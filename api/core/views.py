@@ -1,16 +1,16 @@
 
 from rest_framework import viewsets
-from .models import (
-    User, Room, Equipment, SensorLog, MaintenanceRequest,
-    LLMQuery, LLMSummary, AuthToken
-)
-from .serializers import (
-    UserSerializer, RoomSerializer, EquipmentSerializer,
-    SensorLogSerializer, MaintenanceRequestSerializer,
-    LLMQuerySerializer, LLMSummarySerializer, AuthTokenSerializer
-)
-
+from rest_framework import generics
+from .models import *
+from .serializers import *
 from django.http import HttpResponse
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
 
 def home(request):
     return HttpResponse("Welcome to the DBMS API.")

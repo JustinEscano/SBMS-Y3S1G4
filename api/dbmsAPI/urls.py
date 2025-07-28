@@ -19,6 +19,7 @@ from django.contrib import admin
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.urls import path, include
 from core.views import home  
+from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
     path('', home),  

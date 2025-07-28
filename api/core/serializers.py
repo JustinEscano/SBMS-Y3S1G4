@@ -1,10 +1,17 @@
 from rest_framework import serializers
 from .models import User, Room, Equipment, SensorLog, MaintenanceRequest, LLMQuery, LLMSummary, AuthToken
+from django.contrib.auth.hashers import make_password
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['id', 'username', 'email', 'password', 'role', 'created_at']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return super().create(validated_data)
 
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
