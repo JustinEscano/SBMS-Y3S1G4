@@ -1,0 +1,107 @@
+/* Adjusted full dashboard layout with topbar and sidebar separation */
+
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.topbar {
+  height: 60px;
+  background-color: #0a0f3c;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.dashboard-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-sidebar {
+  width: 220px;
+  background: #1f1f1f;
+  color: #fff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-sidebar h3 {
+  margin-bottom: 20px;
+}
+
+.dashboard-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dashboard-sidebar li {
+  margin: 12px 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.dashboard-sidebar li:hover {
+  color: #00d8ff;
+}
+
+.dashboard-sidebar li.active {
+  font-weight: bold;
+  color: #00d8ff;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 40px;
+  background-color: #1150a1;
+  overflow-y: auto;
+}
+
+.logout-button {
+  margin-top: 40px;
+  padding: 10px 20px;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.logout-button:hover {
+  background-color: #c0392b;
+}
+
+/* expand blocks */
+
+.room-block {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.room-header {
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #0a0f3c;
+}
+
+.equipment-list {
+  margin-top: 10px;
+  padding-left: 20px;
+  color: #333;
+}
+
+.equipment-item {
+  margin-bottom: 6px;
+}
