@@ -1,0 +1,103 @@
+.signup-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(to bottom right, #0a0f3c, #0d122e);
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.signup-title {
+  margin-bottom: 20px;
+  font-size: 26px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+}
+
+.signup-form {
+  background-color: #1f1f1f;
+  padding: 30px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-form h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.signup-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 16px;
+  background-color: #2c2c2c;
+  border: none;
+  border-radius: 6px;
+  color: white;
+}
+
+.signup-form input:focus {
+  outline: 2px solid #4a90e2;
+}
+
+.signup-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #4a90e2;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  color: #aaa;
+}
+
+.social-login {
+  display: flex;
+  gap: 10px;
+}
+
+.google-button,
+.facebook-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: none;
+  background-color: white;
+  color: black;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.google-button img,
+.facebook-button img {
+  height: 18px;
+  margin-right: 8px;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 20px;
+  color: #aaa;
+}
+
+.login-link a {
+  color: #4a90e2;
+  text-decoration: none;
+}

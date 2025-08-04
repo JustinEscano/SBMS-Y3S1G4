@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginScreen from './pages/LoginScreen.tsx';
-import DashboardScreen from './pages/DashboardScreen.tsx';
-import { useAuth } from './context/AuthContext';
+import { BrowserRouter as Router } from 'react-router-dom';
+import AppRoutes from './routes/AppRoutes'; // Import your new routes
 import './App.css';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated } = useAuth(); // role removed
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000); // Simulated loading delay
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -26,26 +23,7 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        {/* Root: auto redirect based on authentication */}
-        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
-
-        {/* Login: redirect if already logged in */}
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginScreen />}
-        />
-
-        {/* Dashboard: any authenticated user */}
-        <Route
-          path="/dashboard"
-          element={
-            isAuthenticated
-              ? <DashboardScreen />
-              : <Navigate to="/login" replace />
-          }
-        />
-      </Routes>
+      <AppRoutes />
     </Router>
   );
 }

@@ -1,0 +1,58 @@
+.topbar {
+  width: 100%;
+  height: 60px;
+  background-color: #1f2235;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid #444;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-y: hidden;
+}
+
+.topbar-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.topbar-user {
+  margin-right: 20px;
+  font-size: 14px;
+  color: #ddd;
+}
+
+.logout-button {
+  background-color: #e74c3c;
+  border: none;
+  padding: 8px 14px;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #c0392b;
+}
+
+.topbar-right {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 100px; /* Aligns vertically with topbar height */
+}
+
+/*no overflow x*/
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
