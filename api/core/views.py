@@ -1,10 +1,13 @@
-
-from rest_framework import viewsets
-from rest_framework import generics
+from rest_framework import viewsets, generics, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from django.http import HttpResponse
 from .models import *
 from .serializers import *
-from django.http import HttpResponse
-from rest_framework.permissions import AllowAny
+import requests
+import json
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 class RegisterView(generics.CreateAPIView):
@@ -46,3 +49,46 @@ class LLMSummaryViewSet(viewsets.ModelViewSet):
 class AuthTokenViewSet(viewsets.ModelViewSet):
     queryset = AuthToken.objects.all()
     serializer_class = AuthTokenSerializer
+
+# 🧠 NEW: Local LLM API View using Ollama
+class LocalLLMView(APIView):
+    permission_classes = [AllowAny]  # Restrict this in production
+
+    def post(self, request, *args, **kwargs):
+        prompt = request.data.get('prompt', '').strip()
+
+        if not prompt:
+            return Response(
+                {"error": "Prompt is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            ollama_response = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": "llama3:latest",  
+                    "prompt": prompt,
+                    "stream": False
+                }
+            )
+            ollama_response.raise_for_status()  
+            ollama_data = ollama_response.json()
+
+            return Response({
+                "model": "llama3:latest",
+                "prompt": prompt,
+                "response": ollama_data.get("response", "")
+            })
+
+        except requests.exceptions.RequestException as e:
+            return Response(
+                {"error": f"Ollama request failed: {str(e)}"},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Unexpected error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
