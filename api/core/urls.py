@@ -10,8 +10,7 @@ from .views import (
     LLMQueryViewSet,
     LLMSummaryViewSet,
     AuthTokenViewSet,
-    LocalLLMView,  # ✅ make sure this is imported
-)
+    LocalLLMView,  
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
