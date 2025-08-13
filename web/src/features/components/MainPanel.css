@@ -1,0 +1,40 @@
+.dashboard-main {
+  padding: 24px;
+  color: white;
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 450px)); /* responsive columns */
+  gap: 1rem;
+  align-items: start; /* <--- IMPORTANT: Prevent equal height rows */
+}
+
+.room-card {
+  background-color: #1e1e2f;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.toggle-button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #0a84ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.toggle-button:hover {
+  background-color: #0066cc;
+}
+
+.equipment-section {
+  margin-top: 12px;
+  padding-left: 16px;
+}
