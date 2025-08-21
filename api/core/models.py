@@ -8,7 +8,6 @@ class UserManager(BaseUserManager):
             raise ValueError("Email is required")
         if not username:
             raise ValueError("Username is required")
-
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, role=role, **extra_fields)
         user.set_password(password)
@@ -19,7 +18,7 @@ class User(AbstractBaseUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)  # Will be set with hashing
+    password = models.CharField(max_length=128) # Will be set with hashing
     role = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
@@ -40,14 +39,21 @@ class Room(models.Model):
     type = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.name
+
 class Equipment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     type = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
+    device_id = models.CharField(max_length=100, unique=True, null=True, blank=True)  # NEW: For ESP32 identification
     qr_code = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 class SensorLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -59,9 +65,15 @@ class SensorLog(models.Model):
     energy_usage = models.FloatField()
     recorded_at = models.DateTimeField()
 
+    class Meta:
+        ordering = ['-recorded_at']  # Latest first
+
+    def __str__(self):
+        return f"{self.equipment.name} - {self.recorded_at}"
+
 class MaintenanceRequest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey('core.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)  # Changed from 'core.User' to 'User'
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE)
     issue = models.TextField()
     status = models.CharField(max_length=100)
@@ -69,12 +81,18 @@ class MaintenanceRequest(models.Model):
     resolved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.equipment.name} - {self.issue[:50]}"
+
 class LLMQuery(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey('core.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)  # Changed from 'core.User' to 'User'
     query = models.TextField()
     response = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.query[:50]}"
 
 class LLMSummary(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -82,8 +100,14 @@ class LLMSummary(models.Model):
     summary = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Summary for {self.generated_for}"
+
 class AuthToken(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey('core.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)  # Changed from 'core.User' to 'User'
     token = models.CharField(max_length=255)
     expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.user.username} - Token"
