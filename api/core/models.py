@@ -87,3 +87,4 @@ class AuthToken(models.Model):
     user = models.ForeignKey('core.User', on_delete=models.CASCADE)
     token = models.CharField(max_length=255)
     expires_at = models.DateTimeField()
+	
