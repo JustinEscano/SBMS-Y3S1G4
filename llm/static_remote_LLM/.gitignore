@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Compiled files
+*.cpython-*
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# SQLite databases
+*.sqlite3
+
+# Chroma / vector DB artifacts
+chroma_room_*/
+*/chroma_room_*/
+chroma.sqlite3
+
+# Misc
+*.log
+.DS_Store
