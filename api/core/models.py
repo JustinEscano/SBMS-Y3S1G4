@@ -24,13 +24,14 @@ class User(AbstractBaseUser):
     created_at = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'role']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'role']
+    EMAIL_FIELD = 'email'
 
     objects = UserManager()
 
     def __str__(self):
-        return self.username
+        return self.email
 
 class Room(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

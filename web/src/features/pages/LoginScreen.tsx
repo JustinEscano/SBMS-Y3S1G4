@@ -1,45 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loginUser } from '../services/authService'; // use your axios instance here
+import { loginUser } from '../services/authService';
 import { Link } from 'react-router-dom';
 import '../pages/LoginScreen.css';
 
+type Star = { x: number; y: number };
+
 function LoginScreen() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [stars, setStars] = useState<Star[]>([]);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  // Generate stars randomly on mount
+  useEffect(() => {
+    const starCount = Math.floor(Math.random() * 20) + 10; // between 10 and 30
+    const newStars: Star[] = [];
+    for (let i = 0; i < starCount; i++) {
+      newStars.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+      });
+    }
+    setStars(newStars);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
-      const data = await loginUser(username, password); // calls authService
-      login(data.access); // store the access token
+      const response = await loginUser(email, password);
+      login(response.access); // store JWT in context
       navigate('/dashboard');
     } catch (err) {
-      console.error(err);
-      alert('Login failed. Please check your credentials.');
+      setError('Invalid email or password');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
+      {/* Overlay spinner */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="spinner"></div>
+        </div>
+      )}
+
+      {/* Random stars */}
+      {stars.map((star, idx) => (
+        <div
+          key={idx}
+          className="star"
+          style={{ top: `${star.y}px`, left: `${star.x}px` }}
+        />
+      ))}
+
       <div className="logo">
-        <img src="/orbit-logo.png" alt="Orbit Logo" className="logo-img" />
+        <div className="logo-img" />
         <span className="logo-text">Orbit</span>
       </div>
 
       <form className="login-card" onSubmit={handleSubmit}>
-        <h2 className="login-title">Login To Continue</h2>
+        <h2 className="login-title">Login</h2>
 
         <label>Email</label>
         <input
           type="text"
           placeholder="example@gmail.com"
           className="input-field"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
 
@@ -56,24 +94,11 @@ function LoginScreen() {
         />
         <a href="#" className="forgot-password">Forget Your Password?</a>
 
-        <button type="submit" className="login-button">Login</button>
+        {error && <div className="error-message">* {error}</div>}
 
-        <div className="separator">
-          <hr />
-          <span>OR</span>
-          <hr />
-        </div>
-
-        <div className="social-buttons">
-          <button type="button" className="social-btn google">
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
-            Login Via Google
-          </button>
-          <button type="button" className="social-btn facebook">
-            <img src="https://www.svgrepo.com/show/157817/facebook.svg" alt="Facebook" />
-            Login Via Facebook
-          </button>
-        </div>
+        <button type="submit" className="login-button" disabled={loading}>
+          Login
+        </button>
 
         <p className="signup-text">
           Don’t have an account? <Link to="/registration">Sign Up</Link>
