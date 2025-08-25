@@ -217,7 +217,7 @@ class RoomLogAnalyzer:
                 logger.info("Creating new vector store")
                 embedding = OllamaEmbeddings(model="nomic-embed-text")
                 vector_store = Chroma.from_documents(
-                    documents=documents, 
+                    documents=document, 
                     embedding=embedding, 
                     persist_directory=self.chroma_dir, 
                     collection_name="room_logs"
@@ -257,6 +257,126 @@ class RoomLogAnalyzer:
             })
         return source_docs
 
+    def _parse_mixed_query(self, q_lower):
+        """Parse mixed queries like 'highest temperature and highest energy'"""
+        # Define column mapping
+        col_map = {
+            "temperature": "environmental_data.temperature_celsius",
+            "temp": "environmental_data.temperature_celsius",
+            "energy": "energy_consumption_kwh",
+            "power": "power_consumption_watts.total",
+            "humidity": "environmental_data.humidity_percent",
+            "occupancy": "occupancy_count",
+            "lighting": "power_consumption_watts.lighting",
+            "hvac": "power_consumption_watts.hvac_fan",
+            "ac": "power_consumption_watts.hvac_fan",
+            "fan": "power_consumption_watts.hvac_fan",
+            "standby": "power_consumption_watts.standby_misc"
+        }
+        
+        # Define operation mapping
+        op_map = {
+            "highest": "max",
+            "maximum": "max",
+            "max": "max",
+            "lowest": "min",
+            "minimum": "min",
+            "min": "min",
+            "average": "mean",
+            "mean": "mean",
+            "avg": "mean"
+        }
+        
+        # Extract operations and columns
+        operations = []
+        columns = []
+        
+        # Split by 'and', '&', or comma
+        parts = re.split(r'\s+and\s+|\s*&\s*|\s*,\s*', q_lower)
+        
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+                
+            # Find operation and column
+            found_op = None
+            found_col = None
+            
+            for op_word, op_func in op_map.items():
+                if op_word in part:
+                    found_op = op_func
+                    break
+            
+            for col_word, col_name in col_map.items():
+                if col_word in part:
+                    found_col = col_name
+                    break
+            
+            if found_op and found_col:
+                operations.append((found_op, found_col))
+        
+        return operations
+
+    def _handle_mixed_query(self, q_lower, df):
+        """Handle mixed queries with multiple operations on different columns"""
+        operations = self._parse_mixed_query(q_lower)
+        
+        if not operations:
+            return None
+        
+        results = []
+        all_sources = []
+        
+        for op, col in operations:
+            if col not in df.columns:
+                continue
+                
+            if op == "max":
+                value = df[col].max()
+                op_word = "highest"
+            elif op == "min":
+                value = df[col].min()
+                op_word = "lowest"
+            elif op == "mean":
+                value = df[col].mean()
+                op_word = "average"
+                # For average, get sample sources
+                sample_rows = df.sample(min(3, len(df)))
+                sources = self._get_source_documents_for_rows(sample_rows)
+                all_sources.extend(sources)
+                results.append(f"The {op_word} {col.split('.')[-1]} is {value:.2f}")
+                continue
+            else:
+                continue
+            
+            # Get rows where this value occurs
+            matching_rows = df[df[col] == value]
+            
+            # Get timestamps
+            timestamps = []
+            for _, row in matching_rows.iterrows():
+                try:
+                    timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
+                except:
+                    timestamps.append(str(row["timestamp"]))
+            
+            # Get source documents
+            sources = self._get_source_documents_for_rows(matching_rows.head(2))  # Limit to 2 per operation
+            all_sources.extend(sources)
+            
+            # Short column name for display
+            col_display = col.split('.')[-1]
+            results.append(f"The {op_word} {col_display} is {value} at {', '.join(timestamps[:2])}{'...' if len(timestamps) > 2 else ''}")
+        
+        if results:
+            return {
+                "answer": ". ".join(results) + ".",
+                "sources": all_sources[:6]  # Limit total sources to 6
+            }
+        
+        return None
+
     def _handle_deterministic_query(self, query):
         """Handle specific queries deterministically to avoid hallucinations"""
         q_lower = query.lower().strip()
@@ -277,12 +397,17 @@ class RoomLogAnalyzer:
                 "sources": sources
             }
         
-        # Check for combined min/max queries first
+        # First try to handle mixed queries
+        mixed_result = self._handle_mixed_query(q_lower, df)
+        if mixed_result:
+            return mixed_result
+        
+        # Then try single operation queries
         has_lowest = "lowest" in q_lower or "minimum" in q_lower or "min " in q_lower
         has_highest = "highest" in q_lower or "maximum" in q_lower or "max " in q_lower
         
         if has_lowest and has_highest:
-            # This is a combined query - handle it specially
+            # This is a combined query for the same column
             return self._handle_min_max_query(q_lower, df, "combined")
         elif has_lowest:
             return self._handle_min_max_query(q_lower, df, "min")
@@ -294,7 +419,7 @@ class RoomLogAnalyzer:
         return None
     
     def _handle_min_max_query(self, q_lower, df, operation):
-        """Handle minimum/maximum queries deterministically"""
+        """Handle minimum/maximum queries for single columns"""
         col_map = {
             "total": "power_consumption_watts.total",
             "lighting": "power_consumption_watts.lighting",
@@ -314,15 +439,12 @@ class RoomLogAnalyzer:
         for key, col in col_map.items():
             if key in q_lower and col in df.columns:
                 if operation == "combined":
-                    # Handle combined min/max query
                     min_value = df[col].min()
                     max_value = df[col].max()
                     
-                    # Get rows where these values occur
                     min_rows = df[df[col] == min_value]
                     max_rows = df[df[col] == max_value]
                     
-                    # Get timestamps
                     min_timestamps = []
                     for _, row in min_rows.iterrows():
                         try:
@@ -337,12 +459,11 @@ class RoomLogAnalyzer:
                         except:
                             max_timestamps.append(str(row["timestamp"]))
                     
-                    # Get source documents for both min and max
-                    sources = self._get_source_documents_for_rows(pd.concat([min_rows.head(3), max_rows.head(3)]))
+                    sources = self._get_source_documents_for_rows(pd.concat([min_rows.head(2), max_rows.head(2)]))
                     
                     return {
-                        "answer": f"The lowest {key} is {min_value} at {', '.join(min_timestamps[:2])}{'...' if len(min_timestamps) > 2 else ''}. "
-                                 f"The highest {key} is {max_value} at {', '.join(max_timestamps[:2])}{'...' if len(max_timestamps) > 2 else ''}.",
+                        "answer": f"The lowest {key} is {min_value} at {', '.join(min_timestamps[:2])}. "
+                                 f"The highest {key} is {max_value} at {', '.join(max_timestamps[:2])}.",
                         "sources": sources
                     }
                 elif operation == "min":
@@ -352,7 +473,6 @@ class RoomLogAnalyzer:
                     value = df[col].max()
                     op_word = "highest"
                 
-                # Get rows where this value occurs
                 matching_rows = df[df[col] == value]
                 timestamps = []
                 for _, row in matching_rows.iterrows():
@@ -361,11 +481,10 @@ class RoomLogAnalyzer:
                     except:
                         timestamps.append(str(row["timestamp"]))
                 
-                # Get source documents for the matching rows
-                sources = self._get_source_documents_for_rows(matching_rows.head(5))  # Limit to 5 sources
+                sources = self._get_source_documents_for_rows(matching_rows.head(3))
                 
                 return {
-                    "answer": f"The {op_word} {key} is {value} at {', '.join(timestamps[:3])}{'...' if len(timestamps) > 3 else ''}.",
+                    "answer": f"The {op_word} {key} is {value} at {', '.join(timestamps[:2])}{'...' if len(timestamps) > 2 else ''}.",
                     "sources": sources
                 }
         
@@ -385,7 +504,6 @@ class RoomLogAnalyzer:
         for key, col in col_map.items():
             if key in q_lower and col in df.columns:
                 avg_value = df[col].mean()
-                # Return a sample of documents as sources
                 sample_df = df.sample(min(3, len(df)))
                 sources = self._get_source_documents_for_rows(sample_df)
                 return {
@@ -513,4 +631,4 @@ def ask(query):
         return {"error": str(e)}
 
 # Initialize when this module is imported
-initialize_analyzer(reset_vector_store=False)  # Do not reset; use existing data
+initialize_analyzer(reset_vector_store=False)  # PS: Set True once to reset (If set to True while fetching data it won't work) after that set to False again for fetching data.
