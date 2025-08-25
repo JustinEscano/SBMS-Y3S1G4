@@ -1,3 +1,5 @@
+import os
+import shutil
 import json
 import pandas as pd
 from langchain_core.documents import Document
@@ -7,16 +9,19 @@ from langchain_ollama import OllamaLLM
 from langchain_community.vectorstores import Chroma
 
 
-# Loads the data log in the JSON file.
+chroma_dir = "./chroma_room_logs"
+if os.path.exists(chroma_dir):
+    shutil.rmtree(chroma_dir)
+
+
 with open("room_logs.json", "r") as file:
     data = json.load(file)
 
-# Flattens the logs into DataFrame, parses timestamps, and filters for occupied logs.   
 df = pd.json_normalize(data["logs"])
 df["timestamp"]= pd.to_datetime(df["timestamp"])
 df = df[df["occupancy_status"] == "occupied"]
 
-# Converts each log row into a readable summary strings.
+
 def summarize_log(row):
     return (
         f"At {row['timestamp']}, the room was occupied with "
@@ -33,19 +38,33 @@ def summarize_log(row):
         f"Humidity: {row['environmental_data.humidity_percent']}%."
     )
 
-# Turns each summary into a LangChain Document for embeddings.
-documents = [Document(page_content=summarize_log(row), metadata={"timestamp": row["timestamp"].isoformat()}) for _, row in df.iterrows()]
+documents = [
+    Document(
+        page_content=summarize_log(row),
+        metadata={"timestamp": row["timestamp"].isoformat()}
+    )
+    for _, row in df.iterrows()
+]
 
-# Embeds the documents using Ollama, stores them in ChromaDB, and persist the database.
+
 embedding = OllamaEmbeddings(model="nomic-embed-text")
-chroma_dir = "./chroma_room_logs"
 
-vector_store = Chroma.from_documents(documents=documents, embedding=embedding, persist_directory=chroma_dir, collection_name="room_logs")
+vector_store = Chroma.from_documents(
+    documents=documents,
+    embedding=embedding,
+    persist_directory=chroma_dir,
+    collection_name="room_logs"
+)
 vector_store.persist()
 
-# Sets up the Ollama LLM and retrieval
-llm = OllamaLLM(model="llama3.2:3b")
-qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=vector_store.as_retriever(),chain_type="stuff", return_source_documents=True)
 
-def ask(query:str):
+llm = OllamaLLM(model="llama3:latest")
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    retriever=vector_store.as_retriever(search_kwargs={"k": 3}),  # avoid too many dupes
+    chain_type="stuff",
+    return_source_documents=True
+)
+
+def ask(query: str):
     return qa_chain({"query": query})
