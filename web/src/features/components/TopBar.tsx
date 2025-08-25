@@ -2,11 +2,10 @@ import React from 'react';
 import './TopBar.css';
 
 interface TopBarProps {
-  onLogout: () => void;
   username?: string;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ onLogout, username }) => {
+const TopBar: React.FC<TopBarProps> = ({ username }) => {
   return (
     <header className="topbar">
       <div className="topbar-left">
@@ -14,9 +13,6 @@ const TopBar: React.FC<TopBarProps> = ({ onLogout, username }) => {
       </div>
       <div className="topbar-right">
         <span className="topbar-user">Hello, {username || 'Admin'}</span>
-        <button className="logout-button" onClick={onLogout}>
-          Logout
-        </button>
       </div>
     </header>
   );

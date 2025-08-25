@@ -1,0 +1,129 @@
+
+
+.dashboard-sidebar {
+    width: 250px;
+    background: #1f1f1f;
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dashboard-sidebar h3 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: #808080;
+  }
+  
+  .dashboard-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .dashboard-sidebar li {
+    margin: 12px 0;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  
+  .dashboard-sidebar li:hover {
+    color: #00d8ff;
+  }
+  
+  .dashboard-sidebar li.active {
+    font-weight: bold;
+    color: #00d8ff;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+  }
+  
+  button:hover {
+    background-color: #e9ecef;
+    color: #000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  button.active {
+    background-color: #007bff;
+    color: #ffffff;
+  }
+  
+  button .sidebar__nav-text {
+    margin-left: 10px;
+    flex-grow: 1;
+    text-align: left;
+  }
+  
+  /* Dropdown arrow styling */
+  .sidebar__dropdown-arrow {
+    margin-left: auto;
+  }
+  
+  /* Dropdown sub-items */
+  .sidebar__dropdown {
+    margin-left: 15px;
+    padding-left: 10px;
+    border-left: 2px solid #e9ecef;
+  }
+  
+  .sidebar__nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 8px 15px;
+    background-color: transparent;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .sidebar__nav-item:hover {
+    background-color: #f1f3f5;
+  }
+  
+  .sidebar__nav-item--active {
+    background-color: #007bff;
+    color: #000;
+  }
+  
+  .sidebar__nav-item--inactive {
+    color: #ffffff;
+  }
+  
+  .logout-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;background-color: #e74c3c;
+    border: none;
+    padding: 10px 15px;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .logout-button:hover {
+    background-color: #c0392b;
+  }

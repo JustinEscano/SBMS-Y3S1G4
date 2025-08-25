@@ -23,21 +23,6 @@
   color: #ddd;
 }
 
-.logout-button {
-  background-color: #e74c3c;
-  border: none;
-  padding: 8px 14px;
-  color: white;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-.logout-button:hover {
-  background-color: #c0392b;
-}
-
 .topbar-right {
   font-size: 20px;
   font-weight: bold;
