@@ -68,7 +68,7 @@
         "computer_on_hours": 0.5
       },
       "environmental_data": {
-        "temperature_celsius": 26.5,
+        "temperature_celsius": 35.5,
         "humidity_percent": 68
       }
     },
@@ -118,7 +118,7 @@
         "computer_on_hours": 5.0
       },
       "environmental_data": {
-        "temperature_celsius": 22.5,
+        "temperature_celsius": 15.0,
         "humidity_percent": 58
       }
     },
@@ -381,7 +381,7 @@
         "computer_on_hours": 8.0
       },
       "environmental_data": {
-        "temperature_celsius": 22.0,
+        "temperature_celsius": 20.0,
         "humidity_percent": 56
       }
     },

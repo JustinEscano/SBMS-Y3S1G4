@@ -219,11 +219,24 @@ class RoomLogAnalyzer:
         """Ask a question about the room logs"""
         if not self.qa_chain:
             raise ValueError("QA chain not initialized. Call initialize_qa_chain() first.")
-        
+
         try:
+            # Normalize query
+            q_lower = str(query).lower().strip().replace('"', '')
+
+            # Handle "how many" type queries directly
+            if "how many" in q_lower and ("data" in q_lower or "record" in q_lower or "log" in q_lower):
+                df = self.load_and_process_data()
+                count = len(df)
+                return {
+                    "answer": f"There are {count} records in the room_logs.",
+                    "sources": []
+                }
+
+            # Otherwise use the retrieval QA chain
             result = self.qa_chain({"query": query})
             logger.info(f"Query: '{query}' - Response generated successfully")
-            
+
             # Deduplicate source documents by doc_hash
             seen_hashes = set()
             unique_source_docs = []
@@ -235,14 +248,16 @@ class RoomLogAnalyzer:
                         "metadata": dict(doc.metadata)
                     })
                     seen_hashes.add(doc_hash)
-            
+
             return {
-                "result": result["result"],
-                "source_documents": unique_source_docs
+                "answer": result.get("result", ""),
+                "sources": unique_source_docs
             }
+
         except Exception as e:
             logger.error(f"Error processing query '{query}': {e}")
-            raise
+            return {"error": str(e)}
+
 
 # Initialize the analyzer globally
 analyzer = None

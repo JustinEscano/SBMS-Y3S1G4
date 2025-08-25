@@ -1,83 +1,50 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
-from main import ask  # Import the ask function from main.py
+from fastapi import FastAPI, Request, HTTPException
 import logging
+from main import ask
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="Room Logs RAG API",
-    description="API for querying room occupancy and energy consumption data",
-    version="1.0.0"
-)
+app = FastAPI()
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
-)
-
-# Pydantic models for request/response
-class QueryRequest(BaseModel):
-    query: str
-
-class SourceDocument(BaseModel):
-    page_content: str
-    metadata: dict
-
-class QueryResponse(BaseModel):
-    result: str
-    source_documents: List[SourceDocument]
-    error: Optional[str] = None
-
-@app.post("/rag", response_model=QueryResponse)
-async def rag_endpoint(request: QueryRequest):
-    """
-    Query the room logs RAG system with a natural language question.
-    
-    Example queries:
-    - "What was the average occupancy count?"
-    - "When was the energy consumption highest?"
-    - "How does occupancy relate to energy usage?"
-    """
+@app.post("/rag")
+async def rag_endpoint(request: Request):
     try:
-        logger.info(f"Received query: {request.query}")
-        result = ask(request.query)
+        data = await request.json()
+        query = data.get("query", "")
+        if not query:
+            logger.error("Missing query in request")
+            raise HTTPException(status_code=400, detail="Missing query.")
         
-        # Check if there was an error
+        logger.info(f"Received query: {query}")
+        result = ask(query)
+        
+        # Check for error in result
         if "error" in result:
+            logger.error(f"Error from main.ask: {result['error']}")
             raise HTTPException(status_code=500, detail=result["error"])
         
-        return QueryResponse(**result)
+        # Ensure sources are formatted correctly
+        sources = [
+            {"content": doc["page_content"], "metadata": doc["metadata"]}
+            for doc in result.get("sources", [])
+        ]
         
-    except Exception as e:
-        logger.error(f"Error processing query: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint to verify the API is running"""
-    return {"status": "healthy", "message": "RAG API is running"}
-
-@app.get("/")
-async def root():
-    """Root endpoint with API information"""
-    return {
-        "message": "Room Logs RAG API",
-        "endpoints": {
-            "POST /rag": "Query the RAG system",
-            "GET /health": "Health check",
-            "GET /": "This information"
+        response = {
+            "answer": result.get("answer", ""),
+            "sources": sources
         }
-    }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+        logger.info(f"Response: {response}")
+        return response
+    
+    except Exception as e:
+        logger.error(f"Error processing request: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
