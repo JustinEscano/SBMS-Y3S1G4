@@ -10,6 +10,7 @@ from langchain_ollama import OllamaLLM
 from langchain_community.vectorstores import Chroma
 import logging
 import shutil
+import re
 
 # Set up logging
 logging.basicConfig(
@@ -29,6 +30,7 @@ class RoomLogAnalyzer:
         self.vector_store = None
         self.qa_chain = None
         self.processed_hashes = set()
+        self.df = None  # Cache the dataframe
         
         # Load existing processed hashes if they exist
         self._load_processed_hashes()
@@ -76,6 +78,9 @@ class RoomLogAnalyzer:
     
     def load_and_process_data(self):
         """Load and process the room logs data"""
+        if self.df is not None:
+            return self.df
+            
         try:
             with open(self.json_file_path, "r") as file:
                 data = json.load(file)
@@ -84,6 +89,19 @@ class RoomLogAnalyzer:
             df = pd.json_normalize(data["logs"])
             df["timestamp"] = pd.to_datetime(df["timestamp"])
             df = df[df["occupancy_status"] == "occupied"]
+            
+            # CRITICAL FIX: Ensure numeric types for correct calculations
+            numeric_cols = [
+                "occupancy_count", "energy_consumption_kwh",
+                "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
+                "power_consumption_watts.standby_misc", "power_consumption_watts.total",
+                "equipment_usage.lights_on_hours", "equipment_usage.air_conditioner_on_hours",
+                "equipment_usage.projector_on_hours", "equipment_usage.computer_on_hours",
+                "environmental_data.temperature_celsius", "environmental_data.humidity_percent"
+            ]
+            for col in numeric_cols:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors="coerce")
             
             # Remove duplicates based on all relevant fields
             dedup_columns = [
@@ -97,11 +115,49 @@ class RoomLogAnalyzer:
             df = df.drop_duplicates(subset=dedup_columns)
             
             logger.info(f"Loaded {len(df)} unique occupied room records after deduplication")
+            self.df = df
             return df
             
         except Exception as e:
             logger.error(f"Error loading data: {e}")
             raise
+    
+    def _create_document_from_row(self, row):
+        """Create a Document object from a DataFrame row"""
+        try:
+            timestamp_str = row['timestamp'].strftime("%Y-%m-%d %H:%M:%S")
+        except:
+            timestamp_str = str(row['timestamp'])
+        
+        page_content = (
+            f"At {timestamp_str}, the room was occupied with "
+            f"{row['occupancy_count']} people. Energy consumption: {row['energy_consumption_kwh']} kWh. "
+            f"Lighting power: {row['power_consumption_watts.lighting']}W, "
+            f"HVAC power: {row['power_consumption_watts.hvac_fan']}W, "
+            f"Standby power: {row['power_consumption_watts.standby_misc']}W, "
+            f"Total power: {row['power_consumption_watts.total']}W. "
+            f"Lights usage: {row['equipment_usage.lights_on_hours']} hours, "
+            f"AC usage: {row['equipment_usage.air_conditioner_on_hours']} hours, "
+            f"Projector usage: {row['equipment_usage.projector_on_hours']} hours, "
+            f"Computers usage: {row['equipment_usage.computer_on_hours']} hours. "
+            f"Temperature: {row['environmental_data.temperature_celsius']}°C, "
+            f"Humidity: {row['environmental_data.humidity_percent']}%."
+        )
+        
+        doc_hash = self._generate_document_hash(row)
+        
+        return Document(
+            page_content=page_content, 
+            metadata={
+                "timestamp": timestamp_str,
+                "occupancy_count": int(row["occupancy_count"]),
+                "energy_kwh": float(row["energy_consumption_kwh"]),
+                "power_total": float(row["power_consumption_watts.total"]),
+                "temperature": float(row["environmental_data.temperature_celsius"]),
+                "humidity": float(row["environmental_data.humidity_percent"]),
+                "doc_hash": doc_hash
+            }
+        )
     
     def create_documents(self, df):
         """Convert DataFrame rows into LangChain Documents with deduplication"""
@@ -117,32 +173,7 @@ class RoomLogAnalyzer:
                 logger.info(f"Skipping duplicate document with hash {doc_hash}")
                 continue
             
-            # Create the document content
-            page_content = (
-                f"At {row['timestamp']}, the room was occupied with "
-                f"{row['occupancy_count']} people. Energy: {row['energy_consumption_kwh']} kWh. "
-                f"Lighting: {row['power_consumption_watts.lighting']}W, "
-                f"HVAC: {row['power_consumption_watts.hvac_fan']}W, "
-                f"Standby: {row['power_consumption_watts.standby_misc']}W, "
-                f"Total Power: {row['power_consumption_watts.total']}W. "
-                f"Lights on: {row['equipment_usage.lights_on_hours']}h, "
-                f"AC on: {row['equipment_usage.air_conditioner_on_hours']}h, "
-                f"Projector: {row['equipment_usage.projector_on_hours']}h, "
-                f"Computers: {row['equipment_usage.computer_on_hours']}h. "
-                f"Temp: {row['environmental_data.temperature_celsius']}°C, "
-                f"Humidity: {row['environmental_data.humidity_percent']}%. "
-            )
-            
-            # Create the document
-            doc = Document(
-                page_content=page_content, 
-                metadata={
-                    "timestamp": row["timestamp"].isoformat(),
-                    "occupancy_count": row["occupancy_count"],
-                    "doc_hash": doc_hash
-                }
-            )
-            
+            doc = self._create_document_from_row(row)
             documents.append(doc)
             self.processed_hashes.add(doc_hash)
             new_document_count += 1
@@ -214,6 +245,171 @@ class RoomLogAnalyzer:
         except Exception as e:
             logger.error(f"Error initializing QA chain: {e}")
             raise
+
+    def _get_source_documents_for_rows(self, rows):
+        """Convert DataFrame rows to source documents for response"""
+        source_docs = []
+        for _, row in rows.iterrows():
+            doc = self._create_document_from_row(row)
+            source_docs.append({
+                "page_content": doc.page_content,
+                "metadata": dict(doc.metadata)
+            })
+        return source_docs
+
+    def _handle_deterministic_query(self, query):
+        """Handle specific queries deterministically to avoid hallucinations"""
+        q_lower = query.lower().strip()
+        
+        # Load data
+        df = self.load_and_process_data()
+        if df.empty:
+            return None
+        
+        # Handle count queries
+        if "how many" in q_lower and ("record" in q_lower or "data" in q_lower or "log" in q_lower):
+            count = len(df)
+            # Return a sample of source documents
+            sample_df = df.sample(min(3, len(df)))
+            sources = self._get_source_documents_for_rows(sample_df)
+            return {
+                "answer": f"There are {count} occupied room records in the dataset.",
+                "sources": sources
+            }
+        
+        # Check for combined min/max queries first
+        has_lowest = "lowest" in q_lower or "minimum" in q_lower or "min " in q_lower
+        has_highest = "highest" in q_lower or "maximum" in q_lower or "max " in q_lower
+        
+        if has_lowest and has_highest:
+            # This is a combined query - handle it specially
+            return self._handle_min_max_query(q_lower, df, "combined")
+        elif has_lowest:
+            return self._handle_min_max_query(q_lower, df, "min")
+        elif has_highest:
+            return self._handle_min_max_query(q_lower, df, "max")
+        elif "average" in q_lower or "mean" in q_lower:
+            return self._handle_avg_query(q_lower, df)
+        
+        return None
+    
+    def _handle_min_max_query(self, q_lower, df, operation):
+        """Handle minimum/maximum queries deterministically"""
+        col_map = {
+            "total": "power_consumption_watts.total",
+            "lighting": "power_consumption_watts.lighting",
+            "light": "power_consumption_watts.lighting",
+            "hvac": "power_consumption_watts.hvac_fan",
+            "fan": "power_consumption_watts.hvac_fan",
+            "ac": "power_consumption_watts.hvac_fan",
+            "standby": "power_consumption_watts.standby_misc",
+            "misc": "power_consumption_watts.standby_misc",
+            "energy": "energy_consumption_kwh",
+            "temperature": "environmental_data.temperature_celsius",
+            "temp": "environmental_data.temperature_celsius",
+            "humidity": "environmental_data.humidity_percent",
+            "occupancy": "occupancy_count"
+        }
+        
+        for key, col in col_map.items():
+            if key in q_lower and col in df.columns:
+                if operation == "combined":
+                    # Handle combined min/max query
+                    min_value = df[col].min()
+                    max_value = df[col].max()
+                    
+                    # Get rows where these values occur
+                    min_rows = df[df[col] == min_value]
+                    max_rows = df[df[col] == max_value]
+                    
+                    # Get timestamps
+                    min_timestamps = []
+                    for _, row in min_rows.iterrows():
+                        try:
+                            min_timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
+                        except:
+                            min_timestamps.append(str(row["timestamp"]))
+                    
+                    max_timestamps = []
+                    for _, row in max_rows.iterrows():
+                        try:
+                            max_timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
+                        except:
+                            max_timestamps.append(str(row["timestamp"]))
+                    
+                    # Get source documents for both min and max
+                    sources = self._get_source_documents_for_rows(pd.concat([min_rows.head(3), max_rows.head(3)]))
+                    
+                    return {
+                        "answer": f"The lowest {key} is {min_value} at {', '.join(min_timestamps[:2])}{'...' if len(min_timestamps) > 2 else ''}. "
+                                 f"The highest {key} is {max_value} at {', '.join(max_timestamps[:2])}{'...' if len(max_timestamps) > 2 else ''}.",
+                        "sources": sources
+                    }
+                elif operation == "min":
+                    value = df[col].min()
+                    op_word = "lowest"
+                else:
+                    value = df[col].max()
+                    op_word = "highest"
+                
+                # Get rows where this value occurs
+                matching_rows = df[df[col] == value]
+                timestamps = []
+                for _, row in matching_rows.iterrows():
+                    try:
+                        timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
+                    except:
+                        timestamps.append(str(row["timestamp"]))
+                
+                # Get source documents for the matching rows
+                sources = self._get_source_documents_for_rows(matching_rows.head(5))  # Limit to 5 sources
+                
+                return {
+                    "answer": f"The {op_word} {key} is {value} at {', '.join(timestamps[:3])}{'...' if len(timestamps) > 3 else ''}.",
+                    "sources": sources
+                }
+        
+        return None
+    
+    def _handle_avg_query(self, q_lower, df):
+        """Handle average queries deterministically"""
+        col_map = {
+            "power": "power_consumption_watts.total",
+            "energy": "energy_consumption_kwh",
+            "temperature": "environmental_data.temperature_celsius",
+            "temp": "environmental_data.temperature_celsius",
+            "humidity": "environmental_data.humidity_percent",
+            "occupancy": "occupancy_count"
+        }
+        
+        for key, col in col_map.items():
+            if key in q_lower and col in df.columns:
+                avg_value = df[col].mean()
+                # Return a sample of documents as sources
+                sample_df = df.sample(min(3, len(df)))
+                sources = self._get_source_documents_for_rows(sample_df)
+                return {
+                    "answer": f"The average {key} is {avg_value:.2f}.",
+                    "sources": sources
+                }
+        
+        return None
+    
+    def _enhance_query_for_llm(self, query):
+        """Add context and instructions to reduce hallucinations"""
+        enhanced_query = f"""
+        Based EXCLUSIVELY on the room energy consumption data provided, answer the following question.
+        If the information is not available in the data, say "I cannot find this information in the data."
+        Do not make up or assume any information.
+        
+        Question: {query}
+        
+        Important instructions:
+        1. Only use numbers and facts from the provided documents
+        2. If unsure, say you don't know
+        3. Be precise and factual
+        """
+        return enhanced_query
     
     def ask(self, query):
         """Ask a question about the room logs"""
@@ -221,21 +417,20 @@ class RoomLogAnalyzer:
             raise ValueError("QA chain not initialized. Call initialize_qa_chain() first.")
 
         try:
-            # Normalize query
-            q_lower = str(query).lower().strip().replace('"', '')
+            # First try deterministic handling
+            deterministic_result = self._handle_deterministic_query(query)
+            if deterministic_result:
+                logger.info(f"Used deterministic handler for query: '{query}'")
+                return deterministic_result
 
-            # Handle "how many" type queries directly
-            if "how many" in q_lower and ("data" in q_lower or "record" in q_lower or "log" in q_lower):
-                df = self.load_and_process_data()
-                count = len(df)
-                return {
-                    "answer": f"There are {count} records in the room_logs.",
-                    "sources": []
-                }
+            # Otherwise use the retrieval QA chain with enhanced prompt
+            enhanced_query = self._enhance_query_for_llm(query)
+            result = self.qa_chain({"query": enhanced_query})
+            logger.info(f"Query: '{query}' - Response generated using LLM")
 
-            # Otherwise use the retrieval QA chain
-            result = self.qa_chain({"query": query})
-            logger.info(f"Query: '{query}' - Response generated successfully")
+            # Validate LLM response for obvious hallucinations
+            llm_answer = result.get("result", "")
+            validated_answer = self._validate_llm_response(llm_answer, query)
 
             # Deduplicate source documents by doc_hash
             seen_hashes = set()
@@ -250,13 +445,29 @@ class RoomLogAnalyzer:
                     seen_hashes.add(doc_hash)
 
             return {
-                "answer": result.get("result", ""),
+                "answer": validated_answer,
                 "sources": unique_source_docs
             }
 
         except Exception as e:
             logger.error(f"Error processing query '{query}': {e}")
             return {"error": str(e)}
+    
+    def _validate_llm_response(self, response, query):
+        """Basic validation to catch obvious hallucinations"""
+        # Check for unrealistic numbers in power-related queries
+        if any(word in query.lower() for word in ['power', 'energy', 'watt', 'kwh']):
+            numbers = re.findall(r'\d+\.?\d*', response)
+            for num in numbers:
+                try:
+                    num_val = float(num)
+                    # If power value is unrealistically high
+                    if num_val > 10000:  # 10kW is unrealistic for a room
+                        return "I cannot provide a precise answer based on the available data. The numbers may not be accurate."
+                except:
+                    continue
+        
+        return response
 
 
 # Initialize the analyzer globally
