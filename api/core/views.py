@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from .models import *
 from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .permissions import RoleBasedPermission
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -27,7 +28,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [RoleBasedPermission]
+    permission_classes = [AllowAny]
 
 def home(request):
     return HttpResponse("Welcome to the DBMS API.")
