@@ -1,6 +1,10 @@
+/* Topbar */
 .topbar {
-  width: 100%;
-  height: 60px;
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-expanded);
+  height: var(--topbar-height);
+  width: calc(100% - var(--sidebar-expanded));
   background-color: #1f2235;
   color: white;
   display: flex;
@@ -9,50 +13,156 @@
   padding: 0 20px;
   border-bottom: 1px solid #444;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow-y: hidden;
+  z-index: 1000;
+  transition: left 0.3s ease, width 0.3s ease;
+}
+.topbar.collapsed {
+  left: var(--sidebar-collapsed);
+  width: calc(100% - var(--sidebar-collapsed));
+}
+.topbar-left { display: flex; align-items: center; }
+.topbar-title { font-size: 20px; font-weight: bold; }
+.topbar-right { display: flex; align-items: center; }
+
+/* Profile dropdown button */
+.profile-dropdown {
+  position: relative;
 }
 
-.topbar-title {
-  font-size: 20px;
-  font-weight: bold;
+.profile-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  user-select: none;
+}
+
+.profile-button:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.4);
+}
+
+.profile-button:active {
+  background: rgba(255,255,255,0.15);
+}
+
+.avatar-circle {
+  background: #4a90e2;
+  color: #fff;
+  border-radius: 50%;
+  height: 32px;
+  width: 32px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
 }
 
 .topbar-user {
-  margin-right: 20px;
   font-size: 14px;
+  font-weight: 500;
   color: #ddd;
 }
 
-.logout-button {
-  background-color: #e74c3c;
-  border: none;
-  padding: 8px 14px;
+/* Dropdown menu */
+.dropdown-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 260px;
+  background: #1a1f3d;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+  z-index: 1200;
+}
+
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #2a3260;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.avatar-large {
+  background: #4a90e2;
   color: white;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-.logout-button:hover {
-  background-color: #c0392b;
-}
-
-.topbar-right {
-  font-size: 20px;
   font-weight: bold;
-  line-height: 100px; /* Aligns vertically with topbar height */
+  border-radius: 50%;
+  height: 44px;
+  width: 44px;
+  display: grid;
+  place-items: center;
 }
-
-/*no overflow x*/
-
-* {
+.dropdown-header h4 {
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  font-size: 15px;
+  font-weight: 600;
 }
+.dropdown-header small { color: gray; }
 
-html, body {
-  width: 100%;
-  overflow-x: hidden;
+.dropdown-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.dropdown-links button {
+  background: none;
+  border: none;
+  color: #ddd;
+  text-align: left;
+  cursor: pointer;
+}
+.dropdown-links button:hover { color: #fff; }
+
+/* Switch */
+.switch { display: flex; align-items: center; gap: 8px; }
+.switch input { display: none; }
+.slider {
+  width: 36px;
+  height: 20px;
+  background: #555;
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.3s;
+}
+.slider::after {
+  content: "";
+  position: absolute;
+  top: 3px; left: 3px;
+  height: 14px; width: 14px;
+  background: white; border-radius: 50%;
+  transition: transform 0.3s;
+}
+.switch input:checked + .slider { background: #4a90e2; }
+.switch input:checked + .slider::after { transform: translateX(16px); }
+.switch-label { font-size: 13px; color: #bbb; }
+
+.dropdown-footer {
+  padding: 12px;
+  font-size: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: #aaa;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dropdown-footer a {
+  color: gray;
+  text-decoration: none;
+}
+.dropdown-footer a:hover { text-decoration: underline; }
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-size: 13px;
 }
