@@ -1,0 +1,41 @@
+/* Sidebar widths */
+:root {
+  --sidebar-expanded: 220px;
+  --sidebar-collapsed: 70px;
+  --topbar-height: 60px;
+}
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+  height: 100%;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Main container */
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Dashboard content */
+.dashboard-content {
+  flex: 1;
+  padding: 20px;
+  background: #000;
+  margin-top: var(--topbar-height);
+  margin-left: var(--sidebar-expanded);
+  transition: margin-left 0.3s ease;
+}
+
+.dashboard-content.expanded {
+  margin-left: var(--sidebar-collapsed);
+}

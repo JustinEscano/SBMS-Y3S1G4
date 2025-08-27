@@ -8,6 +8,22 @@ from django.utils import timezone
 from django.http import HttpResponse
 from .models import *
 from .serializers import *
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .permissions import RoleBasedPermission
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = User.EMAIL_FIELD  # force SimpleJWT to use email
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add extra claims if needed
+        token['role'] = user.role
+        return token
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -24,6 +40,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
+    
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     queryset = Equipment.objects.all()

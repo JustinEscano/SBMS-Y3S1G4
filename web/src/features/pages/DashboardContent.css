@@ -1,0 +1,114 @@
+.content-container {
+  padding: 20px;
+}
+
+.content-header h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: gray;
+}
+
+.breadcrumb .active {
+  color: blue;
+  font-weight: bold;
+}
+
+/* Stat boxes */
+.stats-boxes {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.stat-box {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  background: #ccc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-info {
+  text-align: right;
+  color: gray;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.stat-label {
+  color: gray;
+  margin: 0;
+}
+
+/* HVAC Table */
+.hvac-table h2 {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.table-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.table-controls input,
+.table-controls select,
+.table-controls button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.table-controls button {
+  background: #25eb77;
+  color: rgb(56, 56, 56);
+  cursor: pointer;
+  border: none;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+thead {
+  background: #f4f4f4;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  color: gray;
+  padding: 10px;
+  text-align: left;
+}
+
+.status.online {
+  color: green;
+  font-weight: bold;
+}
