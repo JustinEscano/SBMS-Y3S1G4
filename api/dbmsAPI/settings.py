@@ -27,7 +27,7 @@ DEBUG = True
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-ALLOWED_HOSTS = [
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2'
     '127.0.0.1',
     'localhost',
     '10.0.2.2',
@@ -98,9 +98,6 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
 }
 
 

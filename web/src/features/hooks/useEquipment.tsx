@@ -1,25 +1,24 @@
-import { useEffect, useState } from 'react';
-import type { Equipment } from '../types/equipmentTypes';
-import { getAllEquipment } from '../services/equipmentService';
+import { useEffect, useState } from "react";
+import { equipmentService } from "../services/equipmentService";
+import type { Equipment } from "../types/equipmentTypes";
 
 export const useEquipment = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchEquipment = async () => {
-      try {
-        const data = await getAllEquipment();
-        setEquipment(data);
-      } catch (error) {
-        console.error('Failed to fetch equipment:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchEquipment = async () => {
+    setLoading(true);
+    try {
+      const data = await equipmentService.getAll();
+      setEquipment(data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEquipment();
   }, []);
 
-  return { equipment, loading };
+  return { equipment, loading, refetch: fetchEquipment };
 };
