@@ -3607,3 +3607,1069 @@
 2025-08-26 01:57:50,817 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
 2025-08-26 01:57:54,577 - INFO - Query: 'what is the projector data' - Response generated using LLM
 2025-08-26 01:57:54,578 - INFO - Response: {'answer': 'I can find this information in the data.\n\nProjector usage: \nAt 2025-03-03 07:30:00: Projector usage: 0.0 hours.\nAt 2025-03-07 08:00:00: Projector usage: 0.0 hours.\nAt 2025-03-09 08:00:00: Projector usage: 0.0 hours.\nAt 2025-03-08 09:30:00: Projector usage: 0.0 hours.\n\nThere is no instance where the projector was used.', 'sources': [{'content': 'At 2025-03-03 07:30:00, the room was occupied with 1 people. Energy consumption: 0.18 kWh. Lighting power: 60W, HVAC power: 35W, Standby power: 25W, Total power: 200W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 35.5°C, Humidity: 68%.', 'metadata': {'humidity': 68.0, 'energy_kwh': 0.18, 'temperature': 35.5, 'doc_hash': '039f0029dbc1e4ad7ac4271664e3e7cf', 'power_total': 200.0, 'timestamp': '2025-03-03 07:30:00', 'occupancy_count': 1}}, {'content': 'At 2025-03-07 08:00:00, the room was occupied with 3 people. Energy consumption: 0.4 kWh. Lighting power: 80W, HVAC power: 80W, Standby power: 28W, Total power: 588W. Lights usage: 1.0 hours, AC usage: 0.5 hours, Projector usage: 0.0 hours, Computers usage: 1.0 hours. Temperature: 24.0°C, Humidity: 65%.', 'metadata': {'energy_kwh': 0.4, 'power_total': 588.0, 'timestamp': '2025-03-07 08:00:00', 'doc_hash': '84a4d0c02c1cea0ea6466254b1875a1c', 'humidity': 65.0, 'temperature': 24.0, 'occupancy_count': 3}}, {'content': 'At 2025-03-09 08:00:00, the room was occupied with 1 people. Energy consumption: 0.15 kWh. Lighting power: 50W, HVAC power: 30W, Standby power: 25W, Total power: 165W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 25.5°C, Humidity: 69%.', 'metadata': {'energy_kwh': 0.15, 'occupancy_count': 1, 'doc_hash': '427d68ed8ef68c1b0ac5201c89337483', 'humidity': 69.0, 'power_total': 165.0, 'temperature': 25.5, 'timestamp': '2025-03-09 08:00:00'}}, {'content': 'At 2025-03-08 09:30:00, the room was occupied with 2 people. Energy consumption: 0.3 kWh. Lighting power: 70W, HVAC power: 60W, Standby power: 25W, Total power: 435W. Lights usage: 1.0 hours, AC usage: 0.5 hours, Projector usage: 0.0 hours, Computers usage: 1.5 hours. Temperature: 24.0°C, Humidity: 65%.', 'metadata': {'humidity': 65.0, 'energy_kwh': 0.3, 'doc_hash': '3e58cc5386912dbb967597245ae24a4f', 'timestamp': '2025-03-08 09:30:00', 'power_total': 435.0, 'temperature': 24.0, 'occupancy_count': 2}}]}
+2025-08-26 18:43:42,444 - INFO - Loaded 14 existing document hashes
+2025-08-26 18:43:42,470 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-26 18:43:42,472 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-26 18:43:42,472 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-26 18:43:42,472 - INFO - Skipping duplicate document with hash 7daed89170eb98839e618a5a11b933cf
+2025-08-26 18:43:42,472 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-26 18:43:42,473 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-26 18:43:42,473 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-26 18:43:42,473 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-26 18:43:42,473 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-26 18:43:42,474 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-26 18:43:42,474 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-26 18:43:42,474 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-26 18:43:42,474 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-26 18:43:42,474 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-26 18:43:42,475 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-26 18:43:42,475 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-26 18:43:42,475 - INFO - Loading existing vector store
+2025-08-26 18:43:43,659 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-26 18:43:44,090 - INFO - No new documents to add to vector store
+2025-08-26 18:43:44,589 - INFO - QA chain initialized successfully
+2025-08-26 18:43:44,589 - INFO - Analyzer initialized successfully
+2025-08-26 18:45:01,984 - INFO - Received query: what is the projector data, lowest temperature and lowest power, highest power, in the room?
+2025-08-26 18:45:01,988 - INFO - Used deterministic handler for query: 'what is the projector data, lowest temperature and lowest power, highest power, in the room?'
+2025-08-26 18:45:01,988 - INFO - Response: {'answer': 'The lowest temperature_celsius is 15.0 at 2025-03-03 12:30:00. The lowest total is 165 at 2025-03-09 08:00:00. The highest total is 1775 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-03 12:30:00, the room was occupied with 8 people. Energy consumption: 0.8 kWh. Lighting power: 120W, HVAC power: 120W, Standby power: 40W, Total power: 1600W. Lights usage: 5.5 hours, AC usage: 4.0 hours, Projector usage: 2.5 hours, Computers usage: 5.0 hours. Temperature: 15.0°C, Humidity: 58%.', 'metadata': {'timestamp': '2025-03-03 12:30:00', 'occupancy_count': 8, 'energy_kwh': 0.8, 'power_total': 1600.0, 'temperature': 15.0, 'humidity': 58.0, 'doc_hash': '7daed89170eb98839e618a5a11b933cf'}}, {'content': 'At 2025-03-09 08:00:00, the room was occupied with 1 people. Energy consumption: 0.15 kWh. Lighting power: 50W, HVAC power: 30W, Standby power: 25W, Total power: 165W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 25.5°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-09 08:00:00', 'occupancy_count': 1, 'energy_kwh': 0.15, 'power_total': 165.0, 'temperature': 25.5, 'humidity': 69.0, 'doc_hash': '427d68ed8ef68c1b0ac5201c89337483'}}, {'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-26 18:45:07,102 - INFO - Received query: what is the projector data, lowest temperature and lowest power, highest power, in the room?
+2025-08-26 18:45:07,105 - INFO - Used deterministic handler for query: 'what is the projector data, lowest temperature and lowest power, highest power, in the room?'
+2025-08-26 18:45:07,105 - INFO - Response: {'answer': 'The lowest temperature_celsius is 15.0 at 2025-03-03 12:30:00. The lowest total is 165 at 2025-03-09 08:00:00. The highest total is 1775 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-03 12:30:00, the room was occupied with 8 people. Energy consumption: 0.8 kWh. Lighting power: 120W, HVAC power: 120W, Standby power: 40W, Total power: 1600W. Lights usage: 5.5 hours, AC usage: 4.0 hours, Projector usage: 2.5 hours, Computers usage: 5.0 hours. Temperature: 15.0°C, Humidity: 58%.', 'metadata': {'timestamp': '2025-03-03 12:30:00', 'occupancy_count': 8, 'energy_kwh': 0.8, 'power_total': 1600.0, 'temperature': 15.0, 'humidity': 58.0, 'doc_hash': '7daed89170eb98839e618a5a11b933cf'}}, {'content': 'At 2025-03-09 08:00:00, the room was occupied with 1 people. Energy consumption: 0.15 kWh. Lighting power: 50W, HVAC power: 30W, Standby power: 25W, Total power: 165W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 25.5°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-09 08:00:00', 'occupancy_count': 1, 'energy_kwh': 0.15, 'power_total': 165.0, 'temperature': 25.5, 'humidity': 69.0, 'doc_hash': '427d68ed8ef68c1b0ac5201c89337483'}}, {'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-26 18:45:23,117 - INFO - Received query: how many dataset in room_logs
+2025-08-26 18:45:23,122 - INFO - Used deterministic handler for query: 'how many dataset in room_logs'
+2025-08-26 18:45:23,122 - INFO - Response: {'answer': 'There are 14 occupied room records in the dataset.', 'sources': [{'content': 'At 2025-03-03 12:30:00, the room was occupied with 8 people. Energy consumption: 0.8 kWh. Lighting power: 120W, HVAC power: 120W, Standby power: 40W, Total power: 1600W. Lights usage: 5.5 hours, AC usage: 4.0 hours, Projector usage: 2.5 hours, Computers usage: 5.0 hours. Temperature: 15.0°C, Humidity: 58%.', 'metadata': {'timestamp': '2025-03-03 12:30:00', 'occupancy_count': 8, 'energy_kwh': 0.8, 'power_total': 1600.0, 'temperature': 15.0, 'humidity': 58.0, 'doc_hash': '7daed89170eb98839e618a5a11b933cf'}}, {'content': 'At 2025-03-05 09:00:00, the room was occupied with 6 people. Energy consumption: 0.62 kWh. Lighting power: 105W, HVAC power: 115W, Standby power: 32W, Total power: 1242W. Lights usage: 2.5 hours, AC usage: 2.0 hours, Projector usage: 1.5 hours, Computers usage: 2.5 hours. Temperature: 22.8°C, Humidity: 60%.', 'metadata': {'timestamp': '2025-03-05 09:00:00', 'occupancy_count': 6, 'energy_kwh': 0.62, 'power_total': 1242.0, 'temperature': 22.8, 'humidity': 60.0, 'doc_hash': '839368bf0f1e6e8b76c384d0c600d7bd'}}, {'content': 'At 2025-03-04 08:00:00, the room was occupied with 4 people. Energy consumption: 0.58 kWh. Lighting power: 90W, HVAC power: 100W, Standby power: 30W, Total power: 940W. Lights usage: 1.0 hours, AC usage: 1.0 hours, Projector usage: 0.0 hours, Computers usage: 1.5 hours. Temperature: 23.2°C, Humidity: 61%.', 'metadata': {'timestamp': '2025-03-04 08:00:00', 'occupancy_count': 4, 'energy_kwh': 0.58, 'power_total': 940.0, 'temperature': 23.2, 'humidity': 61.0, 'doc_hash': 'aa84f0e544e749533aeb890982607a7f'}}]}
+2025-08-26 18:45:44,595 - INFO - Loaded 14 existing document hashes
+2025-08-26 18:45:44,604 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-26 18:45:44,604 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-26 18:45:44,605 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-26 18:45:44,605 - INFO - Skipping duplicate document with hash 7daed89170eb98839e618a5a11b933cf
+2025-08-26 18:45:44,605 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-26 18:45:44,605 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-26 18:45:44,605 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-26 18:45:44,606 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-26 18:45:44,606 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-26 18:45:44,606 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-26 18:45:44,606 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-26 18:45:44,606 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-26 18:45:44,606 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-26 18:45:44,607 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-26 18:45:44,607 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-26 18:45:44,607 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-26 18:45:44,607 - INFO - Resetting vector store
+2025-08-26 18:45:44,612 - INFO - Creating new vector store
+2025-08-26 18:45:45,128 - ERROR - Error initializing vector store: name 'document' is not defined
+2025-08-26 18:45:45,128 - ERROR - Error initializing analyzer: name 'document' is not defined
+2025-08-26 18:45:54,062 - INFO - Loaded 0 existing document hashes
+2025-08-26 18:45:54,070 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-26 18:45:54,072 - INFO - Created 14 new documents, skipped 0 duplicates
+2025-08-26 18:45:54,072 - INFO - Resetting vector store
+2025-08-26 18:45:54,073 - INFO - Creating new vector store
+2025-08-26 18:45:54,596 - ERROR - Error initializing vector store: name 'document' is not defined
+2025-08-26 18:45:54,596 - ERROR - Error initializing analyzer: name 'document' is not defined
+2025-08-26 18:45:56,783 - INFO - Received query: how many dataset in room_logs
+2025-08-26 18:45:56,783 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-26 18:45:56,784 - ERROR - Error from main.ask: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-26 18:45:56,784 - ERROR - Error processing request: 500: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-26 18:46:06,061 - INFO - Loaded 0 existing document hashes
+2025-08-26 18:46:06,070 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-26 18:46:06,072 - INFO - Created 14 new documents, skipped 0 duplicates
+2025-08-26 18:46:06,073 - INFO - Loading existing vector store
+2025-08-26 18:46:06,960 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-26 18:46:07,106 - INFO - Adding 14 new documents to existing vector store
+2025-08-26 18:46:09,460 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-26 18:46:10,055 - INFO - QA chain initialized successfully
+2025-08-26 18:46:10,055 - INFO - Analyzer initialized successfully
+2025-08-26 18:46:41,607 - INFO - Received query: how many dataset in room_logs
+2025-08-26 18:46:41,609 - INFO - Used deterministic handler for query: 'how many dataset in room_logs'
+2025-08-26 18:46:41,609 - INFO - Response: {'answer': 'There are 14 occupied room records in the dataset.', 'sources': [{'content': 'At 2025-03-08 09:30:00, the room was occupied with 2 people. Energy consumption: 0.3 kWh. Lighting power: 70W, HVAC power: 60W, Standby power: 25W, Total power: 435W. Lights usage: 1.0 hours, AC usage: 0.5 hours, Projector usage: 0.0 hours, Computers usage: 1.5 hours. Temperature: 24.0°C, Humidity: 65%.', 'metadata': {'timestamp': '2025-03-08 09:30:00', 'occupancy_count': 2, 'energy_kwh': 0.3, 'power_total': 435.0, 'temperature': 24.0, 'humidity': 65.0, 'doc_hash': '3e58cc5386912dbb967597245ae24a4f'}}, {'content': 'At 2025-03-06 08:30:00, the room was occupied with 5 people. Energy consumption: 0.57 kWh. Lighting power: 95W, HVAC power: 105W, Standby power: 30W, Total power: 1135W. Lights usage: 1.5 hours, AC usage: 1.0 hours, Projector usage: 0.5 hours, Computers usage: 2.0 hours. Temperature: 23.1°C, Humidity: 60%.', 'metadata': {'timestamp': '2025-03-06 08:30:00', 'occupancy_count': 5, 'energy_kwh': 0.57, 'power_total': 1135.0, 'temperature': 23.1, 'humidity': 60.0, 'doc_hash': 'a03895c40d8b7e2b81eef012c0c7083f'}}, {'content': 'At 2025-03-04 17:30:00, the room was occupied with 2 people. Energy consumption: 0.35 kWh. Lighting power: 70W, HVAC power: 70W, Standby power: 28W, Total power: 508W. Lights usage: 10.5 hours, AC usage: 9.0 hours, Projector usage: 3.0 hours, Computers usage: 10.0 hours. Temperature: 24.2°C, Humidity: 63%.', 'metadata': {'timestamp': '2025-03-04 17:30:00', 'occupancy_count': 2, 'energy_kwh': 0.35, 'power_total': 508.0, 'temperature': 24.2, 'humidity': 63.0, 'doc_hash': '6554edd9d7d9b815a8a0ecaf771e72de'}}]}
+2025-08-28 18:50:38,004 - INFO - Loaded 14 existing document hashes
+2025-08-28 18:50:38,005 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:50:38,031 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 18:50:38,032 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:50:38,032 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:50:38,033 - INFO - Skipping duplicate document with hash 7daed89170eb98839e618a5a11b933cf
+2025-08-28 18:50:38,033 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:50:38,033 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:50:38,033 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:50:38,033 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:50:38,034 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:50:38,034 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:50:38,034 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:50:38,034 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:50:38,034 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:50:38,035 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:50:38,035 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:50:38,035 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 18:50:38,035 - INFO - Loading existing vector store
+2025-08-28 18:50:39,325 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:50:40,225 - INFO - No new documents to add to vector store
+2025-08-28 18:50:40,765 - INFO - QA chain initialized successfully
+2025-08-28 18:50:40,766 - INFO - Analyzer initialized successfully
+2025-08-28 18:51:03,119 - INFO - Loaded 14 existing document hashes
+2025-08-28 18:51:03,119 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:51:03,129 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 18:51:03,130 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:51:03,130 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:51:03,130 - INFO - Skipping duplicate document with hash 7daed89170eb98839e618a5a11b933cf
+2025-08-28 18:51:03,131 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:51:03,131 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:51:03,131 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:51:03,131 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:51:03,131 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:51:03,132 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:51:03,132 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:51:03,132 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:51:03,132 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:51:03,133 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:51:03,133 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:51:03,133 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 18:51:03,133 - INFO - Resetting vector store
+2025-08-28 18:51:03,138 - INFO - Creating new vector store
+2025-08-28 18:51:04,116 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:51:06,354 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:51:06,354 - ERROR - Error initializing vector store: Expected Embeddings to be non-empty list or numpy array, got [] in upsert.
+2025-08-28 18:51:06,355 - ERROR - Error initializing analyzer: Expected Embeddings to be non-empty list or numpy array, got [] in upsert.
+2025-08-28 18:51:18,678 - INFO - Loaded 0 existing document hashes
+2025-08-28 18:51:18,679 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:51:18,688 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 18:51:18,691 - INFO - Created 14 new documents, skipped 0 duplicates
+2025-08-28 18:51:18,691 - INFO - Loading existing vector store
+2025-08-28 18:51:19,641 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:51:19,760 - INFO - Adding 14 new documents to existing vector store
+2025-08-28 18:51:20,420 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:51:21,099 - INFO - QA chain initialized successfully
+2025-08-28 18:51:21,099 - INFO - Analyzer initialized successfully
+2025-08-28 18:52:23,054 - INFO - Received query: how many dataset in room_logs
+2025-08-28 18:52:23,055 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:52:23,071 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 18:52:23,072 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:52:23,072 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:52:23,073 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:52:23,073 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:52:23,073 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:52:23,074 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:52:23,074 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:52:23,074 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:52:23,074 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:52:23,075 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:52:23,075 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:52:23,075 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:52:23,075 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:52:23,075 - INFO - Created 1 new documents, skipped 13 duplicates
+2025-08-28 18:52:23,075 - INFO - Adding 1 new documents due to data changes
+2025-08-28 18:52:23,114 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:52:23,130 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:52:23,133 - INFO - Used deterministic handler for query: 'how many dataset in room_logs'
+2025-08-28 18:52:23,133 - INFO - Response: {'answer': 'There are 14 occupied room records in the dataset.', 'sources': [{'content': 'At 2025-03-07 08:00:00, the room was occupied with 3 people. Energy consumption: 0.4 kWh. Lighting power: 80W, HVAC power: 80W, Standby power: 28W, Total power: 588W. Lights usage: 1.0 hours, AC usage: 0.5 hours, Projector usage: 0.0 hours, Computers usage: 1.0 hours. Temperature: 24.0°C, Humidity: 65%.', 'metadata': {'timestamp': '2025-03-07 08:00:00', 'occupancy_count': 3, 'energy_kwh': 0.4, 'power_total': 588.0, 'temperature': 24.0, 'humidity': 65.0, 'doc_hash': '84a4d0c02c1cea0ea6466254b1875a1c'}}, {'content': 'At 2025-03-04 08:00:00, the room was occupied with 4 people. Energy consumption: 0.58 kWh. Lighting power: 90W, HVAC power: 100W, Standby power: 30W, Total power: 940W. Lights usage: 1.0 hours, AC usage: 1.0 hours, Projector usage: 0.0 hours, Computers usage: 1.5 hours. Temperature: 23.2°C, Humidity: 61%.', 'metadata': {'timestamp': '2025-03-04 08:00:00', 'occupancy_count': 4, 'energy_kwh': 0.58, 'power_total': 940.0, 'temperature': 23.2, 'humidity': 61.0, 'doc_hash': 'aa84f0e544e749533aeb890982607a7f'}}, {'content': 'At 2025-03-03 07:30:00, the room was occupied with 1 people. Energy consumption: 0.18 kWh. Lighting power: 60W, HVAC power: 35W, Standby power: 25W, Total power: 200W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 35.5°C, Humidity: 68%.', 'metadata': {'timestamp': '2025-03-03 07:30:00', 'occupancy_count': 1, 'energy_kwh': 0.18, 'power_total': 200.0, 'temperature': 35.5, 'humidity': 68.0, 'doc_hash': '039f0029dbc1e4ad7ac4271664e3e7cf'}}]}
+2025-08-28 18:52:45,154 - INFO - Received query: what is the highest in room_logs
+2025-08-28 18:52:45,154 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:52:45,155 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:52:45,155 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:52:45,155 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:52:45,156 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:52:45,156 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:52:45,156 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:52:45,156 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:52:45,157 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:52:45,157 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:52:45,157 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:52:45,157 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:52:45,158 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:52:45,158 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:52:45,158 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:52:45,158 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 18:52:45,159 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:52:45,263 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:52:51,564 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 18:52:53,096 - INFO - Query: 'what is the highest in room_logs' - Response generated using LLM
+2025-08-28 18:52:53,096 - INFO - Response: {'answer': 'Based on the provided data, I can answer the question as follows:\n\nWhat is the highest in room_logs?\n\nThe highest energy consumption recorded in the logs is 0.4 kWh, which occurred at 2025-03-07 08:00:00 when the room was occupied with 3 people.\n\nSo, the correct answer is:\n\n0.4 kWh', 'sources': [{'content': 'At 2025-03-03 07:30:00, the room was occupied with 1 people. Energy consumption: 0.18 kWh. Lighting power: 60W, HVAC power: 35W, Standby power: 25W, Total power: 200W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 35.5°C, Humidity: 68%.', 'metadata': {'occupancy_count': 1, 'temperature': 35.5, 'doc_hash': '039f0029dbc1e4ad7ac4271664e3e7cf', 'energy_kwh': 0.18, 'humidity': 68.0, 'timestamp': '2025-03-03 07:30:00', 'power_total': 200.0}}, {'content': 'At 2025-03-09 08:00:00, the room was occupied with 1 people. Energy consumption: 0.15 kWh. Lighting power: 50W, HVAC power: 30W, Standby power: 25W, Total power: 165W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 25.5°C, Humidity: 69%.', 'metadata': {'doc_hash': '427d68ed8ef68c1b0ac5201c89337483', 'power_total': 165.0, 'humidity': 69.0, 'energy_kwh': 0.15, 'temperature': 25.5, 'occupancy_count': 1, 'timestamp': '2025-03-09 08:00:00'}}, {'content': 'At 2025-03-07 08:00:00, the room was occupied with 3 people. Energy consumption: 0.4 kWh. Lighting power: 80W, HVAC power: 80W, Standby power: 28W, Total power: 588W. Lights usage: 1.0 hours, AC usage: 0.5 hours, Projector usage: 0.0 hours, Computers usage: 1.0 hours. Temperature: 24.0°C, Humidity: 65%.', 'metadata': {'temperature': 24.0, 'power_total': 588.0, 'humidity': 65.0, 'energy_kwh': 0.4, 'occupancy_count': 3, 'timestamp': '2025-03-07 08:00:00', 'doc_hash': '84a4d0c02c1cea0ea6466254b1875a1c'}}, {'content': 'At 2025-03-08 09:30:00, the room was occupied with 2 people. Energy consumption: 0.3 kWh. Lighting power: 70W, HVAC power: 60W, Standby power: 25W, Total power: 435W. Lights usage: 1.0 hours, AC usage: 0.5 hours, Projector usage: 0.0 hours, Computers usage: 1.5 hours. Temperature: 24.0°C, Humidity: 65%.', 'metadata': {'occupancy_count': 2, 'humidity': 65.0, 'power_total': 435.0, 'timestamp': '2025-03-08 09:30:00', 'energy_kwh': 0.3, 'doc_hash': '3e58cc5386912dbb967597245ae24a4f', 'temperature': 24.0}}]}
+2025-08-28 18:53:06,882 - INFO - Received query: what is the highest power in room_logs
+2025-08-28 18:53:06,882 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:53:06,883 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:53:06,883 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:53:06,883 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:53:06,884 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:53:06,884 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:53:06,884 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:53:06,884 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:53:06,885 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:53:06,885 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:53:06,885 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:53:06,885 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:53:06,886 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:53:06,886 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:53:06,886 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:53:06,886 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 18:53:06,886 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:53:06,955 - INFO - Used deterministic handler for query: 'what is the highest power in room_logs'
+2025-08-28 18:53:06,955 - INFO - Response: {'answer': 'The highest total is 1775 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-28 18:57:51,948 - INFO - Loaded 15 existing document hashes
+2025-08-28 18:57:51,948 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:57:51,968 - INFO - Loaded 26 unique room records after deduplication
+2025-08-28 18:57:51,969 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:57:51,970 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:57:51,970 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:57:51,971 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:57:51,971 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:57:51,971 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:57:51,972 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:57:51,972 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:57:51,973 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:57:51,973 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:57:51,973 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:57:51,973 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:57:51,974 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:57:51,975 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:57:51,975 - INFO - Created 12 new documents, skipped 14 duplicates
+2025-08-28 18:57:51,975 - INFO - Resetting vector store
+2025-08-28 18:57:51,978 - INFO - Creating new vector store
+2025-08-28 18:57:52,974 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:57:54,324 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:57:54,956 - INFO - QA chain initialized successfully
+2025-08-28 18:57:54,956 - INFO - Analyzer initialized successfully
+2025-08-28 18:59:01,465 - INFO - Loaded 0 existing document hashes
+2025-08-28 18:59:01,465 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:59:01,473 - INFO - Loaded 26 unique room records after deduplication
+2025-08-28 18:59:01,478 - INFO - Created 26 new documents, skipped 0 duplicates
+2025-08-28 18:59:01,478 - INFO - Loading existing vector store
+2025-08-28 18:59:02,416 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:59:02,606 - INFO - Adding 14 new documents to existing vector store
+2025-08-28 18:59:02,795 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:59:03,337 - INFO - QA chain initialized successfully
+2025-08-28 18:59:03,338 - INFO - Analyzer initialized successfully
+2025-08-28 18:59:12,143 - INFO - Loaded 26 existing document hashes
+2025-08-28 18:59:12,143 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:59:12,151 - INFO - Loaded 26 unique room records after deduplication
+2025-08-28 18:59:12,152 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 18:59:12,152 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 18:59:12,152 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:59:12,153 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:59:12,153 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:59:12,153 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 18:59:12,154 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 18:59:12,154 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:59:12,154 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:59:12,154 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:59:12,154 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 18:59:12,155 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:59:12,155 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:59:12,155 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 18:59:12,155 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:59:12,156 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:59:12,156 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 18:59:12,156 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:59:12,156 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:59:12,157 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 18:59:12,157 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 18:59:12,157 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:59:12,157 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 18:59:12,157 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:59:12,158 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 18:59:12,158 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 18:59:12,158 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 18:59:12,158 - INFO - Resetting vector store
+2025-08-28 18:59:12,163 - INFO - Creating new vector store
+2025-08-28 18:59:13,057 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:59:13,198 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:59:13,198 - ERROR - Error initializing vector store: Expected Embeddings to be non-empty list or numpy array, got [] in upsert.
+2025-08-28 18:59:13,198 - ERROR - Error initializing analyzer: Expected Embeddings to be non-empty list or numpy array, got [] in upsert.
+2025-08-28 18:59:19,330 - INFO - Received query: how many records are there?
+2025-08-28 18:59:19,330 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-28 18:59:19,331 - ERROR - Error from main.ask: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-28 18:59:19,331 - ERROR - Error processing request: 500: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-28 18:59:21,048 - INFO - Received query: how many records are there?
+2025-08-28 18:59:21,048 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-28 18:59:21,048 - ERROR - Error from main.ask: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-28 18:59:21,049 - ERROR - Error processing request: 500: QA chain not initialized. Call initialize_qa_chain() first.
+2025-08-28 18:59:25,073 - INFO - Loaded 0 existing document hashes
+2025-08-28 18:59:25,073 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:59:25,081 - INFO - Loaded 26 unique room records after deduplication
+2025-08-28 18:59:25,086 - INFO - Created 26 new documents, skipped 0 duplicates
+2025-08-28 18:59:25,086 - INFO - Resetting vector store
+2025-08-28 18:59:25,087 - INFO - Creating new vector store
+2025-08-28 18:59:26,018 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:59:26,611 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 18:59:27,271 - INFO - QA chain initialized successfully
+2025-08-28 18:59:27,272 - INFO - Analyzer initialized successfully
+2025-08-28 18:59:33,057 - INFO - Loaded 0 existing document hashes
+2025-08-28 18:59:33,057 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 18:59:33,065 - INFO - Loaded 26 unique room records after deduplication
+2025-08-28 18:59:33,070 - INFO - Created 26 new documents, skipped 0 duplicates
+2025-08-28 18:59:33,070 - INFO - Loading existing vector store
+2025-08-28 18:59:33,983 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 18:59:34,160 - INFO - No new documents to add to vector store
+2025-08-28 18:59:34,678 - INFO - QA chain initialized successfully
+2025-08-28 18:59:34,678 - INFO - Analyzer initialized successfully
+2025-08-28 18:59:34,681 - INFO - Received query: how many records are there?
+2025-08-28 18:59:34,681 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:34,682 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 18:59:34,682 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 18:59:34,682 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:59:34,682 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:59:34,683 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:59:34,683 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 18:59:34,683 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 18:59:34,683 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:59:34,684 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:59:34,684 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:59:34,684 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 18:59:34,684 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:59:34,685 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:59:34,685 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 18:59:34,685 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:59:34,685 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:59:34,686 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 18:59:34,686 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:59:34,686 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:59:34,686 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 18:59:34,687 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 18:59:34,687 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:59:34,687 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 18:59:34,687 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:59:34,688 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 18:59:34,688 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 18:59:34,688 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 18:59:34,688 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:34,694 - INFO - Used deterministic handler for query: 'how many records are there?'
+2025-08-28 18:59:34,694 - INFO - Response: {'answer': 'There are 26 room records in the dataset.', 'sources': [{'content': 'At 2025-03-03 07:30:00, the room was occupied with 1 people. Energy consumption: 0.18 kWh. Lighting power: 60W, HVAC power: 35W, Standby power: 25W, Total power: 200W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 35.5°C, Humidity: 68%.', 'metadata': {'timestamp': '2025-03-03 07:30:00', 'occupancy_count': 1, 'energy_kwh': 0.18, 'power_total': 200.0, 'temperature': 35.5, 'humidity': 68.0, 'doc_hash': '039f0029dbc1e4ad7ac4271664e3e7cf'}}, {'content': 'At 2025-03-09 08:00:00, the room was occupied with 1 people. Energy consumption: 0.15 kWh. Lighting power: 50W, HVAC power: 30W, Standby power: 25W, Total power: 165W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 25.5°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-09 08:00:00', 'occupancy_count': 1, 'energy_kwh': 0.15, 'power_total': 165.0, 'temperature': 25.5, 'humidity': 69.0, 'doc_hash': '427d68ed8ef68c1b0ac5201c89337483'}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-09 11:00:00', 'occupancy_count': 0, 'energy_kwh': 0.06, 'power_total': 50.0, 'temperature': 26.0, 'humidity': 70.0, 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5'}}]}
+2025-08-28 18:59:55,704 - INFO - Received query: What is the highest power is the room?
+2025-08-28 18:59:55,705 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:55,706 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 18:59:55,706 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 18:59:55,706 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:59:55,706 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:59:55,707 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:59:55,707 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 18:59:55,707 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 18:59:55,707 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:59:55,708 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:59:55,708 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:59:55,708 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 18:59:55,708 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:59:55,709 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:59:55,709 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 18:59:55,709 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:59:55,710 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:59:55,710 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 18:59:55,710 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:59:55,711 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:59:55,711 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 18:59:55,711 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 18:59:55,711 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:59:55,712 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 18:59:55,715 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:59:55,715 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 18:59:55,717 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 18:59:55,718 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 18:59:55,718 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:55,720 - INFO - Used deterministic handler for query: 'What is the highest power is the room?'
+2025-08-28 18:59:55,720 - INFO - Response: {'answer': 'The highest total is 1775 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-28 18:59:58,052 - INFO - Received query: What is the highest power is the room?
+2025-08-28 18:59:58,053 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:58,053 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 18:59:58,054 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 18:59:58,054 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:59:58,054 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:59:58,055 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:59:58,055 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 18:59:58,055 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 18:59:58,055 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:59:58,056 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:59:58,056 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:59:58,056 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 18:59:58,056 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:59:58,057 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:59:58,057 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 18:59:58,057 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:59:58,058 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:59:58,058 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 18:59:58,058 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:59:58,058 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:59:58,059 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 18:59:58,059 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 18:59:58,059 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:59:58,060 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 18:59:58,060 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:59:58,060 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 18:59:58,061 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 18:59:58,061 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 18:59:58,061 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:58,062 - INFO - Used deterministic handler for query: 'What is the highest power is the room?'
+2025-08-28 18:59:58,063 - INFO - Response: {'answer': 'The highest total is 1775 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-28 18:59:58,799 - INFO - Received query: What is the highest power is the room?
+2025-08-28 18:59:58,800 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:58,800 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 18:59:58,801 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 18:59:58,801 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 18:59:58,801 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 18:59:58,802 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 18:59:58,802 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 18:59:58,802 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 18:59:58,803 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 18:59:58,803 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 18:59:58,803 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 18:59:58,803 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 18:59:58,804 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 18:59:58,804 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 18:59:58,804 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 18:59:58,805 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 18:59:58,805 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 18:59:58,805 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 18:59:58,805 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 18:59:58,806 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 18:59:58,806 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 18:59:58,806 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 18:59:58,807 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 18:59:58,807 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 18:59:58,807 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 18:59:58,807 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 18:59:58,808 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 18:59:58,808 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 18:59:58,808 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 18:59:58,809 - INFO - Used deterministic handler for query: 'What is the highest power is the room?'
+2025-08-28 18:59:58,809 - INFO - Response: {'answer': 'The highest total is 1775 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-28 19:00:04,131 - INFO - Received query: What is the lowest power is the room?
+2025-08-28 19:00:04,131 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:04,132 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 19:00:04,132 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 19:00:04,133 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:00:04,133 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:00:04,133 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:00:04,134 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 19:00:04,134 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 19:00:04,134 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:00:04,135 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:00:04,135 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:00:04,135 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 19:00:04,136 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:00:04,136 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:00:04,136 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 19:00:04,136 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:00:04,137 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:00:04,137 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 19:00:04,137 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:00:04,137 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:00:04,138 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 19:00:04,138 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 19:00:04,138 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:00:04,139 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 19:00:04,139 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:00:04,139 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 19:00:04,140 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 19:00:04,140 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 19:00:04,140 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:04,142 - INFO - Used deterministic handler for query: 'What is the lowest power is the room?'
+2025-08-28 19:00:04,142 - INFO - Response: {'answer': 'The lowest total is 40 at 2025-03-03 21:00:00, 2025-03-05 20:00:00....', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-03 21:00:00', 'occupancy_count': 0, 'energy_kwh': 0.06, 'power_total': 40.0, 'temperature': 25.8, 'humidity': 70.0, 'doc_hash': '22267cabd7aeda224fcb012d86755706'}}, {'content': 'At 2025-03-05 20:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 10.0 hours, Projector usage: 3.5 hours, Computers usage: 13.0 hours. Temperature: 25.0°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-05 20:00:00', 'occupancy_count': 0, 'energy_kwh': 0.05, 'power_total': 40.0, 'temperature': 25.0, 'humidity': 69.0, 'doc_hash': 'fc7b37cafdb44bba6d279680e4547eb6'}}]}
+2025-08-28 19:00:05,737 - INFO - Received query: What is the lowest power is the room?
+2025-08-28 19:00:05,737 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:05,738 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 19:00:05,738 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 19:00:05,738 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:00:05,739 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:00:05,739 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:00:05,739 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 19:00:05,739 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 19:00:05,740 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:00:05,740 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:00:05,740 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:00:05,741 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 19:00:05,741 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:00:05,741 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:00:05,742 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 19:00:05,742 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:00:05,742 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:00:05,742 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 19:00:05,743 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:00:05,743 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:00:05,743 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 19:00:05,743 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 19:00:05,744 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:00:05,744 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 19:00:05,744 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:00:05,744 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 19:00:05,745 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 19:00:05,745 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 19:00:05,745 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:05,747 - INFO - Used deterministic handler for query: 'What is the lowest power is the room?'
+2025-08-28 19:00:05,747 - INFO - Response: {'answer': 'The lowest total is 40 at 2025-03-03 21:00:00, 2025-03-05 20:00:00....', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-03 21:00:00', 'occupancy_count': 0, 'energy_kwh': 0.06, 'power_total': 40.0, 'temperature': 25.8, 'humidity': 70.0, 'doc_hash': '22267cabd7aeda224fcb012d86755706'}}, {'content': 'At 2025-03-05 20:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 10.0 hours, Projector usage: 3.5 hours, Computers usage: 13.0 hours. Temperature: 25.0°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-05 20:00:00', 'occupancy_count': 0, 'energy_kwh': 0.05, 'power_total': 40.0, 'temperature': 25.0, 'humidity': 69.0, 'doc_hash': 'fc7b37cafdb44bba6d279680e4547eb6'}}]}
+2025-08-28 19:00:29,384 - INFO - Received query: What is the lowest power and highest temperature is the room?
+2025-08-28 19:00:29,384 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:29,385 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 19:00:29,385 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 19:00:29,385 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:00:29,386 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:00:29,386 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:00:29,386 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 19:00:29,387 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 19:00:29,387 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:00:29,387 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:00:29,387 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:00:29,388 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 19:00:29,388 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:00:29,388 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:00:29,388 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 19:00:29,389 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:00:29,389 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:00:29,389 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 19:00:29,390 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:00:29,390 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:00:29,390 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 19:00:29,391 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 19:00:29,391 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:00:29,391 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 19:00:29,391 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:00:29,392 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 19:00:29,392 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 19:00:29,392 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 19:00:29,392 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:29,397 - INFO - Used deterministic handler for query: 'What is the lowest power and highest temperature is the room?'
+2025-08-28 19:00:29,397 - INFO - Response: {'answer': 'The lowest total is 40 at 2025-03-03 21:00:00, 2025-03-05 20:00:00.... The highest temperature_celsius is 35.5 at 2025-03-03 07:30:00.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-03 21:00:00', 'occupancy_count': 0, 'energy_kwh': 0.06, 'power_total': 40.0, 'temperature': 25.8, 'humidity': 70.0, 'doc_hash': '22267cabd7aeda224fcb012d86755706'}}, {'content': 'At 2025-03-05 20:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 10.0 hours, Projector usage: 3.5 hours, Computers usage: 13.0 hours. Temperature: 25.0°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-05 20:00:00', 'occupancy_count': 0, 'energy_kwh': 0.05, 'power_total': 40.0, 'temperature': 25.0, 'humidity': 69.0, 'doc_hash': 'fc7b37cafdb44bba6d279680e4547eb6'}}, {'content': 'At 2025-03-03 07:30:00, the room was occupied with 1 people. Energy consumption: 0.18 kWh. Lighting power: 60W, HVAC power: 35W, Standby power: 25W, Total power: 200W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 35.5°C, Humidity: 68%.', 'metadata': {'timestamp': '2025-03-03 07:30:00', 'occupancy_count': 1, 'energy_kwh': 0.18, 'power_total': 200.0, 'temperature': 35.5, 'humidity': 68.0, 'doc_hash': '039f0029dbc1e4ad7ac4271664e3e7cf'}}]}
+2025-08-28 19:00:40,458 - INFO - Received query: What is the lowest power and highest,lowest temperature is the room?
+2025-08-28 19:00:40,458 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:40,459 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 19:00:40,459 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 19:00:40,459 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:00:40,460 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:00:40,460 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:00:40,460 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 19:00:40,461 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 19:00:40,461 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:00:40,461 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:00:40,462 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:00:40,462 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 19:00:40,462 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:00:40,462 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:00:40,463 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 19:00:40,463 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:00:40,463 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:00:40,464 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 19:00:40,464 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:00:40,464 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:00:40,464 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 19:00:40,465 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 19:00:40,465 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:00:40,465 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 19:00:40,466 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:00:40,466 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 19:00:40,466 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 19:00:40,466 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 19:00:40,466 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:40,469 - INFO - Used deterministic handler for query: 'What is the lowest power and highest,lowest temperature is the room?'
+2025-08-28 19:00:40,469 - INFO - Response: {'answer': 'The lowest total is 40 at 2025-03-03 21:00:00, 2025-03-05 20:00:00.... The lowest temperature_celsius is 15.0 at 2025-03-03 12:30:00.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-03 21:00:00', 'occupancy_count': 0, 'energy_kwh': 0.06, 'power_total': 40.0, 'temperature': 25.8, 'humidity': 70.0, 'doc_hash': '22267cabd7aeda224fcb012d86755706'}}, {'content': 'At 2025-03-05 20:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 10.0 hours, Projector usage: 3.5 hours, Computers usage: 13.0 hours. Temperature: 25.0°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-05 20:00:00', 'occupancy_count': 0, 'energy_kwh': 0.05, 'power_total': 40.0, 'temperature': 25.0, 'humidity': 69.0, 'doc_hash': 'fc7b37cafdb44bba6d279680e4547eb6'}}, {'content': 'At 2025-03-03 12:30:00, the room was occupied with 8 people. Energy consumption: 0.8 kWh. Lighting power: 120W, HVAC power: 120W, Standby power: 40W, Total power: 1600W. Lights usage: 5.5 hours, AC usage: 4.0 hours, Projector usage: 2.5 hours, Computers usage: 10.0 hours. Temperature: 15.0°C, Humidity: 58%.', 'metadata': {'timestamp': '2025-03-03 12:30:00', 'occupancy_count': 8, 'energy_kwh': 0.8, 'power_total': 1600.0, 'temperature': 15.0, 'humidity': 58.0, 'doc_hash': '0ccfb85963684ccafa13457920be69ac'}}]}
+2025-08-28 19:00:50,058 - INFO - Received query: What is the lowest power and highest and lowest temperature is the room?
+2025-08-28 19:00:50,058 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:50,059 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 19:00:50,059 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 19:00:50,059 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:00:50,060 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:00:50,060 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:00:50,060 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 19:00:50,060 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 19:00:50,061 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:00:50,061 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:00:50,061 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:00:50,062 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 19:00:50,062 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:00:50,062 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:00:50,062 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 19:00:50,063 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:00:50,063 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:00:50,063 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 19:00:50,064 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:00:50,064 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:00:50,064 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 19:00:50,064 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 19:00:50,065 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:00:50,065 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 19:00:50,065 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:00:50,065 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 19:00:50,066 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 19:00:50,066 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 19:00:50,066 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:00:50,068 - INFO - Used deterministic handler for query: 'What is the lowest power and highest and lowest temperature is the room?'
+2025-08-28 19:00:50,069 - INFO - Response: {'answer': 'The lowest total is 40 at 2025-03-03 21:00:00, 2025-03-05 20:00:00.... The lowest temperature_celsius is 15.0 at 2025-03-03 12:30:00.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-03 21:00:00', 'occupancy_count': 0, 'energy_kwh': 0.06, 'power_total': 40.0, 'temperature': 25.8, 'humidity': 70.0, 'doc_hash': '22267cabd7aeda224fcb012d86755706'}}, {'content': 'At 2025-03-05 20:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 10.0 hours, Projector usage: 3.5 hours, Computers usage: 13.0 hours. Temperature: 25.0°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-05 20:00:00', 'occupancy_count': 0, 'energy_kwh': 0.05, 'power_total': 40.0, 'temperature': 25.0, 'humidity': 69.0, 'doc_hash': 'fc7b37cafdb44bba6d279680e4547eb6'}}, {'content': 'At 2025-03-03 12:30:00, the room was occupied with 8 people. Energy consumption: 0.8 kWh. Lighting power: 120W, HVAC power: 120W, Standby power: 40W, Total power: 1600W. Lights usage: 5.5 hours, AC usage: 4.0 hours, Projector usage: 2.5 hours, Computers usage: 10.0 hours. Temperature: 15.0°C, Humidity: 58%.', 'metadata': {'timestamp': '2025-03-03 12:30:00', 'occupancy_count': 8, 'energy_kwh': 0.8, 'power_total': 1600.0, 'temperature': 15.0, 'humidity': 58.0, 'doc_hash': '0ccfb85963684ccafa13457920be69ac'}}]}
+2025-08-28 19:01:05,937 - INFO - Received query: what is the capital of canada
+2025-08-28 19:01:05,938 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:01:05,938 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 19:01:05,939 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 19:01:05,939 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:01:05,939 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:01:05,939 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:01:05,940 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 19:01:05,940 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 19:01:05,940 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:01:05,941 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:01:05,941 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:01:05,941 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 19:01:05,941 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:01:05,942 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:01:05,942 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 19:01:05,942 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:01:05,943 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:01:05,943 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 19:01:05,943 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:01:05,944 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:01:05,944 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 19:01:05,944 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 19:01:05,944 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:01:05,945 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 19:01:05,945 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:01:05,945 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 19:01:05,946 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 19:01:05,946 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 19:01:05,946 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:01:06,009 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:01:11,921 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:01:12,551 - INFO - Query: 'what is the capital of canada' - Response generated using LLM
+2025-08-28 19:01:12,551 - INFO - Response: {'answer': 'I cannot find this information in the data. The provided data does not contain any information about Canada or its capital. It only provides energy consumption data for a room.', 'sources': [{'content': 'At 2025-03-03 00:30:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.1°C, Humidity: 70%.', 'metadata': {'doc_hash': '7c9bbe7706a902823b181c34efe1d2b1', 'occupancy_count': 0, 'humidity': 70.0, 'timestamp': '2025-03-03 00:30:00', 'energy_kwh': 0.05, 'temperature': 25.1, 'power_total': 50.0}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'temperature': 25.0, 'doc_hash': '843a02888293d76cc41f8689e977c75a', 'humidity': 70.0, 'power_total': 50.0, 'energy_kwh': 0.05, 'occupancy_count': 0, 'timestamp': '2025-03-03 00:00:00'}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'occupancy_count': 0, 'power_total': 50.0, 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5', 'energy_kwh': 0.06, 'humidity': 70.0, 'temperature': 26.0, 'timestamp': '2025-03-09 11:00:00'}}, {'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'doc_hash': '22267cabd7aeda224fcb012d86755706', 'occupancy_count': 0, 'energy_kwh': 0.06, 'humidity': 70.0, 'power_total': 40.0, 'timestamp': '2025-03-03 21:00:00', 'temperature': 25.8}}]}
+2025-08-28 19:01:43,630 - INFO - Received query: what is the highest projectors on the room?
+2025-08-28 19:01:43,630 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:01:43,631 - INFO - Skipping duplicate document with hash 843a02888293d76cc41f8689e977c75a
+2025-08-28 19:01:43,631 - INFO - Skipping duplicate document with hash 7c9bbe7706a902823b181c34efe1d2b1
+2025-08-28 19:01:43,631 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:01:43,632 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:01:43,632 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:01:43,632 - INFO - Skipping duplicate document with hash 3211f4cbe2064c4457bc52df4a1eea4a
+2025-08-28 19:01:43,633 - INFO - Skipping duplicate document with hash 22267cabd7aeda224fcb012d86755706
+2025-08-28 19:01:43,633 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:01:43,633 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:01:43,633 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:01:43,634 - INFO - Skipping duplicate document with hash 209232e91969fa30a25915d7d96d11ec
+2025-08-28 19:01:43,634 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:01:43,634 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:01:43,634 - INFO - Skipping duplicate document with hash fc7b37cafdb44bba6d279680e4547eb6
+2025-08-28 19:01:43,635 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:01:43,635 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:01:43,635 - INFO - Skipping duplicate document with hash dd952ff73bff62392b804d1d5f79e37b
+2025-08-28 19:01:43,636 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:01:43,636 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:01:43,636 - INFO - Skipping duplicate document with hash 939671a700c5eb6a275aa52e7b9352ee
+2025-08-28 19:01:43,636 - INFO - Skipping duplicate document with hash eab079c994f6f09c554ae856455c7337
+2025-08-28 19:01:43,637 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:01:43,637 - INFO - Skipping duplicate document with hash f350fb61f863c39f00bc7240e1e46a99
+2025-08-28 19:01:43,637 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:01:43,638 - INFO - Skipping duplicate document with hash 5ee85dfff25bf9bc9c9f3fdb2f2550f5
+2025-08-28 19:01:43,638 - INFO - Skipping duplicate document with hash 7a0b3714ec5873b017b8962af13965e2
+2025-08-28 19:01:43,638 - INFO - Created 0 new documents, skipped 26 duplicates
+2025-08-28 19:01:43,638 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:01:43,817 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:01:44,298 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:01:46,643 - INFO - Query: 'what is the highest projectors on the room?' - Response generated using LLM
+2025-08-28 19:01:46,643 - INFO - Response: {'answer': 'I can answer this question!\n\nAccording to the data, Projector usage was measured for three instances:\n\n* At 2025-03-03 07:30:00: Projector usage: 0.0 hours\n* At 2025-03-07 08:00:00: Projector usage: 0.0 hours\n* At 2025-03-03 21:00:00: Projector usage: 2.5 hours\n\nThe highest projectors on the room is therefore **2.5 hours** at 2025-03-03 21:00:00 when the room was unoccupied.', 'sources': [{'content': 'At 2025-03-03 07:30:00, the room was occupied with 1 people. Energy consumption: 0.18 kWh. Lighting power: 60W, HVAC power: 35W, Standby power: 25W, Total power: 200W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 35.5°C, Humidity: 68%.', 'metadata': {'power_total': 200.0, 'temperature': 35.5, 'doc_hash': '039f0029dbc1e4ad7ac4271664e3e7cf', 'timestamp': '2025-03-03 07:30:00', 'energy_kwh': 0.18, 'occupancy_count': 1, 'humidity': 68.0}}, {'content': 'At 2025-03-07 08:00:00, the room was occupied with 3 people. Energy consumption: 0.4 kWh. Lighting power: 80W, HVAC power: 80W, Standby power: 28W, Total power: 588W. Lights usage: 1.0 hours, AC usage: 0.5 hours, Projector usage: 0.0 hours, Computers usage: 1.0 hours. Temperature: 24.0°C, Humidity: 65%.', 'metadata': {'temperature': 24.0, 'energy_kwh': 0.4, 'humidity': 65.0, 'power_total': 588.0, 'timestamp': '2025-03-07 08:00:00', 'doc_hash': '84a4d0c02c1cea0ea6466254b1875a1c', 'occupancy_count': 3}}, {'content': 'At 2025-03-09 08:00:00, the room was occupied with 1 people. Energy consumption: 0.15 kWh. Lighting power: 50W, HVAC power: 30W, Standby power: 25W, Total power: 165W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 25.5°C, Humidity: 69%.', 'metadata': {'energy_kwh': 0.15, 'humidity': 69.0, 'doc_hash': '427d68ed8ef68c1b0ac5201c89337483', 'power_total': 165.0, 'timestamp': '2025-03-09 08:00:00', 'occupancy_count': 1, 'temperature': 25.5}}, {'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'temperature': 25.8, 'timestamp': '2025-03-03 21:00:00', 'power_total': 40.0, 'humidity': 70.0, 'occupancy_count': 0, 'doc_hash': '22267cabd7aeda224fcb012d86755706', 'energy_kwh': 0.06}}]}
+2025-08-28 19:08:04,542 - INFO - Loaded 26 existing document hashes
+2025-08-28 19:08:04,543 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 19:08:04,552 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 19:08:04,552 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:08:04,553 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:08:04,553 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:08:04,553 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:08:04,553 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:08:04,554 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:08:04,554 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:08:04,554 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:08:04,554 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:08:04,555 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:08:04,555 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:08:04,555 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:08:04,555 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:08:04,556 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:08:04,556 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:08:04,556 - INFO - Loading existing vector store
+2025-08-28 19:08:05,520 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 19:08:05,684 - INFO - No new documents to add to vector store
+2025-08-28 19:08:06,198 - INFO - QA chain initialized successfully
+2025-08-28 19:08:06,198 - INFO - Analyzer initialized successfully
+2025-08-28 19:08:12,203 - INFO - Loaded 26 existing document hashes
+2025-08-28 19:08:12,203 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 19:08:12,211 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 19:08:12,212 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:08:12,212 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:08:12,212 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:08:12,213 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:08:12,213 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:08:12,213 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:08:12,213 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:08:12,214 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:08:12,214 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:08:12,214 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:08:12,214 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:08:12,215 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:08:12,215 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:08:12,215 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:08:12,215 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:08:12,215 - INFO - Loading existing vector store
+2025-08-28 19:08:13,124 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 19:08:13,298 - INFO - No new documents to add to vector store
+2025-08-28 19:08:13,818 - INFO - QA chain initialized successfully
+2025-08-28 19:08:13,818 - INFO - Analyzer initialized successfully
+2025-08-28 19:08:25,558 - INFO - Received query: what is the highest projectors on the room?
+2025-08-28 19:08:25,558 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:25,559 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:08:25,559 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:08:25,559 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:08:25,560 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:08:25,560 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:08:25,560 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:08:25,561 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:08:25,561 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:08:25,561 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:08:25,561 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:08:25,562 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:08:25,562 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:08:25,562 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:08:25,563 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:08:25,563 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:08:25,563 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:25,566 - INFO - Used deterministic handler for query: 'what is the highest projectors on the room?'
+2025-08-28 19:08:25,566 - INFO - Response: {'answer': 'The highest projector is 5.0 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-28 19:08:47,248 - INFO - Received query: how many occupied people are in a room?
+2025-08-28 19:08:47,249 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:47,249 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:08:47,250 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:08:47,250 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:08:47,250 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:08:47,251 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:08:47,251 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:08:47,251 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:08:47,251 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:08:47,252 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:08:47,252 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:08:47,252 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:08:47,253 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:08:47,253 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:08:47,253 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:08:47,253 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:08:47,253 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:48,288 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:08:54,258 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:08:54,473 - INFO - Query: 'how many occupied people are in a room?' - Response generated using LLM
+2025-08-28 19:08:54,473 - INFO - Response: {'answer': 'I cannot find this information in the data.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-03 21:00:00', 'occupancy_count': 0, 'power_total': 40.0, 'humidity': 70.0, 'temperature': 25.8, 'doc_hash': '22267cabd7aeda224fcb012d86755706', 'energy_kwh': 0.06}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'occupancy_count': 0, 'energy_kwh': 0.05, 'doc_hash': '843a02888293d76cc41f8689e977c75a', 'power_total': 50.0, 'timestamp': '2025-03-03 00:00:00', 'humidity': 70.0, 'temperature': 25.0}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5', 'power_total': 50.0, 'energy_kwh': 0.06, 'timestamp': '2025-03-09 11:00:00', 'humidity': 70.0, 'temperature': 26.0, 'occupancy_count': 0}}, {'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'timestamp': '2025-03-07 18:00:00', 'temperature': 25.0, 'humidity': 68.0, 'power_total': 90.0, 'energy_kwh': 0.12, 'doc_hash': '939671a700c5eb6a275aa52e7b9352ee', 'occupancy_count': 0}}]}
+2025-08-28 19:08:56,890 - INFO - Received query: how many occupied people are in a room?
+2025-08-28 19:08:56,890 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:56,891 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:08:56,891 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:08:56,891 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:08:56,892 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:08:56,892 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:08:56,892 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:08:56,893 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:08:56,893 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:08:56,893 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:08:56,894 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:08:56,894 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:08:56,894 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:08:56,894 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:08:56,895 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:08:56,895 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:08:56,895 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:56,922 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:08:57,035 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:08:57,833 - INFO - Query: 'how many occupied people are in a room?' - Response generated using LLM
+2025-08-28 19:08:57,833 - INFO - Response: {'answer': 'I cannot find this information in the data. The data only provides information about energy consumption, lighting power, HVAC power, standby power, temperature, and humidity, but does not provide any information about occupied people or occupants.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'humidity': 70.0, 'energy_kwh': 0.06, 'temperature': 25.8, 'timestamp': '2025-03-03 21:00:00', 'doc_hash': '22267cabd7aeda224fcb012d86755706', 'power_total': 40.0, 'occupancy_count': 0}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'timestamp': '2025-03-03 00:00:00', 'energy_kwh': 0.05, 'occupancy_count': 0, 'power_total': 50.0, 'doc_hash': '843a02888293d76cc41f8689e977c75a', 'humidity': 70.0, 'temperature': 25.0}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'temperature': 26.0, 'power_total': 50.0, 'timestamp': '2025-03-09 11:00:00', 'occupancy_count': 0, 'energy_kwh': 0.06, 'humidity': 70.0, 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5'}}, {'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'doc_hash': '939671a700c5eb6a275aa52e7b9352ee', 'humidity': 68.0, 'occupancy_count': 0, 'energy_kwh': 0.12, 'power_total': 90.0, 'temperature': 25.0, 'timestamp': '2025-03-07 18:00:00'}}]}
+2025-08-28 19:08:59,158 - INFO - Received query: how many occupied people are in a room?
+2025-08-28 19:08:59,159 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:59,159 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:08:59,160 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:08:59,160 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:08:59,160 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:08:59,161 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:08:59,161 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:08:59,161 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:08:59,161 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:08:59,162 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:08:59,162 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:08:59,162 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:08:59,163 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:08:59,163 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:08:59,163 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:08:59,163 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:08:59,163 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:08:59,189 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:08:59,290 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:08:59,451 - INFO - Query: 'how many occupied people are in a room?' - Response generated using LLM
+2025-08-28 19:08:59,451 - INFO - Response: {'answer': 'I cannot find this information in the data.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'doc_hash': '22267cabd7aeda224fcb012d86755706', 'power_total': 40.0, 'timestamp': '2025-03-03 21:00:00', 'occupancy_count': 0, 'temperature': 25.8, 'energy_kwh': 0.06, 'humidity': 70.0}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'temperature': 25.0, 'humidity': 70.0, 'energy_kwh': 0.05, 'power_total': 50.0, 'timestamp': '2025-03-03 00:00:00', 'doc_hash': '843a02888293d76cc41f8689e977c75a', 'occupancy_count': 0}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'humidity': 70.0, 'timestamp': '2025-03-09 11:00:00', 'energy_kwh': 0.06, 'temperature': 26.0, 'power_total': 50.0, 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5', 'occupancy_count': 0}}, {'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'timestamp': '2025-03-07 18:00:00', 'humidity': 68.0, 'power_total': 90.0, 'energy_kwh': 0.12, 'occupancy_count': 0, 'temperature': 25.0, 'doc_hash': '939671a700c5eb6a275aa52e7b9352ee'}}]}
+2025-08-28 19:10:15,451 - INFO - Loaded 26 existing document hashes
+2025-08-28 19:10:15,451 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 19:10:15,460 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 19:10:15,462 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:10:15,462 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:10:15,462 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:10:15,463 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:10:15,463 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:10:15,463 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:10:15,464 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:10:15,464 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:10:15,464 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:10:15,465 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:10:15,465 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:10:15,465 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:10:15,465 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:10:15,465 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:10:15,466 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:10:15,466 - INFO - Loading existing vector store
+2025-08-28 19:10:16,473 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 19:10:16,658 - INFO - No new documents to add to vector store
+2025-08-28 19:10:17,183 - INFO - QA chain initialized successfully
+2025-08-28 19:10:17,183 - INFO - Analyzer initialized successfully
+2025-08-28 19:10:32,761 - INFO - Received query: how many occupied people are in a room?
+2025-08-28 19:10:32,762 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:10:32,762 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:10:32,762 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:10:32,763 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:10:32,763 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:10:32,763 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:10:32,763 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:10:32,764 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:10:32,764 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:10:32,764 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:10:32,765 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:10:32,765 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:10:32,765 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:10:32,765 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:10:32,766 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:10:32,766 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:10:32,766 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:10:32,801 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:10:32,946 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:10:33,155 - INFO - Query: 'how many occupied people are in a room?' - Response generated using LLM
+2025-08-28 19:10:33,155 - INFO - Response: {'answer': 'I cannot find this information in the data.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'doc_hash': '22267cabd7aeda224fcb012d86755706', 'humidity': 70.0, 'power_total': 40.0, 'timestamp': '2025-03-03 21:00:00', 'energy_kwh': 0.06, 'occupancy_count': 0, 'temperature': 25.8}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'power_total': 50.0, 'occupancy_count': 0, 'timestamp': '2025-03-03 00:00:00', 'humidity': 70.0, 'temperature': 25.0, 'energy_kwh': 0.05, 'doc_hash': '843a02888293d76cc41f8689e977c75a'}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'humidity': 70.0, 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5', 'occupancy_count': 0, 'temperature': 26.0, 'timestamp': '2025-03-09 11:00:00', 'power_total': 50.0, 'energy_kwh': 0.06}}, {'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'doc_hash': '939671a700c5eb6a275aa52e7b9352ee', 'humidity': 68.0, 'energy_kwh': 0.12, 'occupancy_count': 0, 'power_total': 90.0, 'temperature': 25.0, 'timestamp': '2025-03-07 18:00:00'}}]}
+2025-08-28 19:10:34,157 - INFO - Received query: how many occupied people are in a room?
+2025-08-28 19:10:34,158 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:10:34,158 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:10:34,159 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:10:34,159 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:10:34,159 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:10:34,159 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:10:34,160 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:10:34,160 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:10:34,160 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:10:34,160 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:10:34,161 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:10:34,161 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:10:34,161 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:10:34,161 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:10:34,162 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:10:34,162 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:10:34,162 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:10:34,188 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:10:34,289 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:10:34,447 - INFO - Query: 'how many occupied people are in a room?' - Response generated using LLM
+2025-08-28 19:10:34,447 - INFO - Response: {'answer': 'I cannot find this information in the data.', 'sources': [{'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'temperature': 25.8, 'timestamp': '2025-03-03 21:00:00', 'doc_hash': '22267cabd7aeda224fcb012d86755706', 'humidity': 70.0, 'occupancy_count': 0, 'power_total': 40.0, 'energy_kwh': 0.06}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'occupancy_count': 0, 'temperature': 25.0, 'timestamp': '2025-03-03 00:00:00', 'power_total': 50.0, 'energy_kwh': 0.05, 'doc_hash': '843a02888293d76cc41f8689e977c75a', 'humidity': 70.0}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'occupancy_count': 0, 'energy_kwh': 0.06, 'temperature': 26.0, 'timestamp': '2025-03-09 11:00:00', 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5', 'power_total': 50.0, 'humidity': 70.0}}, {'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'energy_kwh': 0.12, 'occupancy_count': 0, 'temperature': 25.0, 'doc_hash': '939671a700c5eb6a275aa52e7b9352ee', 'power_total': 90.0, 'humidity': 68.0, 'timestamp': '2025-03-07 18:00:00'}}]}
+2025-08-28 19:14:21,547 - INFO - Loaded 26 existing document hashes
+2025-08-28 19:14:21,547 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 19:14:21,556 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 19:14:21,557 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:14:21,557 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:14:21,558 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:14:21,558 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:14:21,558 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:14:21,558 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:14:21,559 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:14:21,559 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:14:21,559 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:14:21,559 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:14:21,560 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:14:21,560 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:14:21,560 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:14:21,560 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:14:21,560 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:14:21,560 - INFO - Loading existing vector store
+2025-08-28 19:14:22,491 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 19:14:22,655 - INFO - No new documents to add to vector store
+2025-08-28 19:14:23,168 - INFO - QA chain initialized successfully
+2025-08-28 19:14:23,168 - INFO - Analyzer initialized successfully
+2025-08-28 19:14:26,749 - INFO - Received query: how many occupied people are in a room?
+2025-08-28 19:14:26,749 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:14:26,750 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:14:26,750 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:14:26,750 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:14:26,751 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:14:26,751 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:14:26,751 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:14:26,751 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:14:26,752 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:14:26,752 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:14:26,752 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:14:26,752 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:14:26,753 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:14:26,753 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:14:26,753 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:14:26,753 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:14:26,753 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:14:26,753 - INFO - Processing query: 'how many occupied people are in a room?'
+2025-08-28 19:14:26,756 - INFO - Matched people query; returning total of 66 people
+2025-08-28 19:14:26,756 - INFO - Used deterministic handler for query: 'how many occupied people are in a room?'
+2025-08-28 19:14:26,756 - INFO - Response: {'answer': 'There are a total of 66 people across all occupied room records.', 'sources': [{'content': 'At 2025-03-03 12:30:00, the room was occupied with 8 people. Energy consumption: 0.8 kWh. Lighting power: 120W, HVAC power: 120W, Standby power: 40W, Total power: 1600W. Lights usage: 5.5 hours, AC usage: 4.0 hours, Projector usage: 2.5 hours, Computers usage: 10.0 hours. Temperature: 15.0°C, Humidity: 58%.', 'metadata': {'timestamp': '2025-03-03 12:30:00', 'occupancy_count': 8, 'energy_kwh': 0.8, 'power_total': 1600.0, 'temperature': 15.0, 'humidity': 58.0, 'doc_hash': '0ccfb85963684ccafa13457920be69ac'}}, {'content': 'At 2025-03-09 08:00:00, the room was occupied with 1 people. Energy consumption: 0.15 kWh. Lighting power: 50W, HVAC power: 30W, Standby power: 25W, Total power: 165W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 25.5°C, Humidity: 69%.', 'metadata': {'timestamp': '2025-03-09 08:00:00', 'occupancy_count': 1, 'energy_kwh': 0.15, 'power_total': 165.0, 'temperature': 25.5, 'humidity': 69.0, 'doc_hash': '427d68ed8ef68c1b0ac5201c89337483'}}, {'content': 'At 2025-03-06 08:30:00, the room was occupied with 5 people. Energy consumption: 0.57 kWh. Lighting power: 95W, HVAC power: 105W, Standby power: 30W, Total power: 1135W. Lights usage: 1.5 hours, AC usage: 1.0 hours, Projector usage: 0.5 hours, Computers usage: 2.0 hours. Temperature: 23.1°C, Humidity: 60%.', 'metadata': {'timestamp': '2025-03-06 08:30:00', 'occupancy_count': 5, 'energy_kwh': 0.57, 'power_total': 1135.0, 'temperature': 23.1, 'humidity': 60.0, 'doc_hash': 'a03895c40d8b7e2b81eef012c0c7083f'}}]}
+2025-08-28 19:15:00,410 - INFO - Received query: what is the highest projectors on the room?
+2025-08-28 19:15:00,411 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:15:00,411 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:15:00,412 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:15:00,412 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:15:00,412 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:15:00,412 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:15:00,413 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:15:00,413 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:15:00,413 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:15:00,414 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:15:00,414 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:15:00,414 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:15:00,414 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:15:00,415 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:15:00,415 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:15:00,415 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:15:00,415 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:15:00,415 - INFO - Processing query: 'what is the highest projectors on the room?'
+2025-08-28 19:15:00,416 - INFO - Matched max query
+2025-08-28 19:15:00,418 - INFO - Used deterministic handler for query: 'what is the highest projectors on the room?'
+2025-08-28 19:15:00,418 - INFO - Response: {'answer': 'The highest projector is 5.0 at 2025-03-06 15:00:00.', 'sources': [{'content': 'At 2025-03-06 15:00:00, the room was occupied with 9 people. Energy consumption: 0.9 kWh. Lighting power: 130W, HVAC power: 130W, Standby power: 45W, Total power: 1775W. Lights usage: 8.0 hours, AC usage: 6.0 hours, Projector usage: 5.0 hours, Computers usage: 8.0 hours. Temperature: 20.0°C, Humidity: 56%.', 'metadata': {'timestamp': '2025-03-06 15:00:00', 'occupancy_count': 9, 'energy_kwh': 0.9, 'power_total': 1775.0, 'temperature': 20.0, 'humidity': 56.0, 'doc_hash': '9b0312b8eaabd84e2fb1001ce0313b51'}}]}
+2025-08-28 19:15:08,899 - INFO - Received query: what is the projectors on the room?
+2025-08-28 19:15:08,900 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:15:08,900 - INFO - Skipping duplicate document with hash 039f0029dbc1e4ad7ac4271664e3e7cf
+2025-08-28 19:15:08,901 - INFO - Skipping duplicate document with hash df054e05b474db04a19da2711969d653
+2025-08-28 19:15:08,901 - INFO - Skipping duplicate document with hash 0ccfb85963684ccafa13457920be69ac
+2025-08-28 19:15:08,901 - INFO - Skipping duplicate document with hash aa84f0e544e749533aeb890982607a7f
+2025-08-28 19:15:08,901 - INFO - Skipping duplicate document with hash c61fd546134e4c66327b60d370666b35
+2025-08-28 19:15:08,902 - INFO - Skipping duplicate document with hash 6554edd9d7d9b815a8a0ecaf771e72de
+2025-08-28 19:15:08,902 - INFO - Skipping duplicate document with hash 839368bf0f1e6e8b76c384d0c600d7bd
+2025-08-28 19:15:08,902 - INFO - Skipping duplicate document with hash f9a453425830aacaf4cf1588ac4e7252
+2025-08-28 19:15:08,902 - INFO - Skipping duplicate document with hash a03895c40d8b7e2b81eef012c0c7083f
+2025-08-28 19:15:08,903 - INFO - Skipping duplicate document with hash 9b0312b8eaabd84e2fb1001ce0313b51
+2025-08-28 19:15:08,903 - INFO - Skipping duplicate document with hash 84a4d0c02c1cea0ea6466254b1875a1c
+2025-08-28 19:15:08,903 - INFO - Skipping duplicate document with hash b20825edb3e91b4d5bc4263d1e42fa50
+2025-08-28 19:15:08,903 - INFO - Skipping duplicate document with hash 3e58cc5386912dbb967597245ae24a4f
+2025-08-28 19:15:08,904 - INFO - Skipping duplicate document with hash 427d68ed8ef68c1b0ac5201c89337483
+2025-08-28 19:15:08,904 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:15:08,904 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:15:08,904 - INFO - Processing query: 'what is the projectors on the room?'
+2025-08-28 19:15:08,904 - WARNING - No deterministic match for query: 'what is the projectors on the room?'; falling back to LLM
+2025-08-28 19:15:08,937 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:15:09,478 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:15:10,870 - INFO - Query: 'what is the projectors on the room?' - Response generated using LLM
+2025-08-28 19:15:10,870 - INFO - Response: {'answer': 'I cannot find this information in the data.\n\nAccording to the data, there is no information about the projector\'s usage or status beyond mentioning "Projector usage: x.x hours" in each entry, where x.x hours are always 0.0 hours, except for one instance at 2025-03-03 21:00:00 with 2.5 hours of usage.', 'sources': [{'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'doc_hash': '843a02888293d76cc41f8689e977c75a', 'occupancy_count': 0, 'timestamp': '2025-03-03 00:00:00', 'humidity': 70.0, 'temperature': 25.0, 'energy_kwh': 0.05, 'power_total': 50.0}}, {'content': 'At 2025-03-03 00:30:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.1°C, Humidity: 70%.', 'metadata': {'power_total': 50.0, 'occupancy_count': 0, 'temperature': 25.1, 'doc_hash': '7c9bbe7706a902823b181c34efe1d2b1', 'energy_kwh': 0.05, 'timestamp': '2025-03-03 00:30:00', 'humidity': 70.0}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'power_total': 50.0, 'occupancy_count': 0, 'temperature': 26.0, 'humidity': 70.0, 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5', 'energy_kwh': 0.06, 'timestamp': '2025-03-09 11:00:00'}}, {'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'temperature': 25.8, 'humidity': 70.0, 'doc_hash': '22267cabd7aeda224fcb012d86755706', 'timestamp': '2025-03-03 21:00:00', 'energy_kwh': 0.06, 'occupancy_count': 0, 'power_total': 40.0}}]}
+2025-08-28 19:22:51,165 - INFO - Loaded 26 existing document hashes
+2025-08-28 19:22:51,165 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 19:22:51,174 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 19:22:51,177 - INFO - Created 14 new documents, skipped 0 duplicates
+2025-08-28 19:22:51,178 - INFO - Loading existing vector store
+2025-08-28 19:22:52,110 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 19:22:52,278 - INFO - Adding 14 new documents to existing vector store
+2025-08-28 19:22:53,430 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:22:53,980 - INFO - QA chain initialized successfully
+2025-08-28 19:22:53,980 - INFO - Analyzer initialized successfully
+2025-08-28 19:23:05,358 - INFO - Received query: what is the projectors on the room?
+2025-08-28 19:23:05,358 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:23:05,359 - INFO - Skipping duplicate document with hash 16e5053b42e636662cf5e8496a4eb341
+2025-08-28 19:23:05,359 - INFO - Skipping duplicate document with hash a8b87e5d0f39d7514602fff0e96cc2ae
+2025-08-28 19:23:05,359 - INFO - Skipping duplicate document with hash 4517230a1d651626363fb06272795422
+2025-08-28 19:23:05,359 - INFO - Skipping duplicate document with hash 834c5f41596416233629d57ac0a2799c
+2025-08-28 19:23:05,359 - INFO - Skipping duplicate document with hash 545e2eb93f1391c0ae4623794ac26007
+2025-08-28 19:23:05,360 - INFO - Skipping duplicate document with hash 8de67a33b014706d996eae79d517b822
+2025-08-28 19:23:05,360 - INFO - Skipping duplicate document with hash df365b380a63e45ee62fbe9c6bc7e1f6
+2025-08-28 19:23:05,360 - INFO - Skipping duplicate document with hash 3669e44568d383a9742d22ab8b70406f
+2025-08-28 19:23:05,360 - INFO - Skipping duplicate document with hash 601d6eb0ef20a3653359e1b747fe1143
+2025-08-28 19:23:05,360 - INFO - Skipping duplicate document with hash 8ee8cc35bca68b4dbe624907fe47bbd5
+2025-08-28 19:23:05,360 - INFO - Skipping duplicate document with hash 8f4beaadcabcd79ad244e75af5e7dca4
+2025-08-28 19:23:05,361 - INFO - Skipping duplicate document with hash 64972fa566721f9c0a056a53aa46157d
+2025-08-28 19:23:05,361 - INFO - Skipping duplicate document with hash 7c31a0f0b4b628be221191b3f6cac290
+2025-08-28 19:23:05,361 - INFO - Skipping duplicate document with hash 94f78e0a5fa4eb531c9298992b099783
+2025-08-28 19:23:05,361 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:23:05,361 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:23:05,361 - INFO - Processing query: 'what is the projectors on the room?'
+2025-08-28 19:23:05,362 - WARNING - No deterministic match for query: 'what is the projectors on the room?'; falling back to LLM
+2025-08-28 19:23:05,393 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:23:11,226 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:23:13,791 - INFO - Query: 'what is the projectors on the room?' - Response generated using LLM
+2025-08-28 19:23:13,791 - INFO - Response: {'answer': 'I can find this information in the data.\n\nProjector usage:\n\n* At 2025-03-03 00:00:00: 0.0 hours\n* At 2025-03-03 00:30:00: 0.0 hours\n* At 2025-03-09 11:00:00: 0.0 hours\n* At 2025-03-03 21:00:00: 2.5 hours\n\nSo, the projector usage is not consistent across all readings, but it was used for a total of 2.5 hours at some point (specifically on March 3 at 21:00).', 'sources': [{'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'energy_kwh': 0.05, 'timestamp': '2025-03-03 00:00:00', 'occupancy_count': 0, 'power_total': 50.0, 'humidity': 70.0, 'temperature': 25.0, 'doc_hash': '843a02888293d76cc41f8689e977c75a'}}, {'content': 'At 2025-03-03 00:30:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.1°C, Humidity: 70%.', 'metadata': {'humidity': 70.0, 'occupancy_count': 0, 'timestamp': '2025-03-03 00:30:00', 'power_total': 50.0, 'doc_hash': '7c9bbe7706a902823b181c34efe1d2b1', 'temperature': 25.1, 'energy_kwh': 0.05}}, {'content': 'At 2025-03-09 11:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 3.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 3.0 hours. Temperature: 26.0°C, Humidity: 70%.', 'metadata': {'energy_kwh': 0.06, 'temperature': 26.0, 'occupancy_count': 0, 'doc_hash': '5ee85dfff25bf9bc9c9f3fdb2f2550f5', 'timestamp': '2025-03-09 11:00:00', 'power_total': 50.0, 'humidity': 70.0}}, {'content': 'At 2025-03-03 21:00:00, the room was unoccupied with 0 people. Energy consumption: 0.06 kWh. Lighting power: 0W, HVAC power: 15W, Standby power: 25W, Total power: 40W. Lights usage: 13.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 13.0 hours. Temperature: 25.8°C, Humidity: 70%.', 'metadata': {'power_total': 40.0, 'humidity': 70.0, 'timestamp': '2025-03-03 21:00:00', 'doc_hash': '22267cabd7aeda224fcb012d86755706', 'temperature': 25.8, 'energy_kwh': 0.06, 'occupancy_count': 0}}]}
+2025-08-28 19:23:30,801 - INFO - Received query: how many dataset in room_logs
+2025-08-28 19:23:30,802 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:23:30,802 - INFO - Skipping duplicate document with hash 16e5053b42e636662cf5e8496a4eb341
+2025-08-28 19:23:30,803 - INFO - Skipping duplicate document with hash a8b87e5d0f39d7514602fff0e96cc2ae
+2025-08-28 19:23:30,803 - INFO - Skipping duplicate document with hash 4517230a1d651626363fb06272795422
+2025-08-28 19:23:30,803 - INFO - Skipping duplicate document with hash 834c5f41596416233629d57ac0a2799c
+2025-08-28 19:23:30,804 - INFO - Skipping duplicate document with hash 545e2eb93f1391c0ae4623794ac26007
+2025-08-28 19:23:30,804 - INFO - Skipping duplicate document with hash 8de67a33b014706d996eae79d517b822
+2025-08-28 19:23:30,804 - INFO - Skipping duplicate document with hash df365b380a63e45ee62fbe9c6bc7e1f6
+2025-08-28 19:23:30,805 - INFO - Skipping duplicate document with hash 3669e44568d383a9742d22ab8b70406f
+2025-08-28 19:23:30,805 - INFO - Skipping duplicate document with hash 601d6eb0ef20a3653359e1b747fe1143
+2025-08-28 19:23:30,805 - INFO - Skipping duplicate document with hash 8ee8cc35bca68b4dbe624907fe47bbd5
+2025-08-28 19:23:30,805 - INFO - Skipping duplicate document with hash 8f4beaadcabcd79ad244e75af5e7dca4
+2025-08-28 19:23:30,806 - INFO - Skipping duplicate document with hash 64972fa566721f9c0a056a53aa46157d
+2025-08-28 19:23:30,806 - INFO - Skipping duplicate document with hash 7c31a0f0b4b628be221191b3f6cac290
+2025-08-28 19:23:30,806 - INFO - Skipping duplicate document with hash 94f78e0a5fa4eb531c9298992b099783
+2025-08-28 19:23:30,806 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:23:30,807 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:23:30,807 - INFO - Processing query: 'how many dataset in room_logs'
+2025-08-28 19:23:30,809 - INFO - Matched count query; returning 14 records
+2025-08-28 19:23:30,809 - INFO - Used deterministic handler for query: 'how many dataset in room_logs'
+2025-08-28 19:23:30,809 - INFO - Response: {'answer': 'There are 14 occupied room records in the dataset.', 'sources': [{'content': 'At 2025-03-04 12:00:00, the room was occupied with 7 people. Energy consumption: 0.75 kWh. Lighting power: 110W, HVAC power: 120W, Air Conditioner Compressor: 750.0W, Projector power: 280.0W, Computer power: 200.0W, Standby power: 35W, Total power: 1495W. Lights usage: 5.0 hours, AC usage: 4.0 hours, Projector usage: 3.0 hours, Computers usage: 5.5 hours. Temperature: 22.7°C, Humidity: 59%.', 'metadata': {'timestamp': '2025-03-04 12:00:00', 'occupancy_count': 7, 'energy_kwh': 0.75, 'power_total': 1495.0, 'temperature': 22.7, 'humidity': 59.0, 'doc_hash': '545e2eb93f1391c0ae4623794ac26007'}}, {'content': 'At 2025-03-07 12:00:00, the room was occupied with 6 people. Energy consumption: 0.68 kWh. Lighting power: 100W, HVAC power: 110W, Air Conditioner Compressor: 680.0W, Projector power: 240.0W, Computer power: 170.0W, Standby power: 35W, Total power: 1335W. Lights usage: 5.0 hours, AC usage: 3.0 hours, Projector usage: 2.0 hours, Computers usage: 5.0 hours. Temperature: 22.9°C, Humidity: 60%.', 'metadata': {'timestamp': '2025-03-07 12:00:00', 'occupancy_count': 6, 'energy_kwh': 0.68, 'power_total': 1335.0, 'temperature': 22.9, 'humidity': 60.0, 'doc_hash': '64972fa566721f9c0a056a53aa46157d'}}, {'content': 'At 2025-03-03 07:30:00, the room was occupied with 1 people. Energy consumption: 0.18 kWh. Lighting power: 60W, HVAC power: 35W, Air Conditioner Compressor: nanW, Projector power: nanW, Computer power: 80.0W, Standby power: 25W, Total power: 200W. Lights usage: 0.5 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.5 hours. Temperature: 35.5°C, Humidity: 68%.', 'metadata': {'timestamp': '2025-03-03 07:30:00', 'occupancy_count': 1, 'energy_kwh': 0.18, 'power_total': 200.0, 'temperature': 35.5, 'humidity': 68.0, 'doc_hash': '16e5053b42e636662cf5e8496a4eb341'}}]}
+2025-08-28 19:24:01,167 - INFO - Received query: can you give me all the readings of room_logs?
+2025-08-28 19:24:01,167 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:24:01,168 - INFO - Skipping duplicate document with hash 16e5053b42e636662cf5e8496a4eb341
+2025-08-28 19:24:01,168 - INFO - Skipping duplicate document with hash a8b87e5d0f39d7514602fff0e96cc2ae
+2025-08-28 19:24:01,168 - INFO - Skipping duplicate document with hash 4517230a1d651626363fb06272795422
+2025-08-28 19:24:01,168 - INFO - Skipping duplicate document with hash 834c5f41596416233629d57ac0a2799c
+2025-08-28 19:24:01,169 - INFO - Skipping duplicate document with hash 545e2eb93f1391c0ae4623794ac26007
+2025-08-28 19:24:01,169 - INFO - Skipping duplicate document with hash 8de67a33b014706d996eae79d517b822
+2025-08-28 19:24:01,169 - INFO - Skipping duplicate document with hash df365b380a63e45ee62fbe9c6bc7e1f6
+2025-08-28 19:24:01,170 - INFO - Skipping duplicate document with hash 3669e44568d383a9742d22ab8b70406f
+2025-08-28 19:24:01,170 - INFO - Skipping duplicate document with hash 601d6eb0ef20a3653359e1b747fe1143
+2025-08-28 19:24:01,170 - INFO - Skipping duplicate document with hash 8ee8cc35bca68b4dbe624907fe47bbd5
+2025-08-28 19:24:01,170 - INFO - Skipping duplicate document with hash 8f4beaadcabcd79ad244e75af5e7dca4
+2025-08-28 19:24:01,171 - INFO - Skipping duplicate document with hash 64972fa566721f9c0a056a53aa46157d
+2025-08-28 19:24:01,171 - INFO - Skipping duplicate document with hash 7c31a0f0b4b628be221191b3f6cac290
+2025-08-28 19:24:01,171 - INFO - Skipping duplicate document with hash 94f78e0a5fa4eb531c9298992b099783
+2025-08-28 19:24:01,172 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:24:01,172 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:24:01,172 - INFO - Processing query: 'can you give me all the readings of room_logs?'
+2025-08-28 19:24:01,172 - WARNING - No deterministic match for query: 'can you give me all the readings of room_logs?'; falling back to LLM
+2025-08-28 19:24:01,241 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:24:01,736 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:24:03,295 - INFO - Query: 'can you give me all the readings of room_logs?' - Response generated using LLM
+2025-08-28 19:24:03,295 - INFO - Response: {'answer': 'Based on the room energy consumption data provided, here are all the readings of room_logs:\n\n* 2025-03-07 18:00:00\n* 2025-03-03 18:00:00\n* 2025-03-03 00:00:00\n* 2025-03-09 18:00:00\n\nThese are the four readings available in the provided data.', 'sources': [{'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'energy_kwh': 0.12, 'power_total': 90.0, 'doc_hash': '939671a700c5eb6a275aa52e7b9352ee', 'occupancy_count': 0, 'timestamp': '2025-03-07 18:00:00', 'temperature': 25.0, 'humidity': 68.0}}, {'content': 'At 2025-03-03 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.1 kWh. Lighting power: 20W, HVAC power: 25W, Standby power: 30W, Total power: 75W. Lights usage: 10.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 10.0 hours. Temperature: 24.5°C, Humidity: 65%.', 'metadata': {'humidity': 65.0, 'timestamp': '2025-03-03 18:00:00', 'doc_hash': '3211f4cbe2064c4457bc52df4a1eea4a', 'occupancy_count': 0, 'power_total': 75.0, 'temperature': 24.5, 'energy_kwh': 0.1}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'humidity': 70.0, 'power_total': 50.0, 'occupancy_count': 0, 'temperature': 25.0, 'doc_hash': '843a02888293d76cc41f8689e977c75a', 'timestamp': '2025-03-03 00:00:00', 'energy_kwh': 0.05}}, {'content': 'At 2025-03-09 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 10.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 10.0 hours. Temperature: 25.8°C, Humidity: 71%.', 'metadata': {'timestamp': '2025-03-09 18:00:00', 'temperature': 25.8, 'occupancy_count': 0, 'doc_hash': '7a0b3714ec5873b017b8962af13965e2', 'energy_kwh': 0.05, 'power_total': 50.0, 'humidity': 71.0}}]}
+2025-08-28 19:27:41,713 - INFO - Loaded 40 existing document hashes
+2025-08-28 19:27:41,714 - INFO - Changes detected or first load; reloading JSON data
+2025-08-28 19:27:41,723 - INFO - Loaded 14 unique occupied room records after deduplication
+2025-08-28 19:27:41,724 - INFO - Skipping duplicate document with hash 16e5053b42e636662cf5e8496a4eb341
+2025-08-28 19:27:41,724 - INFO - Skipping duplicate document with hash a8b87e5d0f39d7514602fff0e96cc2ae
+2025-08-28 19:27:41,724 - INFO - Skipping duplicate document with hash 4517230a1d651626363fb06272795422
+2025-08-28 19:27:41,725 - INFO - Skipping duplicate document with hash 834c5f41596416233629d57ac0a2799c
+2025-08-28 19:27:41,725 - INFO - Skipping duplicate document with hash 545e2eb93f1391c0ae4623794ac26007
+2025-08-28 19:27:41,725 - INFO - Skipping duplicate document with hash 8de67a33b014706d996eae79d517b822
+2025-08-28 19:27:41,725 - INFO - Skipping duplicate document with hash df365b380a63e45ee62fbe9c6bc7e1f6
+2025-08-28 19:27:41,726 - INFO - Skipping duplicate document with hash 3669e44568d383a9742d22ab8b70406f
+2025-08-28 19:27:41,726 - INFO - Skipping duplicate document with hash 601d6eb0ef20a3653359e1b747fe1143
+2025-08-28 19:27:41,726 - INFO - Skipping duplicate document with hash 8ee8cc35bca68b4dbe624907fe47bbd5
+2025-08-28 19:27:41,726 - INFO - Skipping duplicate document with hash 8f4beaadcabcd79ad244e75af5e7dca4
+2025-08-28 19:27:41,727 - INFO - Skipping duplicate document with hash 64972fa566721f9c0a056a53aa46157d
+2025-08-28 19:27:41,727 - INFO - Skipping duplicate document with hash 7c31a0f0b4b628be221191b3f6cac290
+2025-08-28 19:27:41,727 - INFO - Skipping duplicate document with hash 94f78e0a5fa4eb531c9298992b099783
+2025-08-28 19:27:41,727 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:27:41,727 - INFO - Loading existing vector store
+2025-08-28 19:27:42,648 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-08-28 19:27:42,810 - INFO - No new documents to add to vector store
+2025-08-28 19:27:43,324 - INFO - QA chain initialized successfully
+2025-08-28 19:27:43,324 - INFO - Analyzer initialized successfully
+2025-08-28 19:27:49,587 - INFO - Received query: can you give me all the readings of room_logs?
+2025-08-28 19:27:49,587 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:27:49,588 - INFO - Skipping duplicate document with hash 16e5053b42e636662cf5e8496a4eb341
+2025-08-28 19:27:49,588 - INFO - Skipping duplicate document with hash a8b87e5d0f39d7514602fff0e96cc2ae
+2025-08-28 19:27:49,589 - INFO - Skipping duplicate document with hash 4517230a1d651626363fb06272795422
+2025-08-28 19:27:49,589 - INFO - Skipping duplicate document with hash 834c5f41596416233629d57ac0a2799c
+2025-08-28 19:27:49,589 - INFO - Skipping duplicate document with hash 545e2eb93f1391c0ae4623794ac26007
+2025-08-28 19:27:49,589 - INFO - Skipping duplicate document with hash 8de67a33b014706d996eae79d517b822
+2025-08-28 19:27:49,590 - INFO - Skipping duplicate document with hash df365b380a63e45ee62fbe9c6bc7e1f6
+2025-08-28 19:27:49,590 - INFO - Skipping duplicate document with hash 3669e44568d383a9742d22ab8b70406f
+2025-08-28 19:27:49,590 - INFO - Skipping duplicate document with hash 601d6eb0ef20a3653359e1b747fe1143
+2025-08-28 19:27:49,591 - INFO - Skipping duplicate document with hash 8ee8cc35bca68b4dbe624907fe47bbd5
+2025-08-28 19:27:49,591 - INFO - Skipping duplicate document with hash 8f4beaadcabcd79ad244e75af5e7dca4
+2025-08-28 19:27:49,591 - INFO - Skipping duplicate document with hash 64972fa566721f9c0a056a53aa46157d
+2025-08-28 19:27:49,591 - INFO - Skipping duplicate document with hash 7c31a0f0b4b628be221191b3f6cac290
+2025-08-28 19:27:49,592 - INFO - Skipping duplicate document with hash 94f78e0a5fa4eb531c9298992b099783
+2025-08-28 19:27:49,592 - INFO - Created 0 new documents, skipped 14 duplicates
+2025-08-28 19:27:49,592 - INFO - No changes detected in JSON file; using cached DataFrame
+2025-08-28 19:27:49,592 - INFO - Processing query: 'can you give me all the readings of room_logs?'
+2025-08-28 19:27:49,593 - WARNING - No deterministic match for query: 'can you give me all the readings of room_logs?'; falling back to LLM
+2025-08-28 19:27:49,628 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-08-28 19:27:49,767 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-08-28 19:27:59,637 - INFO - Query: 'can you give me all the readings of room_logs?' - Response generated using LLM
+2025-08-28 19:27:59,637 - INFO - Response: {'answer': 'Based on the provided data, I can extract the following readings:\n\n* Energy consumption:\n\t+ 2025-03-07 18:00:00: 0.12 kWh\n\t+ 2025-03-03 18:00:00: 0.1 kWh\n\t+ 2025-03-03 00:00:00: 0.05 kWh\n\t+ 2025-03-09 18:00:00: 0.05 kWh\n* Lighting power:\n\t+ 2025-03-07 18:00:00: 30W\n\t+ 2025-03-03 18:00:00: 20W\n\t+ 2025-03-03 00:00:00: 10W\n\t+ 2025-03-09 18:00:00: 10W\n* HVAC power:\n\t+ 2025-03-07 18:00:00: 30W\n\t+ 2025-03-03 18:00:00: 25W\n\t+ 2025-03-03 00:00:00: 15W\n\t+ 2025-03-09 18:00:00: 15W\n* Standby power:\n\t+ 2025-03-07 18:00:00: 30W\n\t+ 2025-03-03 18:00:00: 30W\n\t+ 2025-03-03 00:00:00: 25W\n\t+ 2025-03-09 18:00:00: 25W\n* Temperature:\n\t+ 2025-03-07 18:00:00: 25.0°C\n\t+ 2025-03-03 18:00:00: 24.5°C\n\t+ 2025-03-03 00:00:00: 25.0°C\n\t+ 2025-03-09 18:00:00: 25.8°C\n* Humidity:\n\t+ 2025-03-07 18:00:00: 68%\n\t+ 2025-03-03 18:00:00: 65%\n\t+ 2025-03-03 00:00:00: 70%\n\t+ 2025-03-09 18:00:00: 71%\n\nNote that I did not find information on the "room_logs" in the provided data.', 'sources': [{'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'doc_hash': '939671a700c5eb6a275aa52e7b9352ee', 'timestamp': '2025-03-07 18:00:00', 'occupancy_count': 0, 'humidity': 68.0, 'temperature': 25.0, 'power_total': 90.0, 'energy_kwh': 0.12}}, {'content': 'At 2025-03-03 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.1 kWh. Lighting power: 20W, HVAC power: 25W, Standby power: 30W, Total power: 75W. Lights usage: 10.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 10.0 hours. Temperature: 24.5°C, Humidity: 65%.', 'metadata': {'timestamp': '2025-03-03 18:00:00', 'power_total': 75.0, 'energy_kwh': 0.1, 'humidity': 65.0, 'doc_hash': '3211f4cbe2064c4457bc52df4a1eea4a', 'occupancy_count': 0, 'temperature': 24.5}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'doc_hash': '843a02888293d76cc41f8689e977c75a', 'occupancy_count': 0, 'timestamp': '2025-03-03 00:00:00', 'power_total': 50.0, 'humidity': 70.0, 'temperature': 25.0, 'energy_kwh': 0.05}}, {'content': 'At 2025-03-09 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 10.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 10.0 hours. Temperature: 25.8°C, Humidity: 71%.', 'metadata': {'humidity': 71.0, 'timestamp': '2025-03-09 18:00:00', 'power_total': 50.0, 'occupancy_count': 0, 'energy_kwh': 0.05, 'temperature': 25.8, 'doc_hash': '7a0b3714ec5873b017b8962af13965e2'}}]}

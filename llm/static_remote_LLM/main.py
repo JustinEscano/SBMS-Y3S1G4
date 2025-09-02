@@ -31,6 +31,7 @@ class RoomLogAnalyzer:
         self.qa_chain = None
         self.processed_hashes = set()
         self.df = None  # Cache the dataframe
+        self.last_modified = None  # Track last file modification time for change detection
         
         # Load existing processed hashes if they exist
         self._load_processed_hashes()
@@ -65,6 +66,9 @@ class RoomLogAnalyzer:
             f"{row['energy_consumption_kwh']}_"
             f"{row['power_consumption_watts.lighting']}_"
             f"{row['power_consumption_watts.hvac_fan']}_"
+            f"{row.get('power_consumption_watts.air_conditioner_compressor', 0)}_"
+            f"{row.get('power_consumption_watts.projector', 0)}_"
+            f"{row.get('power_consumption_watts.computer', 0)}_"
             f"{row['power_consumption_watts.standby_misc']}_"
             f"{row['power_consumption_watts.total']}_"
             f"{row['equipment_usage.lights_on_hours']}_"
@@ -76,28 +80,37 @@ class RoomLogAnalyzer:
         )
         return hashlib.md5(content.encode()).hexdigest()
     
-    def load_and_process_data(self):
-        """Load and process the room logs data"""
-        if self.df is not None:
-            return self.df
-            
+    def load_and_process_data(self, force_reload=False):
+        """Load and process the room logs data, with change detection"""
         try:
+            current_mtime = os.path.getmtime(self.json_file_path)  # Get current file mod time
+            
+            # Check if file has changed since last load; skip reload if not
+            if not force_reload and self.df is not None and self.last_modified == current_mtime:
+                logger.info("No changes detected in JSON file; using cached DataFrame")
+                return self.df
+            
+            logger.info("Changes detected or first load; reloading JSON data")
             with open(self.json_file_path, "r") as file:
                 data = json.load(file)
             
-            # Flatten the logs into DataFrame, parse timestamps, and filter for occupied logs
+            # Flatten the logs into DataFrame and parse timestamps
             df = pd.json_normalize(data["logs"])
             df["timestamp"] = pd.to_datetime(df["timestamp"])
+            
+            # Filter for occupied logs only
             df = df[df["occupancy_status"] == "occupied"]
             
             # CRITICAL FIX: Ensure numeric types for correct calculations
             numeric_cols = [
                 "occupancy_count", "energy_consumption_kwh",
                 "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
-                "power_consumption_watts.standby_misc", "power_consumption_watts.total",
-                "equipment_usage.lights_on_hours", "equipment_usage.air_conditioner_on_hours",
-                "equipment_usage.projector_on_hours", "equipment_usage.computer_on_hours",
-                "environmental_data.temperature_celsius", "environmental_data.humidity_percent"
+                "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
+                "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
+                "power_consumption_watts.total", "equipment_usage.lights_on_hours",
+                "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
+                "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
+                "environmental_data.humidity_percent"
             ]
             for col in numeric_cols:
                 if col in df.columns:
@@ -107,15 +120,18 @@ class RoomLogAnalyzer:
             dedup_columns = [
                 "timestamp", "occupancy_count", "energy_consumption_kwh",
                 "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
-                "power_consumption_watts.standby_misc", "power_consumption_watts.total",
-                "equipment_usage.lights_on_hours", "equipment_usage.air_conditioner_on_hours",
-                "equipment_usage.projector_on_hours", "equipment_usage.computer_on_hours",
-                "environmental_data.temperature_celsius", "environmental_data.humidity_percent"
+                "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
+                "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
+                "power_consumption_watts.total", "equipment_usage.lights_on_hours",
+                "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
+                "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
+                "environmental_data.humidity_percent"
             ]
-            df = df.drop_duplicates(subset=dedup_columns)
+            df = df.drop_duplicates(subset=[col for col in dedup_columns if col in df.columns])
             
             logger.info(f"Loaded {len(df)} unique occupied room records after deduplication")
             self.df = df
+            self.last_modified = current_mtime  # Update last mod time after successful load
             return df
             
         except Exception as e:
@@ -130,10 +146,13 @@ class RoomLogAnalyzer:
             timestamp_str = str(row['timestamp'])
         
         page_content = (
-            f"At {timestamp_str}, the room was occupied with "
+            f"At {timestamp_str}, the room was {row['occupancy_status']} with "
             f"{row['occupancy_count']} people. Energy consumption: {row['energy_consumption_kwh']} kWh. "
             f"Lighting power: {row['power_consumption_watts.lighting']}W, "
             f"HVAC power: {row['power_consumption_watts.hvac_fan']}W, "
+            f"Air Conditioner Compressor: {row.get('power_consumption_watts.air_conditioner_compressor', 0)}W, "
+            f"Projector power: {row.get('power_consumption_watts.projector', 0)}W, "
+            f"Computer power: {row.get('power_consumption_watts.computer', 0)}W, "
             f"Standby power: {row['power_consumption_watts.standby_misc']}W, "
             f"Total power: {row['power_consumption_watts.total']}W. "
             f"Lights usage: {row['equipment_usage.lights_on_hours']} hours, "
@@ -217,7 +236,7 @@ class RoomLogAnalyzer:
                 logger.info("Creating new vector store")
                 embedding = OllamaEmbeddings(model="nomic-embed-text")
                 vector_store = Chroma.from_documents(
-                    documents=document, 
+                    documents=documents, 
                     embedding=embedding, 
                     persist_directory=self.chroma_dir, 
                     collection_name="room_logs"
@@ -271,7 +290,12 @@ class RoomLogAnalyzer:
             "hvac": "power_consumption_watts.hvac_fan",
             "ac": "power_consumption_watts.hvac_fan",
             "fan": "power_consumption_watts.hvac_fan",
-            "standby": "power_consumption_watts.standby_misc"
+            "compressor": "power_consumption_watts.air_conditioner_compressor",
+            "air conditioner": "power_consumption_watts.air_conditioner_compressor",
+            "projector power": "power_consumption_watts.projector",
+            "computer": "power_consumption_watts.computer",
+            "standby": "power_consumption_watts.standby_misc",
+            "misc": "power_consumption_watts.standby_misc"
         }
         
         # Define operation mapping
@@ -314,7 +338,7 @@ class RoomLogAnalyzer:
                     break
             
             if found_op and found_col:
-                operations.append((found_op, found_col))
+                operations.append((found_op, col_name))
         
         return operations
 
@@ -384,22 +408,82 @@ class RoomLogAnalyzer:
         # Load data
         df = self.load_and_process_data()
         if df.empty:
+            logger.error("DataFrame is empty; cannot process query")
             return None
         
-        # Handle count queries
-        if "how many" in q_lower and ("record" in q_lower or "data" in q_lower or "log" in q_lower):
+        logger.info(f"Processing query: '{q_lower}'")
+        
+        # Handle queries asking for all readings/timestamps
+        if any(keyword in q_lower for keyword in ["all readings", "all logs", "all records", "all room_logs"]):
+            timestamps = []
+            for _, row in df.iterrows():
+                try:
+                    timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
+                except:
+                    timestamps.append(str(row["timestamp"]))
+            sources = self._get_source_documents_for_rows(df.sample(min(3, len(df))))
+            logger.info(f"Matched all readings query; returning {len(timestamps)} timestamps")
+            return {
+                "answer": f"The room logs contain {len(timestamps)} occupied readings: {', '.join(timestamps)}.",
+                "sources": sources
+            }
+        
+        # Handle count queries for number of records
+        if "how many" in q_lower and any(keyword in q_lower for keyword in ["record", "data", "log"]):
             count = len(df)
-            # Return a sample of source documents
             sample_df = df.sample(min(3, len(df)))
             sources = self._get_source_documents_for_rows(sample_df)
+            logger.info(f"Matched count query; returning {count} records")
             return {
                 "answer": f"There are {count} occupied room records in the dataset.",
                 "sources": sources
             }
         
+        # Handle queries about total number of people in occupied rooms
+        if "how many" in q_lower and "people" in q_lower:
+            total_people = int(df["occupancy_count"].sum())
+            sample_df = df.sample(min(3, len(df)))
+            sources = self._get_source_documents_for_rows(sample_df)
+            logger.info(f"Matched people query; returning total of {total_people} people")
+            return {
+                "answer": f"There are a total of {total_people} people across all occupied room records.",
+                "sources": sources
+            }
+        
+        # Handle power consumption breakdown queries
+        if "power consumption breakdown" in q_lower or "power breakdown" in q_lower:
+            timestamp_match = re.search(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}', q_lower)
+            if timestamp_match:
+                target_timestamp = timestamp_match.group(0)
+                try:
+                    target_dt = pd.to_datetime(target_timestamp)
+                    matching_rows = df[df["timestamp"] == target_dt]
+                    if not matching_rows.empty:
+                        row = matching_rows.iloc[0]
+                        breakdown = (
+                            f"Lighting: {row['power_consumption_watts.lighting']}W, "
+                            f"HVAC Fan: {row['power_consumption_watts.hvac_fan']}W, "
+                            f"Air Conditioner Compressor: {row.get('power_consumption_watts.air_conditioner_compressor', 0)}W, "
+                            f"Projector: {row.get('power_consumption_watts.projector', 0)}W, "
+                            f"Computer: {row.get('power_consumption_watts.computer', 0)}W, "
+                            f"Standby Misc: {row['power_consumption_watts.standby_misc']}W, "
+                            f"Total: {row['power_consumption_watts.total']}W"
+                        )
+                        sources = self._get_source_documents_for_rows(matching_rows)
+                        logger.info(f"Matched power breakdown query for timestamp {target_timestamp}")
+                        return {
+                            "answer": f"At {target_timestamp}, the power consumption breakdown is: {breakdown}.",
+                            "sources": sources
+                        }
+                except ValueError:
+                    logger.warning(f"Invalid timestamp format in query: {target_timestamp}")
+            logger.warning("No valid timestamp found for power breakdown query")
+            return None
+        
         # First try to handle mixed queries
         mixed_result = self._handle_mixed_query(q_lower, df)
         if mixed_result:
+            logger.info("Matched mixed query")
             return mixed_result
         
         # Then try single operation queries
@@ -408,14 +492,19 @@ class RoomLogAnalyzer:
         
         if has_lowest and has_highest:
             # This is a combined query for the same column
+            logger.info("Matched combined min/max query")
             return self._handle_min_max_query(q_lower, df, "combined")
         elif has_lowest:
+            logger.info("Matched min query")
             return self._handle_min_max_query(q_lower, df, "min")
         elif has_highest:
+            logger.info("Matched max query")
             return self._handle_min_max_query(q_lower, df, "max")
         elif "average" in q_lower or "mean" in q_lower:
+            logger.info("Matched average query")
             return self._handle_avg_query(q_lower, df)
         
+        logger.warning(f"No deterministic match for query: '{q_lower}'; falling back to LLM")
         return None
     
     def _handle_min_max_query(self, q_lower, df, operation):
@@ -427,13 +516,19 @@ class RoomLogAnalyzer:
             "hvac": "power_consumption_watts.hvac_fan",
             "fan": "power_consumption_watts.hvac_fan",
             "ac": "power_consumption_watts.hvac_fan",
+            "compressor": "power_consumption_watts.air_conditioner_compressor",
+            "air conditioner": "power_consumption_watts.air_conditioner_compressor",
+            "projector power": "power_consumption_watts.projector",
+            "computer": "power_consumption_watts.computer",
             "standby": "power_consumption_watts.standby_misc",
             "misc": "power_consumption_watts.standby_misc",
             "energy": "energy_consumption_kwh",
             "temperature": "environmental_data.temperature_celsius",
             "temp": "environmental_data.temperature_celsius",
             "humidity": "environmental_data.humidity_percent",
-            "occupancy": "occupancy_count"
+            "occupancy": "occupancy_count",
+            "projector": "equipment_usage.projector_on_hours",
+            "projectors": "equipment_usage.projector_on_hours"
         }
         
         for key, col in col_map.items():
@@ -498,7 +593,13 @@ class RoomLogAnalyzer:
             "temperature": "environmental_data.temperature_celsius",
             "temp": "environmental_data.temperature_celsius",
             "humidity": "environmental_data.humidity_percent",
-            "occupancy": "occupancy_count"
+            "occupancy": "occupancy_count",
+            "lighting": "power_consumption_watts.lighting",
+            "hvac": "power_consumption_watts.hvac_fan",
+            "compressor": "power_consumption_watts.air_conditioner_compressor",
+            "projector power": "power_consumption_watts.projector",
+            "computer": "power_consumption_watts.computer",
+            "standby": "power_consumption_watts.standby_misc"
         }
         
         for key, col in col_map.items():
@@ -535,6 +636,18 @@ class RoomLogAnalyzer:
             raise ValueError("QA chain not initialized. Call initialize_qa_chain() first.")
 
         try:
+            # Refresh data and vector store if file has changed
+            df = self.load_and_process_data()  # This checks for changes automatically
+            documents = self.create_documents(df)  # Only creates new/unique docs based on hashes
+            if documents:
+                logger.info(f"Adding {len(documents)} new documents due to data changes")
+                if self.vector_store is None:
+                    self.initialize_vector_store(documents)  # Init if not already
+                else:
+                    self.vector_store.add_documents(documents)  # Add to existing
+                    self.vector_store.persist()
+                self._save_processed_hashes()
+
             # First try deterministic handling
             deterministic_result = self._handle_deterministic_query(query)
             if deterministic_result:
@@ -587,7 +700,6 @@ class RoomLogAnalyzer:
         
         return response
 
-
 # Initialize the analyzer globally
 analyzer = None
 
@@ -631,4 +743,4 @@ def ask(query):
         return {"error": str(e)}
 
 # Initialize when this module is imported
-initialize_analyzer(reset_vector_store=False)  # PS: Set True once to reset (If set to True while fetching data it won't work) after that set to False again for fetching data.
+initialize_analyzer(reset_vector_store=False)  # Set True once to reset, then False for normal operation
