@@ -115,7 +115,7 @@
         "lights_on_hours": 5.5,
         "air_conditioner_on_hours": 4.0,
         "projector_on_hours": 2.5,
-        "computer_on_hours": 5.0
+        "computer_on_hours": 10.0
       },
       "environmental_data": {
         "temperature_celsius": 15.0,
