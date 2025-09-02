@@ -17,14 +17,14 @@ const LightingPage: React.FC = () => {
         {/* Stat boxes */}
         <div className="stats-boxes">
           <div className="stat-box">
-            <div className="stat-icon">icon</div>
+            <div className="stat-icon">💡</div>
             <div className="stat-info">
               <p className="stat-number">{light.length}</p>
               <p className="stat-label">Total Lighting Units</p>
             </div>
           </div>
           <div className="stat-box">
-            <div className="stat-icon">icon</div>
+            <div className="stat-icon">✅</div>
             <div className="stat-info">
               <p className="stat-number">
                 {light.filter(e => e.status === "Active").length}
@@ -33,7 +33,7 @@ const LightingPage: React.FC = () => {
             </div>
           </div>
           <div className="stat-box">
-            <div className="stat-icon">icon</div>
+            <div className="stat-icon">❌</div>
             <div className="stat-info">
               <p className="stat-number">
                 {light.filter(e => e.status !== "Active").length}
@@ -44,7 +44,7 @@ const LightingPage: React.FC = () => {
         </div>
 
             {/* HVAC Equipment Table */}
-            <div className="hvac-table">
+            <div className="lighting-table">
                 <h2>Lighting Equipment Summary</h2>
 
                 {/* Search + Filter */}

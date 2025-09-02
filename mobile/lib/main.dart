@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'Screens/loginscreen.dart';
+import 'Screens/LoginScreen.dart';
 
 void main() {
   runApp(const SmartBuildingApp());
