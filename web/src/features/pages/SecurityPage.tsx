@@ -71,7 +71,10 @@ const SecurityPage: React.FC = () => {
           </div>
         </div>
 
-        {/* --- Controls --- */}
+        
+        <div className="requests-table">
+          <h2>Security Table Summary</h2>
+          {/* --- Controls --- */}
         <div className="table-controls">
           <input
             type="text"
@@ -132,8 +135,9 @@ const SecurityPage: React.FC = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table>    
         )}
+        </div>
       </div>
 
       {/* --- Modals --- */}

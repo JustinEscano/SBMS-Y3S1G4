@@ -82,15 +82,15 @@
 .icon {
   cursor: pointer;
   background-color: transparent; /* Default background */
-  border-radius: 50%; /* Make the icon background circular */
+  border-radius: 10%; /* Make the icon background circular */
   transition: background-color 0.3s ease, color 0.3s ease;
   text-decoration: none; /* Remove underline for icons */
+  padding: 2px;
   margin: 0 8px;
 }
 
 .icon:hover {
-  background-color: #fff; /* Change background to blue */
-  color: #007bff; /* Change icon color to white */
+  background-color: rgba(255, 255, 255, 0.5);
   transform: scale(1.5);
 }
 
