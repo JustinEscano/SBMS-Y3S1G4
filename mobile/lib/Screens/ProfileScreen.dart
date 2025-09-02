@@ -85,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Coming soon!')),
+                        const SnackBar(content: Text('')),
                       );
                     },
                   ),
@@ -96,7 +96,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Coming soon!')),
+                        const SnackBar(content: Text('')),
                       );
                     },
                   ),
@@ -107,7 +107,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Coming soon!')),
+                        const SnackBar(content: Text('')),
                       );
                     },
                   ),
@@ -118,7 +118,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Coming soon!')),
+                        const SnackBar(content: Text('')),
                       );
                     },
                   ),

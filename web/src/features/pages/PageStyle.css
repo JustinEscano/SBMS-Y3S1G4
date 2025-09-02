@@ -39,3 +39,7 @@ html, body {
 .dashboard-content.expanded {
   margin-left: var(--sidebar-collapsed);
 }
+
+.stat-icon {
+  font-size: 32px;
+}
