@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .permissions import RoleBasedPermission
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = User.EMAIL_FIELD  # force SimpleJWT to use email
+    username_field = User.EMAIL_FIELD # force SimpleJWT to use email
 
     @classmethod
     def get_token(cls, user):
@@ -40,14 +40,13 @@ class UserViewSet(viewsets.ModelViewSet):
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
-    
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     queryset = Equipment.objects.all()
     serializer_class = EquipmentSerializer
 
 class SensorLogViewSet(viewsets.ModelViewSet):
-    queryset = SensorLog.objects.all().order_by('-recorded_at')  # Latest first
+    queryset = SensorLog.objects.all().order_by('-recorded_at') # Latest first
     serializer_class = SensorLogSerializer
 
 class MaintenanceRequestViewSet(viewsets.ModelViewSet):
@@ -66,10 +65,40 @@ class AuthTokenViewSet(viewsets.ModelViewSet):
     queryset = AuthToken.objects.all()
     serializer_class = AuthTokenSerializer
 
-# ESP32 Integration Endpoints
+# New endpoint for field options
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def equipment_field_options(request):
+    """
+    Endpoint to get standardized field options for frontend dropdowns
+    """
+    return Response({
+        'equipment_status_options': [
+            {'value': 'online', 'label': 'Online', 'description': 'Equipment is working and connected'},
+            {'value': 'offline', 'label': 'Offline', 'description': 'Equipment is not working or disconnected'},
+            {'value': 'maintenance', 'label': 'Maintenance', 'description': 'Equipment is under maintenance'},
+            {'value': 'error', 'label': 'Error', 'description': 'Equipment has errors or issues'},
+        ],
+        'equipment_type_options': [
+            {'value': 'esp32', 'label': 'ESP32', 'description': 'ESP32 microcontroller'},
+            {'value': 'sensor', 'label': 'Sensor', 'description': 'General sensors'},
+            {'value': 'actuator', 'label': 'Actuator', 'description': 'Motors, relays, etc.'},
+            {'value': 'controller', 'label': 'Controller', 'description': 'Control devices'},
+            {'value': 'monitor', 'label': 'Monitor', 'description': 'Monitoring devices'},
+        ],
+        'room_type_options': [
+            {'value': 'office', 'label': 'Office', 'description': 'Office spaces'},
+            {'value': 'lab', 'label': 'Laboratory', 'description': 'Laboratory'},
+            {'value': 'meeting', 'label': 'Meeting Room', 'description': 'Meeting rooms'},
+            {'value': 'storage', 'label': 'Storage', 'description': 'Storage areas'},
+            {'value': 'corridor', 'label': 'Corridor', 'description': 'Hallways/corridors'},
+            {'value': 'utility', 'label': 'Utility', 'description': 'Utility rooms'},
+        ]
+    })
 
+# ESP32 Integration Endpoints
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Allow ESP32 to send data without authentication
+@permission_classes([AllowAny]) # Allow ESP32 to send data without authentication
 def esp32_sensor_data(request):
     """
     Endpoint for ESP32 to send sensor data
@@ -91,19 +120,19 @@ def esp32_sensor_data(request):
         for field in required_fields:
             if field not in data:
                 return Response(
-                    {'error': f'Missing required field: {field}'}, 
+                    {'error': f'Missing required field: {field}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        
+
         # Find equipment by device_id
         try:
             equipment = Equipment.objects.get(device_id=data['device_id'])
         except Equipment.DoesNotExist:
             return Response(
-                {'error': f'Equipment with device_id {data["device_id"]} not found'}, 
+                {'error': f'Equipment with device_id {data["device_id"]} not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
         # Create sensor log entry
         sensor_log = SensorLog.objects.create(
             equipment=equipment,
@@ -111,29 +140,29 @@ def esp32_sensor_data(request):
             humidity=float(data['humidity']),
             light_level=float(data['light_level']),
             motion_detected=bool(data['motion_detected']),
-            energy_usage=float(data.get('energy_usage', 0.0)),  # Optional field
+            energy_usage=float(data.get('energy_usage', 0.0)), # Optional field
             recorded_at=timezone.now()
         )
-        
-        # Update equipment status to online
+
+        # Update equipment status to online (using standardized value)
         equipment.status = 'online'
         equipment.save()
-        
+
         return Response({
             'success': True,
             'message': 'Sensor data received successfully',
             'log_id': str(sensor_log.id),
             'timestamp': sensor_log.recorded_at.isoformat()
         }, status=status.HTTP_201_CREATED)
-        
+
     except ValueError as e:
         return Response(
-            {'error': f'Invalid data format: {str(e)}'}, 
+            {'error': f'Invalid data format: {str(e)}'},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
         return Response(
-            {'error': f'Server error: {str(e)}'}, 
+            {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -175,16 +204,16 @@ def latest_sensor_data(request):
                     'recorded_at': latest_log.recorded_at.isoformat(),
                     'status': equipment.status
                 })
-        
+
         return Response({
             'success': True,
             'data': latest_logs,
             'count': len(latest_logs)
         }, status=status.HTTP_200_OK)
-        
+
     except Exception as e:
         return Response(
-            {'error': f'Server error: {str(e)}'}, 
+            {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -198,28 +227,29 @@ def esp32_heartbeat(request):
         device_id = request.data.get('device_id')
         if not device_id:
             return Response(
-                {'error': 'device_id is required'}, 
+                {'error': 'device_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             equipment = Equipment.objects.get(device_id=device_id)
-            equipment.status = 'online'
+            equipment.status = 'online'  # Use standardized value
             equipment.save()
-            
+
             return Response({
                 'success': True,
                 'message': f'Heartbeat received from {device_id}',
                 'timestamp': timezone.now().isoformat()
             })
+
         except Equipment.DoesNotExist:
             return Response(
-                {'error': f'Equipment with device_id {device_id} not found'}, 
+                {'error': f'Equipment with device_id {device_id} not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
-            
+
     except Exception as e:
         return Response(
-            {'error': f'Server error: {str(e)}'}, 
+            {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
