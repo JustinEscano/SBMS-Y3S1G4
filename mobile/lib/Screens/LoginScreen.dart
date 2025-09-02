@@ -14,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String _errorMessage = '';
@@ -26,22 +26,27 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
     try {
+      final requestBody = {
+        'email': email,
+        'password': password,
+      };
+
       final response = await http.post(
         Uri.parse('$baseUrl/token/'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({
-          'username': _usernameController.text,
-          'password': _passwordController.text,
-        }),
+        body: json.encode(requestBody),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
@@ -59,26 +64,52 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         } else {
           setState(() {
-            _errorMessage = 'Invalid response from server';
+            _errorMessage = 'Invalid response from server - missing tokens';
           });
         }
       } else if (response.statusCode == 401) {
         setState(() {
-          _errorMessage = 'Invalid username or password';
+          _errorMessage = 'Invalid email or password';
         });
+      } else if (response.statusCode == 400) {
+        try {
+          final errorData = json.decode(response.body);
+          String errorMsg = 'Login failed: ';
+          if (errorData is Map) {
+            List<String> errors = [];
+            errorData.forEach((key, value) {
+              if (value is List && value.isNotEmpty) {
+                errors.add('$key: ${value.first}');
+              } else if (value is String) {
+                errors.add('$key: $value');
+              }
+            });
+            errorMsg += errors.join(', ');
+          } else {
+            errorMsg += 'Invalid request format';
+          }
+
+          setState(() {
+            _errorMessage = errorMsg;
+          });
+        } catch (e) {
+          setState(() {
+            _errorMessage = 'Login failed. Please check your credentials.';
+          });
+        }
       } else {
         setState(() {
-          _errorMessage = 'Login failed. Please try again.';
+          _errorMessage = 'Login failed. Server returned ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
         if (e.toString().contains('SocketException')) {
-          _errorMessage = 'Cannot connect to server. Please check your connection.';
+          _errorMessage = 'Cannot connect to server. Check if Django is running on port 8000';
         } else if (e.toString().contains('TimeoutException')) {
-          _errorMessage = 'Request timed out. Please try again.';
+          _errorMessage = 'Request timed out. Server might be slow or down';
         } else {
-          _errorMessage = 'An error occurred. Please try again.';
+          _errorMessage = 'Error: ${e.toString()}';
         }
       });
     } finally {
@@ -117,15 +148,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 48),
               TextFormField(
-                controller: _usernameController,
+                controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'Email',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.email),
                 ),
+                keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your username';
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email address';
                   }
                   return null;
                 },
@@ -193,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
