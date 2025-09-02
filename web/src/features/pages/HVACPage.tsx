@@ -12,21 +12,21 @@ const HVACPage: React.FC = () => {
   );
 
   return (
-    <PageLayout initialSection={{ parent: "Equipment", child: "HVAC" }}>
+    <PageLayout initialSection={{ parent: "Dashboard", child: "HVAC" }}>
       <h1>Dashboard {">"} HVAC</h1>
 
       <div className="content-container">
         {/* Stat boxes */}
         <div className="stats-boxes">
           <div className="stat-box">
-            <div className="stat-icon">icon</div>
+            <div className="stat-icon">❄️</div>
             <div className="stat-info">
               <p className="stat-number">{hvac.length}</p>
               <p className="stat-label">Total HVAC Units</p>
             </div>
           </div>
           <div className="stat-box">
-            <div className="stat-icon">icon</div>
+            <div className="stat-icon">✅</div>
             <div className="stat-info">
               <p className="stat-number">
                 {hvac.filter(e => e.status === "Active").length}
@@ -35,7 +35,7 @@ const HVACPage: React.FC = () => {
             </div>
           </div>
           <div className="stat-box">
-            <div className="stat-icon">icon</div>
+            <div className="stat-icon">❌</div>
             <div className="stat-info">
               <p className="stat-number">
                 {hvac.filter(e => e.status !== "Active").length}
@@ -47,7 +47,7 @@ const HVACPage: React.FC = () => {
 
             {/* HVAC Equipment Table */}
             <div className="hvac-table">
-                <h2>HVAC Equipment Summary</h2>
+            <h2>HVAC Equipment Summary</h2>
 
                 {/* Search + Filter */}
                 <div className="table-controls">

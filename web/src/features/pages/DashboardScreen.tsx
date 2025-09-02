@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
           {/* Stat boxes */}
           <div className="stats-boxes">
             <div className="stat-box">
-              <div className="stat-icon">icon</div>
+              <div className="stat-icon">🏢</div>
               <div className="stat-info">
                 <p className="stat-number">{rooms.length}</p>
                 <p className="stat-label">Total Rooms</p>
@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className="stat-box">
-              <div className="stat-icon">icon</div>
+              <div className="stat-icon">🔌</div>
               <div className="stat-info">
                 <p className="stat-number">
                   {rooms.filter(r => (equipmentByRoom[r.id]?.length ?? 0) > 0).length}
@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className="stat-box">
-              <div className="stat-icon">icon</div>
+              <div className="stat-icon">❌</div>
               <div className="stat-info">
                 <p className="stat-number">
                   {rooms.filter(r => (equipmentByRoom[r.id]?.length ?? 0) === 0).length}

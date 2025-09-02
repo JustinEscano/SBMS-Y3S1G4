@@ -39,6 +39,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _errorMessage = '';
     });
 
+    final requestData = {
+      'username': _usernameController.text,
+      'email': _emailController.text,
+      'password': _passwordController.text,
+      'role': _selectedRole,
+    };
+
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/register/'),
@@ -46,30 +53,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({
-          'username': _usernameController.text,
-          'email': _emailController.text,
-          'password': _passwordController.text,
-          'role': _selectedRole,
-        }),
+        body: json.encode(requestData),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please login.'),
+            content: Text('Registration successful! Please login with your email.'),
             backgroundColor: Colors.green,
           ),
         );
         Navigator.pop(context);
       } else {
         setState(() {
-          _errorMessage = 'Registration failed. Please try again.';
+          _errorMessage = 'Registration failed. Status: ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Connection error. Please try again.';
+        _errorMessage = 'Connection error: ${e.toString()}';
       });
     } finally {
       setState(() {
