@@ -56,7 +56,7 @@ const SideBar: React.FC<SideBarProps> = ({
 
       <ul className="sidebar-list">
         <li className="menu-item toggle-btn">
-          <div className="menu-main" onClick={onToggle}>
+          <div title="Navigation Menu" className="menu-main" onClick={onToggle}>
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             {!collapsed && <span className="label">Navigation Menu</span>}
           </div>
