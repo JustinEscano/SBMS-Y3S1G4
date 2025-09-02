@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'LoginScreen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -11,11 +12,93 @@ class ProfileScreen extends StatelessWidget {
     required this.refreshToken,
   });
 
-  void _logout(BuildContext context) {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (route) => false,
+  // SharedPreferences keys (same as in LoginScreen)
+  static const String _accessTokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
+
+  Future<void> _logout(BuildContext context) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Logging out..."),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Clear stored tokens from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_accessTokenKey);
+      await prefs.remove(_refreshTokenKey);
+
+      // Optional: You can also clear the email if you want users to re-enter it
+      // await prefs.remove('user_email');
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Navigate to login screen and clear all previous routes
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+              (route) => false,
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error during logout: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Logout'),
+          content: const Text('Are you sure you want to log out?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                _logout(context); // Perform logout
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Log Out'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -85,7 +168,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('')),
+                        const SnackBar(content: Text('Settings feature coming soon!')),
                       );
                     },
                   ),
@@ -96,7 +179,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('')),
+                        const SnackBar(content: Text('About Us feature coming soon!')),
                       );
                     },
                   ),
@@ -107,7 +190,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('')),
+                        const SnackBar(content: Text('Help & Support feature coming soon!')),
                       );
                     },
                   ),
@@ -118,7 +201,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('')),
+                        const SnackBar(content: Text('Privacy Policy feature coming soon!')),
                       );
                     },
                   ),
@@ -131,7 +214,7 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _logout(context),
+                onPressed: () => _showLogoutConfirmation(context),
                 icon: const Icon(Icons.logout, color: Colors.white),
                 label: const Text(
                   'Log Out',
