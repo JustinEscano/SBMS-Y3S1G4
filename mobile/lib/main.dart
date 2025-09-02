@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:async';
 
@@ -15,11 +16,232 @@ class SmartBuildingApp extends StatelessWidget {
     return MaterialApp(
       title: 'Smart Building Management',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF323339),
+        colorScheme: ColorScheme.dark(
+          primary: const Color(0xFF4D6BFE),
+          secondary: const Color(0xFF81C784),
+          surface: const Color(0xFF424242),
+          background: const Color(0xFF323339),
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Colors.white,
+          onBackground: Colors.white,
+        ),
+        cardTheme: CardThemeData(
+          color: const Color(0xFF424242),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF424242),
+          foregroundColor: Colors.white,
+          elevation: 2,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4D6BFE),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF4D6BFE),
+          ),
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFF4D6BFE),
+          foregroundColor: Colors.white,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFF424242),
+          selectedItemColor: Color(0xFF4D6BFE),
+          unselectedItemColor: Color(0xFF757575),
+          type: BottomNavigationBarType.fixed,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF424242),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF616161)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF616161)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF4D6BFE), width: 2),
+          ),
+          labelStyle: const TextStyle(color: Color(0xFFBDBDBD)),
+          hintStyle: const TextStyle(color: Color(0xFF757575)),
+        ),
+        chipTheme: ChipThemeData(
+          backgroundColor: const Color(0xFF616161),
+          labelStyle: const TextStyle(color: Colors.white),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
       ),
-      home: const LoginScreen(),
+      home: const AuthWrapper(),
     );
+  }
+}
+
+// New AuthWrapper to check for existing tokens
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isLoading = true;
+  bool _isLoggedIn = false;
+  String? _accessToken;
+  String? _refreshToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthStatus();
+  }
+
+  Future<void> _checkAuthStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString('access_token');
+      final refreshToken = prefs.getString('refresh_token');
+
+      if (accessToken != null && refreshToken != null) {
+        // Verify token is still valid
+        final isValid = await _verifyToken(accessToken);
+        if (isValid) {
+          setState(() {
+            _isLoggedIn = true;
+            _accessToken = accessToken;
+            _refreshToken = refreshToken;
+          });
+        } else {
+          // Try to refresh the token
+          final newTokens = await _refreshAccessToken(refreshToken);
+          if (newTokens != null) {
+            final newAccessToken = newTokens['access'] as String?;
+            final newRefreshToken = newTokens['refresh'] as String?;
+
+            if (newAccessToken != null && newRefreshToken != null) {
+              await _saveTokens(newAccessToken, newRefreshToken);
+              setState(() {
+                _isLoggedIn = true;
+                _accessToken = newAccessToken;
+                _refreshToken = newRefreshToken;
+              });
+            } else {
+              await _clearTokens();
+            }
+          } else {
+            // Clear invalid tokens
+            await _clearTokens();
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking auth status: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<bool> _verifyToken(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/rooms/'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 5));
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<Map<String, String>?> _refreshAccessToken(String refreshToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8000/api/token/refresh/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'refresh': refreshToken}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'access': data['access'] as String,
+          'refresh': refreshToken, // Keep the same refresh token
+        };
+      }
+    } catch (e) {
+      print('Error refreshing token: $e');
+    }
+    return null;
+  }
+
+  Future<void> _saveTokens(String accessToken, String refreshToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('access_token', accessToken);
+    await prefs.setString('refresh_token', refreshToken);
+  }
+
+  Future<void> _clearTokens() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('access_token');
+    await prefs.remove('refresh_token');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Color(0xFF4D6BFE)),
+              SizedBox(height: 16),
+              Text(
+                'Loading...',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_isLoggedIn && _accessToken != null && _refreshToken != null) {
+      return MainScreen(
+        accessToken: _accessToken!,
+        refreshToken: _refreshToken!,
+      );
+    }
+
+    return const LoginScreen();
   }
 }
 
@@ -38,6 +260,12 @@ class _LoginScreenState extends State<LoginScreen> {
   String _errorMessage = '';
 
   final String baseUrl = 'http://10.0.2.2:8000/api';
+
+  Future<void> _saveTokens(String accessToken, String refreshToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('access_token', accessToken);
+    await prefs.setString('refresh_token', refreshToken);
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
@@ -71,12 +299,18 @@ class _LoginScreenState extends State<LoginScreen> {
         final data = json.decode(response.body);
 
         if (data.containsKey('access') && data.containsKey('refresh')) {
+          final accessToken = data['access'] as String;
+          final refreshToken = data['refresh'] as String;
+
+          // Save tokens to persistent storage
+          await _saveTokens(accessToken, refreshToken);
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => DashboardScreen(
-                accessToken: data['access'],
-                refreshToken: data['refresh'],
+              builder: (context) => MainScreen(
+                accessToken: accessToken,
+                refreshToken: refreshToken,
               ),
             ),
           );
@@ -142,7 +376,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Smart Building Login'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -154,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Icon(
                 Icons.business,
                 size: 80,
-                color: Colors.blue,
+                color: Color(0xFF4D6BFE),
               ),
               const SizedBox(height: 32),
               const Text(
@@ -162,6 +395,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 48),
@@ -169,10 +403,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: Icon(Icons.email, color: Color(0xFF4D6BFE)),
                 ),
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
@@ -188,10 +422,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  prefixIcon: Icon(Icons.lock, color: Color(0xFF4D6BFE)),
                 ),
                 obscureText: true,
+                style: const TextStyle(color: Colors.white),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your password';
@@ -205,12 +439,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.all(12),
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.red[100],
+                    color: const Color(0xFF5D4037),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE57373)),
                   ),
                   child: Text(
                     _errorMessage,
-                    style: TextStyle(color: Colors.red[800]),
+                    style: const TextStyle(color: Color(0xFFFFCDD2)),
                   ),
                 ),
               SizedBox(
@@ -222,7 +457,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                       : const Text('Login'),
                 ),
@@ -309,7 +547,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Registration successful! Please login with your email.'),
-            backgroundColor: Colors.green,
+            backgroundColor: Color(0xFF4CAF50),
           ),
         );
         Navigator.pop(context);
@@ -334,7 +572,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Register'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -347,7 +584,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const Icon(
                   Icons.person_add,
                   size: 80,
-                  color: Colors.blue,
+                  color: Color(0xFF4D6BFE),
                 ),
                 const SizedBox(height: 32),
                 const Text(
@@ -355,6 +592,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -362,9 +600,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _usernameController,
                   decoration: const InputDecoration(
                     labelText: 'Username',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                    prefixIcon: Icon(Icons.person, color: Color(0xFF4D6BFE)),
                   ),
+                  style: const TextStyle(color: Colors.white),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a username';
@@ -380,10 +618,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                    prefixIcon: Icon(Icons.email, color: Color(0xFF4D6BFE)),
                   ),
                   keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Colors.white),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter an email';
@@ -399,9 +637,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   value: _selectedRole,
                   decoration: const InputDecoration(
                     labelText: 'Role',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.work),
+                    prefixIcon: Icon(Icons.work, color: Color(0xFF4D6BFE)),
                   ),
+                  dropdownColor: const Color(0xFF424242),
+                  style: const TextStyle(color: Colors.white),
                   items: const [
                     DropdownMenuItem(value: 'client', child: Text('Client')),
                     DropdownMenuItem(value: 'admin', child: Text('Admin')),
@@ -417,10 +656,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordController,
                   decoration: const InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: Icon(Icons.lock, color: Color(0xFF4D6BFE)),
                   ),
                   obscureText: true,
+                  style: const TextStyle(color: Colors.white),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a password';
@@ -436,10 +675,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _confirmPasswordController,
                   decoration: const InputDecoration(
                     labelText: 'Confirm Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock_outline),
+                    prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF4D6BFE)),
                   ),
                   obscureText: true,
+                  style: const TextStyle(color: Colors.white),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please confirm your password';
@@ -453,12 +692,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.red[100],
+                      color: const Color(0xFF5D4037),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE57373)),
                     ),
                     child: Text(
                       _errorMessage,
-                      style: TextStyle(color: Colors.red[800]),
+                      style: const TextStyle(color: Color(0xFFFFCDD2)),
                     ),
                   ),
                 SizedBox(
@@ -467,7 +707,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _register,
                     child: _isLoading
-                        ? const CircularProgressIndicator()
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Text('Register'),
                   ),
                 ),
@@ -493,6 +733,109 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+}
+
+// Main Screen with Bottom Navigation
+class MainScreen extends StatefulWidget {
+  final String accessToken;
+  final String refreshToken;
+
+  const MainScreen({
+    super.key,
+    required this.accessToken,
+    required this.refreshToken,
+  });
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+  late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      DashboardScreen(
+        accessToken: widget.accessToken,
+        refreshToken: widget.refreshToken,
+      ),
+      const AnalyticsScreen(),
+      const NotificationsScreen(),
+      const ChatbotScreen(),
+    ];
+  }
+
+  Future<void> _logout() async {
+    // Clear stored tokens
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('access_token');
+    await prefs.remove('refresh_token');
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_getAppBarTitle()),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: _logout,
+          ),
+        ],
+      ),
+      body: _screens[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Notifications',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chatbot',
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getAppBarTitle() {
+    switch (_currentIndex) {
+      case 0:
+        return 'Smart Building Dashboard';
+      case 1:
+        return 'Analytics';
+      case 2:
+        return 'Notifications';
+      case 3:
+        return 'AI Assistant';
+      default:
+        return 'Smart Building';
+    }
   }
 }
 
@@ -630,358 +973,371 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _logout() {
-    _refreshTimer?.cancel();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Smart Building Dashboard'),
-        actions: [
-          IconButton(
-            icon: Icon(isAutoRefresh ? Icons.pause : Icons.play_arrow),
-            onPressed: _toggleAutoRefresh,
-            tooltip: isAutoRefresh ? 'Pause Auto Refresh' : 'Start Auto Refresh',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: loadData,
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isAutoRefresh)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.green[100],
-                  borderRadius: BorderRadius.circular(20),
+    return isLoading
+        ? const Center(child: CircularProgressIndicator(color: Color(0xFF4D6BFE)))
+        : SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Auto-refresh indicator and controls
+          Row(
+            children: [
+              if (isAutoRefresh)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E7D32),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.autorenew, size: 16, color: Color(0xFF81C784)),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Auto-refresh ON (10s)',
+                        style: TextStyle(color: Color(0xFF81C784), fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              const Spacer(),
+              IconButton(
+                icon: Icon(
+                  isAutoRefresh ? Icons.pause : Icons.play_arrow,
+                  color: const Color(0xFF4D6BFE),
+                ),
+                onPressed: _toggleAutoRefresh,
+                tooltip: isAutoRefresh ? 'Pause Auto Refresh' : 'Start Auto Refresh',
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Color(0xFF4D6BFE)),
+                onPressed: loadData,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Overview Cards
+          Row(
+            children: [
+              Expanded(
+                child: _buildOverviewCard(
+                  'Rooms',
+                  rooms.length.toString(),
+                  Icons.room,
+                  const Color(0xFF4D6BFE),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildOverviewCard(
+                  'Equipment',
+                  equipment.length.toString(),
+                  Icons.devices,
+                  const Color(0xFF81C784),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildOverviewCard(
+                  'ESP32 Devices',
+                  latestSensorData.length.toString(),
+                  Icons.memory,
+                  const Color(0xFFBA68C8),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildOverviewCard(
+                  'Online',
+                  latestSensorData.where((e) => e['status'] == 'online').length.toString(),
+                  Icons.online_prediction,
+                  const Color(0xFF81C784),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Live Sensor Data
+          if (latestSensorData.isNotEmpty) ...[
+            Row(
+              children: [
+                const Icon(Icons.sensors, color: Color(0xFFFFB74D)),
+                const SizedBox(width: 8),
+                const Text(
+                  'Live ESP32 Sensor Data',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5D4037),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: Color(0xFFFFB74D),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...latestSensorData.map((sensorData) => Card(
+              elevation: 3,
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.autorenew, size: 16, color: Colors.green[700]),
-                    const SizedBox(width: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.memory,
+                          color: sensorData['status'] == 'online'
+                              ? const Color(0xFF81C784)
+                              : const Color(0xFFE57373),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          sensorData['equipment_name'] ?? 'Unknown Device',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: sensorData['status'] == 'online'
+                                ? const Color(0xFF2E7D32)
+                                : const Color(0xFF5D4037),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            sensorData['status']?.toUpperCase() ?? 'UNKNOWN',
+                            style: TextStyle(
+                              color: sensorData['status'] == 'online'
+                                  ? const Color(0xFF81C784)
+                                  : const Color(0xFFE57373),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     Text(
-                      'Auto-refresh ON (10s)',
-                      style: TextStyle(color: Colors.green[700], fontSize: 12),
+                      'Device ID: ${sensorData['device_id'] ?? 'N/A'}',
+                      style: const TextStyle(color: Color(0xFFBDBDBD), fontSize: 12),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSensorValue(
+                            'Temperature',
+                            '${sensorData['temperature']?.toStringAsFixed(1) ?? 'N/A'}°C',
+                            Icons.thermostat,
+                            const Color(0xFFE57373),
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildSensorValue(
+                            'Humidity',
+                            '${sensorData['humidity']?.toStringAsFixed(1) ?? 'N/A'}%',
+                            Icons.water_drop,
+                            const Color(0xFF4D6BFE),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSensorValue(
+                            'Light Level',
+                            '${sensorData['light_level']?.toStringAsFixed(0) ?? 'N/A'}',
+                            Icons.light_mode,
+                            const Color(0xFFFFD54F),
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildSensorValue(
+                            'Motion',
+                            sensorData['motion_detected'] == true ? 'Detected' : 'None',
+                            Icons.motion_photos_on,
+                            sensorData['motion_detected'] == true
+                                ? const Color(0xFFFFB74D)
+                                : const Color(0xFF757575),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Last Update: ${_formatDateTime(sensorData['recorded_at'])}',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFFBDBDBD)),
                     ),
                   ],
                 ),
               ),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildOverviewCard(
-                    'Rooms',
-                    rooms.length.toString(),
-                    Icons.room,
-                    Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildOverviewCard(
-                    'Equipment',
-                    equipment.length.toString(),
-                    Icons.devices,
-                    Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildOverviewCard(
-                    'ESP32 Devices',
-                    latestSensorData.length.toString(),
-                    Icons.memory,
-                    Colors.purple,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildOverviewCard(
-                    'Online',
-                    latestSensorData.where((e) => e['status'] == 'online').length.toString(),
-                    Icons.online_prediction,
-                    Colors.green,
-                  ),
-                ),
-              ],
-            ),
+            )).toList(),
             const SizedBox(height: 24),
-
-            if (latestSensorData.isNotEmpty) ...[
-              Row(
-                children: [
-                  const Icon(Icons.sensors, color: Colors.orange),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Live ESP32 Sensor Data',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'LIVE',
-                      style: TextStyle(
-                        color: Colors.orange[700],
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ...latestSensorData.map((sensorData) => Card(
-                elevation: 3,
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.memory,
-                            color: sensorData['status'] == 'online' ? Colors.green : Colors.red,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            sensorData['equipment_name'] ?? 'Unknown Device',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: sensorData['status'] == 'online'
-                                  ? Colors.green[100]
-                                  : Colors.red[100],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              sensorData['status']?.toUpperCase() ?? 'UNKNOWN',
-                              style: TextStyle(
-                                color: sensorData['status'] == 'online'
-                                    ? Colors.green[700]
-                                    : Colors.red[700],
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Device ID: ${sensorData['device_id'] ?? 'N/A'}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildSensorValue(
-                              'Temperature',
-                              '${sensorData['temperature']?.toStringAsFixed(1) ?? 'N/A'}°C',
-                              Icons.thermostat,
-                              Colors.red,
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildSensorValue(
-                              'Humidity',
-                              '${sensorData['humidity']?.toStringAsFixed(1) ?? 'N/A'}%',
-                              Icons.water_drop,
-                              Colors.blue,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildSensorValue(
-                              'Light Level',
-                              '${sensorData['light_level']?.toStringAsFixed(0) ?? 'N/A'}',
-                              Icons.light_mode,
-                              Colors.amber,
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildSensorValue(
-                              'Motion',
-                              sensorData['motion_detected'] == true ? 'Detected' : 'None',
-                              Icons.motion_photos_on,
-                              sensorData['motion_detected'] == true ? Colors.orange : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Last Update: ${_formatDateTime(sensorData['recorded_at'])}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-              )).toList(),
-              const SizedBox(height: 24),
-            ],
-
-            if (rooms.isNotEmpty) ...[
-              const Text(
-                'Rooms',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ...rooms.map((room) => Card(
-                child: ListTile(
-                  leading: const Icon(Icons.room),
-                  title: Text(room['name'] ?? 'Unknown Room'),
-                  subtitle: Text('Floor ${room['floor']} • Capacity: ${room['capacity']}'),
-                  trailing: Chip(
-                    label: Text(room['type'] ?? 'Unknown'),
-                    backgroundColor: Colors.blue[100],
-                  ),
-                ),
-              )).toList(),
-              const SizedBox(height: 24),
-            ],
-
-            if (equipment.isNotEmpty) ...[
-              const Text(
-                'Equipment',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ...equipment.map((item) {
-                Color statusColor = item['status'] == 'online' ? Colors.green : Colors.red;
-                return Card(
-                  child: ListTile(
-                    leading: Icon(Icons.devices, color: statusColor),
-                    title: Text(item['name'] ?? 'Unknown Equipment'),
-                    subtitle: Text('Type: ${item['type']} • Device ID: ${item['device_id'] ?? 'N/A'}'),
-                    trailing: Chip(
-                      label: Text(item['status'] ?? 'Unknown'),
-                      backgroundColor: statusColor.withOpacity(0.2),
-                    ),
-                  ),
-                );
-              }).toList(),
-              const SizedBox(height: 24),
-            ],
-
-            if (sensorLogs.isNotEmpty) ...[
-              const Text(
-                'Recent Sensor Data',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ...sensorLogs.take(5).map((log) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Equipment ID: ${log['equipment']}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildSensorValue('Temp', '${log['temperature']}°C', Icons.thermostat),
-                          _buildSensorValue('Humidity', '${log['humidity']}%', Icons.water_drop),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildSensorValue('Light', '${log['light_level']}', Icons.light_mode),
-                          _buildSensorValue('Motion', log['motion_detected'] ? 'Yes' : 'No', Icons.motion_photos_on),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Recorded: ${log['recorded_at']}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-              )).toList(),
-            ],
-
-            if (rooms.isEmpty && equipment.isEmpty && sensorLogs.isEmpty && latestSensorData.isEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.info_outline, size: 48, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No Data Available',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text('Add some rooms and equipment in Django admin to see them here.'),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: loadData,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Refresh Data'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ESP32 QR Scanner coming soon!')),
-          );
-        },
-        tooltip: 'Scan ESP32 QR Code',
-        child: const Icon(Icons.qr_code_scanner),
+
+          // Rooms Section
+          if (rooms.isNotEmpty) ...[
+            const Text(
+              'Rooms',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            ...rooms.map((room) => Card(
+              child: ListTile(
+                leading: const Icon(Icons.room, color: Color(0xFF4D6BFE)),
+                title: Text(
+                  room['name'] ?? 'Unknown Room',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                subtitle: Text(
+                  'Floor ${room['floor']} • Capacity: ${room['capacity']}',
+                  style: const TextStyle(color: Color(0xFFBDBDBD)),
+                ),
+                trailing: Chip(
+                  label: Text(room['type'] ?? 'Unknown'),
+                  backgroundColor: const Color(0xFF1976D2),
+                  labelStyle: const TextStyle(color: Colors.white),
+                ),
+              ),
+            )).toList(),
+            const SizedBox(height: 24),
+          ],
+
+          // Equipment Section
+          if (equipment.isNotEmpty) ...[
+            const Text(
+              'Equipment',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            ...equipment.map((item) {
+              Color statusColor = item['status'] == 'online'
+                  ? const Color(0xFF81C784)
+                  : const Color(0xFFE57373);
+              return Card(
+                child: ListTile(
+                  leading: Icon(Icons.devices, color: statusColor),
+                  title: Text(
+                    item['name'] ?? 'Unknown Equipment',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    'Type: ${item['type']} • Device ID: ${item['device_id'] ?? 'N/A'}',
+                    style: const TextStyle(color: Color(0xFFBDBDBD)),
+                  ),
+                  trailing: Chip(
+                    label: Text(item['status'] ?? 'Unknown'),
+                    backgroundColor: statusColor.withOpacity(0.3),
+                    labelStyle: TextStyle(color: statusColor),
+                  ),
+                ),
+              );
+            }).toList(),
+            const SizedBox(height: 24),
+          ],
+
+          // Recent Sensor Data
+          if (sensorLogs.isNotEmpty) ...[
+            const Text(
+              'Recent Sensor Data',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            ...sensorLogs.take(5).map((log) => Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Equipment ID: ${log['equipment']}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSensorValue('Temp', '${log['temperature']}°C', Icons.thermostat),
+                        _buildSensorValue('Humidity', '${log['humidity']}%', Icons.water_drop),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSensorValue('Light', '${log['light_level']}', Icons.light_mode),
+                        _buildSensorValue('Motion', log['motion_detected'] ? 'Yes' : 'No', Icons.motion_photos_on),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Recorded: ${log['recorded_at']}',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFFBDBDBD)),
+                    ),
+                  ],
+                ),
+              ),
+            )).toList(),
+          ],
+
+          // No Data Available
+          if (rooms.isEmpty && equipment.isEmpty && sensorLogs.isEmpty && latestSensorData.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    const Icon(Icons.info_outline, size: 48, color: Color(0xFF757575)),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No Data Available',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Add some rooms and equipment in Django admin to see them here.',
+                      style: TextStyle(color: Color(0xFFBDBDBD)),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: loadData,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Refresh Data'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -996,11 +1352,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             Text(
               title,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              style: const TextStyle(fontSize: 14, color: Color(0xFFBDBDBD)),
             ),
           ],
         ),
@@ -1011,15 +1367,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildSensorValue(String label, String value, IconData icon, [Color? color]) {
     return Column(
       children: [
-        Icon(icon, size: 20, color: color ?? Colors.blue),
+        Icon(icon, size: 20, color: color ?? const Color(0xFF4D6BFE)),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          style: const TextStyle(fontSize: 12, color: Color(0xFFBDBDBD)),
           textAlign: TextAlign.center,
         ),
       ],
@@ -1045,5 +1401,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       return 'Unknown';
     }
+  }
+}
+
+// Empty Analytics Screen
+class AnalyticsScreen extends StatelessWidget {
+  const AnalyticsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.analytics,
+            size: 80,
+            color: Color(0xFF757575),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Analytics',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Empty Notifications Screen
+class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.notifications,
+            size: 80,
+            color: Color(0xFF757575),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Notifications',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Empty Chatbot Screen
+class ChatbotScreen extends StatelessWidget {
+  const ChatbotScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.chat,
+            size: 80,
+            color: Color(0xFF757575),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'AI Assistant',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -4,13 +4,13 @@
 #include <DHT.h>
 
 // WiFi credentials - UPDATE THESE TO YOUR NETWORK
-const char* ssid = "";
+const char* ssid = "Ace's A55";
 const char* password = "";
 
 // Django API endpoints - UPDATE YOUR_COMPUTER_IP
-const char* serverURL = "http://192.168.0.100:8000/api/esp32/sensor-data/";
-const char* healthURL = "http://192.168.0.100:8000/api/esp32/health/";
-const char* heartbeatURL = "http://192.168.0.100:8000/api/esp32/heartbeat/";
+const char* serverURL = "http://10.18.90.29:8000/api/esp32/sensor-data/";
+const char* healthURL = "http://10.18.90.29:8000/api/esp32/health/";
+const char* heartbeatURL = "http://10.18.90.29:8000/api/esp32/heartbeat/";
 
 // Device configuration - MUST MATCH Django equipment device_id
 const char* deviceID = "ESP32_001";
