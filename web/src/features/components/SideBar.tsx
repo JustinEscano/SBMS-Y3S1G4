@@ -1,6 +1,6 @@
 import React, { type JSX } from "react";
 import "./SideBar.css";
-import { Home, Settings, Bell, BarChart2, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Bell, BarChart2, LogOut, ChevronLeft, ChevronRight, Info, Bot } from "lucide-react";
 import OrbitLogo from "../../assets/ORBIT.png";
 import CompanyNameLogo from "../../assets/Logo-Name.png";
 import { useNavigate } from "react-router-dom";
@@ -31,10 +31,10 @@ const sections: Section[] = [
       { id: "Maintenance", label: "Maintenance" },
     ],
   },
-  { id: "Usage", label: "Usage Analytics", icon: <Settings size={18} /> },
-  { id: "Notification", label: "Notification", icon: <BarChart2 size={18} /> },
-  { id: "LLM", label: "LLM Chat", icon: <BarChart2 size={18} /> },
-  { id: "About", label: "About Us", icon: <Bell size={18} /> },
+  { id: "Usage", label: "Usage Analytics", icon: <BarChart2 size={18} /> },
+  { id: "Notification", label: "Notification", icon: <Bell size={18} /> },
+  { id: "LLM", label: "LLM Chat", icon: <Bot size={18} /> },
+  { id: "About", label: "About Us", icon: <Info size={18} /> },
 ];
 
 const SideBar: React.FC<SideBarProps> = ({
@@ -58,7 +58,7 @@ const SideBar: React.FC<SideBarProps> = ({
         <li className="menu-item toggle-btn">
           <div className="menu-main" onClick={onToggle}>
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-            {!collapsed && <span className="label">Collapse</span>}
+            {!collapsed && <span className="label">Navigation Menu</span>}
           </div>
         </li>
 

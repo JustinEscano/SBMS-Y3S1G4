@@ -24,7 +24,7 @@ const NotificationCard: React.FC<{
         <p className="notif-card-content">{notif.content || "Notification Content"}</p>
         <div className="notif-card-actions">
           <div className="action-icons">
-            <PenSquareIcon className="icon text-primary" />
+            <PenSquareIcon className="icon" color="#CCE9EF"/>
             <button className="delete-btn">
               <TrashIcon className="icon" />
             </button>
