@@ -253,7 +253,7 @@ class RoomLogAnalyzer:
     def initialize_qa_chain(self):
         """Initialize the QA chain with the LLM"""
         try:
-            llm = OllamaLLM(model="llama3:latest")
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
             self.qa_chain = RetrievalQA.from_chain_type(
                 llm=llm, 
                 retriever=self.vector_store.as_retriever(),
