@@ -1,0 +1,108 @@
+/* Notification grid container */
+.notif-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* 1 column by default */
+  gap: 20px; /* Space between cards */
+  padding: 20px; /* Optional padding around the grid */
+}
+
+@media (min-width: 1024px) {
+  .notif-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+  }
+}
+
+@media (min-width: 1656px) {
+  .notif-grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns on large screens */
+  }
+}
+
+/* Notification card styling */
+.notif-card {
+  border-radius: 8px;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none; /* Remove underline for the entire card */
+  color: white; /* Ensure the text color inherits from the parent */
+}
+
+.notif-card-body {
+  padding: 16px;
+  width: 100%; /* Ensure the card takes up the full width of its grid cell */
+  border-radius: 8px; /* Match the card's border radius */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #0d122e; /* Default background color */
+  border: 1px solid #ddd;
+  box-sizing: border-box; /* Include padding and border in the width calculation */
+}
+
+/* Hover effect for the card */
+.notif-card-body:hover {
+  background-color: #007bff; /* Change background to blue */
+  color: white; /* Change text color to orange */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add hover effect */
+  transform: scale(1.05); /* Slightly enlarge the card */
+}
+
+.notif-card:hover .notif-card-content {
+  color: white; 
+}
+
+/* Title and Date Row */
+.notif-card-header {
+  display: flex;
+  justify-content: space-between; /* Space between title and date */
+  align-items: center;
+  margin-bottom: 8px; /* Add spacing below the row */
+}
+
+/* Orange Divider Line */
+.notif-card-divider {
+  height: 2px;
+  background-color: orange; /* Orange line */
+  margin: 8px 0; /* Add spacing above and below the line */
+}
+
+/* Content */
+.notif-card-content {
+  font-size: 1rem;
+  color: white;
+  margin-bottom: 16px; /* Add spacing below the content */
+}
+
+/* Actions */
+.notif-card-actions {
+  display: flex;
+  justify-content: flex-end; /* Align actions to the right */
+  align-items: center;
+  gap: 8px; /* Space between action icons */
+}
+
+/* Hover effect for icons */
+.icon {
+  cursor: pointer;
+  background-color: transparent; /* Default background */
+  border-radius: 50%; /* Make the icon background circular */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  text-decoration: none; /* Remove underline for icons */
+  margin: 0 8px;
+}
+
+.icon:hover {
+  background-color: #fff; /* Change background to blue */
+  color: #007bff; /* Change icon color to white */
+  transform: scale(1.5);
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #e74c3c;
+  transition: color 0.3s ease;
+  text-decoration: none; /* Remove underline for delete button */
+}
+
+.delete-btn:hover {
+  color: #c0392b; /* Darker red on hover */
+}
