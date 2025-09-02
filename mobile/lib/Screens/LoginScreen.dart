@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'RegisterScreen.dart';
 import 'DashboardScreen.dart';
 
@@ -17,9 +18,158 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isCheckingStoredLogin = true;
   String _errorMessage = '';
 
   final String baseUrl = 'http://10.0.2.2:8000/api';
+
+  // SharedPreferences keys
+  static const String _accessTokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
+  static const String _emailKey = 'user_email';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStoredLogin();
+  }
+
+  /// Check if user is already logged in with stored tokens
+  Future<void> _checkStoredLogin() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString(_accessTokenKey);
+      final refreshToken = prefs.getString(_refreshTokenKey);
+      final storedEmail = prefs.getString(_emailKey);
+
+      if (accessToken != null && refreshToken != null) {
+        // Verify token is still valid by making a test request
+        final isValid = await _verifyToken(accessToken);
+
+        if (isValid) {
+          // Navigate to dashboard if token is valid
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardScreen(
+                  accessToken: accessToken,
+                  refreshToken: refreshToken,
+                ),
+              ),
+            );
+          }
+          return;
+        } else {
+          // Token expired, try to refresh
+          if (refreshToken.isNotEmpty) {
+            final newTokens = await _refreshAccessToken(refreshToken);
+            if (newTokens != null &&
+                newTokens['access'] != null &&
+                newTokens['refresh'] != null) {
+              final newAccessToken = newTokens['access']!;
+              final newRefreshToken = newTokens['refresh']!;
+
+              await _saveTokens(newAccessToken, newRefreshToken, storedEmail ?? '');
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DashboardScreen(
+                      accessToken: newAccessToken,
+                      refreshToken: newRefreshToken,
+                    ),
+                  ),
+                );
+              }
+              return;
+            }
+          }
+          // Clear invalid tokens
+          await _clearStoredTokens();
+        }
+      }
+
+      // Pre-fill email if stored
+      if (storedEmail != null && storedEmail.isNotEmpty) {
+        _emailController.text = storedEmail;
+      }
+    } catch (e) {
+      print('Error checking stored login: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingStoredLogin = false;
+        });
+      }
+    }
+  }
+
+  /// Verify if the access token is still valid
+  Future<bool> _verifyToken(String accessToken) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/verify-token/'), // Adjust endpoint as needed
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Refresh the access token using refresh token
+  Future<Map<String, String>?> _refreshAccessToken(String refreshToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/token/refresh/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'refresh': refreshToken}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data.containsKey('access') && data['access'] != null) {
+          return {
+            'access': data['access'] as String,
+            'refresh': refreshToken, // Keep the same refresh token
+          };
+        }
+      }
+    } catch (e) {
+      print('Error refreshing token: $e');
+    }
+    return null;
+  }
+
+  /// Save tokens to SharedPreferences
+  Future<void> _saveTokens(String accessToken, String refreshToken, String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_accessTokenKey, accessToken);
+    await prefs.setString(_refreshTokenKey, refreshToken);
+    await prefs.setString(_emailKey, email);
+  }
+
+  /// Clear stored tokens from SharedPreferences
+  Future<void> _clearStoredTokens() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_accessTokenKey);
+    await prefs.remove(_refreshTokenKey);
+    // Keep email for convenience
+  }
+
+  /// Static method to logout from anywhere in the app
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_accessTokenKey);
+    await prefs.remove(_refreshTokenKey);
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
@@ -52,16 +202,27 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        if (data.containsKey('access') && data.containsKey('refresh')) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DashboardScreen(
-                accessToken: data['access'],
-                refreshToken: data['refresh'],
+        if (data.containsKey('access') &&
+            data.containsKey('refresh') &&
+            data['access'] != null &&
+            data['refresh'] != null) {
+          final accessToken = data['access'] as String;
+          final refreshToken = data['refresh'] as String;
+
+          // Save tokens to SharedPreferences
+          await _saveTokens(accessToken, refreshToken, email);
+
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardScreen(
+                  accessToken: accessToken,
+                  refreshToken: refreshToken,
+                ),
               ),
-            ),
-          );
+            );
+          }
         } else {
           setState(() {
             _errorMessage = 'Invalid response from server - missing tokens';
@@ -121,6 +282,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading screen while checking stored login
+    if (_isCheckingStoredLogin) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Checking login status...'),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Smart Building Login'),
