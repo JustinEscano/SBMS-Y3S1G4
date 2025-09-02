@@ -1,2 +1,6 @@
 
 .qodo
+
+# ChromaDB runtime files
+llm/static_remote_LLM/chroma_room_logs/
+*.sqlite3
