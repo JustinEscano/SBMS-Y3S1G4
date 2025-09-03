@@ -1,29 +1,30 @@
-import axiosInstance from '../../service/AppService';
-import type { Room } from '../types/roomTypes';
+import axiosInstance from "../../service/AppService";
+import type { Room } from "../types/dashboardTypes";
 
-export const getAllRooms = async (): Promise<Room[]> => {
-  const res = await axiosInstance.get<Room[]>('/api/rooms/');
-  return res.data;
-};
+const ROOM_API = "/api/rooms/";
 
-export const getRoomById = async (id: string): Promise<Room> => {
-  const res = await axiosInstance.get<Room>(`/api/rooms/${id}/`);
-  return res.data;
-};
+export const roomService = {
+  getAll: async (): Promise<Room[]> => {
+    const res = await axiosInstance.get<Room[]>(ROOM_API);
+    return res.data;
+  },
 
-export const createRoom = async (roomData: Partial<Room>): Promise<Room> => {
-  const res = await axiosInstance.post<Room>('/api/rooms/', roomData);
-  return res.data;
-};
+  getById: async (id: string): Promise<Room> => {
+    const res = await axiosInstance.get<Room>(`${ROOM_API}${id}/`);
+    return res.data;
+  },
 
-export const updateRoom = async (
-  id: string,
-  roomData: Partial<Room>
-): Promise<Room> => {
-  const res = await axiosInstance.put<Room>(`/api/rooms/${id}/`, roomData);
-  return res.data;
-};
+  create: async (roomData: Partial<Room>): Promise<Room> => {
+    const res = await axiosInstance.post<Room>(ROOM_API, roomData);
+    return res.data;
+  },
 
-export const deleteRoom = async (id: string): Promise<void> => {
-  await axiosInstance.delete(`/api/rooms/${id}/`);
+  update: async (id: string, roomData: Partial<Room>): Promise<Room> => {
+    const res = await axiosInstance.put<Room>(`${ROOM_API}${id}/`, roomData);
+    return res.data;
+  },
+
+  remove: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${ROOM_API}${id}/`);
+  },
 };

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../components/SideBar";
-import TopBar from "../components/TopBar";
-import { useAuth } from "../context/AuthContext";
+import SideBar from "../components/sideBar";
+import TopBar from "../components/topBar";
+import { useAuth } from "../context/authContext";
 import "./PageStyle.css";
 
 interface SelectedSection {

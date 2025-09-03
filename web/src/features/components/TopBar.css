@@ -1,5 +1,4 @@
-/* Topbar */
-.topbar {
+/* Topbar */.topbar {
   position: fixed;
   top: 0;
   left: var(--sidebar-expanded);
@@ -15,14 +14,32 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   transition: left 0.3s ease, width 0.3s ease;
+  box-sizing: border-box;
 }
+
 .topbar.collapsed {
   left: var(--sidebar-collapsed);
   width: calc(100% - var(--sidebar-collapsed));
 }
-.topbar-left { display: flex; align-items: center; }
-.topbar-title { font-size: 20px; font-weight: bold; }
-.topbar-right { display: flex; align-items: center; }
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-size: 20px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
 
 /* Profile dropdown button */
 .profile-dropdown {

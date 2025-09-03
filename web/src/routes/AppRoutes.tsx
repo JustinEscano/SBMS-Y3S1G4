@@ -2,11 +2,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginScreen from "../features/pages/LoginScreen";
 import DashboardScreen from "../features/pages/DashboardScreen";
 import RegSignUpForm from "../features/pages/SignUpForm";
-import { useAuth } from "../features/context/AuthContext";
+import { useAuth } from "../features/context/authContext";
 import type { JSX } from "react";
-import HVACPage from "../features/pages/HVACPage";
-import LightingPage from "../features/pages/LightingPage";
-import SecurityPage from "../features/pages/SecurityPage";
+import GenericEquipmentPage from "../features/pages/EquipmentPage";
 import UsagePage from "../features/pages/UsagePage";
 import MaintenancePage from "../features/pages/MaintenancePage";
 import NotificationPage from "../features/pages/NotificationPage";
@@ -59,9 +57,9 @@ const AppRoutes = () => {
         }
       />
 
-      <Route path="/dashboard/hvac" element={<ProtectedRoute><HVACPage /></ProtectedRoute>} />
-      <Route path="/dashboard/lighting" element={<ProtectedRoute><LightingPage /></ProtectedRoute>} />
-      <Route path="/dashboard/security" element={<ProtectedRoute><SecurityPage /></ProtectedRoute>} />
+      <Route path="/dashboard/hvac" element={<ProtectedRoute><GenericEquipmentPage mode="hvac" icon="❄️" /></ProtectedRoute>} />
+      <Route path="/dashboard/lighting" element={<ProtectedRoute><GenericEquipmentPage mode="lighting" icon="💡" /></ProtectedRoute>} />
+      <Route path="/dashboard/security" element={<ProtectedRoute><GenericEquipmentPage mode="security" icon="🔒" /></ProtectedRoute>} />
       <Route path="/dashboard/maintenance" element={<ProtectedRoute><MaintenancePage /></ProtectedRoute>} />
 
       <Route path="/usage" element={<ProtectedRoute><UsagePage /></ProtectedRoute>} />

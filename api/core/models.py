@@ -2,13 +2,43 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
 
+# Add these constants at the top for standardized field values
+EQUIPMENT_STATUS_CHOICES = [
+    ('online', 'Online'),
+    ('offline', 'Offline'),
+    ('maintenance', 'Maintenance'),
+    ('error', 'Error'),
+]
+
+EQUIPMENT_TYPE_CHOICES = [
+    ('esp32', 'ESP32'),
+    ('sensor', 'Sensor'),
+    ('actuator', 'Actuator'),
+    ('controller', 'Controller'),
+    ('monitor', 'Monitor'),
+]
+
+EQUIPMENT_MODE_CHOICES = [
+    ('hvac', 'HVAC'),
+    ('lighting', 'Lighting'),
+    ('security', 'Security'),
+]
+
+ROOM_TYPE_CHOICES = [
+    ('office', 'Office'),
+    ('lab', 'Laboratory'),
+    ('meeting', 'Meeting Room'),
+    ('storage', 'Storage'),
+    ('corridor', 'Corridor'),
+    ('utility', 'Utility'),
+]
+
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role='client', **extra_fields):
         if not email:
             raise ValueError("Email is required")
         if not username:
             raise ValueError("Username is required")
-
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, role=role, **extra_fields)
         user.set_password(password)
@@ -19,7 +49,7 @@ class User(AbstractBaseUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)  # Will be set with hashing
+    password = models.CharField(max_length=128) # Will be set with hashing
     role = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
@@ -38,17 +68,25 @@ class Room(models.Model):
     name = models.CharField(max_length=255)
     floor = models.IntegerField()
     capacity = models.IntegerField()
-    type = models.CharField(max_length=100)
+    type = models.CharField(max_length=100, choices=ROOM_TYPE_CHOICES)  # Add choices
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 class Equipment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    type = models.CharField(max_length=100)
-    status = models.CharField(max_length=100)
-    qr_code = models.CharField(max_length=255)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
+    type = models.CharField(max_length=100, choices=EQUIPMENT_TYPE_CHOICES)  # Add choices
+    mode = models.CharField(max_length=100, choices=EQUIPMENT_MODE_CHOICES, blank=True)
+    status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')  # Add choices and default
+    device_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    qr_code = models.CharField(max_length=255, null=True, blank=True)  # Make optional
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 class SensorLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -60,9 +98,15 @@ class SensorLog(models.Model):
     energy_usage = models.FloatField()
     recorded_at = models.DateTimeField()
 
+    class Meta:
+        ordering = ['-recorded_at'] # Latest first
+
+    def __str__(self):
+        return f"{self.equipment.name} - {self.recorded_at}"
+
 class MaintenanceRequest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey('core.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE)
     issue = models.TextField()
     status = models.CharField(max_length=100)
@@ -70,12 +114,18 @@ class MaintenanceRequest(models.Model):
     resolved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.equipment.name} - {self.issue[:50]}"
+
 class LLMQuery(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey('core.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     query = models.TextField()
     response = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.query[:50]}"
 
 class LLMSummary(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -83,8 +133,14 @@ class LLMSummary(models.Model):
     summary = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Summary for {self.generated_for}"
+
 class AuthToken(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey('core.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     token = models.CharField(max_length=255)
     expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.user.username} - Token"

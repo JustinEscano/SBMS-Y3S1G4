@@ -1,41 +1,276 @@
-/* Sidebar widths */
 :root {
+
   --sidebar-expanded: 220px;
   --sidebar-collapsed: 70px;
   --topbar-height: 60px;
-}
 
-/* Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  --red: #e74c3c;
+  --dark-red: #c0392b;
+  --blue: #4c6ef5;
+  --light-blue: #4cafef;
+  --hover-blue: #3a9cd6;
+  --dark-blue: #3652d9;
+  --dark-bg: #1f2235;
+  --mid-bg: #2a2d43;
+  --header-bg: #3a3f61;
+  --white: #ffffff;
+  --off-white: #f5f5f5;
+  --light-purple: #a6b1ff;
+  --black: #000000;
+  --gray: #aaa;
+  --light-gray: #ddd;
 }
 
 html, body {
   width: 100%;
-  overflow-x: hidden;
   height: 100%;
+  overflow-x: hidden;
   font-family: 'Segoe UI', sans-serif;
 }
 
-/* Main container */
-.dashboard-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-}
-
-/* Dashboard content */
 .dashboard-content {
   flex: 1;
-  padding: 20px;
-  background: #000;
-  margin-top: var(--topbar-height);
+  padding: 24px;
+  padding-top: calc(var(--topbar-height) + 24px); /* extra padding for content below topbar */
+  background: #1f2235; 
+  color: #f5f5f5;
   margin-left: var(--sidebar-expanded);
   transition: margin-left 0.3s ease;
+  overflow-y: auto;
+  height: calc(100vh - var(--topbar-height));
 }
 
 .dashboard-content.expanded {
   margin-left: var(--sidebar-collapsed);
 }
+
+.dashboard-content h1 {
+  font-size: 1.8rem;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.dashboard-content h2 {
+  font-size: 1.3rem;
+  margin: 20px 0 12px;
+  font-weight: 500;
+  color: var(--light-purple);
+}
+
+.stats-boxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  background: var(--mid-bg);
+  padding: 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+  transform: translateY(-3px);
+}
+
+.stat-icon {
+  font-size: 1.8rem;
+}
+
+.stat-info p.stat-number {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.stat-info p.stat-label {
+  font-size: 0.9rem;
+  color: var(--white);
+}
+
+.table-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.table-controls input {
+  width: 100%;
+}
+
+.table-controls input,
+.table-controls select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: var(--mid-bg);
+  color: var(--off-white);
+}
+
+.table-controls input::placeholder {
+  color: var(--gray);
+}
+
+.table-controls .add-btn {
+  background: var(--blue);
+  color: var(--white);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.table-controls .add-btn:hover {
+  background: var(--dark-blue);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--mid-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+table thead {
+  background: var(--header-bg);
+}
+
+table thead th {
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--light-gray);
+}
+
+table tbody td {
+  padding: 12px;
+  border-top: 1px solid var(--header-bg);
+  color: var(--white);
+  text-align: center;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-right: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.edit-btn {
+  background: var(--light-blue);
+  color: var(--white);
+}
+
+.edit-btn:hover {
+  background: var(--hover-blue);
+}
+
+.delete-btn {
+  background: var(--red);
+  color: var(--white);
+}
+
+.delete-btn:hover {
+  background: var(--dark-red);
+}
+
+.add-btn-main {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #4c6ef5;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 16px;
+  margin-top: 16px;
+  transition: background 0.2s ease;
+}
+
+.add-btn-main:hover {
+  background: #3652d9;
+}
+
+/* --- Pagination --- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.pagination button {
+  background: transparent;
+  border: none;
+  color: #f5f5f5;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  color: #4c6ef5;
+}
+
+.pagination button[disabled] {
+  cursor: default;
+  color: #555;
+}
+
+.pagination button.current {
+  text-decoration: underline;
+  font-weight: bold;
+  cursor: default;
+}
+
+/* --- Jump to page input --- */
+.jump-page {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.jump-page input {
+  width: 60px;
+  padding: 4px;
+  border-radius: 4px;
+  border: none;
+  text-align: center;
+}
+
+.jump-page button {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: none;
+  background: #4c6ef5;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.jump-page button:hover {
+  background: #3652d9;
+}
+
+

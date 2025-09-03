@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { MaintenanceRequest } from '../types/maintenanceTypes';
+import type { MaintenanceRequest } from '../types/dashboardTypes';
 import { getAllMaintenanceRequests } from '../services/maintenanceService';
 
 export const useMaintenanceRequests = () => {
