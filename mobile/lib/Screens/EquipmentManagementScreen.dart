@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'dart:io';
 
 class EquipmentManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -45,44 +47,96 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   @override
   void initState() {
     super.initState();
+    _logAppInfo();
     _loadData();
   }
 
+  void _logAppInfo() {
+    developer.log('=== EQUIPMENT MANAGEMENT SCREEN INITIALIZED ===', name: 'EquipmentScreen');
+    developer.log('Base URL: $baseUrl', name: 'EquipmentScreen');
+    developer.log('Access Token Length: ${widget.accessToken.length}', name: 'EquipmentScreen');
+    developer.log('Access Token Preview: ${widget.accessToken.substring(0, 20)}...', name: 'EquipmentScreen');
+    developer.log('Refresh Token Length: ${widget.refreshToken.length}', name: 'EquipmentScreen');
+  }
+
+  Future<bool> _checkNetworkConnectivity() async {
+    try {
+      developer.log('Checking network connectivity...', name: 'EquipmentScreen.Network');
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        developer.log('Network connectivity: OK', name: 'EquipmentScreen.Network');
+        return true;
+      }
+    } catch (e) {
+      developer.log('Network connectivity check failed: $e', name: 'EquipmentScreen.Network');
+    }
+    return false;
+  }
+
   Future<void> _loadData() async {
+    developer.log('=== STARTING DATA LOAD ===', name: 'EquipmentScreen.LoadData');
+
     setState(() {
       isLoading = true;
       _errorMessage = '';
     });
 
     try {
+      // Check network connectivity first
+      final hasNetwork = await _checkNetworkConnectivity();
+      if (!hasNetwork) {
+        developer.log('No network connectivity detected', name: 'EquipmentScreen.LoadData');
+        setState(() {
+          _errorMessage = 'No internet connection. Please check your network settings.';
+          isLoading = false;
+        });
+        return;
+      }
+
       final headers = {
         'Authorization': 'Bearer ${widget.accessToken}',
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
 
+      developer.log('Request headers: $headers', name: 'EquipmentScreen.LoadData');
+
+      // Log individual API calls
+      developer.log('Making API calls to:', name: 'EquipmentScreen.LoadData');
+      developer.log('  - Equipment: $baseUrl/equipment/', name: 'EquipmentScreen.LoadData');
+      developer.log('  - Rooms: $baseUrl/rooms/', name: 'EquipmentScreen.LoadData');
+
+      final stopwatch = Stopwatch()..start();
+
       final responses = await Future.wait([
-        http.get(Uri.parse('$baseUrl/equipment/'), headers: headers),
-        http.get(Uri.parse('$baseUrl/rooms/'), headers: headers),
-      ]).timeout(const Duration(seconds: 10));
+        _makeHttpRequest('$baseUrl/equipment/', headers, 'Equipment'),
+        _makeHttpRequest('$baseUrl/rooms/', headers, 'Rooms'),
+      ]).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          developer.log('API calls timed out after 15 seconds', name: 'EquipmentScreen.LoadData');
+          throw Exception('Request timed out. Please check your connection.');
+        },
+      );
 
-      if (responses[0].statusCode == 200) {
-        final equipmentData = json.decode(responses[0].body);
-        setState(() {
-          equipment = equipmentData is List ? equipmentData : [];
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to load equipment. Status: ${responses[0].statusCode}';
-        });
-      }
+      stopwatch.stop();
+      developer.log('API calls completed in ${stopwatch.elapsedMilliseconds}ms', name: 'EquipmentScreen.LoadData');
 
-      if (responses[1].statusCode == 200) {
-        final roomsData = json.decode(responses[1].body);
-        setState(() {
-          rooms = roomsData is List ? roomsData : [];
-        });
-      }
-    } catch (e) {
+      // Process Equipment Response
+      await _processEquipmentResponse(responses[0]);
+
+      // Process Rooms Response
+      await _processRoomsResponse(responses[1]);
+
+      developer.log('=== DATA LOAD COMPLETED SUCCESSFULLY ===', name: 'EquipmentScreen.LoadData');
+      developer.log('Equipment count: ${equipment.length}', name: 'EquipmentScreen.LoadData');
+      developer.log('Rooms count: ${rooms.length}', name: 'EquipmentScreen.LoadData');
+
+    } catch (e, stackTrace) {
+      developer.log('=== DATA LOAD FAILED ===', name: 'EquipmentScreen.LoadData');
+      developer.log('Error: $e', name: 'EquipmentScreen.LoadData');
+      developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.LoadData');
+
       setState(() {
         _errorMessage = 'Error loading data: $e';
       });
@@ -93,7 +147,147 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     }
   }
 
+  Future<http.Response> _makeHttpRequest(String url, Map<String, String> headers, String requestName) async {
+    developer.log('--- $requestName REQUEST START ---', name: 'EquipmentScreen.HTTP');
+    developer.log('URL: $url', name: 'EquipmentScreen.HTTP');
+    developer.log('Headers: $headers', name: 'EquipmentScreen.HTTP');
+
+    final stopwatch = Stopwatch()..start();
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      stopwatch.stop();
+
+      developer.log('--- $requestName RESPONSE ---', name: 'EquipmentScreen.HTTP');
+      developer.log('Status Code: ${response.statusCode}', name: 'EquipmentScreen.HTTP');
+      developer.log('Response Time: ${stopwatch.elapsedMilliseconds}ms', name: 'EquipmentScreen.HTTP');
+      developer.log('Response Headers: ${response.headers}', name: 'EquipmentScreen.HTTP');
+      developer.log('Response Body Length: ${response.body.length}', name: 'EquipmentScreen.HTTP');
+
+      if (response.statusCode >= 400) {
+        developer.log('ERROR RESPONSE BODY: ${response.body}', name: 'EquipmentScreen.HTTP');
+      } else {
+        // Log first 500 characters of successful response
+        final bodyPreview = response.body.length > 500
+            ? '${response.body.substring(0, 500)}...'
+            : response.body;
+        developer.log('Response Body Preview: $bodyPreview', name: 'EquipmentScreen.HTTP');
+      }
+
+      return response;
+    } catch (e, stackTrace) {
+      stopwatch.stop();
+      developer.log('--- $requestName REQUEST FAILED ---', name: 'EquipmentScreen.HTTP');
+      developer.log('Error: $e', name: 'EquipmentScreen.HTTP');
+      developer.log('Stack Trace: $stackTrace', name: 'EquipmentScreen.HTTP');
+      rethrow;
+    }
+  }
+
+  Future<void> _processEquipmentResponse(http.Response response) async {
+    developer.log('--- PROCESSING EQUIPMENT RESPONSE ---', name: 'EquipmentScreen.Process');
+
+    if (response.statusCode == 200) {
+      try {
+        final responseBody = response.body;
+        developer.log('Parsing equipment JSON...', name: 'EquipmentScreen.Process');
+
+        final equipmentData = json.decode(responseBody);
+        developer.log('JSON parsed successfully', name: 'EquipmentScreen.Process');
+        developer.log('Data type: ${equipmentData.runtimeType}', name: 'EquipmentScreen.Process');
+
+        if (equipmentData is List) {
+          developer.log('Equipment data is a List with ${equipmentData.length} items', name: 'EquipmentScreen.Process');
+
+          // Log each equipment item structure
+          for (int i = 0; i < equipmentData.length && i < 3; i++) {
+            developer.log('Equipment[$i]: ${equipmentData[i]}', name: 'EquipmentScreen.Process');
+          }
+
+          setState(() {
+            equipment = equipmentData;
+          });
+        } else if (equipmentData is Map) {
+          developer.log('Equipment data is a Map: $equipmentData', name: 'EquipmentScreen.Process');
+
+          // Check if it's a paginated response
+          if (equipmentData.containsKey('results')) {
+            final results = equipmentData['results'];
+            developer.log('Found paginated results: ${results.length} items', name: 'EquipmentScreen.Process');
+            setState(() {
+              equipment = results is List ? results : [];
+            });
+          } else {
+            developer.log('Map does not contain results key, treating as empty', name: 'EquipmentScreen.Process');
+            setState(() {
+              equipment = [];
+            });
+          }
+        } else {
+          developer.log('Unexpected data type: ${equipmentData.runtimeType}', name: 'EquipmentScreen.Process');
+          setState(() {
+            equipment = [];
+          });
+        }
+      } catch (e, stackTrace) {
+        developer.log('JSON parsing failed for equipment: $e', name: 'EquipmentScreen.Process');
+        developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.Process');
+        developer.log('Raw response body: ${response.body}', name: 'EquipmentScreen.Process');
+
+        setState(() {
+          _errorMessage = 'Failed to parse equipment data: $e';
+        });
+      }
+    } else {
+      developer.log('Equipment request failed with status: ${response.statusCode}', name: 'EquipmentScreen.Process');
+      developer.log('Error response: ${response.body}', name: 'EquipmentScreen.Process');
+
+      setState(() {
+        _errorMessage = 'Failed to load equipment. Status: ${response.statusCode}\nResponse: ${response.body}';
+      });
+    }
+  }
+
+  Future<void> _processRoomsResponse(http.Response response) async {
+    developer.log('--- PROCESSING ROOMS RESPONSE ---', name: 'EquipmentScreen.Process');
+
+    if (response.statusCode == 200) {
+      try {
+        final roomsData = json.decode(response.body);
+        developer.log('Rooms JSON parsed successfully', name: 'EquipmentScreen.Process');
+        developer.log('Rooms data type: ${roomsData.runtimeType}', name: 'EquipmentScreen.Process');
+
+        if (roomsData is List) {
+          developer.log('Rooms data is a List with ${roomsData.length} items', name: 'EquipmentScreen.Process');
+          setState(() {
+            rooms = roomsData;
+          });
+        } else if (roomsData is Map && roomsData.containsKey('results')) {
+          final results = roomsData['results'];
+          developer.log('Found paginated rooms results: ${results.length} items', name: 'EquipmentScreen.Process');
+          setState(() {
+            rooms = results is List ? results : [];
+          });
+        } else {
+          developer.log('Unexpected rooms data format', name: 'EquipmentScreen.Process');
+          setState(() {
+            rooms = [];
+          });
+        }
+      } catch (e) {
+        developer.log('JSON parsing failed for rooms: $e', name: 'EquipmentScreen.Process');
+        // Don't set error message for rooms failure, just log it
+      }
+    } else {
+      developer.log('Rooms request failed with status: ${response.statusCode}', name: 'EquipmentScreen.Process');
+    }
+  }
+
   Future<void> _deleteEquipment(String equipmentId, String equipmentName) async {
+    developer.log('=== DELETE EQUIPMENT REQUEST ===', name: 'EquipmentScreen.Delete');
+    developer.log('Equipment ID: $equipmentId', name: 'EquipmentScreen.Delete');
+    developer.log('Equipment Name: $equipmentName', name: 'EquipmentScreen.Delete');
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -117,15 +311,25 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
     if (confirmed == true) {
       try {
+        final url = '$baseUrl/equipment/$equipmentId/';
+        final headers = {
+          'Authorization': 'Bearer ${widget.accessToken}',
+          'Content-Type': 'application/json',
+        };
+
+        developer.log('DELETE request URL: $url', name: 'EquipmentScreen.Delete');
+        developer.log('DELETE request headers: $headers', name: 'EquipmentScreen.Delete');
+
         final response = await http.delete(
-          Uri.parse('$baseUrl/equipment/$equipmentId/'),
-          headers: {
-            'Authorization': 'Bearer ${widget.accessToken}',
-            'Content-Type': 'application/json',
-          },
+          Uri.parse(url),
+          headers: headers,
         ).timeout(const Duration(seconds: 10));
 
+        developer.log('DELETE response status: ${response.statusCode}', name: 'EquipmentScreen.Delete');
+        developer.log('DELETE response body: ${response.body}', name: 'EquipmentScreen.Delete');
+
         if (response.statusCode == 204) {
+          developer.log('Equipment deleted successfully', name: 'EquipmentScreen.Delete');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Equipment "$equipmentName" deleted successfully'),
@@ -134,6 +338,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           );
           _loadData();
         } else {
+          developer.log('Delete failed with status: ${response.statusCode}', name: 'EquipmentScreen.Delete');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to delete equipment. Status: ${response.statusCode}'),
@@ -141,7 +346,9 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
             ),
           );
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
+        developer.log('Delete equipment error: $e', name: 'EquipmentScreen.Delete');
+        developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.Delete');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error deleting equipment: $e'),
@@ -149,10 +356,18 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           ),
         );
       }
+    } else {
+      developer.log('Delete cancelled by user', name: 'EquipmentScreen.Delete');
     }
   }
 
   void _showAddEditEquipmentDialog({Map<String, dynamic>? equipmentItem}) {
+    developer.log('=== SHOW ADD/EDIT DIALOG ===', name: 'EquipmentScreen.Dialog');
+    developer.log('Is editing: ${equipmentItem != null}', name: 'EquipmentScreen.Dialog');
+    if (equipmentItem != null) {
+      developer.log('Equipment item: $equipmentItem', name: 'EquipmentScreen.Dialog');
+    }
+
     final isEditing = equipmentItem != null;
     final nameController = TextEditingController(text: equipmentItem?['name'] ?? '');
     final deviceIdController = TextEditingController(text: equipmentItem?['device_id'] ?? '');
@@ -164,8 +379,14 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
     // Ensure the selected type exists in our options, otherwise default to 'sensor'
     if (!EQUIPMENT_TYPE_OPTIONS.any((option) => option['value'] == selectedType)) {
+      developer.log('Invalid type "$selectedType", defaulting to "sensor"', name: 'EquipmentScreen.Dialog');
       selectedType = 'sensor';
     }
+
+    developer.log('Dialog initial values:', name: 'EquipmentScreen.Dialog');
+    developer.log('  - Room ID: $selectedRoomId', name: 'EquipmentScreen.Dialog');
+    developer.log('  - Status: $selectedStatus', name: 'EquipmentScreen.Dialog');
+    developer.log('  - Type: $selectedType', name: 'EquipmentScreen.Dialog');
 
     showDialog(
       context: context,
@@ -379,7 +600,18 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     required String status,
     required bool isEditing,
   }) async {
+    developer.log('=== SAVE EQUIPMENT REQUEST ===', name: 'EquipmentScreen.Save');
+    developer.log('Is editing: $isEditing', name: 'EquipmentScreen.Save');
+    developer.log('Equipment ID: $equipmentId', name: 'EquipmentScreen.Save');
+    developer.log('Name: $name', name: 'EquipmentScreen.Save');
+    developer.log('Type: $type', name: 'EquipmentScreen.Save');
+    developer.log('Device ID: $deviceId', name: 'EquipmentScreen.Save');
+    developer.log('QR Code: $qrCode', name: 'EquipmentScreen.Save');
+    developer.log('Room ID: $roomId', name: 'EquipmentScreen.Save');
+    developer.log('Status: $status', name: 'EquipmentScreen.Save');
+
     if (name.isEmpty || type.isEmpty) {
+      developer.log('Validation failed: missing required fields', name: 'EquipmentScreen.Save');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in required fields (Name and Type)'),
@@ -402,29 +634,39 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
         requestBody['room'] = roomId;
       }
 
+      developer.log('Request body: $requestBody', name: 'EquipmentScreen.Save');
+
       final url = isEditing
           ? '$baseUrl/equipment/$equipmentId/'
           : '$baseUrl/equipment/';
 
+      developer.log('Request URL: $url', name: 'EquipmentScreen.Save');
+      developer.log('Request method: ${isEditing ? 'PUT' : 'POST'}', name: 'EquipmentScreen.Save');
+
+      final headers = {
+        'Authorization': 'Bearer ${widget.accessToken}',
+        'Content-Type': 'application/json',
+      };
+
+      developer.log('Request headers: $headers', name: 'EquipmentScreen.Save');
+
       final response = isEditing
           ? await http.put(
         Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer ${widget.accessToken}',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: json.encode(requestBody),
       ).timeout(const Duration(seconds: 10))
           : await http.post(
         Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer ${widget.accessToken}',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: json.encode(requestBody),
       ).timeout(const Duration(seconds: 10));
 
+      developer.log('Save response status: ${response.statusCode}', name: 'EquipmentScreen.Save');
+      developer.log('Save response body: ${response.body}', name: 'EquipmentScreen.Save');
+
       if (response.statusCode == 200 || response.statusCode == 201) {
+        developer.log('Equipment saved successfully', name: 'EquipmentScreen.Save');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditing ? 'Equipment updated successfully' : 'Equipment added successfully'),
@@ -433,19 +675,34 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
         );
         _loadData();
       } else {
-        final errorData = json.decode(response.body);
-        String errorMessage = 'Failed to ${isEditing ? 'update' : 'add'} equipment.';
-        if (errorData is Map && errorData.containsKey('device_id')) {
-          errorMessage += ' Device ID already exists.';
+        developer.log('Save failed with status: ${response.statusCode}', name: 'EquipmentScreen.Save');
+        try {
+          final errorData = json.decode(response.body);
+          developer.log('Error data: $errorData', name: 'EquipmentScreen.Save');
+
+          String errorMessage = 'Failed to ${isEditing ? 'update' : 'add'} equipment.';
+          if (errorData is Map && errorData.containsKey('device_id')) {
+            errorMessage += ' Device ID already exists.';
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } catch (e) {
+          developer.log('Failed to parse error response: $e', name: 'EquipmentScreen.Save');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to ${isEditing ? 'update' : 'add'} equipment. Status: ${response.statusCode}'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      developer.log('Save equipment error: $e', name: 'EquipmentScreen.Save');
+      developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.Save');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error ${isEditing ? 'updating' : 'adding'} equipment: $e'),
@@ -456,7 +713,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   }
 
   List<dynamic> get filteredEquipment {
-    return equipment.where((item) {
+    final filtered = equipment.where((item) {
       bool roomMatch = _filterRoom == 'all' ||
           (_filterRoom == 'unassigned' && item['room'] == null) ||
           item['room']?.toString() == _filterRoom;
@@ -465,6 +722,9 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
       return roomMatch && typeMatch;
     }).toList();
+
+    developer.log('Filtered equipment: ${filtered.length} items', name: 'EquipmentScreen.Filter');
+    return filtered;
   }
 
   String _getRoomName(String? roomId) {
@@ -505,11 +765,42 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     final onlineCount = equipment.where((e) => e['status'] == 'online').length;
     final esp32Count = equipment.where((e) => e['type']?.toLowerCase() == 'esp32').length;
 
+    developer.log('Building UI with ${filtered.length} filtered items', name: 'EquipmentScreen.Build');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Equipment Management'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: () {
+              // Show debug info dialog
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Debug Info'),
+                  content: SingleChildScrollView(
+                    child: Text(
+                      'Base URL: $baseUrl\n'
+                          'Token Length: ${widget.accessToken.length}\n'
+                          'Equipment Count: ${equipment.length}\n'
+                          'Rooms Count: ${rooms.length}\n'
+                          'Error Message: $_errorMessage\n'
+                          'Is Loading: $isLoading',
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            tooltip: 'Debug Info',
+          ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
