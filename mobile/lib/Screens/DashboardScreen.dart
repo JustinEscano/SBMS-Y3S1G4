@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'ProfileScreen.dart';
 import 'RoomManagementScreen.dart';
 import 'EquipmentManagementScreen.dart';
-import 'QRScannerScreen.dart'; // Add QR Scanner import
+import 'MaintenanceManagementScreen.dart'; // Add this import
+import 'QRScannerScreen.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'LoginScreen.dart';
@@ -28,6 +29,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> equipment = [];
   List<dynamic> sensorLogs = [];
   List<dynamic> latestSensorData = [];
+  List<dynamic> maintenanceRequests = []; // Add this line
+
+  // New data structures for the additional sections
+  Map<String, dynamic> hvacData = {};
+  Map<String, dynamic> lightingData = {};
+  Map<String, dynamic> securityData = {};
+  List<dynamic> maintenanceData = [];
+
   bool isLoading = true;
   bool isAutoRefresh = true;
   String _errorMessage = '';
@@ -53,6 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (isAutoRefresh && mounted) {
         loadLatestSensorData();
+        _loadSystemStatus(); // Refresh system status data
       }
     });
   }
@@ -61,7 +71,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       isAutoRefresh = !isAutoRefresh;
     });
-
     if (isAutoRefresh) {
       _startAutoRefresh();
     } else {
@@ -87,6 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         http.get(Uri.parse('$baseUrl/equipment/'), headers: headers),
         http.get(Uri.parse('$baseUrl/sensorlog/'), headers: headers),
         http.get(Uri.parse('$baseUrl/esp32/latest/')),
+        http.get(Uri.parse('$baseUrl/maintenancerequest/'), headers: headers), // Add this line
       ]).timeout(const Duration(seconds: 15));
 
       if (responses[0].statusCode == 200) {
@@ -118,6 +128,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         }
       }
+
+      // Add maintenance requests loading
+      if (responses[4].statusCode == 200) {
+        final maintenanceData = json.decode(responses[4].body);
+        setState(() {
+          maintenanceRequests = maintenanceData is List ? maintenanceData : [];
+        });
+      }
+
+      // Load additional system data
+      await _loadSystemStatus();
+
     } catch (e) {
       setState(() {
         _errorMessage = 'Error loading data: $e';
@@ -127,6 +149,141 @@ class _DashboardScreenState extends State<DashboardScreen> {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> _loadSystemStatus() async {
+    try {
+      // Simulate HVAC data based on sensor readings
+      _generateHVACData();
+
+      // Simulate Lighting data based on equipment
+      _generateLightingData();
+
+      // Simulate Security data
+      _generateSecurityData();
+
+      // Generate real Maintenance data from API
+      _generateMaintenanceData();
+
+    } catch (e) {
+      print('Error loading system status: $e');
+    }
+  }
+
+  void _generateHVACData() {
+    // Generate HVAC data based on sensor readings
+    double avgTemp = 0;
+    double avgHumidity = 0;
+    int activeZones = 0;
+
+    if (latestSensorData.isNotEmpty) {
+      double totalTemp = 0;
+      double totalHumidity = 0;
+      int validReadings = 0;
+
+      for (var sensor in latestSensorData) {
+        if (sensor['temperature'] != null && sensor['humidity'] != null) {
+          totalTemp += sensor['temperature'];
+          totalHumidity += sensor['humidity'];
+          validReadings++;
+          if (sensor['status'] == 'online') activeZones++;
+        }
+      }
+
+      if (validReadings > 0) {
+        avgTemp = totalTemp / validReadings;
+        avgHumidity = totalHumidity / validReadings;
+      }
+    }
+
+    setState(() {
+      hvacData = {
+        'avgTemperature': avgTemp,
+        'avgHumidity': avgHumidity,
+        'activeZones': activeZones,
+        'totalZones': latestSensorData.length,
+        'status': activeZones > 0 ? 'operational' : 'offline',
+        'energyEfficiency': activeZones > 0 ? 85 + (activeZones * 2) : 0,
+      };
+    });
+  }
+
+  void _generateLightingData() {
+    // Generate lighting data based on equipment and sensors
+    int lightingDevices = equipment.where((e) =>
+    e['type']?.toLowerCase().contains('light') == true ||
+        e['name']?.toLowerCase().contains('light') == true
+    ).length;
+
+    int activeLights = equipment.where((e) =>
+    (e['type']?.toLowerCase().contains('light') == true ||
+        e['name']?.toLowerCase().contains('light') == true) &&
+        e['status'] == 'online'
+    ).length;
+
+    double avgLightLevel = 0;
+    if (latestSensorData.isNotEmpty) {
+      double totalLight = 0;
+      int validReadings = 0;
+
+      for (var sensor in latestSensorData) {
+        if (sensor['light_level'] != null) {
+          totalLight += sensor['light_level'];
+          validReadings++;
+        }
+      }
+
+      if (validReadings > 0) {
+        avgLightLevel = totalLight / validReadings;
+      }
+    }
+
+    setState(() {
+      lightingData = {
+        'totalDevices': lightingDevices > 0 ? lightingDevices : rooms.length,
+        'activeDevices': activeLights > 0 ? activeLights : (rooms.length * 0.7).round(),
+        'avgLightLevel': avgLightLevel > 0 ? avgLightLevel : 450,
+        'energySaving': activeLights > 0 ? 15 : 25,
+        'status': activeLights > 0 ? 'optimal' : 'normal',
+      };
+    });
+  }
+
+  void _generateSecurityData() {
+    // Generate security data based on motion sensors and equipment
+    int securityDevices = equipment.where((e) =>
+    e['type']?.toLowerCase().contains('security') == true ||
+        e['type']?.toLowerCase().contains('camera') == true ||
+        e['name']?.toLowerCase().contains('security') == true
+    ).length;
+
+    int motionDetections = latestSensorData.where((s) =>
+    s['motion_detected'] == true
+    ).length;
+
+    int activeDevices = equipment.where((e) =>
+    (e['type']?.toLowerCase().contains('security') == true ||
+        e['type']?.toLowerCase().contains('camera') == true) &&
+        e['status'] == 'online'
+    ).length;
+
+    setState(() {
+      securityData = {
+        'totalDevices': securityDevices > 0 ? securityDevices : (rooms.length * 0.5).round(),
+        'activeDevices': activeDevices > 0 ? activeDevices : (rooms.length * 0.4).round(),
+        'motionDetections': motionDetections,
+        'alertsToday': motionDetections > 2 ? motionDetections - 2 : 0,
+        'status': motionDetections > 5 ? 'alert' : 'secure',
+        'lastIncident': motionDetections > 0 ? '2 hours ago' : 'None today',
+      };
+    });
+  }
+
+  void _generateMaintenanceData() {
+    // Use real maintenance requests from API
+    setState(() {
+      maintenanceData = maintenanceRequests;
+    });
   }
 
   Future<void> loadLatestSensorData() async {
@@ -144,7 +301,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
     } catch (e) {
-      // Handle errors silently for background refresh
       print('Error refreshing sensor data: $e');
     }
   }
@@ -160,12 +316,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
         break;
       case 'dashboard':
-      default: // Do nothing - already on dashboard
+      default:
         break;
     }
   }
 
-  // Navigate to Room Management Screen
   void _navigateToRoomManagement() {
     Navigator.push(
       context,
@@ -176,12 +331,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     ).then((_) {
-      // Refresh data when returning from room management
       loadData();
     });
   }
 
-  // Navigate to Equipment Management Screen
   void _navigateToEquipmentManagement() {
     Navigator.push(
       context,
@@ -192,12 +345,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     ).then((_) {
-      // Refresh data when returning from equipment management
       loadData();
     });
   }
 
-  // Navigate to QR Scanner Screen
+  // Add this method
+  void _navigateToMaintenanceManagement() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MaintenanceManagementScreen(
+          accessToken: widget.accessToken,
+          refreshToken: widget.refreshToken,
+        ),
+      ),
+    ).then((_) {
+      loadData();
+    });
+  }
+
   void _navigateToQRScanner() {
     Navigator.push(
       context,
@@ -208,9 +374,178 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     ).then((_) {
-      // Refresh data when returning from QR scanner
       loadData();
     });
+  }
+
+  void _showSystemDetails(String systemType) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('$systemType System Details'),
+          content: SingleChildScrollView(
+            child: _buildSystemDetailsContent(systemType),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (systemType == 'Maintenance') {
+                  _navigateToMaintenanceManagement(); // Navigate to maintenance management
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$systemType management coming soon!')),
+                  );
+                }
+              },
+              child: const Text('Manage'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSystemDetailsContent(String systemType) {
+    switch (systemType) {
+      case 'HVAC':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDetailRow('Average Temperature', '${hvacData['avgTemperature']?.toStringAsFixed(1) ?? 'N/A'}°C'),
+            _buildDetailRow('Average Humidity', '${hvacData['avgHumidity']?.toStringAsFixed(1) ?? 'N/A'}%'),
+            _buildDetailRow('Active Zones', '${hvacData['activeZones']}/${hvacData['totalZones']}'),
+            _buildDetailRow('Energy Efficiency', '${hvacData['energyEfficiency']}%'),
+            _buildDetailRow('System Status', hvacData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
+          ],
+        );
+      case 'Lighting':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDetailRow('Total Devices', '${lightingData['totalDevices']}'),
+            _buildDetailRow('Active Devices', '${lightingData['activeDevices']}'),
+            _buildDetailRow('Average Light Level', '${lightingData['avgLightLevel']?.toStringAsFixed(0)} lux'),
+            _buildDetailRow('Energy Saving', '${lightingData['energySaving']}%'),
+            _buildDetailRow('System Status', lightingData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
+          ],
+        );
+      case 'Security':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDetailRow('Total Devices', '${securityData['totalDevices']}'),
+            _buildDetailRow('Active Devices', '${securityData['activeDevices']}'),
+            _buildDetailRow('Motion Detections', '${securityData['motionDetections']}'),
+            _buildDetailRow('Alerts Today', '${securityData['alertsToday']}'),
+            _buildDetailRow('Last Incident', securityData['lastIncident'] ?? 'None'),
+            _buildDetailRow('System Status', securityData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
+          ],
+        );
+      case 'Maintenance':
+        final pendingCount = maintenanceRequests.where((r) => r['status'] == 'pending').length;
+        final inProgressCount = maintenanceRequests.where((r) => r['status'] == 'in_progress').length;
+        final resolvedCount = maintenanceRequests.where((r) => r['status'] == 'resolved').length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDetailRow('Total Requests', '${maintenanceRequests.length}'),
+            _buildDetailRow('Pending', '$pendingCount'),
+            _buildDetailRow('In Progress', '$inProgressCount'),
+            _buildDetailRow('Resolved', '$resolvedCount'),
+            const SizedBox(height: 12),
+            if (maintenanceRequests.isNotEmpty) ...[
+              const Text('Recent Requests:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              ...maintenanceRequests.take(3).map((request) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getEquipmentName(request['equipment']?.toString()),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        request['issue'] ?? 'No description',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text('Status: ${_getStatusLabel(request['status'])} • Priority: ${_getPriorityLabel(request['priority'])}'),
+                    ],
+                  ),
+                ),
+              )).toList(),
+            ] else ...[
+              const Text('No maintenance requests found.'),
+            ],
+          ],
+        );
+      default:
+        return Text('No details available for $systemType');
+    }
+  }
+
+  String _getEquipmentName(String? equipmentId) {
+    if (equipmentId == null) return 'Unknown Equipment';
+    final eq = equipment.firstWhere(
+          (e) => e['id'].toString() == equipmentId.toString(),
+      orElse: () => null,
+    );
+    return eq != null ? eq['name'] : 'Unknown Equipment';
+  }
+
+  String _getStatusLabel(String? status) {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'in_progress':
+        return 'In Progress';
+      case 'resolved':
+        return 'Resolved';
+      default:
+        return status ?? 'Unknown';
+    }
+  }
+
+  String _getPriorityLabel(String? priority) {
+    switch (priority) {
+      case 'low':
+        return 'Low';
+      case 'medium':
+        return 'Medium';
+      case 'high':
+        return 'High';
+      case 'critical':
+        return 'Critical';
+      default:
+        return priority ?? 'Unknown';
+    }
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value),
+        ],
+      ),
+    );
   }
 
   @override
@@ -224,7 +559,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Smart Building Dashboard'),
         actions: [
-          // Management button with enhanced modal
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
@@ -277,6 +611,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onTap: () {
                             Navigator.pop(context);
                             _navigateToEquipmentManagement();
+                          },
+                        ),
+                        // Add maintenance management tile
+                        _buildManagementTile(
+                          icon: Icons.build,
+                          title: 'Maintenance Management',
+                          subtitle: 'Create and manage maintenance requests',
+                          color: Colors.indigo,
+                          onTap: () {
+                            Navigator.pop(context);
+                            _navigateToMaintenanceManagement();
                           },
                         ),
                         _buildManagementTile(
@@ -377,7 +722,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Monitor and manage your building\'s rooms, equipment, and sensors',
+                        'Monitor and manage your building\'s systems, equipment, and sensors',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ],
@@ -409,7 +754,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
 
+              // Building Systems Overview
+              const Text(
+                'Building Systems',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+
+              // HVAC and Lighting Row
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showSystemDetails('HVAC'),
+                      child: _buildSystemCard(
+                        'HVAC',
+                        '${hvacData['activeZones'] ?? 0}/${hvacData['totalZones'] ?? 0}',
+                        'Active Zones',
+                        Icons.thermostat,
+                        Colors.orange,
+                        hvacData['status'] ?? 'offline',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showSystemDetails('Lighting'),
+                      child: _buildSystemCard(
+                        'Lighting',
+                        '${lightingData['activeDevices'] ?? 0}/${lightingData['totalDevices'] ?? 0}',
+                        'Active Lights',
+                        Icons.lightbulb,
+                        Colors.amber,
+                        lightingData['status'] ?? 'normal',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Security and Maintenance Row
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showSystemDetails('Security'),
+                      child: _buildSystemCard(
+                        'Security',
+                        '${securityData['activeDevices'] ?? 0}',
+                        'Active Devices',
+                        Icons.security,
+                        Colors.red,
+                        securityData['status'] ?? 'secure',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showSystemDetails('Maintenance'),
+                      child: _buildSystemCard(
+                        'Maintenance',
+                        '${maintenanceRequests.length}',
+                        'Total Requests',
+                        Icons.build,
+                        Colors.indigo,
+                        maintenanceRequests.any((task) => task['priority'] == 'high' || task['priority'] == 'critical') ? 'attention' : 'normal',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
               // Enhanced Overview Cards
+              const Text(
+                'Infrastructure Overview',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+
               Row(
                 children: [
                   Expanded(
@@ -437,7 +865,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 16),
+
               Row(
                 children: [
                   Expanded(
@@ -454,7 +884,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       'Online',
                       onlineEquipment.toString(),
                       Icons.online_prediction,
-                      Colors.orange,
+                      Colors.teal,
                     ),
                   ),
                 ],
@@ -469,56 +899,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 12),
 
-              // QR Scanner Prominent Card
-              Card(
-                elevation: 3,
-                child: InkWell(
-                  onTap: _navigateToQRScanner,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.qr_code_scanner,
-                            color: Colors.deepPurple,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(
+              // Quick Action Cards Row
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      elevation: 3,
+                      child: InkWell(
+                        onTap: _navigateToQRScanner,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'QR Code Scanner',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.deepPurple.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.qr_code_scanner,
+                                  color: Colors.deepPurple,
+                                  size: 28,
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Scan equipment QR codes for quick access',
+                              const SizedBox(height: 8),
+                              const Text(
+                                'QR Scanner',
                                 style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Card(
+                      elevation: 3,
+                      child: InkWell(
+                        onTap: _navigateToMaintenanceManagement,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.build,
+                                  color: Colors.indigo,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Maintenance',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 24),
@@ -667,7 +1124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 24),
               ],
 
-              // Rooms Section
+              // Rooms Section (condensed)
               if (rooms.isNotEmpty) ...[
                 Row(
                   children: [
@@ -684,7 +1141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                ...rooms.take(3).map((room) => Card(
+                ...rooms.take(2).map((room) => Card(
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.blue[100],
@@ -699,57 +1156,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     title: Text(room['name'] ?? 'Unknown Room'),
                     subtitle: Text('Floor ${room['floor']} • Capacity: ${room['capacity']} • ${room['type'] ?? 'Unknown'}'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // Show room details in a dialog
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(room['name'] ?? 'Room Details'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Floor: ${room['floor']}'),
-                                Text('Capacity: ${room['capacity']} people'),
-                                Text('Type: ${room['type']}'),
-                                const SizedBox(height: 16),
-                                const Text('Equipment in this room:'),
-                                const SizedBox(height: 8),
-                                ...equipment
-                                    .where((eq) => eq['room'] == room['id'])
-                                    .map((eq) => Padding(
-                                  padding: const EdgeInsets.only(left: 16, bottom: 4),
-                                  child: Text('• ${eq['name']}'),
-                                ))
-                                    .toList(),
-                                if (equipment.where((eq) => eq['room'] == room['id']).isEmpty)
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 16),
-                                    child: Text('No equipment assigned', style: TextStyle(color: Colors.grey)),
-                                  ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Close'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  _navigateToRoomManagement();
-                                },
-                                child: const Text('Manage Rooms'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
+                    onTap: () => _navigateToRoomManagement(),
                   ),
                 )).toList(),
-                if (rooms.length > 3)
+                if (rooms.length > 2)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Center(
@@ -762,7 +1172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 24),
               ],
 
-              // Equipment Section
+              // Equipment Section (condensed)
               if (equipment.isNotEmpty) ...[
                 Row(
                   children: [
@@ -779,7 +1189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                ...equipment.take(3).map((item) {
+                ...equipment.take(2).map((item) {
                   Color statusColor = _getStatusColor(item['status']);
                   return Card(
                     child: ListTile(
@@ -804,49 +1214,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ),
-                      onTap: () {
-                        // Show equipment details in a dialog
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text(item['name'] ?? 'Equipment Details'),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Type: ${item['type']}'),
-                                  Text('Device ID: ${item['device_id'] ?? 'N/A'}'),
-                                  Text('Status: ${item['status']}'),
-                                  if (item['room'] != null)
-                                    Text('Room: ${rooms.firstWhere((r) => r['id'] == item['room'], orElse: () => {'name': 'Unknown'})['name']}')
-                                  else
-                                    const Text('Room: Unassigned'),
-                                  if (item['qr_code'] != null)
-                                    Text('QR Code: ${item['qr_code']}'),
-                                ],
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('Close'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    _navigateToEquipmentManagement();
-                                  },
-                                  child: const Text('Manage Equipment'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
+                      onTap: () => _navigateToEquipmentManagement(),
                     ),
                   );
                 }).toList(),
-                if (equipment.length > 3)
+                if (equipment.length > 2)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Center(
@@ -970,6 +1342,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildSystemCard(String title, String value, String subtitle, IconData icon, Color color, String status) {
+    Color statusColor = _getSystemStatusColor(status);
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon, size: 28, color: color),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    status.toUpperCase(),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSensorValue(String label, String value, IconData icon, Color color) {
     return Column(
       children: [
@@ -1001,6 +1424,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       default:
         return Colors.grey;
     }
+  }
+
+  Color _getSystemStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'operational':
+      case 'optimal':
+      case 'secure':
+      case 'normal':
+        return Colors.green;
+      case 'alert':
+      case 'attention':
+        return Colors.red;
+      case 'offline':
+        return Colors.grey;
+      default:
+        return Colors.orange;
+    }
+  }
+
+  String _getRoomName(String? roomId) {
+    if (roomId == null) return 'Unassigned';
+    final room = rooms.firstWhere(
+          (r) => r['id'].toString() == roomId.toString(),
+      orElse: () => null,
+    );
+    return room != null ? room['name'] : 'Unknown Room';
   }
 
   String _formatDateTime(String? dateTimeString) {
