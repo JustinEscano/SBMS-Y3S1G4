@@ -137,7 +137,7 @@ const DashboardScreen: React.FC = () => {
                 <td>{room.type}</td>
                 <td>
                   <button
-                    className="edit-btn"
+                    className="edt-btn"
                     onClick={() => {
                       setModalMode("edit");
                       setSelectedRoom(room);
@@ -146,7 +146,7 @@ const DashboardScreen: React.FC = () => {
                     Edit
                   </button>
                   <button
-                    className="delete-btn"
+                    className="dlt-btn"
                     onClick={() => {
                       setModalMode("delete");
                       setSelectedRoom(room);

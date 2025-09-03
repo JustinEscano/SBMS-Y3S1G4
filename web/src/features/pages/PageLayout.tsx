@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../components/sideBar";
+import SideBar from "../components/SideBar";
 import TopBar from "../components/topBar";
 import { useAuth } from "../context/authContext";
 import "./PageStyle.css";
