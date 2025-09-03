@@ -26,7 +26,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [RoleBasedPermission]
+    permission_classes = [AllowAny]
 
 def home(request):
     return HttpResponse("Welcome to the DBMS API.")

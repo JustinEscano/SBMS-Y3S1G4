@@ -1,5 +1,5 @@
 import axiosInstance from "../../service/AppService";
-import type { Equipment } from "../types/equipmentTypes";
+import type { Equipment } from "../types/dashboardTypes";
 
 const EQUIPMENT_API = "/api/equipment/";
 

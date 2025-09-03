@@ -1,0 +1,45 @@
+.modal-content textarea {
+    resize: none;
+    max-width: 100%;
+    width: 100%;
+    min-height: 150px;
+    width: 100%;
+    padding: 10px 12px;     /* space inside box */
+    font-size: 14px;        /* readable text */
+    line-height: 1.5;
+    border: 1px solid #ccc; /* light border */
+    border-radius: 8px;     /* smooth corners */
+    resize: none;       /* user can resize vertically only */
+    box-sizing: border-box; /* padding doesn’t push width */
+    background: #fafafa;    /* subtle background */
+}
+
+.modal-content textarea:focus {
+    outline: none;
+  border-color: #007bff;  /* highlight border when active */
+  background: #fff;
+}
+
+
+.modal-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.issue-textarea {
+  width: 100%;
+  padding: 10px 12px;     /* space inside box */
+  font-size: 14px;        /* readable text */
+  line-height: 1.5;
+  border: 1px solid #ccc; /* light border */
+  border-radius: 8px;     /* smooth corners */
+  resize: vertical;       /* user can resize vertically only */
+  box-sizing: border-box; /* padding doesn’t push width */
+  background: #fafafa;    /* subtle background */
+}
+
+.issue-textarea:focus {
+  outline: none;
+  border-color: #007bff;  /* highlight border when active */
+  background: #fff;
+}
