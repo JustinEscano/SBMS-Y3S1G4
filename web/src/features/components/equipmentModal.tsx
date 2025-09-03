@@ -1,12 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import type {
-  Equipment,
-  EquipmentMode,
-  EquipmentStatus,
-  EquipmentType,
-  Room,
-} from "../types/dashboardTypes";
-import { MODE_TYPE_MAP } from "../types/dashboardTypes";
+import type { Equipment, EquipmentStatus, EquipmentType, Room } from "../types/dashboardTypes";
 import "./Modal.css";
 
 export type EquipmentModalMode = "add" | "edit" | "delete";
@@ -15,23 +8,18 @@ interface EquipmentModalProps {
   mode: EquipmentModalMode;
   equipment?: Equipment;
   rooms: Room[];
-  dashboardMode: EquipmentMode; // hvac | lighting | security
+  allowedTypes: EquipmentType[];
   onClose: () => void;
   onSubmit: (data: Partial<Equipment>) => void;
 }
 
-const STATUS_OPTIONS: EquipmentStatus[] = [
-  "online",
-  "offline",
-  "maintenance",
-  "error",
-];
+const STATUS_OPTIONS: EquipmentStatus[] = ["online", "offline", "maintenance", "error"];
 
 const EquipmentModal: React.FC<EquipmentModalProps> = ({
   mode,
   equipment,
   rooms,
-  dashboardMode,
+  allowedTypes,
   onClose,
   onSubmit,
 }) => {
@@ -41,12 +29,14 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
     type: EquipmentType;
     status: EquipmentStatus;
     qr_code: string;
+    description: string;
   }>({
     name: "",
     room: "",
-    type: MODE_TYPE_MAP[dashboardMode][0],
+    type: allowedTypes[0],
     status: "offline",
     qr_code: "",
+    description: "",
   });
 
   const [roomSearch, setRoomSearch] = useState("");
@@ -54,7 +44,7 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
   const [roomError, setRoomError] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Initialize for edit/delete
+  // Initialize modal data
   useEffect(() => {
     if ((mode === "edit" || mode === "delete") && equipment) {
       setFormData({
@@ -63,18 +53,15 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
         type: equipment.type,
         status: equipment.status,
         qr_code: equipment.qr_code ?? "",
+        description: (equipment as any).description ?? "",
       });
       const room = rooms.find((r) => r.id === equipment.room);
       setRoomSearch(room ? `${room.name} (Floor ${room.floor})` : "");
     } else if (mode === "add") {
-      setFormData((prev) => ({
-        ...prev,
-        type: MODE_TYPE_MAP[dashboardMode][0],
-        status: "offline",
-      }));
+      setFormData((prev) => ({ ...prev, type: allowedTypes[0], status: "offline", description: "" }));
       setRoomSearch("");
     }
-  }, [mode, equipment, rooms, dashboardMode]);
+  }, [mode, equipment, rooms, allowedTypes]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -87,7 +74,6 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter rooms
   const filteredRooms = useMemo(
     () =>
       rooms.filter((r) =>
@@ -96,37 +82,25 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
     [rooms, roomSearch]
   );
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => {
-      if (name === "type") {
-        return { ...prev, type: value as EquipmentType };
-      }
-      if (name === "status") {
-        return { ...prev, status: value as EquipmentStatus };
-      }
-      return { ...prev, [name]: value };
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === "roomSearch") setRoomError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Delete path
     if (mode === "delete" && equipment) {
       onSubmit({ id: equipment.id });
       return;
     }
 
-    // Validate room selection
     if (!roomSearch.trim() && !formData.room) {
       setRoomError("* Please select a room.");
       return;
     }
-    setRoomError("");
 
-    // If user typed the room text, map it to an id
     let roomId = formData.room;
     if (!roomId) {
       const match = rooms.find(
@@ -139,10 +113,9 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
       id: equipment?.id,
       name: formData.name,
       type: formData.type,
-      status: formData.status, // ✅ send backend value as-is
+      status: formData.status,
       qr_code: formData.qr_code,
       room: roomId,
-      mode: dashboardMode,
     };
 
     onSubmit(payload);
@@ -153,20 +126,16 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
       <div className="modal">
         <div className="modal-header">
           <h2>
-            {mode === "add" && `Add ${dashboardMode.toUpperCase()} Equipment`}
+            {mode === "add" && `Add Equipment`}
             {mode === "edit" && "Edit Equipment"}
             {mode === "delete" && "Delete Equipment"}
           </h2>
-          <button className="modal-close" onClick={onClose}>
-            &times;
-          </button>
+          <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
 
         {mode === "delete" ? (
           <div className="modal-content">
-            <p>
-              Are you sure you want to delete <strong>{equipment?.name}</strong>?
-            </p>
+            <p>Are you sure you want to delete <strong>{equipment?.name}</strong>?</p>
             <div className="modal-actions">
               <button onClick={handleSubmit} className="delete-btn">Delete</button>
               <button onClick={onClose}>Cancel</button>
@@ -175,13 +144,14 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
         ) : (
           <form onSubmit={handleSubmit} className="modal-content">
             <label>Name:</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
+            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+
+            <label>Type:</label>
+            <select name="type" value={formData.type} onChange={handleChange}>
+              {allowedTypes.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
 
             <label>Status:</label>
             <select name="status" value={formData.status} onChange={handleChange}>
@@ -190,34 +160,15 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
               ))}
             </select>
 
-            <label>Type:</label>
-            <select name="type" value={formData.type} onChange={handleChange}>
-              {MODE_TYPE_MAP[dashboardMode].map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-
             <label>QR Code:</label>
-            <input
-              type="text"
-              name="qr_code"
-              value={formData.qr_code}
-              onChange={handleChange}
-            />
+            <input type="text" name="qr_code" value={formData.qr_code} onChange={handleChange} />
 
             <label>Room:</label>
             <div className="dropdown-wrapper" ref={dropdownRef}>
               <input
                 type="text"
                 value={roomSearch}
-                onChange={(e) => {
-                  setRoomSearch(e.target.value);
-                  setShowDropdown(true);
-                  setFormData((prev) => ({ ...prev, room: "" }));
-                  setRoomError("");
-                }}
+                onChange={(e) => { setRoomSearch(e.target.value); setShowDropdown(true); setFormData((prev) => ({ ...prev, room: "" })); setRoomError(""); }}
                 onFocus={() => setShowDropdown(true)}
                 placeholder="Search room..."
                 className={roomError ? "input-error" : ""}
@@ -230,19 +181,12 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({
                     <li
                       key={r.id}
                       className={`dropdown-item ${r.id === formData.room ? "selected" : ""}`}
-                      onClick={() => {
-                        setFormData((prev) => ({ ...prev, room: r.id }));
-                        setRoomSearch(`${r.name} (Floor ${r.floor})`);
-                        setShowDropdown(false);
-                        setRoomError("");
-                      }}
+                      onClick={() => { setFormData((prev) => ({ ...prev, room: r.id })); setRoomSearch(`${r.name} (Floor ${r.floor})`); setShowDropdown(false); setRoomError(""); }}
                     >
                       {r.name} (Floor {r.floor})
                     </li>
                   ))}
-                  {filteredRooms.length === 0 && (
-                    <li className="dropdown-item disabled">No rooms found</li>
-                  )}
+                  {filteredRooms.length === 0 && <li className="dropdown-item disabled">No rooms found</li>}
                 </ul>
               )}
             </div>

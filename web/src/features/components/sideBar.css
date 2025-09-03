@@ -63,12 +63,13 @@
 }
 
 .menu-main:hover {
-  background-color: #1a1f3d;
+  background-color: #007bff;
 }
 
 .menu-item.active > .menu-main {
   background-color: #2a3260;
   border-left: 4px solid #4a90e2;
+  font-weight: bold;
 }
 
 .menu-item.active:not(.subitem-active) > .menu-main {
@@ -91,6 +92,7 @@
 
 .submenu-item.active {
   color: white;
+  background-color: #2a3260;
   font-weight: bold;
   background-color: #2a3260; /* highlight the selected subitem */
   border-left: 4px solid #4a90e2; /* match parent style if desired */
@@ -98,6 +100,10 @@
 
 .submenu-item .dot {
   display: none; /* remove dot */
+}
+.submenu-item:hover {
+  color: white;
+  background-color: #007bff;
 }
 
 /* logout now sits just below the menu */
@@ -113,7 +119,8 @@
 }
 
 .sidebar-logout:hover {
-  background-color: #1a1f3d;
+  background-color: #FF0000;
+  color: #000;
 }
 
 
@@ -127,7 +134,7 @@
 }
 
 .toggle-btn .menu-main:hover {
-  background-color: #1a1f3d;
+  background-color: #2a3260;
 }
 
 .sidebar.collapsed .toggle-btn .label {

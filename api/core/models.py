@@ -49,7 +49,7 @@ class User(AbstractBaseUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128) # Will be set with hashing
+    password = models.CharField(max_length=128) 
     role = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
@@ -78,8 +78,7 @@ class Equipment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
-    type = models.CharField(max_length=100, choices=EQUIPMENT_TYPE_CHOICES)  # Add choices
-    mode = models.CharField(max_length=100, choices=EQUIPMENT_MODE_CHOICES, blank=True)
+    type = models.CharField(max_length=100, choices=EQUIPMENT_TYPE_CHOICES)
     status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')  # Add choices and default
     device_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     qr_code = models.CharField(max_length=255, null=True, blank=True)  # Make optional

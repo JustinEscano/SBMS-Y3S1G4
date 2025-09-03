@@ -5,28 +5,30 @@ import { useRooms } from "../hooks/useRooms";
 import EquipmentModal from "../components/equipmentModal";
 import { equipmentService } from "../services/equipmentService";
 import Pagination from "../components/Pagination";
-import type {
-  Equipment,
-  EquipmentMode,
-  EquipmentType,
-  EquipmentStatus,
-  Room,
-} from "../types/dashboardTypes";
-import { MODE_TYPE_MAP } from "../types/dashboardTypes";
+import type { Equipment, EquipmentType, EquipmentStatus, Room } from "../types/dashboardTypes";
+import "../pages/PageStyle.css";
+
+import { PAGE_TYPES } from "../constants/constant";
+import type { PageType } from "../constants/constant";
+
+// Mapping of page type → allowed equipment types
+export const PAGE_TYPE_MAP: Record<PageType, EquipmentType[]> = {
+  [PAGE_TYPES.HVAC]: ["monitor", "esp32"],
+  [PAGE_TYPES.LIGHTING]: ["actuator", "controller"],
+  [PAGE_TYPES.SECURITY]: ["sensor"],
+};
 
 type ModalType = "add" | "edit" | "delete" | null;
+const ITEMS_PER_PAGE = 5;
 
 interface GenericEquipmentPageProps {
-  mode: EquipmentMode; // hvac | lighting | security
+  pageType: PageType;
   icon: string;
 }
 
-const ITEMS_PER_PAGE = 5;
-
-// A local type that augments Equipment with roomName & floor for display
 type EquipmentWithRoom = Equipment & { roomName?: string; floor?: number | "" };
 
-const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon }) => {
+const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, icon }) => {
   const { equipment, loading, refetch } = useEquipment();
   const { rooms } = useRooms();
 
@@ -37,30 +39,24 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
   const [currentPage, setCurrentPage] = useState(1);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Filter equipment by dashboard mode and allowed types
-  const filteredByMode: Equipment[] = useMemo(
-    () =>
-      equipment
-        .filter(
-          (e) =>
-            e.mode?.toLowerCase() === mode.toLowerCase() &&
-            MODE_TYPE_MAP[mode].includes(e.type as EquipmentType)
-        )
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    [equipment, mode]
-  );
+  // Ensure allowedTypes is always defined
+  const allowedTypes = PAGE_TYPE_MAP[pageType] ?? [];
+  if (!allowedTypes.length) console.warn("Unknown pageType:", pageType);
+
+  // Filter equipment by type
+  const filteredByType: Equipment[] = useMemo(() => {
+    return equipment
+      .filter((e) => allowedTypes.includes(e.type))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [equipment, allowedTypes]);
 
   // Attach room info
   const mappedEquipment: EquipmentWithRoom[] = useMemo(() => {
-    return filteredByMode.map((eq) => {
+    return filteredByType.map((eq) => {
       const room = rooms.find((r: Room) => r.id === eq.room);
-      return {
-        ...eq,
-        roomName: room?.name ?? eq.room,
-        floor: room?.floor ?? "",
-      };
+      return { ...eq, roomName: room?.name ?? eq.room, floor: room?.floor ?? "" };
     });
-  }, [filteredByMode, rooms]);
+  }, [filteredByType, rooms]);
 
   // Search + status filter
   const filteredEquipment: EquipmentWithRoom[] = useMemo(() => {
@@ -73,10 +69,7 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
         (e.qr_code ?? "").toLowerCase().includes(term) ||
         (e.roomName ?? "").toLowerCase().includes(term) ||
         floorStr.toLowerCase().includes(term);
-
-      const matchesStatus =
-        statusFilter === "All" ? true : e.status === statusFilter;
-
+      const matchesStatus = statusFilter === "All" ? true : e.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [mappedEquipment, search, statusFilter]);
@@ -100,17 +93,14 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
     setErrorMsg(null);
   };
 
-  // Build payload in backend format (already using backend status)
-  const formatPayload = (data: Partial<Equipment>): Partial<Equipment> => {
-    return {
-      name: data.name ?? "",
-      type: data.type as EquipmentType,
-      mode, // implied by page
-      status: (data.status as EquipmentStatus) ?? "offline",
-      qr_code: data.qr_code ?? "",
-      room: data.room, // UUID
-    };
-  };
+  // Backend payload formatter
+  const formatPayload = (data: Partial<Equipment>): Partial<Equipment> => ({
+    name: data.name ?? "",
+    type: data.type as EquipmentType,
+    status: (data.status as EquipmentStatus) ?? "offline",
+    qr_code: data.qr_code ?? "",
+    room: data.room,
+  });
 
   const handleAdd = async (data: Partial<Equipment>) => {
     try {
@@ -119,7 +109,6 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
       closeModal();
     } catch (err: any) {
       setErrorMsg(err?.response?.data ? JSON.stringify(err.response.data) : err?.message || "Failed to create.");
-      // Keep modal open so user can fix inputs
     }
   };
 
@@ -145,9 +134,13 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
     }
   };
 
+  // Debugging logs
+  console.log("pageType:", pageType, "allowedTypes:", allowedTypes);
+  console.log("equipment count:", filteredByType.length);
+
   return (
-    <PageLayout initialSection={{ parent: "Dashboard", child: mode }}>
-      <h1>Dashboard &gt; {mode.charAt(0).toUpperCase() + mode.slice(1)}</h1>
+    <PageLayout initialSection={{ parent: "Dashboard", child: pageType }}>
+      <h1>Dashboard &gt; {pageType.charAt(0).toUpperCase() + pageType.slice(1)}</h1>
 
       <div className="content-container">
         {/* Stats */}
@@ -155,25 +148,21 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
           <div className="stat-box">
             <div className="stat-icon">{icon}</div>
             <div className="stat-info">
-              <p className="stat-number">{filteredByMode.length}</p>
-              <p className="stat-label">Total {mode} Units</p>
+              <p className="stat-number">{filteredByType.length}</p>
+              <p className="stat-label">Total Units</p>
             </div>
           </div>
           <div className="stat-box">
             <div className="stat-icon">✅</div>
             <div className="stat-info">
-              <p className="stat-number">
-                {filteredByMode.filter((e) => e.status === "online").length}
-              </p>
+              <p className="stat-number">{filteredByType.filter((e) => e.status === "online").length}</p>
               <p className="stat-label">Online Units</p>
             </div>
           </div>
           <div className="stat-box">
             <div className="stat-icon">❌</div>
             <div className="stat-info">
-              <p className="stat-number">
-                {filteredByMode.filter((e) => e.status === "offline").length}
-              </p>
+              <p className="stat-number">{filteredByType.filter((e) => e.status === "offline").length}</p>
               <p className="stat-label">Offline Units</p>
             </div>
           </div>
@@ -207,14 +196,10 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
 
         {/* Table */}
         {loading ? (
-          <p>Loading {mode} data...</p>
+          <p>Loading {pageType} data...</p>
         ) : (
           <>
-            {errorMsg && (
-              <div className="error-banner" style={{ margin: "0 0 12px 0", color: "#b00020" }}>
-                {errorMsg}
-              </div>
-            )}
+            {errorMsg && <div className="error-banner">{errorMsg}</div>}
 
             <table>
               <thead>
@@ -236,12 +221,12 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
                     <td>{eq.floor}</td>
                     <td>{eq.name}</td>
                     <td>{eq.type}</td>
-                    <td>{eq.status}</td> {/* show backend value directly */}
+                    <td>{eq.status}</td>
                     <td>{eq.qr_code}</td>
                     <td>{new Date(eq.created_at).toLocaleDateString()}</td>
                     <td>
-                      <button className="edit-btn" onClick={() => openModal("edit", eq)}>Edit</button>
-                      <button className="delete-btn" onClick={() => openModal("delete", eq)}>Delete</button>
+                      <button className="edt-btn" onClick={() => openModal("edit", eq)}>Edit</button>
+                      <button className="dlt-btn" onClick={() => openModal("delete", eq)}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -249,7 +234,7 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
             </table>
 
             <button className="add-btn-main" onClick={() => openModal("add")}>
-              + Add {mode.charAt(0).toUpperCase() + mode.slice(1)} Equipment
+              + Add Equipment
             </button>
           </>
         )}
@@ -268,7 +253,7 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ mode, icon 
           rooms={rooms}
           mode={modalType}
           equipment={selected || undefined}
-          dashboardMode={mode}
+          allowedTypes={allowedTypes}
           onClose={closeModal}
           onSubmit={
             modalType === "add"
