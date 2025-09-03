@@ -1,108 +1,187 @@
-import React from "react";
-import PageLayout from "./PageLayout";
-import { useMaintenanceRequests } from "../hooks/useMaintenance";
-import type { MaintenanceRequest } from "../types/maintenanceTypes";
+import React, { useState, useEffect, useMemo } from "react";
+import type { MaintenanceRequest, Equipment, User } from "../types/dashboardTypes";
+import MaintenanceModal from "../components/maintenanceModal";
+import { maintenanceService } from "../services/maintenanceService";
+import { equipmentService } from "../services/equipmentService";
+import { userService } from "../services/userService";
+import PageLayout from "../pages/PageLayout";
+import Pagination from "../components/Pagination";
+import "../pages/PageStyle.css";
+
+type MaintenanceModalMode = "add" | "edit" | "delete";
+
+const ITEMS_PER_PAGE = 5;
 
 const MaintenancePage: React.FC = () => {
-  const { requests, loading } = useMaintenanceRequests();
-  const [search, setSearch] = React.useState("");
+  const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [search, setSearch] = useState("");
+  const [modalMode, setModalMode] = useState<MaintenanceModalMode | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const filtered = requests.filter((r: MaintenanceRequest) =>
-    r.issue.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      const [reqs, eqs, usrs] = await Promise.all([
+        maintenanceService.getAll(),
+        equipmentService.getAll(),
+        userService.getAll(),
+      ]);
+      setRequests(reqs);
+      setEquipments(eqs);
+      setUsers(usrs);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter((r) => {
+      const matchesSearch = r.issue.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [requests, search, statusFilter]);
+
+  const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE);
+  const paginatedRequests = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredRequests.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredRequests, currentPage]);
+
+  const handleSubmit = async (data: Partial<MaintenanceRequest>) => {
+    if (modalMode === "add") {
+      const newReq = await maintenanceService.create(data);
+      setRequests((prev) => [...prev, newReq]);
+    } else if (modalMode === "edit" && data.id) {
+      const updated = await maintenanceService.update(data.id, data);
+      setRequests((prev) =>
+        prev.map((r) => (r.id === data.id ? { ...r, ...updated } : r))
+      );
+    } else if (modalMode === "delete" && data.id) {
+      await maintenanceService.remove(data.id);
+      setRequests((prev) => prev.filter((r) => r.id !== data.id));
+    }
+    setModalMode(null);
+    setSelectedRequest(undefined);
+  };
 
   return (
-    <PageLayout initialSection={{ parent: "Dashboard", child: "Maintenance Requests" }}>
-      <h1>Dashboard {">"} Maintenance Requests</h1>
+    <PageLayout initialSection={{ parent: "Dashboard", child: "Maintenance" }}>
+      <h1>Dashboard &gt; Maintenance Requests</h1>
 
       <div className="content-container">
-        {/* Stat Boxes */}
-        <div className="stats-boxes">
-          <div className="stat-box">
-            <div className="stat-icon">🛠️</div>
-            <div className="stat-info">
-              <p className="stat-number">{requests.length}</p>
-              <p className="stat-label">Total Requests</p>
-            </div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-icon">⏳</div>
-            <div className="stat-info">
-              <p className="stat-number">
-                {requests.filter(r => r.status === "Pending").length}
-              </p>
-              <p className="stat-label">Pending</p>
-            </div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-icon">✅</div>
-            <div className="stat-info">
-              <p className="stat-number">
-                {requests.filter(r => r.status === "Resolved").length}
-              </p>
-              <p className="stat-label">Resolved</p>
-            </div>
-          </div>
+        {/* Search + Filter */}
+        <div className="table-controls">
+          <input
+            type="text"
+            placeholder="Search requests..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ marginLeft: "10px" }}
+          >
+            <option value="all">All</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
         </div>
 
-        {/* Maintenance Requests Table */}
-        <div className="requests-table">
-          <h2>Maintenance Request Summary</h2>
+        {/* Table */}
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Equipment</th>
+              <th>Issue</th>
+              <th>Status</th>
+              <th>Scheduled</th>
+              <th>Resolved</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedRequests.map((req) => (
+              <tr key={req.id}>
+                <td>{users.find((u) => u.id === req.user)?.username || req.user}</td>
+                <td>{equipments.find((eq) => eq.id === req.equipment)?.name || req.equipment}</td>
+                <td>{req.issue}</td>
+                <td>{req.status}</td>
+                <td>{req.scheduled_date}</td>
+                <td>{req.resolved_at || "-"}</td>
+                <td>
+                  <button
+                    className="edit-btn"
+                    onClick={() => {
+                      setModalMode("edit");
+                      setSelectedRequest(req);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="delete-btn"
+                    onClick={() => {
+                      setModalMode("delete");
+                      setSelectedRequest(req);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {paginatedRequests.length === 0 && (
+              <tr>
+                <td colSpan={7}>No maintenance requests found</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
 
-          {/* Search & Filter */}
-          <div className="table-controls">
-            <input
-              type="text"
-              placeholder="Search by issue"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            <select>
-              <option>Status</option>
-              <option>Pending</option>
-              <option>In Progress</option>
-              <option>Resolved</option>
-            </select>
-            <button>Search</button>
-          </div>
+        {/* Add button */}
+        <button
+          className="add-btn-main"
+          onClick={() => {
+            setModalMode("add");
+            setSelectedRequest(undefined);
+          }}
+        >
+          + Add Maintenance Request
+        </button>
 
-          {loading ? (
-            <p>Loading maintenance requests...</p>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>User</th>
-                  <th>Equipment</th>
-                  <th>Issue</th>
-                  <th>Status</th>
-                  <th>Scheduled</th>
-                  <th>Resolved</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((req) => (
-                  <tr key={req.id}>
-                    <td>{req.id}</td>
-                    <td>{req.user}</td>
-                    <td>{req.equipment}</td>
-                    <td>{req.issue}</td>
-                    <td>{req.status}</td>
-                    <td>{new Date(req.scheduled_date).toLocaleDateString()}</td>
-                    <td>
-                      {req.resolved_at
-                        ? new Date(req.resolved_at).toLocaleDateString()
-                        : "—"}
-                    </td>
-                    <td>{new Date(req.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          showRange
+        />
+
+        {/* Modal */}
+        {modalMode && (
+          <MaintenanceModal
+            mode={modalMode}
+            request={selectedRequest}
+            equipments={equipments}
+            users={users}
+            onClose={() => {
+              setModalMode(null);
+              setSelectedRequest(undefined);
+            }}
+            onSubmit={handleSubmit}
+          />
+        )}
       </div>
     </PageLayout>
   );

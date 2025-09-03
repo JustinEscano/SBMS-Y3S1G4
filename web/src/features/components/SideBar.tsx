@@ -3,14 +3,15 @@ import "./SideBar.css";
 import { Home, Bell, BarChart2, LogOut, ChevronLeft, ChevronRight, Info, Bot } from "lucide-react";
 import OrbitLogo from "../../assets/ORBIT.png";
 import CompanyNameLogo from "../../assets/Logo-Name.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface SideBarProps {
   collapsed: boolean;
   onToggle: () => void;
-  selectedSection: { parent: string; child?: string };
-  onSelectSection: (section: { parent: string; child?: string }) => void;
+  selectedSection: { parent: string; child?: string }; // <-- add this
+  onSelectSection: (section: { parent: string; child?: string }) => void; // <-- add this
 }
+
 
 interface Section {
   id: string;
@@ -37,13 +38,25 @@ const sections: Section[] = [
   { id: "About", label: "About Us", icon: <Info size={18} /> },
 ];
 
-const SideBar: React.FC<SideBarProps> = ({
-  collapsed,
-  onToggle,
-  selectedSection,
-  onSelectSection,
-}) => {
+const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Helper: determine active parent/subitem from path
+  const getActiveSection = () => {
+    const path = location.pathname.toLowerCase();
+    for (const section of sections) {
+      if (section.subItems) {
+        for (const sub of section.subItems) {
+          if (path.includes(sub.id.toLowerCase())) return { parent: section.id, child: sub.id };
+        }
+      }
+      if (path.includes(section.id.toLowerCase())) return { parent: section.id };
+    }
+    return { parent: "" };
+  };
+
+  const active = getActiveSection();
 
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -55,6 +68,7 @@ const SideBar: React.FC<SideBarProps> = ({
       </div>
 
       <ul className="sidebar-list">
+        {/* Toggle button */}
         <li className="menu-item toggle-btn">
           <div title="Navigation Menu" className="menu-main" onClick={onToggle}>
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -63,44 +77,43 @@ const SideBar: React.FC<SideBarProps> = ({
         </li>
 
         {sections.map((section) => {
-          const isActive =
-            selectedSection.parent === section.id ||
-            section.subItems?.some((item) => item.id === selectedSection.child);
+          const isParentActive = active.parent === section.id && !active.child;
+          const isExpanded = active.parent === section.id;
 
           return (
-            <li key={section.id} className={`menu-item ${isActive ? "active" : ""}`}>
+            <li key={section.id} className={`menu-item ${isParentActive ? "active" : ""}`}>
               <div
                 className="menu-main"
                 onClick={() => {
-                  onSelectSection({ parent: section.id });
-                  // Navigate to parent page
-                  if (section.id === "Dashboard") navigate("/dashboard");
-                  else if (section.id === "Usage") navigate("/usage");
-                  else if (section.id === "Notification") navigate("/notifications");
-                  else if (section.id === "LLM") navigate("/llm");
-                  else if (section.id === "About") navigate("/about");
+                  if (section.subItems) {
+                    navigate("/dashboard"); // parent always goes to dashboard main
+                  } else {
+                    const routeMap: Record<string, string> = {
+                      Usage: "/usage",
+                      Notification: "/notifications",
+                      LLM: "/llm",
+                      About: "/about",
+                    };
+                    navigate(routeMap[section.id] || "/");
+                  }
                 }}
               >
                 {section.icon}
                 {!collapsed && <span className="label">{section.label}</span>}
               </div>
 
-              {section.subItems && !collapsed && (
+              {section.subItems && isExpanded && !collapsed && (
                 <ul className="submenu">
                   {section.subItems.map((sub) => (
                     <li
                       key={sub.id}
-                      className={`submenu-item ${
-                        selectedSection.child === sub.id ? "active" : ""
-                      }`}
+                      className={`submenu-item ${active.child === sub.id ? "active" : ""}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSelectSection({ parent: section.id, child: sub.id });
                         navigate(`/dashboard/${sub.id.toLowerCase()}`);
                       }}
                     >
-                      <span className="dot" />
-                      <span>{sub.label}</span>
+                      <span>{sub.id === "HVAC" ? sub.label.toUpperCase() : sub.label}</span>
                     </li>
                   ))}
                 </ul>
@@ -111,7 +124,7 @@ const SideBar: React.FC<SideBarProps> = ({
       </ul>
 
       {/* Logout */}
-      <div className="sidebar-logout" onClick={() => onSelectSection({ parent: "logout" })}>
+      <div className="sidebar-logout" onClick={() => navigate("/logout")}>
         <LogOut size={18} />
         {!collapsed && <span>Logout</span>}
       </div>

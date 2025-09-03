@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { Room } from '../types/roomTypes';
-import { getAllRooms } from '../services/roomService';
+import type { Room } from '../types/dashboardTypes';
+import { roomService } from '../services/roomService';
 
 export const useRooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -9,7 +9,7 @@ export const useRooms = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const data = await getAllRooms();
+        const data = await roomService.getAll();
         setRooms(data);
       } catch (error) {
         console.error('Failed to fetch rooms:', error);

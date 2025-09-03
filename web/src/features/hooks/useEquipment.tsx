@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { equipmentService } from "../services/equipmentService";
-import type { Equipment } from "../types/equipmentTypes";
+import { equipmentService } from "../services/equipmentService.tsx";
+import type { Equipment } from "../types/dashboardTypes.tsx";
 
 export const useEquipment = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);

@@ -72,15 +72,19 @@
   font-weight: bold;
 }
 
+.menu-item.active:not(.subitem-active) > .menu-main {
+  background-color: #2a3260;
+  border-left: 4px solid #4a90e2;
+}
+
 .submenu {
   padding-left: 30px;
   background-color: #11163c;
 }
-
 .submenu-item {
   display: flex;
   align-items: center;
-  padding: 8px 0;
+  padding: 8px 0 8px 12px; /* remove dot spacing */
   color: #ccc;
   cursor: pointer;
   gap: 8px;
@@ -90,13 +94,12 @@
   color: white;
   background-color: #2a3260;
   font-weight: bold;
+  background-color: #2a3260; /* highlight the selected subitem */
+  border-left: 4px solid #4a90e2; /* match parent style if desired */
 }
 
 .submenu-item .dot {
-  height: 6px;
-  width: 6px;
-  background-color: #4a90e2;
-  border-radius: 50%;
+  display: none; /* remove dot */
 }
 .submenu-item:hover {
   color: white;

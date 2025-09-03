@@ -18,6 +18,12 @@ EQUIPMENT_TYPE_CHOICES = [
     ('monitor', 'Monitor'),
 ]
 
+EQUIPMENT_MODE_CHOICES = [
+    ('hvac', 'HVAC'),
+    ('lighting', 'Lighting'),
+    ('security', 'Security'),
+]
+
 ROOM_TYPE_CHOICES = [
     ('office', 'Office'),
     ('lab', 'Laboratory'),
@@ -73,6 +79,7 @@ class Equipment(models.Model):
     name = models.CharField(max_length=255)
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
     type = models.CharField(max_length=100, choices=EQUIPMENT_TYPE_CHOICES)  # Add choices
+    mode = models.CharField(max_length=100, choices=EQUIPMENT_MODE_CHOICES, blank=True)
     status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')  # Add choices and default
     device_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     qr_code = models.CharField(max_length=255, null=True, blank=True)  # Make optional
