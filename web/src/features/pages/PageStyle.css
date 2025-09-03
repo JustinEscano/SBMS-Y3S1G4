@@ -161,8 +161,8 @@ table tbody td {
   text-align: center;
 }
 
-.edit-btn,
-.delete-btn {
+.edt-btn,
+.dlt-btn {
   padding: 6px 12px;
   border-radius: 6px;
   border: none;
@@ -172,22 +172,23 @@ table tbody td {
   font-weight: 500;
 }
 
-.edit-btn {
+.edt-btn {
   background: var(--light-blue);
   color: var(--white);
 }
 
-.edit-btn:hover {
+.edt-btn:hover {
   background: var(--hover-blue);
 }
 
-.delete-btn {
+.dlt-btn {
   background: var(--red);
   color: var(--white);
 }
 
-.delete-btn:hover {
+.dlt-btn:hover {
   background: var(--dark-red);
+  color: var(--white);
 }
 
 .add-btn-main {

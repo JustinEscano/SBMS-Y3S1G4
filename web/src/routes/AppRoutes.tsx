@@ -10,6 +10,7 @@ import MaintenancePage from "../features/pages/MaintenancePage";
 import NotificationPage from "../features/pages/NotificationPage";
 import LLMChatPage from "../features/pages/LLMChatPage";
 import AboutPage from "../features/pages/AboutPage";
+import { PAGE_TYPES } from "../features/constants/constant";
 
 
 // ✅ Reusable wrapper for route protection
@@ -57,9 +58,9 @@ const AppRoutes = () => {
         }
       />
 
-      <Route path="/dashboard/hvac" element={<ProtectedRoute><GenericEquipmentPage mode="hvac" icon="❄️" /></ProtectedRoute>} />
-      <Route path="/dashboard/lighting" element={<ProtectedRoute><GenericEquipmentPage mode="lighting" icon="💡" /></ProtectedRoute>} />
-      <Route path="/dashboard/security" element={<ProtectedRoute><GenericEquipmentPage mode="security" icon="🔒" /></ProtectedRoute>} />
+      <Route path={`/dashboard/${PAGE_TYPES.HVAC}`} element={<ProtectedRoute><GenericEquipmentPage pageType={PAGE_TYPES.HVAC} icon="❄️" /></ProtectedRoute>} />
+      <Route path={`/dashboard/${PAGE_TYPES.LIGHTING}`} element={<ProtectedRoute><GenericEquipmentPage pageType={PAGE_TYPES.LIGHTING} icon="💡" /></ProtectedRoute>} />
+      <Route path={`/dashboard/${PAGE_TYPES.SECURITY}`} element={<ProtectedRoute><GenericEquipmentPage pageType={PAGE_TYPES.SECURITY} icon="🔒" /></ProtectedRoute>} />
       <Route path="/dashboard/maintenance" element={<ProtectedRoute><MaintenancePage /></ProtectedRoute>} />
 
       <Route path="/usage" element={<ProtectedRoute><UsagePage /></ProtectedRoute>} />

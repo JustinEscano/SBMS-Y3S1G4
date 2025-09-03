@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { MaintenanceRequest } from '../types/dashboardTypes';
-import { getAllMaintenanceRequests } from '../services/maintenanceService';
+import { maintenanceService } from '../services/maintenanceService';
 
 export const useMaintenanceRequests = () => {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
@@ -9,7 +9,7 @@ export const useMaintenanceRequests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const data = await getAllMaintenanceRequests();
+        const data = await maintenanceService.getAll();
         setRequests(data);
       } catch (error) {
         console.error("Failed to fetch maintenance requests:", error);

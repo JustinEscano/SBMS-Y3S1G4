@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { fetchUsageData, type UsageCategory } from "./usageDataService";
+import { fetchUsageData, type UsageCategory } from "./UsageDataService";
 import "./UsageLineChart.css";
 
 ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
