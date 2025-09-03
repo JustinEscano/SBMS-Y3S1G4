@@ -1,0 +1,125 @@
+.html, body {
+  overflow: hidden;
+}
+
+.orb-chat-container {
+  background-color: #1e1e1e;
+  color: #fff;
+  padding: 2rem;
+  padding-bottom: 250px; /* Prevent overlap with input bar */
+  width: 80vw;
+  height: 100vh;
+  margin: auto;
+  font-family: sans-serif;
+  overflow-y: auto;
+}
+
+/* Greeting section */
+.orb-greeting h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.orb-greeting p {
+  margin: 0.5rem 0 2rem;
+  font-size: 1rem;
+  color: #ccc;
+}
+
+/* Suggestion buttons */
+.orb-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.orb-suggestion-button {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.orb-suggestion-button:hover {
+  background-color: #444;
+}
+
+/* Floating input bar */
+.orb-input-floating {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #2a2a2a;
+  border-top: 1px solid #444;
+  border-radius: 50px 50px 0 0;
+  padding: 1rem 2rem;
+  z-index: 1000;
+  max-width: 800px;
+  margin: auto;
+  box-sizing: border-box;
+}
+
+/* First row: input field */
+.orb-input-row {
+  width: 100%;
+}
+
+.orb-input {
+  width: 100%;
+  font-size: 16px;
+  padding: 1rem;
+  border-radius: 10px;
+  border: none;
+  background-color: #2a2a2a;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+/* Second row: buttons */
+.orb-button-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+/* Left side buttons */
+.orb-left-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.orb-icon-button {
+  background-color: #444;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+/* Right side send button */
+.orb-right-button {
+  display: flex;
+}
+
+.orb-send-button {
+  background-color: #CCE9EF;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #000;
+  font-weight: bold;
+}
+
+.orb-icon-button:hover,
+.orb-send-button:hover {
+    background-color: blue;
+    transform: scale(1.5);
+    transition: transform 0.2s;
+}
