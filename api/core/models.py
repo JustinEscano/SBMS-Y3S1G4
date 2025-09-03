@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 import uuid
 
 # Add these constants at the top for standardized field values
+
 EQUIPMENT_STATUS_CHOICES = [
     ('online', 'Online'),
     ('offline', 'Offline'),
@@ -33,6 +34,12 @@ ROOM_TYPE_CHOICES = [
     ('utility', 'Utility'),
 ]
 
+MAINTENANCE_STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('in_progress', 'In Progress'),
+    ('resolved', 'Resolved'),
+]
+
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role='client', **extra_fields):
         if not email:
@@ -49,7 +56,7 @@ class User(AbstractBaseUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128) 
+    password = models.CharField(max_length=128)
     role = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
@@ -68,7 +75,7 @@ class Room(models.Model):
     name = models.CharField(max_length=255)
     floor = models.IntegerField()
     capacity = models.IntegerField()
-    type = models.CharField(max_length=100, choices=ROOM_TYPE_CHOICES)  # Add choices
+    type = models.CharField(max_length=100, choices=ROOM_TYPE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -79,9 +86,9 @@ class Equipment(models.Model):
     name = models.CharField(max_length=255)
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
     type = models.CharField(max_length=100, choices=EQUIPMENT_TYPE_CHOICES)
-    status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')  # Add choices and default
+    status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')
     device_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
-    qr_code = models.CharField(max_length=255, null=True, blank=True)  # Make optional
+    qr_code = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -98,7 +105,7 @@ class SensorLog(models.Model):
     recorded_at = models.DateTimeField()
 
     class Meta:
-        ordering = ['-recorded_at'] # Latest first
+        ordering = ['-recorded_at']
 
     def __str__(self):
         return f"{self.equipment.name} - {self.recorded_at}"
@@ -108,10 +115,14 @@ class MaintenanceRequest(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE)
     issue = models.TextField()
-    status = models.CharField(max_length=100)
+    status = models.CharField(max_length=100, choices=MAINTENANCE_STATUS_CHOICES, default='pending')
+    # REMOVED: priority field completely
     scheduled_date = models.DateField()
     resolved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.equipment.name} - {self.issue[:50]}"
