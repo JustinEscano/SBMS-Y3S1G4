@@ -55,11 +55,19 @@ const MaintenancePage: React.FC = () => {
   }, [filteredRequests, currentPage]);
 
   const handleSubmit = async (data: Partial<MaintenanceRequest>) => {
+    // Simple status transformation - just this one change!
+    const dataToSend = { ...data };
+    if (dataToSend.status) {
+      if (dataToSend.status === "Pending") dataToSend.status = "pending" as any;
+      if (dataToSend.status === "In Progress") dataToSend.status = "in_progress" as any;
+      if (dataToSend.status === "Resolved") dataToSend.status = "resolved" as any;
+    }
+
     if (modalMode === "add") {
-      const newReq = await maintenanceService.create(data);
+      const newReq = await maintenanceService.create(dataToSend);
       setRequests((prev) => [...prev, newReq]);
     } else if (modalMode === "edit" && data.id) {
-      const updated = await maintenanceService.update(data.id, data);
+      const updated = await maintenanceService.update(data.id, dataToSend);
       setRequests((prev) =>
         prev.map((r) => (r.id === data.id ? { ...r, ...updated } : r))
       );
