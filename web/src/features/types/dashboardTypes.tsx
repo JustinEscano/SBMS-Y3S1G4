@@ -21,7 +21,6 @@ export interface Equipment {
   name: string;
   room: string; // UUID of Room
   type: EquipmentType; // Hardware type
-  mode: EquipmentMode; // Dashboard category
   status: "online" | "offline" | "maintenance" | "error";
   qr_code: string;
   created_at: string;

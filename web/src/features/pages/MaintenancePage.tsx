@@ -121,7 +121,7 @@ const MaintenancePage: React.FC = () => {
                 <td>{req.resolved_at || "-"}</td>
                 <td>
                   <button
-                    className="edit-btn"
+                    className="edt-btn"
                     onClick={() => {
                       setModalMode("edit");
                       setSelectedRequest(req);
@@ -130,7 +130,7 @@ const MaintenancePage: React.FC = () => {
                     Edit
                   </button>
                   <button
-                    className="delete-btn"
+                    className="dlt-btn"
                     onClick={() => {
                       setModalMode("delete");
                       setSelectedRequest(req);
