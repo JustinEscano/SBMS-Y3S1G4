@@ -393,196 +393,384 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(isEditing ? 'Edit Equipment' : 'Add New Equipment'),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Equipment Name *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.devices),
+            return Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: Container(
+                width: double.maxFinite,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                  maxWidth: 500, // Maximum width for better UX on tablets
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Dialog Header
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4),
+                          topRight: Radius.circular(4),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Fixed Equipment Type Dropdown
-                      DropdownButtonFormField<String>(
-                        value: selectedType,
-                        decoration: const InputDecoration(
-                          labelText: 'Equipment Type *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
-                        ),
-                        items: EQUIPMENT_TYPE_OPTIONS.map((option) => DropdownMenuItem<String>(
-                          value: option['value'],
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 250),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  option['label']!,
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  option['description']!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
-                                ),
-                              ],
+                      child: Row(
+                        children: [
+                          Icon(
+                            isEditing ? Icons.edit : Icons.add,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isEditing ? 'Edit Equipment' : 'Add New Equipment',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        )).toList(),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedType = value ?? 'sensor';
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: deviceIdController,
-                        decoration: const InputDecoration(
-                          labelText: 'Device ID',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.memory),
-                          hintText: 'e.g., ESP32_001',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: qrCodeController,
-                        decoration: const InputDecoration(
-                          labelText: 'QR Code',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.qr_code),
-                          hintText: 'QR code identifier',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: selectedRoomId.isEmpty ? null : selectedRoomId,
-                        decoration: const InputDecoration(
-                          labelText: 'Assign to Room',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.room),
-                        ),
-                        hint: const Text('Select a room (optional)'),
-                        items: [
-                          const DropdownMenuItem<String>(
-                            value: '',
-                            child: Text('No room assigned'),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                            tooltip: 'Close',
                           ),
-                          ...rooms.map((room) => DropdownMenuItem<String>(
-                            value: room['id'].toString(),
-                            child: Text('${room['name']} (Floor ${room['floor']})'),
-                          )).toList(),
                         ],
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedRoomId = value ?? '';
-                          });
-                        },
                       ),
-                      const SizedBox(height: 16),
-                      // Fixed Status Dropdown
-                      DropdownButtonFormField<String>(
-                        value: selectedStatus,
-                        decoration: const InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.power_settings_new),
-                        ),
-                        items: EQUIPMENT_STATUS_OPTIONS.map((option) => DropdownMenuItem<String>(
-                          value: option['value'],
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 250),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(option['value']),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
+                    ),
+                    // Dialog Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Equipment Name Field
+                            TextField(
+                              controller: nameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Equipment Name *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.devices),
+                                isDense: true,
+                              ),
+                              textInputAction: TextInputAction.next,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Equipment Type Dropdown - Fixed overflow
+                            DropdownButtonFormField<String>(
+                              value: selectedType,
+                              decoration: const InputDecoration(
+                                labelText: 'Equipment Type *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.category),
+                                isDense: true,
+                              ),
+                              isExpanded: true,
+                              items: EQUIPMENT_TYPE_OPTIONS.map((option) => DropdownMenuItem<String>(
+                                value: option['value'],
+                                child: Container(
+                                  width: double.infinity,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
                                         option['label']!,
-                                        style: const TextStyle(fontWeight: FontWeight.w500),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
                                       ),
                                       Text(
                                         option['description']!,
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           color: Colors.grey[600],
+                                          height: 1.2,
                                         ),
                                         overflow: TextOverflow.ellipsis,
-                                        maxLines: 2,
+                                        maxLines: 1,
                                       ),
                                     ],
                                   ),
                                 ),
+                              )).toList(),
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedType = value ?? 'sensor';
+                                });
+                              },
+                              selectedItemBuilder: (BuildContext context) {
+                                return EQUIPMENT_TYPE_OPTIONS.map<Widget>((option) {
+                                  return Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      option['label']!,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  );
+                                }).toList();
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Device ID Field
+                            TextField(
+                              controller: deviceIdController,
+                              decoration: const InputDecoration(
+                                labelText: 'Device ID',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.memory),
+                                hintText: 'e.g., ESP32_001',
+                                isDense: true,
+                              ),
+                              textInputAction: TextInputAction.next,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // QR Code Field
+                            TextField(
+                              controller: qrCodeController,
+                              decoration: const InputDecoration(
+                                labelText: 'QR Code',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.qr_code),
+                                hintText: 'QR code identifier',
+                                isDense: true,
+                              ),
+                              textInputAction: TextInputAction.next,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Room Assignment Dropdown
+                            DropdownButtonFormField<String>(
+                              value: selectedRoomId.isEmpty ? null : selectedRoomId,
+                              decoration: const InputDecoration(
+                                labelText: 'Assign to Room',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.room),
+                                isDense: true,
+                              ),
+                              hint: const Text('Select a room (optional)'),
+                              isExpanded: true,
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: '',
+                                  child: Text('No room assigned'),
+                                ),
+                                ...rooms.map((room) => DropdownMenuItem<String>(
+                                  value: room['id'].toString(),
+                                  child: Text(
+                                    '${room['name']} (Floor ${room['floor']})',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                )).toList(),
+                              ],
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedRoomId = value ?? '';
+                                });
+                              },
+                              selectedItemBuilder: (BuildContext context) {
+                                return [
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: const Text(
+                                      'No room assigned',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                  ...rooms.map<Widget>((room) {
+                                    return Container(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        '${room['name']} (Floor ${room['floor']})',
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    );
+                                  }).toList(),
+                                ];
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Status Dropdown - Fixed overflow
+                            DropdownButtonFormField<String>(
+                              value: selectedStatus,
+                              decoration: const InputDecoration(
+                                labelText: 'Status',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.power_settings_new),
+                                isDense: true,
+                              ),
+                              isExpanded: true,
+                              items: EQUIPMENT_STATUS_OPTIONS.map((option) => DropdownMenuItem<String>(
+                                value: option['value'],
+                                child: Container(
+                                  width: double.infinity,
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: _getStatusColor(option['value']),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              option['label']!,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 14,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                            Text(
+                                              option['description']!,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey[600],
+                                                height: 1.2,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )).toList(),
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedStatus = value ?? 'offline';
+                                });
+                              },
+                              selectedItemBuilder: (BuildContext context) {
+                                return EQUIPMENT_STATUS_OPTIONS.map<Widget>((option) {
+                                  return Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: _getStatusColor(option['value']),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            option['label']!,
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList();
+                              },
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Required fields note
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '* Required fields',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
                               ],
                             ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Dialog Actions
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(4),
+                          bottomRight: Radius.circular(4),
+                        ),
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey[300]!,
+                            width: 1,
                           ),
-                        )).toList(),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedStatus = value ?? 'offline';
-                          });
-                        },
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '* Required fields',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              _saveEquipment(
+                                equipmentId: equipmentItem?['id'],
+                                name: nameController.text,
+                                type: selectedType,
+                                deviceId: deviceIdController.text,
+                                qrCode: qrCodeController.text,
+                                roomId: selectedRoomId.isEmpty ? null : selectedRoomId,
+                                status: selectedStatus,
+                                isEditing: isEditing,
+                              );
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                            child: Text(isEditing ? 'Update' : 'Add'),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _saveEquipment(
-                      equipmentId: equipmentItem?['id'],
-                      name: nameController.text,
-                      type: selectedType,
-                      deviceId: deviceIdController.text,
-                      qrCode: qrCodeController.text,
-                      roomId: selectedRoomId.isEmpty ? null : selectedRoomId,
-                      status: selectedStatus,
-                      isEditing: isEditing,
-                    );
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(isEditing ? 'Update' : 'Add'),
-                ),
-              ],
             );
           },
         );
@@ -815,106 +1003,125 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       ),
       body: Column(
         children: [
-          // Summary Cards
+          // Summary Cards - Made more responsive
           Container(
-            height: 120,
             margin: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.devices, color: Colors.blue[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${equipment.length}',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.devices, color: Colors.blue[700], size: 24),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  child: Text(
+                                    '${equipment.length}',
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const FittedBox(
+                                  child: Text('Total Equipment', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Text('Total Equipment', style: TextStyle(fontSize: 12)),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.online_prediction, color: Colors.green[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$onlineCount',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.online_prediction, color: Colors.green[700], size: 24),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  child: Text(
+                                    '$onlineCount',
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const FittedBox(
+                                  child: Text('Online', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Text('Online', style: TextStyle(fontSize: 12)),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.memory, color: Colors.purple[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$esp32Count',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.memory, color: Colors.purple[700], size: 24),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  child: Text(
+                                    '$esp32Count',
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const FittedBox(
+                                  child: Text('ESP32 Devices', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Text('ESP32 Devices', style: TextStyle(fontSize: 12)),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
 
-          // Filter Chips
+          // Filter Chips - Made scrollable
           if (_filterRoom != 'all' || _filterType != 'all')
             Container(
               height: 50,
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              child: ListView(
+              child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                children: [
-                  if (_filterRoom != 'all')
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Chip(
-                        label: Text('Room: ${_filterRoom == 'unassigned' ? 'Unassigned' : _getRoomName(_filterRoom)}'),
-                        deleteIcon: const Icon(Icons.close, size: 16),
-                        onDeleted: () => setState(() => _filterRoom = 'all'),
+                child: Row(
+                  children: [
+                    if (_filterRoom != 'all')
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Chip(
+                          label: Text('Room: ${_filterRoom == 'unassigned' ? 'Unassigned' : _getRoomName(_filterRoom)}'),
+                          deleteIcon: const Icon(Icons.close, size: 16),
+                          onDeleted: () => setState(() => _filterRoom = 'all'),
+                        ),
                       ),
-                    ),
-                  if (_filterType != 'all')
-                    Chip(
-                      label: Text('Type: ${_getTypeLabel(_filterType)}'),
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                      onDeleted: () => setState(() => _filterType = 'all'),
-                    ),
-                ],
+                    if (_filterType != 'all')
+                      Chip(
+                        label: Text('Type: ${_getTypeLabel(_filterType)}'),
+                        deleteIcon: const Icon(Icons.close, size: 16),
+                        onDeleted: () => setState(() => _filterType = 'all'),
+                      ),
+                  ],
+                ),
               ),
             ),
 
           // Error Message
           if (_errorMessage.isNotEmpty)
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.red[100],
@@ -940,24 +1147,31 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : filtered.isEmpty
                 ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.devices_outlined, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    equipment.isEmpty ? 'No Equipment Found' : 'No Equipment Match Filters',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(equipment.isEmpty ? 'Add your first equipment to get started' : 'Try adjusting your filters'),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddEditEquipmentDialog(),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Equipment'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.devices_outlined, size: 64, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    Text(
+                      equipment.isEmpty ? 'No Equipment Found' : 'No Equipment Match Filters',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      equipment.isEmpty ? 'Add your first equipment to get started' : 'Try adjusting your filters',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddEditEquipmentDialog(),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Equipment'),
+                    ),
+                  ],
+                ),
               ),
             )
                 : RefreshIndicator(
@@ -982,31 +1196,35 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                       title: Text(
                         item['name'] ?? 'Unknown Equipment',
                         style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Type: ${_getTypeLabel(item['type'])} • Room: ${_getRoomName(item['room']?.toString())}'),
+                          Text(
+                            'Type: ${_getTypeLabel(item['type'])} • Room: ${_getRoomName(item['room']?.toString())}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           if (item['device_id'] != null)
-                            Text('Device ID: ${item['device_id']}'),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  item['status']?.toUpperCase() ?? 'UNKNOWN',
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                            Text(
+                              'Device ID: ${item['device_id']}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              item['status']?.toUpperCase() ?? 'UNKNOWN',
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
@@ -1067,88 +1285,174 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Filter Equipment'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: tempFilterRoom,
-                    decoration: const InputDecoration(
-                      labelText: 'Filter by Room',
-                      border: OutlineInputBorder(),
+            return Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: Container(
+                width: double.maxFinite,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                  maxWidth: 400,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Dialog Header
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4),
+                          topRight: Radius.circular(4),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.filter_list),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Filter Equipment',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                            tooltip: 'Close',
+                          ),
+                        ],
+                      ),
                     ),
-                    items: [
-                      const DropdownMenuItem<String>(
-                        value: 'all',
-                        child: Text('All Rooms'),
+                    // Dialog Content
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            DropdownButtonFormField<String>(
+                              value: tempFilterRoom,
+                              decoration: const InputDecoration(
+                                labelText: 'Filter by Room',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              isExpanded: true,
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: 'all',
+                                  child: Text('All Rooms'),
+                                ),
+                                const DropdownMenuItem<String>(
+                                  value: 'unassigned',
+                                  child: Text('Unassigned'),
+                                ),
+                                ...rooms.map((room) => DropdownMenuItem<String>(
+                                  value: room['id'].toString(),
+                                  child: Text(
+                                    room['name'],
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )).toList(),
+                              ],
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  tempFilterRoom = value ?? 'all';
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<String>(
+                              value: tempFilterType,
+                              decoration: const InputDecoration(
+                                labelText: 'Filter by Type',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              isExpanded: true,
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: 'all',
+                                  child: Text('All Types'),
+                                ),
+                                ...EQUIPMENT_TYPE_OPTIONS.map((option) => DropdownMenuItem<String>(
+                                  value: option['value'],
+                                  child: Text(
+                                    option['label']!,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )).toList(),
+                              ],
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  tempFilterType = value ?? 'all';
+                                });
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                      const DropdownMenuItem<String>(
-                        value: 'unassigned',
-                        child: Text('Unassigned'),
-                      ),
-                      ...rooms.map((room) => DropdownMenuItem<String>(
-                        value: room['id'].toString(),
-                        child: Text(room['name']),
-                      )).toList(),
-                    ],
-                    onChanged: (value) {
-                      setDialogState(() {
-                        tempFilterRoom = value ?? 'all';
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: tempFilterType,
-                    decoration: const InputDecoration(
-                      labelText: 'Filter by Type',
-                      border: OutlineInputBorder(),
                     ),
-                    items: [
-                      const DropdownMenuItem<String>(
-                        value: 'all',
-                        child: Text('All Types'),
+                    // Dialog Actions
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(4),
+                          bottomRight: Radius.circular(4),
+                        ),
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey[300]!,
+                            width: 1,
+                          ),
+                        ),
                       ),
-                      ...EQUIPMENT_TYPE_OPTIONS.map((option) => DropdownMenuItem<String>(
-                        value: option['value'],
-                        child: Text(option['label']!),
-                      )).toList(),
-                    ],
-                    onChanged: (value) {
-                      setDialogState(() {
-                        tempFilterType = value ?? 'all';
-                      });
-                    },
-                  ),
-                ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _filterRoom = 'all';
+                                _filterType = 'all';
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Clear'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _filterRoom = tempFilterRoom;
+                                _filterType = tempFilterType;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                            ),
+                            child: const Text('Apply'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _filterRoom = 'all';
-                      _filterType = 'all';
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Clear'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _filterRoom = tempFilterRoom;
-                      _filterType = tempFilterType;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
             );
           },
         );
