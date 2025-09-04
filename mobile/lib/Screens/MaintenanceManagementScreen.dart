@@ -222,248 +222,414 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(isEditing ? 'Edit Maintenance Request' : 'New Maintenance Request'),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // User Selection
-                      DropdownButtonFormField<String>(
-                        value: selectedUserId.isEmpty ? null : selectedUserId,
-                        decoration: const InputDecoration(
-                          labelText: 'User *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person),
+            return Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: Container(
+                width: double.maxFinite,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                  maxWidth: 500, // Maximum width for better UX on tablets
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Dialog Header
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4),
+                          topRight: Radius.circular(4),
                         ),
-                        hint: const Text('Select user'),
-                        items: users.map((user) => DropdownMenuItem<String>(
-                          value: user['id'].toString(),
-                          child: Text('${user['username']} (${user['email']})'),
-                        )).toList(),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedUserId = value ?? '';
-                          });
-                        },
                       ),
-                      const SizedBox(height: 16),
-
-                      // Equipment Selection
-                      DropdownButtonFormField<String>(
-                        value: selectedEquipmentId.isEmpty ? null : selectedEquipmentId,
-                        decoration: const InputDecoration(
-                          labelText: 'Equipment *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.devices),
-                        ),
-                        hint: const Text('Select equipment'),
-                        items: equipment.map((eq) => DropdownMenuItem<String>(
-                          value: eq['id'].toString(),
-                          child: Text('${eq['name']} (${eq['type']})'),
-                        )).toList(),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedEquipmentId = value ?? '';
-                          });
-                        },
+                      child: Row(
+                        children: [
+                          Icon(
+                            isEditing ? Icons.edit : Icons.add,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isEditing ? 'Edit Maintenance Request' : 'New Maintenance Request',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                            tooltip: 'Close',
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Issue Description
-                      TextField(
-                        controller: issueController,
-                        decoration: const InputDecoration(
-                          labelText: 'Issue Description *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.description),
-                          hintText: 'Describe the maintenance issue...',
-                        ),
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Status Selection (show for both add and edit) - FIXED
-                      DropdownButtonFormField<String>(
-                        value: selectedStatus,
-                        decoration: const InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.assignment),
-                        ),
-                        items: MAINTENANCE_STATUS_OPTIONS.map((option) {
-                          return DropdownMenuItem<String>(
-                            value: option['value']!,
-                            child: Container(
-                              constraints: const BoxConstraints(maxWidth: 250),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(option['value']!),
-                                      shape: BoxShape.circle,
+                    ),
+                    // Dialog Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // User Selection
+                            DropdownButtonFormField<String>(
+                              value: selectedUserId.isEmpty ? null : selectedUserId,
+                              decoration: const InputDecoration(
+                                labelText: 'User *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.person),
+                                isDense: true,
+                              ),
+                              hint: const Text('Select user'),
+                              isExpanded: true,
+                              items: users.map((user) => DropdownMenuItem<String>(
+                                value: user['id'].toString(),
+                                child: Text(
+                                  '${user['username']} (${user['email']})',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              )).toList(),
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedUserId = value ?? '';
+                                });
+                              },
+                              selectedItemBuilder: (BuildContext context) {
+                                return users.map<Widget>((user) {
+                                  return Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      '${user['username']} (${user['email']})',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
+                                  );
+                                }).toList();
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Equipment Selection
+                            DropdownButtonFormField<String>(
+                              value: selectedEquipmentId.isEmpty ? null : selectedEquipmentId,
+                              decoration: const InputDecoration(
+                                labelText: 'Equipment *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.devices),
+                                isDense: true,
+                              ),
+                              hint: const Text('Select equipment'),
+                              isExpanded: true,
+                              items: equipment.map((eq) => DropdownMenuItem<String>(
+                                value: eq['id'].toString(),
+                                child: Text(
+                                  '${eq['name']} (${eq['type']})',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              )).toList(),
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedEquipmentId = value ?? '';
+                                });
+                              },
+                              selectedItemBuilder: (BuildContext context) {
+                                return equipment.map<Widget>((eq) {
+                                  return Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      '${eq['name']} (${eq['type']})',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  );
+                                }).toList();
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Issue Description
+                            TextField(
+                              controller: issueController,
+                              decoration: const InputDecoration(
+                                labelText: 'Issue Description *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.description),
+                                hintText: 'Describe the maintenance issue...',
+                                isDense: true,
+                              ),
+                              maxLines: 3,
+                              textInputAction: TextInputAction.newline,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Status Selection - Fixed overflow
+                            DropdownButtonFormField<String>(
+                              value: selectedStatus,
+                              decoration: const InputDecoration(
+                                labelText: 'Status',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.assignment),
+                                isDense: true,
+                              ),
+                              isExpanded: true,
+                              items: MAINTENANCE_STATUS_OPTIONS.map((option) {
+                                return DropdownMenuItem<String>(
+                                  value: option['value']!,
+                                  child: Container(
+                                    width: double.infinity,
+                                    child: Row(
                                       children: [
-                                        Text(
-                                          option['label']!,
-                                          style: const TextStyle(fontWeight: FontWeight.w500),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          option['description']!,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
+                                        Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: _getStatusColor(option['value']!),
+                                            shape: BoxShape.circle,
                                           ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 2,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                option['label']!,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 14,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
+                                              Text(
+                                                option['description']!,
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey[600],
+                                                  height: 1.2,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedStatus = value ?? 'pending';
-                            // Clear resolved date if status is not resolved
-                            if (selectedStatus != 'resolved') {
-                              resolvedDate = null;
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Scheduled Date
-                      InkWell(
-                        onTap: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate,
-                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
-                          );
-                          if (picked != null) {
-                            setDialogState(() {
-                              selectedDate = picked;
-                            });
-                          }
-                        },
-                        child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Scheduled Date *',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.calendar_today),
-                          ),
-                          child: Text(
-                            '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Resolved At Date (only show if status is resolved or if there's already a resolved date)
-                      if (selectedStatus == 'resolved' || resolvedDate != null) ...[
-                        InkWell(
-                          onTap: () async {
-                            final DateTime? picked = await showDatePicker(
-                              context: context,
-                              initialDate: resolvedDate ?? DateTime.now(),
-                              firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                              lastDate: DateTime.now().add(const Duration(days: 1)),
-                            );
-                            if (picked != null) {
-                              final TimeOfDay? timePicked = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.fromDateTime(resolvedDate ?? DateTime.now()),
-                              );
-                              if (timePicked != null) {
+                                );
+                              }).toList(),
+                              onChanged: (value) {
                                 setDialogState(() {
-                                  resolvedDate = DateTime(
-                                    picked.year,
-                                    picked.month,
-                                    picked.day,
-                                    timePicked.hour,
-                                    timePicked.minute,
-                                  );
-                                });
-                              }
-                            }
-                          },
-                          child: InputDecorator(
-                            decoration: InputDecoration(
-                              labelText: 'Resolved At ${selectedStatus == 'resolved' ? '*' : ''}',
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.check_circle),
-                              suffixIcon: resolvedDate != null
-                                  ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  setDialogState(() {
+                                  selectedStatus = value ?? 'pending';
+                                  // Clear resolved date if status is not resolved
+                                  if (selectedStatus != 'resolved') {
                                     resolvedDate = null;
-                                  });
-                                },
-                              )
-                                  : null,
+                                  }
+                                });
+                              },
+                              selectedItemBuilder: (BuildContext context) {
+                                return MAINTENANCE_STATUS_OPTIONS.map<Widget>((option) {
+                                  return Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: _getStatusColor(option['value']!),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            option['label']!,
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList();
+                              },
                             ),
-                            child: Text(
-                              resolvedDate != null
-                                  ? '${resolvedDate!.day}/${resolvedDate!.month}/${resolvedDate!.year} ${resolvedDate!.hour.toString().padLeft(2, '0')}:${resolvedDate!.minute.toString().padLeft(2, '0')}'
-                                  : 'Select resolved date and time',
-                              style: TextStyle(
-                                color: resolvedDate != null ? Colors.black : Colors.grey[600],
+                            const SizedBox(height: 16),
+
+                            // Scheduled Date
+                            InkWell(
+                              onTap: () async {
+                                final DateTime? picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDate,
+                                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                                );
+                                if (picked != null) {
+                                  setDialogState(() {
+                                    selectedDate = picked;
+                                  });
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Scheduled Date *',
+                                  border: OutlineInputBorder(),
+                                  prefixIcon: Icon(Icons.calendar_today),
+                                  isDense: true,
+                                ),
+                                child: Text(
+                                  '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                                ),
                               ),
                             ),
+                            const SizedBox(height: 16),
+
+                            // Resolved At Date (only show if status is resolved or if there's already a resolved date)
+                            if (selectedStatus == 'resolved' || resolvedDate != null) ...[
+                              InkWell(
+                                onTap: () async {
+                                  final DateTime? picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: resolvedDate ?? DateTime.now(),
+                                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                                    lastDate: DateTime.now().add(const Duration(days: 1)),
+                                  );
+                                  if (picked != null) {
+                                    final TimeOfDay? timePicked = await showTimePicker(
+                                      context: context,
+                                      initialTime: TimeOfDay.fromDateTime(resolvedDate ?? DateTime.now()),
+                                    );
+                                    if (timePicked != null) {
+                                      setDialogState(() {
+                                        resolvedDate = DateTime(
+                                          picked.year,
+                                          picked.month,
+                                          picked.day,
+                                          timePicked.hour,
+                                          timePicked.minute,
+                                        );
+                                      });
+                                    }
+                                  }
+                                },
+                                child: InputDecorator(
+                                  decoration: InputDecoration(
+                                    labelText: 'Resolved At ${selectedStatus == 'resolved' ? '*' : ''}',
+                                    border: const OutlineInputBorder(),
+                                    prefixIcon: const Icon(Icons.check_circle),
+                                    isDense: true,
+                                    suffixIcon: resolvedDate != null
+                                        ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        setDialogState(() {
+                                          resolvedDate = null;
+                                        });
+                                      },
+                                    )
+                                        : null,
+                                  ),
+                                  child: Text(
+                                    resolvedDate != null
+                                        ? '${resolvedDate!.day}/${resolvedDate!.month}/${resolvedDate!.year} ${resolvedDate!.hour.toString().padLeft(2, '0')}:${resolvedDate!.minute.toString().padLeft(2, '0')}'
+                                        : 'Select resolved date and time',
+                                    style: TextStyle(
+                                      color: resolvedDate != null ? Colors.black : Colors.grey[600],
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // Required fields note
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '* Required fields',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Dialog Actions
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(4),
+                          bottomRight: Radius.circular(4),
+                        ),
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey[300]!,
+                            width: 1,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      const Text(
-                        '* Required fields',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              _saveMaintenanceRequest(
+                                requestId: request?['id'],
+                                userId: selectedUserId,
+                                equipmentId: selectedEquipmentId,
+                                issue: issueController.text,
+                                status: selectedStatus,
+                                scheduledDate: selectedDate,
+                                resolvedAt: resolvedDate,
+                                isEditing: isEditing,
+                              );
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                            child: Text(isEditing ? 'Update' : 'Create'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _saveMaintenanceRequest(
-                      requestId: request?['id'],
-                      userId: selectedUserId,
-                      equipmentId: selectedEquipmentId,
-                      issue: issueController.text,
-                      status: selectedStatus,
-                      scheduledDate: selectedDate,
-                      resolvedAt: resolvedDate,
-                      isEditing: isEditing,
-                    );
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(isEditing ? 'Update' : 'Create'),
-                ),
-              ],
             );
           },
         );
@@ -683,96 +849,115 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       ),
       body: Column(
         children: [
-          // Summary Cards
+          // Summary Cards - Made more responsive
           Container(
-            height: 120,
             margin: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.pending, color: Colors.orange[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$pendingCount',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.pending, color: Colors.orange[700], size: 24),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  child: Text(
+                                    '$pendingCount',
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const FittedBox(
+                                  child: Text('Pending', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Text('Pending', style: TextStyle(fontSize: 12)),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.work, color: Colors.blue[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$inProgressCount',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.work, color: Colors.blue[700], size: 24),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  child: Text(
+                                    '$inProgressCount',
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const FittedBox(
+                                  child: Text('In Progress', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Text('In Progress', style: TextStyle(fontSize: 12)),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.green[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$resolvedCount',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green[700], size: 24),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  child: Text(
+                                    '$resolvedCount',
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const FittedBox(
+                                  child: Text('Resolved', style: TextStyle(fontSize: 12)),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Text('Resolved', style: TextStyle(fontSize: 12)),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
 
-          // Filter Chips
+          // Filter Chips - Made scrollable
           if (_filterStatus != 'all')
             Container(
               height: 50,
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              child: ListView(
+              child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                children: [
-                  Chip(
-                    label: Text('Status: ${_getStatusLabel(_filterStatus)}'),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () => setState(() => _filterStatus = 'all'),
-                  ),
-                ],
+                child: Row(
+                  children: [
+                    Chip(
+                      label: Text('Status: ${_getStatusLabel(_filterStatus)}'),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () => setState(() => _filterStatus = 'all'),
+                    ),
+                  ],
+                ),
               ),
             ),
 
           // Error Message
           if (_errorMessage.isNotEmpty)
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.red[100],
@@ -798,24 +983,31 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                 ? const Center(child: CircularProgressIndicator())
                 : filtered.isEmpty
                 ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.build_outlined, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    maintenanceRequests.isEmpty ? 'No Maintenance Requests' : 'No Requests Match Filters',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(maintenanceRequests.isEmpty ? 'Create your first maintenance request' : 'Try adjusting your filters'),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddEditMaintenanceDialog(),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create Request'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.build_outlined, size: 64, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    Text(
+                      maintenanceRequests.isEmpty ? 'No Maintenance Requests' : 'No Requests Match Filters',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      maintenanceRequests.isEmpty ? 'Create your first maintenance request' : 'Try adjusting your filters',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddEditMaintenanceDialog(),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create Request'),
+                    ),
+                  ],
+                ),
               ),
             )
                 : RefreshIndicator(
@@ -840,6 +1032,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                       title: Text(
                         _getEquipmentName(request['equipment']?.toString()),
                         style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,11 +1061,14 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                'By: ${_getUserName(request['user']?.toString())}',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey[600],
+                              Expanded(
+                                child: Text(
+                                  'By: ${_getUserName(request['user']?.toString())}',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -885,6 +1081,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                                 fontSize: 12,
                                 color: Colors.grey[600],
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           if (request['resolved_at'] != null)
                             Text(
@@ -893,6 +1090,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                                 fontSize: 12,
                                 color: Colors.green[600],
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                         ],
                       ),
@@ -952,59 +1150,140 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Filter Maintenance Requests'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: tempFilterStatus,
-                    decoration: const InputDecoration(
-                      labelText: 'Filter by Status',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem<String>(
-                        value: 'all',
-                        child: Text('All Statuses'),
+            return Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: Container(
+                width: double.maxFinite,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                  maxWidth: 400,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Dialog Header
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4),
+                          topRight: Radius.circular(4),
+                        ),
                       ),
-                      ...MAINTENANCE_STATUS_OPTIONS.map((option) => DropdownMenuItem<String>(
-                        value: option['value'],
-                        child: Text(option['label']!),
-                      )).toList(),
-                    ],
-                    onChanged: (value) {
-                      setDialogState(() {
-                        tempFilterStatus = value ?? 'all';
-                      });
-                    },
-                  ),
-                ],
+                      child: Row(
+                        children: [
+                          const Icon(Icons.filter_list),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Filter Maintenance Requests',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close),
+                            tooltip: 'Close',
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Dialog Content
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            DropdownButtonFormField<String>(
+                              value: tempFilterStatus,
+                              decoration: const InputDecoration(
+                                labelText: 'Filter by Status',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              isExpanded: true,
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: 'all',
+                                  child: Text('All Statuses'),
+                                ),
+                                ...MAINTENANCE_STATUS_OPTIONS.map((option) => DropdownMenuItem<String>(
+                                  value: option['value'],
+                                  child: Text(
+                                    option['label']!,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )).toList(),
+                              ],
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  tempFilterStatus = value ?? 'all';
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Dialog Actions
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(4),
+                          bottomRight: Radius.circular(4),
+                        ),
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey[300]!,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _filterStatus = 'all';
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Clear'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _filterStatus = tempFilterStatus;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                            ),
+                            child: const Text('Apply'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _filterStatus = 'all';
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Clear'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _filterStatus = tempFilterStatus;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
             );
           },
         );
