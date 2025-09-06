@@ -11,6 +11,10 @@ from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .permissions import RoleBasedPermission
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = User.EMAIL_FIELD # force SimpleJWT to use email
@@ -72,6 +76,7 @@ def equipment_field_options(request):
     """
     Endpoint to get standardized field options for frontend dropdowns
     """
+    logger.info("Equipment field options requested")
     return Response({
         'equipment_status_options': [
             {'value': 'online', 'label': 'Online', 'description': 'Equipment is working and connected'},
@@ -112,6 +117,9 @@ def esp32_sensor_data(request):
         "energy_usage": 12.3
     }
     """
+    logger.info(f"ESP32 sensor data received: {request.method} {request.path}")
+    logger.info(f"Request data: {request.data}")
+    
     try:
         data = request.data
         
@@ -119,6 +127,7 @@ def esp32_sensor_data(request):
         required_fields = ['device_id', 'temperature', 'humidity', 'light_level', 'motion_detected']
         for field in required_fields:
             if field not in data:
+                logger.error(f"Missing required field: {field}")
                 return Response(
                     {'error': f'Missing required field: {field}'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -127,7 +136,9 @@ def esp32_sensor_data(request):
         # Find equipment by device_id
         try:
             equipment = Equipment.objects.get(device_id=data['device_id'])
+            logger.info(f"Found equipment: {equipment.name}")
         except Equipment.DoesNotExist:
+            logger.error(f"Equipment with device_id {data['device_id']} not found")
             return Response(
                 {'error': f'Equipment with device_id {data["device_id"]} not found'},
                 status=status.HTTP_404_NOT_FOUND
@@ -148,6 +159,8 @@ def esp32_sensor_data(request):
         equipment.status = 'online'
         equipment.save()
 
+        logger.info(f"Sensor data saved successfully: {sensor_log.id}")
+        
         return Response({
             'success': True,
             'message': 'Sensor data received successfully',
@@ -156,11 +169,13 @@ def esp32_sensor_data(request):
         }, status=status.HTTP_201_CREATED)
 
     except ValueError as e:
+        logger.error(f"Invalid data format: {str(e)}")
         return Response(
             {'error': f'Invalid data format: {str(e)}'},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
+        logger.error(f"Server error: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -172,6 +187,7 @@ def esp32_health_check(request):
     """
     Simple health check endpoint for ESP32
     """
+    logger.info("ESP32 health check requested")
     return Response({
         'status': 'healthy',
         'message': 'ESP32 API is running',
@@ -184,6 +200,7 @@ def latest_sensor_data(request):
     """
     Get the latest sensor readings for dashboard
     """
+    logger.info("Latest sensor data requested")
     try:
         # Get latest sensor log for each ESP32 equipment
         latest_logs = []
@@ -205,6 +222,7 @@ def latest_sensor_data(request):
                     'status': equipment.status
                 })
 
+        logger.info(f"Returning {len(latest_logs)} sensor readings")
         return Response({
             'success': True,
             'data': latest_logs,
@@ -212,6 +230,7 @@ def latest_sensor_data(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
+        logger.error(f"Server error in latest_sensor_data: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -223,9 +242,13 @@ def esp32_heartbeat(request):
     """
     Endpoint for ESP32 to send heartbeat and update status
     """
+    logger.info(f"ESP32 heartbeat received: {request.method} {request.path}")
+    logger.info(f"Heartbeat data: {request.data}")
+    
     try:
         device_id = request.data.get('device_id')
         if not device_id:
+            logger.error("Missing device_id in heartbeat")
             return Response(
                 {'error': 'device_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -233,9 +256,10 @@ def esp32_heartbeat(request):
 
         try:
             equipment = Equipment.objects.get(device_id=device_id)
-            equipment.status = 'online'  # Use standardized value
+            equipment.status = 'online' # Use standardized value
             equipment.save()
-
+            
+            logger.info(f"Heartbeat processed for {device_id}")
             return Response({
                 'success': True,
                 'message': f'Heartbeat received from {device_id}',
@@ -243,12 +267,14 @@ def esp32_heartbeat(request):
             })
 
         except Equipment.DoesNotExist:
+            logger.error(f"Equipment with device_id {device_id} not found")
             return Response(
                 {'error': f'Equipment with device_id {device_id} not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
     except Exception as e:
+        logger.error(f"Server error in heartbeat: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
