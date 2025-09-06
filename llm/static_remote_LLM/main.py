@@ -11,6 +11,7 @@ from langchain_community.vectorstores import Chroma
 import logging
 import shutil
 import re
+from database_adapter import DatabaseAdapter
 
 # Set up logging
 logging.basicConfig(
@@ -24,14 +25,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class RoomLogAnalyzer:
-    def __init__(self, json_file_path="room_logs.json", chroma_dir="./chroma_room_logs"):
+    def __init__(self, json_file_path="room_logs.json", chroma_dir="./chroma_room_logs", use_database=True):
         self.json_file_path = json_file_path
         self.chroma_dir = chroma_dir
+        self.use_database = use_database
         self.vector_store = None
         self.qa_chain = None
         self.processed_hashes = set()
         self.df = None  # Cache the dataframe
         self.last_modified = None  # Track last file modification time for change detection
+        self.db_adapter = None
+        
+        # Initialize database adapter if using database
+        if self.use_database:
+            try:
+                self.db_adapter = DatabaseAdapter()
+                logger.info("Database adapter initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize database adapter: {e}")
+                logger.info("Falling back to JSON file mode")
+                self.use_database = False
         
         # Load existing processed hashes if they exist
         self._load_processed_hashes()
@@ -80,59 +93,72 @@ class RoomLogAnalyzer:
         )
         return hashlib.md5(content.encode()).hexdigest()
     
-    def load_and_process_data(self, force_reload=False):
+    def load_and_process_data(self, force_reload=False, limit=None):
         """Load and process the room logs data, with change detection"""
         try:
-            current_mtime = os.path.getmtime(self.json_file_path)  # Get current file mod time
-            
-            # Check if file has changed since last load; skip reload if not
-            if not force_reload and self.df is not None and self.last_modified == current_mtime:
-                logger.info("No changes detected in JSON file; using cached DataFrame")
-                return self.df
-            
-            logger.info("Changes detected or first load; reloading JSON data")
-            with open(self.json_file_path, "r") as file:
-                data = json.load(file)
-            
-            # Flatten the logs into DataFrame and parse timestamps
-            df = pd.json_normalize(data["logs"])
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
-            
-            # Filter for occupied logs only
-            df = df[df["occupancy_status"] == "occupied"]
-            
-            # CRITICAL FIX: Ensure numeric types for correct calculations
-            numeric_cols = [
-                "occupancy_count", "energy_consumption_kwh",
-                "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
-                "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
-                "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
-                "power_consumption_watts.total", "equipment_usage.lights_on_hours",
-                "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
-                "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
-                "environmental_data.humidity_percent"
-            ]
-            for col in numeric_cols:
-                if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors="coerce")
-            
-            # Remove duplicates based on all relevant fields
-            dedup_columns = [
-                "timestamp", "occupancy_count", "energy_consumption_kwh",
-                "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
-                "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
-                "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
-                "power_consumption_watts.total", "equipment_usage.lights_on_hours",
-                "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
-                "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
-                "environmental_data.humidity_percent"
-            ]
-            df = df.drop_duplicates(subset=[col for col in dedup_columns if col in df.columns])
-            
-            logger.info(f"Loaded {len(df)} unique occupied room records after deduplication")
-            self.df = df
-            self.last_modified = current_mtime  # Update last mod time after successful load
-            return df
+            if self.use_database and self.db_adapter:
+                # Use database adapter to get data
+                logger.info("Loading data from PostgreSQL database")
+                df = self.db_adapter.get_sensor_data_as_dataframe(limit=limit)
+                
+                # Filter for occupied logs only
+                df = df[df["occupancy_status"] == "occupied"]
+                
+                logger.info(f"Loaded {len(df)} unique occupied room records from database")
+                self.df = df
+                return df
+            else:
+                # Fallback to JSON file method
+                current_mtime = os.path.getmtime(self.json_file_path)  # Get current file mod time
+                
+                # Check if file has changed since last load; skip reload if not
+                if not force_reload and self.df is not None and self.last_modified == current_mtime:
+                    logger.info("No changes detected in JSON file; using cached DataFrame")
+                    return self.df
+                
+                logger.info("Changes detected or first load; reloading JSON data")
+                with open(self.json_file_path, "r") as file:
+                    data = json.load(file)
+                
+                # Flatten the logs into DataFrame and parse timestamps
+                df = pd.json_normalize(data["logs"])
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
+                
+                # Filter for occupied logs only
+                df = df[df["occupancy_status"] == "occupied"]
+                
+                # CRITICAL FIX: Ensure numeric types for correct calculations
+                numeric_cols = [
+                    "occupancy_count", "energy_consumption_kwh",
+                    "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
+                    "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
+                    "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
+                    "power_consumption_watts.total", "equipment_usage.lights_on_hours",
+                    "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
+                    "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
+                    "environmental_data.humidity_percent"
+                ]
+                for col in numeric_cols:
+                    if col in df.columns:
+                        df[col] = pd.to_numeric(df[col], errors="coerce")
+                
+                # Remove duplicates based on all relevant fields
+                dedup_columns = [
+                    "timestamp", "occupancy_count", "energy_consumption_kwh",
+                    "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
+                    "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
+                    "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
+                    "power_consumption_watts.total", "equipment_usage.lights_on_hours",
+                    "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
+                    "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
+                    "environmental_data.humidity_percent"
+                ]
+                df = df.drop_duplicates(subset=[col for col in dedup_columns if col in df.columns])
+                
+                logger.info(f"Loaded {len(df)} unique occupied room records after deduplication")
+                self.df = df
+                self.last_modified = current_mtime  # Update last mod time after successful load
+                return df
             
         except Exception as e:
             logger.error(f"Error loading data: {e}")
