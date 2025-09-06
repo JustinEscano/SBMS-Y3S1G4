@@ -1,531 +1,1583 @@
-2025-09-06 13:27:22,347 - INFO - Successfully connected to PostgreSQL database
-2025-09-06 13:27:22,348 - INFO - Database adapter initialized successfully
-2025-09-06 13:27:22,348 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:27:22,518 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:27:22,519 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:27:22,520 - INFO - Created 3 new documents, skipped 0 duplicates
-2025-09-06 13:27:22,520 - INFO - Creating new vector store
-2025-09-06 13:27:23,628 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
-2025-09-06 13:27:23,903 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
-2025-09-06 13:27:24,605 - INFO - QA chain initialized successfully
-2025-09-06 13:27:24,606 - INFO - Analyzer initialized successfully
-2025-09-06 13:27:24,606 - INFO - LLM module imported successfully
-2025-09-06 13:27:24,606 - INFO - Processing query: what is the lowest temperature and highest energy
-2025-09-06 13:27:24,606 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:27:24,612 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:27:24,613 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:27:24,613 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 13:27:24,614 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 13:27:24,614 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 13:27:24,614 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 13:27:24,614 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:27:24,619 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:27:24,620 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:27:24,620 - INFO - Processing query: 'what is the lowest temperature and highest energy'
-2025-09-06 13:27:24,624 - INFO - Matched mixed query
-2025-09-06 13:27:24,624 - INFO - Used deterministic handler for query: 'what is the lowest temperature and highest energy'
-2025-09-06 13:27:24,624 - INFO - LLM query processed successfully
-2025-09-06 13:27:27,463 - INFO - Latest sensor data requested
-2025-09-06 13:27:27,514 - INFO - Returning 1 sensor readings
-2025-09-06 13:27:37,391 - INFO - Latest sensor data requested
-2025-09-06 13:27:37,530 - INFO - Returning 1 sensor readings
-2025-09-06 13:27:47,404 - INFO - Latest sensor data requested
-2025-09-06 13:27:47,450 - INFO - Returning 1 sensor readings
-2025-09-06 13:27:57,413 - INFO - Latest sensor data requested
-2025-09-06 13:27:57,445 - INFO - Returning 1 sensor readings
-2025-09-06 13:28:07,844 - INFO - Latest sensor data requested
-2025-09-06 13:28:07,892 - INFO - Returning 1 sensor readings
-2025-09-06 13:28:17,845 - INFO - Latest sensor data requested
-2025-09-06 13:28:17,878 - INFO - Returning 1 sensor readings
-2025-09-06 13:28:27,858 - INFO - Latest sensor data requested
-2025-09-06 13:28:27,890 - INFO - Returning 1 sensor readings
-2025-09-06 13:28:37,859 - INFO - Latest sensor data requested
-2025-09-06 13:28:37,905 - INFO - Returning 1 sensor readings
-2025-09-06 13:28:47,969 - INFO - Latest sensor data requested
-2025-09-06 13:28:48,003 - INFO - Returning 1 sensor readings
-2025-09-06 13:28:57,884 - INFO - Latest sensor data requested
-2025-09-06 13:28:57,917 - INFO - Returning 1 sensor readings
-2025-09-06 13:29:07,898 - INFO - Latest sensor data requested
-2025-09-06 13:29:07,946 - INFO - Returning 1 sensor readings
-2025-09-06 13:29:08,625 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 13:29:08,626 - INFO - Query data: {'query': 'what is the highest temperature'}
-2025-09-06 13:29:08,626 - INFO - LLM module imported successfully
-2025-09-06 13:29:08,626 - INFO - Processing query: what is the highest temperature
-2025-09-06 13:29:08,626 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:29:08,634 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:29:08,635 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:29:08,636 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 13:29:08,636 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 13:29:08,636 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 13:29:08,636 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 13:29:08,637 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:29:08,642 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:29:08,643 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:29:08,643 - INFO - Processing query: 'what is the highest temperature'
-2025-09-06 13:29:08,645 - INFO - Matched mixed query
-2025-09-06 13:29:08,645 - INFO - Used deterministic handler for query: 'what is the highest temperature'
-2025-09-06 13:29:08,645 - INFO - LLM query processed successfully
-2025-09-06 13:29:18,033 - INFO - Latest sensor data requested
-2025-09-06 13:29:18,084 - INFO - Returning 1 sensor readings
-2025-09-06 13:29:27,918 - INFO - Latest sensor data requested
-2025-09-06 13:29:27,950 - INFO - Returning 1 sensor readings
-2025-09-06 13:29:37,538 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 13:29:37,539 - INFO - Query data: {'query': 'what is the highest humidity'}
-2025-09-06 13:29:37,539 - INFO - LLM module imported successfully
-2025-09-06 13:29:37,539 - INFO - Processing query: what is the highest humidity
-2025-09-06 13:29:37,539 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:29:37,545 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:29:37,546 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:29:37,546 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 13:29:37,547 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 13:29:37,547 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 13:29:37,547 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 13:29:37,547 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:29:37,551 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:29:37,552 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:29:37,552 - INFO - Processing query: 'what is the highest humidity'
-2025-09-06 13:29:37,554 - INFO - Matched mixed query
-2025-09-06 13:29:37,554 - INFO - Used deterministic handler for query: 'what is the highest humidity'
-2025-09-06 13:29:37,554 - INFO - LLM query processed successfully
-2025-09-06 13:29:37,927 - INFO - Latest sensor data requested
-2025-09-06 13:29:37,974 - INFO - Returning 1 sensor readings
-2025-09-06 13:29:47,936 - INFO - Latest sensor data requested
-2025-09-06 13:29:47,968 - INFO - Returning 1 sensor readings
-2025-09-06 13:29:57,942 - INFO - Latest sensor data requested
-2025-09-06 13:29:57,989 - INFO - Returning 1 sensor readings
-2025-09-06 13:30:07,959 - INFO - Latest sensor data requested
-2025-09-06 13:30:08,009 - INFO - Returning 1 sensor readings
-2025-09-06 13:30:17,954 - INFO - Latest sensor data requested
-2025-09-06 13:30:17,988 - INFO - Returning 1 sensor readings
-2025-09-06 13:30:27,661 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 13:30:27,662 - INFO - Query data: {'query': 'what is the highest humidity'}
-2025-09-06 13:30:27,662 - INFO - LLM module imported successfully
-2025-09-06 13:30:27,662 - INFO - Processing query: what is the highest humidity
-2025-09-06 13:30:27,662 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:30:27,666 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:30:27,667 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:30:27,668 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 13:30:27,668 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 13:30:27,668 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 13:30:27,668 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 13:30:27,669 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:30:27,672 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:30:27,673 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:30:27,673 - INFO - Processing query: 'what is the highest humidity'
-2025-09-06 13:30:27,674 - INFO - Matched mixed query
-2025-09-06 13:30:27,674 - INFO - Used deterministic handler for query: 'what is the highest humidity'
-2025-09-06 13:30:27,675 - INFO - LLM query processed successfully
-2025-09-06 13:30:27,954 - INFO - Latest sensor data requested
-2025-09-06 13:30:28,002 - INFO - Returning 1 sensor readings
-2025-09-06 13:30:37,958 - INFO - Latest sensor data requested
-2025-09-06 13:30:37,992 - INFO - Returning 1 sensor readings
-2025-09-06 13:30:47,970 - INFO - Latest sensor data requested
-2025-09-06 13:30:48,005 - INFO - Returning 1 sensor readings
-2025-09-06 13:31:41,430 - INFO - Successfully connected to PostgreSQL database
-2025-09-06 13:31:41,431 - INFO - Database adapter initialized successfully
-2025-09-06 13:31:41,440 - INFO - Loaded 3 existing document hashes
-2025-09-06 13:31:41,440 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:31:41,608 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:31:41,609 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:31:41,609 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 13:31:41,610 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 13:31:41,610 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 13:31:41,610 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 13:31:41,610 - INFO - Loading existing vector store
-2025-09-06 13:31:42,540 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
-2025-09-06 13:31:42,704 - INFO - No new documents to add to vector store
-2025-09-06 13:31:43,237 - INFO - QA chain initialized successfully
-2025-09-06 13:31:43,237 - INFO - Analyzer initialized successfully
-2025-09-06 13:31:43,237 - INFO - LLM module imported successfully
-2025-09-06 13:31:43,237 - INFO - Processing query: what is the highest humidity
-2025-09-06 13:31:43,238 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:31:43,242 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:31:43,243 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:31:43,243 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 13:31:43,244 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 13:31:43,244 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 13:31:43,244 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 13:31:43,244 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:31:43,249 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:31:43,249 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:31:43,250 - INFO - Processing query: 'what is the highest humidity'
-2025-09-06 13:31:43,252 - INFO - Matched mixed query
-2025-09-06 13:31:43,253 - INFO - Used deterministic handler for query: 'what is the highest humidity'
-2025-09-06 13:31:43,253 - INFO - LLM query processed successfully
-2025-09-06 13:31:48,315 - INFO - Latest sensor data requested
-2025-09-06 13:31:48,349 - INFO - Returning 1 sensor readings
-2025-09-06 13:31:58,326 - INFO - Latest sensor data requested
-2025-09-06 13:31:58,376 - INFO - Returning 1 sensor readings
-2025-09-06 13:32:08,335 - INFO - Latest sensor data requested
-2025-09-06 13:32:08,384 - INFO - Returning 1 sensor readings
-2025-09-06 13:42:11,749 - WARNING - Method Not Allowed: /api/llm/health/
-2025-09-06 13:42:14,932 - INFO - LLM health check requested
-2025-09-06 13:42:14,932 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:42:14,939 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:42:14,940 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:42:14,940 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 13:42:14,941 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 13:42:14,941 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 13:42:14,941 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 13:42:14,941 - INFO - Loading data from PostgreSQL database
-2025-09-06 13:42:14,947 - INFO - Retrieved 9 sensor records from database
-2025-09-06 13:42:14,948 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 13:42:14,948 - INFO - Processing query: 'how many records are there?'
-2025-09-06 13:42:14,950 - INFO - Matched count query; returning 3 records
-2025-09-06 13:42:14,950 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:05:10,544 - INFO - Successfully connected to PostgreSQL database
-2025-09-06 14:05:10,545 - INFO - Database adapter initialized successfully
-2025-09-06 14:05:10,546 - INFO - Loaded 3 existing document hashes
-2025-09-06 14:05:10,546 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:05:10,710 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:05:10,712 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:05:10,713 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:05:10,713 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:05:10,714 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:05:10,714 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:05:10,714 - INFO - Loading existing vector store
-2025-09-06 14:05:11,693 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
-2025-09-06 14:05:11,870 - INFO - No new documents to add to vector store
-2025-09-06 14:05:12,464 - INFO - QA chain initialized successfully
-2025-09-06 14:05:12,464 - INFO - Analyzer initialized successfully
-2025-09-06 14:05:12,464 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:05:12,470 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:05:12,471 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:05:12,471 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:05:12,471 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:05:12,472 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:05:12,472 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:05:12,472 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:05:12,477 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:05:12,478 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:05:12,478 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:05:12,479 - INFO - Matched count query; returning 3 records
-2025-09-06 14:05:12,480 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:07:38,516 - INFO - Latest sensor data requested
-2025-09-06 14:07:38,517 - INFO - Latest sensor data requested
-2025-09-06 14:07:38,568 - INFO - Returning 1 sensor readings
-2025-09-06 14:07:38,660 - INFO - Returning 1 sensor readings
-2025-09-06 14:29:45,822 - INFO - LLM health check requested
-2025-09-06 14:29:45,822 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:29:45,827 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:29:45,828 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:29:45,829 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:29:45,829 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:29:45,829 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:29:45,829 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:29:45,829 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:29:45,833 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:29:45,834 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:29:45,834 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:29:45,835 - INFO - Matched count query; returning 3 records
-2025-09-06 14:29:45,835 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:36:41,710 - INFO - Latest sensor data requested
-2025-09-06 14:36:41,764 - INFO - Returning 1 sensor readings
-2025-09-06 14:36:41,771 - INFO - Latest sensor data requested
-2025-09-06 14:36:41,822 - INFO - Returning 1 sensor readings
-2025-09-06 14:38:31,064 - INFO - LLM health check requested
-2025-09-06 14:38:31,064 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:38:31,065 - INFO - LLM health check requested
-2025-09-06 14:38:31,065 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:38:31,070 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:38:31,072 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:38:31,074 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:38:31,075 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:38:31,076 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:38:31,076 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:38:31,076 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:38:31,077 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:38:31,077 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:38:31,077 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:38:31,077 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:38:31,077 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:38:31,078 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:38:31,078 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:38:31,083 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:38:31,087 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:38:31,088 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:38:31,089 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:38:31,089 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:38:31,089 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:38:31,090 - INFO - Matched count query; returning 3 records
-2025-09-06 14:38:31,092 - INFO - Matched count query; returning 3 records
-2025-09-06 14:38:31,092 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:38:31,092 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:41:19,760 - INFO - LLM health check requested
-2025-09-06 14:41:19,761 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:19,761 - INFO - LLM health check requested
-2025-09-06 14:41:19,762 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:19,769 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:19,772 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:19,773 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:19,774 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:19,774 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:41:19,775 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:41:19,775 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:41:19,776 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:41:19,776 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:41:19,776 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:41:19,776 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:41:19,776 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:41:19,776 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:19,777 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:19,784 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:19,787 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:19,788 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:19,789 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:19,789 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:41:19,789 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:41:19,790 - INFO - Matched count query; returning 3 records
-2025-09-06 14:41:19,791 - INFO - Matched count query; returning 3 records
-2025-09-06 14:41:19,791 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:41:19,792 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:41:23,789 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:41:23,789 - INFO - Query data: {'query': 'hello'}
-2025-09-06 14:41:23,790 - INFO - LLM module imported successfully
-2025-09-06 14:41:23,790 - INFO - Processing query: hello
-2025-09-06 14:41:23,790 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:23,796 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:23,796 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:23,797 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:41:23,797 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:41:23,798 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:41:23,798 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:41:23,798 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:23,803 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:23,803 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:23,804 - INFO - Processing query: 'hello'
-2025-09-06 14:41:23,804 - WARNING - No deterministic match for query: 'hello'; falling back to LLM
-2025-09-06 14:41:25,349 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
-2025-09-06 14:41:32,429 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
-2025-09-06 14:41:33,352 - INFO - Query: 'hello' - Response generated using LLM
-2025-09-06 14:41:33,353 - INFO - LLM query processed successfully
-2025-09-06 14:41:40,805 - INFO - Backing off send_request(...) for 0.4s (requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='us.i.posthog.com', port=443): Read timed out. (read timeout=15))
-2025-09-06 14:41:44,131 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:41:44,132 - INFO - Query data: {'query': 'what is the highest temperature'}
-2025-09-06 14:41:44,132 - INFO - LLM module imported successfully
-2025-09-06 14:41:44,132 - INFO - Processing query: what is the highest temperature
-2025-09-06 14:41:44,132 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:44,138 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:44,139 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:44,140 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:41:44,140 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:41:44,141 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:41:44,141 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:41:44,141 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:41:44,146 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:41:44,147 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:41:44,147 - INFO - Processing query: 'what is the highest temperature'
-2025-09-06 14:41:44,154 - INFO - Matched mixed query
-2025-09-06 14:41:44,154 - INFO - Used deterministic handler for query: 'what is the highest temperature'
-2025-09-06 14:41:44,155 - INFO - LLM query processed successfully
-2025-09-06 14:42:15,502 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:42:15,502 - INFO - Query data: {'query': 'what is the highest humidity in the room?'}
-2025-09-06 14:42:15,502 - INFO - LLM module imported successfully
-2025-09-06 14:42:15,503 - INFO - Processing query: what is the highest humidity in the room?
-2025-09-06 14:42:15,503 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:42:15,508 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:42:15,508 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:42:15,509 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:42:15,509 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:42:15,510 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:42:15,510 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:42:15,510 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:42:15,515 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:42:15,516 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:42:15,516 - INFO - Processing query: 'what is the highest humidity in the room?'
-2025-09-06 14:42:15,517 - INFO - Matched mixed query
-2025-09-06 14:42:15,517 - INFO - Used deterministic handler for query: 'what is the highest humidity in the room?'
-2025-09-06 14:42:15,518 - INFO - LLM query processed successfully
-2025-09-06 14:42:38,519 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:42:38,519 - INFO - Query data: {'query': 'what is the highest temperature'}
-2025-09-06 14:42:38,520 - INFO - LLM module imported successfully
-2025-09-06 14:42:38,520 - INFO - Processing query: what is the highest temperature
-2025-09-06 14:42:38,520 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:42:38,524 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:42:38,525 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:42:38,525 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:42:38,526 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:42:38,526 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:42:38,526 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:42:38,526 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:42:38,530 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:42:38,531 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:42:38,532 - INFO - Processing query: 'what is the highest temperature'
-2025-09-06 14:42:38,534 - INFO - Matched mixed query
-2025-09-06 14:42:38,534 - INFO - Used deterministic handler for query: 'what is the highest temperature'
-2025-09-06 14:42:38,534 - INFO - LLM query processed successfully
-2025-09-06 14:42:47,458 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:42:47,459 - INFO - Query data: {'query': 'qweqweqwe'}
-2025-09-06 14:42:47,459 - INFO - LLM module imported successfully
-2025-09-06 14:42:47,459 - INFO - Processing query: qweqweqwe
-2025-09-06 14:42:47,459 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:42:47,464 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:42:47,465 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:42:47,465 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:42:47,466 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:42:47,466 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:42:47,466 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:42:47,466 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:42:47,470 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:42:47,471 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:42:47,471 - INFO - Processing query: 'qweqweqwe'
-2025-09-06 14:42:47,471 - WARNING - No deterministic match for query: 'qweqweqwe'; falling back to LLM
-2025-09-06 14:42:49,519 - ERROR - Error processing query 'qweqweqwe': Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
-2025-09-06 14:42:49,519 - ERROR - LLM query failed: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
-2025-09-06 14:42:49,520 - ERROR - Internal Server Error: /api/llm/query/
-2025-09-06 14:43:03,234 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:43:03,234 - INFO - Query data: {'query': 'what is the lowest temperature'}
-2025-09-06 14:43:03,235 - INFO - LLM module imported successfully
-2025-09-06 14:43:03,235 - INFO - Processing query: what is the lowest temperature
-2025-09-06 14:43:03,235 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:03,239 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:03,241 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:03,241 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:43:03,242 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:43:03,242 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:43:03,242 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:43:03,242 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:03,246 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:03,247 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:03,247 - INFO - Processing query: 'what is the lowest temperature'
-2025-09-06 14:43:03,249 - INFO - Matched mixed query
-2025-09-06 14:43:03,249 - INFO - Used deterministic handler for query: 'what is the lowest temperature'
-2025-09-06 14:43:03,249 - INFO - LLM query processed successfully
-2025-09-06 14:43:27,699 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:43:27,699 - INFO - Query data: {'query': 'What is the average temperature?'}
-2025-09-06 14:43:27,699 - INFO - LLM module imported successfully
-2025-09-06 14:43:27,700 - INFO - Processing query: What is the average temperature?
-2025-09-06 14:43:27,700 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:27,705 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:27,706 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:27,706 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:43:27,707 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:43:27,707 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:43:27,707 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:43:27,707 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:27,712 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:27,713 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:27,713 - INFO - Processing query: 'what is the average temperature?'
-2025-09-06 14:43:27,715 - INFO - Matched mixed query
-2025-09-06 14:43:27,715 - INFO - Used deterministic handler for query: 'What is the average temperature?'
-2025-09-06 14:43:27,716 - INFO - LLM query processed successfully
-2025-09-06 14:43:38,321 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:43:38,321 - INFO - Query data: {'query': 'what is the highest humidity in the room'}
-2025-09-06 14:43:38,321 - INFO - LLM module imported successfully
-2025-09-06 14:43:38,322 - INFO - Processing query: what is the highest humidity in the room
-2025-09-06 14:43:38,322 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:38,326 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:38,327 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:38,328 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:43:38,328 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:43:38,328 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:43:38,328 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:43:38,329 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:38,333 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:38,334 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:38,334 - INFO - Processing query: 'what is the highest humidity in the room'
-2025-09-06 14:43:38,336 - INFO - Matched mixed query
-2025-09-06 14:43:38,336 - INFO - Used deterministic handler for query: 'what is the highest humidity in the room'
-2025-09-06 14:43:38,336 - INFO - LLM query processed successfully
-2025-09-06 14:43:51,726 - INFO - LLM health check requested
-2025-09-06 14:43:51,726 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:51,730 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:51,731 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:51,731 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:43:51,732 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:43:51,732 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:43:51,732 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:43:51,732 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:43:51,737 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:43:51,737 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:43:51,738 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:43:51,739 - INFO - Matched count query; returning 3 records
-2025-09-06 14:43:51,739 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:44:34,817 - INFO - LLM health check requested
-2025-09-06 14:44:34,818 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:44:34,823 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:44:34,824 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:44:34,824 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:44:34,825 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:44:34,825 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:44:34,825 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:44:34,825 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:44:34,831 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:44:34,832 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:44:34,832 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:44:34,833 - INFO - Matched count query; returning 3 records
-2025-09-06 14:44:34,833 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:46:07,551 - INFO - LLM health check requested
-2025-09-06 14:46:07,551 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:46:07,556 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:46:07,556 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:46:07,557 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:46:07,557 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:46:07,557 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:46:07,558 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:46:07,558 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:46:07,562 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:46:07,562 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:46:07,562 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:46:07,564 - INFO - Matched count query; returning 3 records
-2025-09-06 14:46:07,564 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:46:07,567 - INFO - LLM health check requested
-2025-09-06 14:46:07,567 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:46:07,572 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:46:07,572 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:46:07,573 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:46:07,573 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:46:07,573 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:46:07,573 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:46:07,574 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:46:07,578 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:46:07,579 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:46:07,579 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:46:07,580 - INFO - Matched count query; returning 3 records
-2025-09-06 14:46:07,580 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:46:46,126 - INFO - LLM query received: POST /api/llm/query/
-2025-09-06 14:46:46,126 - INFO - Query data: {'query': 'Show me the highest energy consumption'}
-2025-09-06 14:46:46,126 - INFO - LLM module imported successfully
-2025-09-06 14:46:46,126 - INFO - Processing query: Show me the highest energy consumption
-2025-09-06 14:46:46,126 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:46:46,131 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:46:46,131 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:46:46,132 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:46:46,132 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:46:46,132 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:46:46,132 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:46:46,132 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:46:46,136 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:46:46,136 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:46:46,137 - INFO - Processing query: 'show me the highest energy consumption'
-2025-09-06 14:46:46,137 - INFO - Matched mixed query
-2025-09-06 14:46:46,138 - INFO - Used deterministic handler for query: 'Show me the highest energy consumption'
-2025-09-06 14:46:46,138 - INFO - LLM query processed successfully
-2025-09-06 14:48:51,898 - INFO - LLM health check requested
-2025-09-06 14:48:51,898 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:48:51,900 - INFO - LLM health check requested
-2025-09-06 14:48:51,900 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:48:51,905 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:48:51,908 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:48:51,908 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:48:51,909 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:48:51,909 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:48:51,910 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
-2025-09-06 14:48:51,910 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:48:51,910 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
-2025-09-06 14:48:51,911 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:48:51,911 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
-2025-09-06 14:48:51,911 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:48:51,911 - INFO - Created 0 new documents, skipped 3 duplicates
-2025-09-06 14:48:51,911 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:48:51,911 - INFO - Loading data from PostgreSQL database
-2025-09-06 14:48:51,918 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:48:51,920 - INFO - Retrieved 9 sensor records from database
-2025-09-06 14:48:51,921 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:48:51,922 - INFO - Loaded 3 unique occupied room records from database
-2025-09-06 14:48:51,922 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:48:51,922 - INFO - Processing query: 'how many records are there?'
-2025-09-06 14:48:51,923 - INFO - Matched count query; returning 3 records
-2025-09-06 14:48:51,924 - INFO - Matched count query; returning 3 records
-2025-09-06 14:48:51,924 - INFO - Used deterministic handler for query: 'How many records are there?'
-2025-09-06 14:48:51,924 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 16:52:09,356 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 16:52:09,357 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 16:52:09,493 - INFO - MongoDB connection initialized successfully
+2025-09-06 16:52:09,503 - INFO - Loaded 43 existing document hashes
+2025-09-06 16:52:09,503 - ERROR - Error loading data: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 16:52:09,504 - ERROR - Error initializing analyzer: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 16:52:09,504 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 16:52:09,504 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 16:52:09,506 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 16:52:09,506 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 16:55:39,907 - INFO - C:\LLM\LLMV2\SBMS-Y3S1G4\llm\static_remote_LLM\main.py changed, reloading.
+2025-09-06 16:56:51,396 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 16:56:51,396 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 16:56:51,402 - INFO - MongoDB connection initialized successfully
+2025-09-06 16:56:51,404 - INFO - Loaded 3 existing document hashes
+2025-09-06 16:56:51,404 - ERROR - Error loading data: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 16:56:51,404 - ERROR - Error initializing analyzer: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 16:56:51,404 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 16:56:51,404 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 16:56:51,406 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 16:56:51,406 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 16:58:48,068 - INFO - C:\LLM\LLMV2\SBMS-Y3S1G4\llm\static_remote_LLM\main.py changed, reloading.
+2025-09-06 16:58:59,841 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 16:58:59,841 - INFO - Database adapter initialized successfully
+2025-09-06 16:58:59,842 - INFO - Loaded 3 existing document hashes
+2025-09-06 16:58:59,842 - INFO - Loading data from PostgreSQL database
+2025-09-06 16:59:00,023 - INFO - Retrieved 9 sensor records from database
+2025-09-06 16:59:00,028 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 16:59:00,030 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 16:59:00,031 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 16:59:00,031 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 16:59:00,031 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 16:59:00,031 - INFO - Loading existing vector store
+2025-09-06 16:59:01,118 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 16:59:01,232 - INFO - LLM health check requested
+2025-09-06 16:59:01,233 - INFO - LLM health check requested
+2025-09-06 16:59:01,365 - INFO - No new documents to add to vector store
+2025-09-06 16:59:01,873 - INFO - QA chain initialized successfully
+2025-09-06 16:59:01,873 - INFO - Analyzer initialized successfully
+2025-09-06 16:59:01,873 - INFO - Loading data from PostgreSQL database
+2025-09-06 16:59:01,873 - INFO - Loading data from PostgreSQL database
+2025-09-06 16:59:01,873 - INFO - Loading data from PostgreSQL database
+2025-09-06 16:59:01,879 - INFO - Retrieved 9 sensor records from database
+2025-09-06 16:59:01,881 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 16:59:01,883 - INFO - Retrieved 9 sensor records from database
+2025-09-06 16:59:01,883 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 16:59:01,886 - INFO - Retrieved 9 sensor records from database
+2025-09-06 16:59:01,887 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 16:59:01,887 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 16:59:01,888 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 16:59:01,888 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 16:59:01,888 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 16:59:01,889 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 16:59:01,889 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 16:59:01,889 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 16:59:01,889 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 16:59:01,890 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 16:59:01,890 - INFO - Loading data from PostgreSQL database
+2025-09-06 16:59:01,890 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 16:59:01,890 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 16:59:01,890 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 16:59:01,890 - INFO - Loading data from PostgreSQL database
+2025-09-06 16:59:01,891 - INFO - Loading data from PostgreSQL database
+2025-09-06 16:59:01,895 - INFO - Retrieved 9 sensor records from database
+2025-09-06 16:59:01,898 - INFO - Retrieved 9 sensor records from database
+2025-09-06 16:59:01,899 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 16:59:01,902 - INFO - Retrieved 9 sensor records from database
+2025-09-06 16:59:01,902 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 16:59:01,902 - INFO - Processing query: 'how many records are there?'
+2025-09-06 16:59:01,903 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 16:59:01,903 - INFO - Processing query: 'how many records are there?'
+2025-09-06 16:59:01,906 - INFO - Matched count query; returning 3 records
+2025-09-06 16:59:01,906 - INFO - Processing query: 'how many records are there?'
+2025-09-06 16:59:01,907 - INFO - Matched count query; returning 3 records
+2025-09-06 16:59:01,908 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 16:59:01,909 - INFO - Matched count query; returning 3 records
+2025-09-06 16:59:01,909 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 16:59:01,910 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 16:59:38,404 - INFO - C:\LLM\LLMV2\SBMS-Y3S1G4\llm\static_remote_LLM\main.py changed, reloading.
+2025-09-06 16:59:46,699 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 16:59:46,699 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 16:59:46,705 - INFO - MongoDB connection initialized successfully
+2025-09-06 16:59:46,706 - INFO - Loaded 43 existing document hashes
+2025-09-06 16:59:46,706 - ERROR - Error loading data: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 16:59:46,706 - ERROR - Error initializing analyzer: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 16:59:46,706 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 16:59:46,707 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 16:59:46,708 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 16:59:46,708 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 17:05:22,635 - INFO - Starting analyzer initialization
+2025-09-06 17:05:22,662 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:05:22,662 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:05:22,668 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:05:22,669 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:05:22,669 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:05:22,669 - ERROR - Error loading data: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 17:05:22,669 - ERROR - Error initializing analyzer: Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None
+2025-09-06 17:05:22,670 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:05:22,670 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:05:22,672 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 17:05:22,672 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 17:11:04,724 - INFO - Starting analyzer initialization
+2025-09-06 17:11:04,748 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:11:04,749 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:11:04,755 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:11:04,755 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:11:04,755 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:11:04,755 - INFO - Loading data from MongoDB
+2025-09-06 17:11:04,760 - INFO - Loaded 0 unique occupied room records from MongoDB
+2025-09-06 17:11:04,760 - ERROR - Error loading data: 'occupancy_status'
+2025-09-06 17:11:04,760 - ERROR - Error initializing analyzer: 'occupancy_status'
+2025-09-06 17:11:04,760 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:11:04,760 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:11:04,762 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 17:11:04,762 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 17:14:08,439 - INFO - C:\LLM\LLMV2\SBMS-Y3S1G4\llm\static_remote_LLM\main.py changed, reloading.
+2025-09-06 17:14:17,772 - INFO - Starting analyzer initialization
+2025-09-06 17:14:17,796 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:14:17,796 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:14:17,802 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:14:17,803 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:14:17,803 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:14:17,803 - INFO - Loading data from PostgreSQL
+2025-09-06 17:14:17,929 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:14:17,932 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:14:17,932 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:14:17,932 - INFO - Data loaded, rows: 0
+2025-09-06 17:14:17,932 - ERROR - Error initializing analyzer: 'NoneType' object has no attribute 'empty'
+2025-09-06 17:14:17,932 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:14:17,932 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:14:17,934 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 17:14:17,934 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-06 17:14:39,045 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 17:14:39,045 - INFO - Query data: {'query': 'testing'}
+2025-09-06 17:14:39,045 - INFO - LLM module imported successfully
+2025-09-06 17:14:39,046 - INFO - Processing query: testing
+2025-09-06 17:14:39,046 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:14:39,046 - ERROR - LLM query failed: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 17:14:39,046 - ERROR - Internal Server Error: /api/llm/query/
+2025-09-06 17:17:49,378 - INFO - Starting analyzer initialization
+2025-09-06 17:17:49,402 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:17:49,402 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:17:49,408 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:17:49,409 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:17:49,409 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:17:49,409 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:17:49,537 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:17:49,539 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:49,539 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:49,540 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:49,540 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:49,540 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:49,540 - INFO - Data loaded, rows: 3
+2025-09-06 17:17:49,541 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:49,541 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:49,541 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:49,541 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:17:49,542 - INFO - Documents created: 0
+2025-09-06 17:17:49,542 - INFO - Loading existing vector store
+2025-09-06 17:17:50,353 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 17:17:50,513 - INFO - No new documents to add to vector store
+2025-09-06 17:17:50,514 - INFO - Vector store initialized
+2025-09-06 17:17:51,017 - INFO - QA chain initialized successfully
+2025-09-06 17:17:51,017 - INFO - QA chain initialized
+2025-09-06 17:17:51,017 - INFO - Analyzer initialized successfully
+2025-09-06 17:17:51,017 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:17:51,017 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:17:51,023 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:17:51,025 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:17:51,027 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,028 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,028 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,028 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,029 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:51,029 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:51,029 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:51,030 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:51,030 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:51,030 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:51,030 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:51,031 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:51,031 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:51,031 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:51,031 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:51,032 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:51,032 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:17:51,032 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:17:51,032 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:17:51,032 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:17:51,037 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:17:51,040 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:17:51,042 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,043 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,043 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,044 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:17:51,044 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:51,044 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:17:51,045 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:51,045 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:17:51,045 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:51,045 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:17:51,046 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:17:51,046 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:17:51,047 - INFO - Matched count query; returning 3 records
+2025-09-06 17:17:51,048 - INFO - Matched count query; returning 3 records
+2025-09-06 17:17:51,049 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:17:51,049 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:18:10,834 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 17:18:10,834 - INFO - Query data: {'query': 'what is the highest temperature in the room?'}
+2025-09-06 17:18:10,834 - INFO - LLM module imported successfully
+2025-09-06 17:18:10,834 - INFO - Processing query: what is the highest temperature in the room?
+2025-09-06 17:18:10,834 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:18:10,839 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:18:10,842 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:18:10,842 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:18:10,842 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:18:10,843 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:18:10,843 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:18:10,844 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:18:10,844 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:18:10,844 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:18:10,844 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:18:10,845 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:18:10,849 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:18:10,851 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:18:10,852 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:18:10,852 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:18:10,852 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:18:10,853 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:18:10,853 - INFO - Processing query: 'what is the highest temperature in the room?'
+2025-09-06 17:18:10,857 - INFO - Matched mixed query
+2025-09-06 17:18:10,857 - INFO - Used deterministic handler for query: 'what is the highest temperature in the room?'
+2025-09-06 17:18:10,857 - INFO - LLM query processed successfully
+2025-09-06 17:20:02,594 - INFO - Starting analyzer initialization
+2025-09-06 17:20:02,619 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:20:02,620 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:20:02,626 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:20:02,637 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:20:02,637 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:20:02,637 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:20:02,760 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:20:02,762 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:02,762 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:02,762 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:02,763 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:02,763 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:02,763 - INFO - Data loaded, rows: 3
+2025-09-06 17:20:02,764 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:02,764 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:02,764 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:02,764 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:20:02,764 - INFO - Documents created: 0
+2025-09-06 17:20:02,765 - INFO - Loading existing vector store
+2025-09-06 17:20:03,612 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 17:20:03,766 - INFO - No new documents to add to vector store
+2025-09-06 17:20:03,767 - INFO - Vector store initialized
+2025-09-06 17:20:04,265 - INFO - QA chain initialized successfully
+2025-09-06 17:20:04,265 - INFO - QA chain initialized
+2025-09-06 17:20:04,265 - INFO - Analyzer initialized successfully
+2025-09-06 17:20:04,266 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:20:04,266 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:20:04,271 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:20:04,274 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:20:04,277 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,278 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,278 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,278 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,279 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:04,279 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:04,279 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:04,280 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:04,280 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:04,280 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:04,280 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:04,281 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:04,281 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:04,281 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:04,282 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:04,282 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:04,282 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:20:04,282 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:20:04,282 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:20:04,282 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:20:04,288 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:20:04,290 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:20:04,292 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,294 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,294 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,294 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:20:04,294 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:04,295 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:20:04,295 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:04,295 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:20:04,295 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:04,295 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:20:04,296 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:20:04,296 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:20:04,297 - INFO - Matched count query; returning 3 records
+2025-09-06 17:20:04,298 - INFO - Matched count query; returning 3 records
+2025-09-06 17:20:04,298 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:20:04,298 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:21:22,107 - INFO - Starting analyzer initialization
+2025-09-06 17:21:22,145 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:21:22,146 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:21:22,151 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:21:22,161 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:21:22,161 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:21:22,162 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:21:22,288 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:21:22,289 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:22,290 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:22,290 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:22,290 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:22,290 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:22,291 - INFO - Data loaded, rows: 3
+2025-09-06 17:21:22,291 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:22,291 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:22,291 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:22,291 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:21:22,291 - INFO - Documents created: 0
+2025-09-06 17:21:22,292 - INFO - Loading existing vector store
+2025-09-06 17:21:23,105 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 17:21:23,249 - INFO - No new documents to add to vector store
+2025-09-06 17:21:23,250 - INFO - Vector store initialized
+2025-09-06 17:21:23,747 - INFO - QA chain initialized successfully
+2025-09-06 17:21:23,747 - INFO - QA chain initialized
+2025-09-06 17:21:23,747 - INFO - Analyzer initialized successfully
+2025-09-06 17:21:23,747 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:21:23,747 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:21:23,753 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:21:23,755 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:21:23,757 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,759 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,760 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,760 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,761 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:23,762 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:23,763 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:23,763 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:23,763 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:23,763 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:23,764 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:23,764 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:23,764 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:23,765 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:23,765 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:23,765 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:23,765 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:21:23,766 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:21:23,766 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:21:23,766 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:21:23,774 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:21:23,777 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:21:23,779 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,780 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,780 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,781 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:21:23,781 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:23,782 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:21:23,782 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:23,782 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:21:23,783 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:23,783 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:21:23,783 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:21:23,783 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:21:23,785 - INFO - Matched count query; returning 3 records
+2025-09-06 17:21:23,786 - INFO - Matched count query; returning 3 records
+2025-09-06 17:21:23,786 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:21:23,786 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:23:23,644 - INFO - Starting analyzer initialization
+2025-09-06 17:23:23,669 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:23:23,669 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:23:23,675 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:23:23,676 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:23:23,676 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:23:23,676 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:23:23,805 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:23:23,807 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:23,807 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:23,807 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:23,808 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:23,808 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:23,808 - INFO - Data loaded, rows: 3
+2025-09-06 17:23:23,808 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:23,809 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:23,809 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:23,809 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:23:23,809 - INFO - Documents created: 0
+2025-09-06 17:23:23,810 - INFO - Loading existing vector store
+2025-09-06 17:23:24,627 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 17:23:24,780 - INFO - No new documents to add to vector store
+2025-09-06 17:23:24,781 - INFO - Vector store initialized
+2025-09-06 17:23:25,289 - INFO - QA chain initialized successfully
+2025-09-06 17:23:25,289 - INFO - QA chain initialized
+2025-09-06 17:23:25,289 - INFO - Analyzer initialized successfully
+2025-09-06 17:23:25,289 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:23:25,289 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:23:25,295 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:23:25,298 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:23:25,300 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,301 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,302 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,302 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,302 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:25,302 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:25,303 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:25,303 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:25,303 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:25,303 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:25,304 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:25,304 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:25,304 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:25,304 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:25,305 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:25,305 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:25,305 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:23:25,305 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:23:25,305 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:23:25,305 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:23:25,310 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:23:25,313 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:23:25,314 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,316 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,316 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,316 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:25,316 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:25,316 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:25,317 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:25,317 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:25,317 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:25,317 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:25,317 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:23:25,318 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:23:25,319 - INFO - Matched count query; returning 3 records
+2025-09-06 17:23:25,320 - INFO - Matched count query; returning 3 records
+2025-09-06 17:23:25,320 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:23:25,320 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:23:39,718 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 17:23:39,719 - INFO - Query data: {'query': 'can you check what is the highest temperature in the room'}
+2025-09-06 17:23:39,719 - INFO - LLM module imported successfully
+2025-09-06 17:23:39,719 - INFO - Processing query: can you check what is the highest temperature in the room
+2025-09-06 17:23:39,719 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:23:39,724 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:23:39,726 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:39,727 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:39,727 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:39,727 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:39,728 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:39,728 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:39,728 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:39,728 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:39,729 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:23:39,729 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:23:39,734 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:23:39,736 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:39,736 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:23:39,736 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:23:39,737 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:23:39,737 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:23:39,737 - INFO - Processing query: 'can you check what is the highest temperature in the room'
+2025-09-06 17:23:39,740 - INFO - Matched mixed query
+2025-09-06 17:23:39,740 - INFO - Used deterministic handler for query: 'can you check what is the highest temperature in the room'
+2025-09-06 17:23:39,740 - INFO - LLM query processed successfully
+2025-09-06 17:37:48,001 - INFO - Starting analyzer initialization
+2025-09-06 17:37:48,049 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:37:48,049 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:37:48,405 - INFO - MongoDB connection initialized successfully
+2025-09-06 17:37:48,506 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:37:48,506 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:37:48,506 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:37:48,645 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:37:48,647 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:48,647 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:48,647 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:48,647 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:48,648 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:48,648 - INFO - Data loaded, rows: 3
+2025-09-06 17:37:48,648 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:48,648 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:48,649 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:48,649 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:37:48,649 - INFO - Documents created: 0
+2025-09-06 17:37:48,649 - INFO - Loading existing vector store
+2025-09-06 17:37:49,516 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 17:37:49,673 - INFO - No new documents to add to vector store
+2025-09-06 17:37:49,674 - INFO - Vector store initialized
+2025-09-06 17:37:50,204 - INFO - QA chain initialized successfully
+2025-09-06 17:37:50,204 - INFO - QA chain initialized
+2025-09-06 17:37:50,204 - INFO - Analyzer initialized successfully
+2025-09-06 17:37:50,204 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:37:50,204 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:37:50,211 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:37:50,214 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:37:50,215 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,217 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,217 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,217 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,218 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:50,218 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:50,218 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:50,218 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:50,219 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:50,219 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:50,219 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:50,220 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:50,220 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:50,220 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:50,220 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:50,221 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:50,221 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:37:50,221 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:37:50,221 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:37:50,221 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:37:50,226 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:37:50,230 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:37:50,231 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,233 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,233 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,233 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:37:50,233 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:50,234 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:37:50,234 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:50,234 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:37:50,234 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:50,235 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:37:50,235 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:37:50,235 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:37:50,236 - INFO - Matched count query; returning 3 records
+2025-09-06 17:37:50,237 - INFO - Matched count query; returning 3 records
+2025-09-06 17:37:50,238 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:37:50,238 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:38:13,933 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 17:38:13,933 - INFO - Query data: {'query': 'what is the highest temperature'}
+2025-09-06 17:38:13,933 - INFO - LLM module imported successfully
+2025-09-06 17:38:13,934 - INFO - Processing query: what is the highest temperature
+2025-09-06 17:38:13,934 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:38:13,939 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:38:13,941 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:38:13,941 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:38:13,942 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:38:13,942 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:38:13,942 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:38:13,943 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:38:13,943 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:38:13,943 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:38:13,943 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:38:13,943 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:38:13,948 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:38:13,950 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:38:13,950 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:38:13,951 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:38:13,951 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:38:13,952 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:38:13,952 - INFO - Processing query: 'what is the highest temperature'
+2025-09-06 17:38:13,954 - INFO - Matched mixed query
+2025-09-06 17:38:13,954 - INFO - Used deterministic handler for query: 'what is the highest temperature'
+2025-09-06 17:38:13,954 - INFO - LLM query processed successfully
+2025-09-06 17:54:09,697 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 17:54:09,698 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 17:54:09,727 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:54:09,727 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:54:09,737 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 17:54:09,737 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 17:54:10,024 - INFO - MongoDB Atlas connection initialized successfully for database: LLM_logs, collection: logs
+2025-09-06 17:54:10,034 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:54:10,034 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:54:10,034 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:10,155 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:10,157 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:10,157 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:10,157 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:10,158 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:10,158 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:10,158 - INFO - Data loaded, rows: 3
+2025-09-06 17:54:10,159 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:10,159 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:10,159 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:10,159 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:54:10,159 - INFO - Documents created: 0
+2025-09-06 17:54:10,159 - INFO - Loading existing vector store
+2025-09-06 17:54:11,019 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 17:54:11,165 - INFO - No new documents to add to vector store
+2025-09-06 17:54:11,166 - INFO - Vector store initialized
+2025-09-06 17:54:11,655 - INFO - QA chain initialized successfully
+2025-09-06 17:54:11,655 - INFO - QA chain initialized
+2025-09-06 17:54:11,655 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 17:54:11,655 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:11,660 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:11,661 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:11,661 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:11,662 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:11,662 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:11,662 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:11,663 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:11,663 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:11,663 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:11,663 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:54:11,663 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:11,668 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:11,670 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:11,670 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:11,670 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:11,671 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:11,671 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:11,671 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:54:11,672 - INFO - Matched count query; returning 3 records
+2025-09-06 17:54:11,672 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:54:12,020 - INFO - MongoDB Atlas connection initialized successfully for database: LLM_logs, collection: logs
+2025-09-06 17:54:12,030 - INFO - Loaded 43 existing document hashes
+2025-09-06 17:54:12,034 - INFO - RoomLogAnalyzer instance created
+2025-09-06 17:54:12,034 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:12,043 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:12,044 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:12,044 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:12,045 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:12,045 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:12,045 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:12,045 - INFO - Data loaded, rows: 3
+2025-09-06 17:54:12,046 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:12,046 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:12,046 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:12,046 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:54:12,046 - INFO - Documents created: 0
+2025-09-06 17:54:12,047 - INFO - Loading existing vector store
+2025-09-06 17:54:12,671 - INFO - No new documents to add to vector store
+2025-09-06 17:54:12,672 - INFO - Vector store initialized
+2025-09-06 17:54:13,168 - INFO - QA chain initialized successfully
+2025-09-06 17:54:13,168 - INFO - QA chain initialized
+2025-09-06 17:54:13,168 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 17:54:13,169 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:13,173 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:13,175 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:13,175 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:13,175 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:13,176 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:13,176 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:13,176 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:13,176 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:13,177 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:13,177 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:54:13,177 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:13,181 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:13,182 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:13,182 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:13,183 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:13,183 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:13,183 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:13,183 - INFO - Processing query: 'how many records are there?'
+2025-09-06 17:54:13,185 - INFO - Matched count query; returning 3 records
+2025-09-06 17:54:13,185 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 17:54:21,304 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 17:54:21,305 - INFO - Query data: {'query': 'Show me the highest energy consumption'}
+2025-09-06 17:54:21,305 - INFO - LLM module imported successfully
+2025-09-06 17:54:21,305 - INFO - Processing query: Show me the highest energy consumption
+2025-09-06 17:54:21,305 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:21,310 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:21,312 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:21,312 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:21,313 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:21,313 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:21,313 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:21,313 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:21,314 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:21,314 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:21,314 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 17:54:21,314 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 17:54:21,318 - INFO - Retrieved 9 sensor records from database
+2025-09-06 17:54:21,320 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:21,320 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 17:54:21,321 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 17:54:21,321 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 17:54:21,321 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 17:54:21,321 - INFO - Processing query: 'show me the highest energy consumption'
+2025-09-06 17:54:21,324 - INFO - Matched mixed query
+2025-09-06 17:54:21,324 - INFO - Used deterministic handler for query: 'Show me the highest energy consumption'
+2025-09-06 17:54:21,324 - INFO - LLM query processed successfully
+2025-09-06 18:06:22,479 - INFO - LLM health check requested
+2025-09-06 18:06:22,479 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:06:22,485 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:06:22,487 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,488 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,488 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:06:22,489 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:06:22,489 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:06:22,489 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:06:22,490 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:06:22,490 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:06:22,490 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:06:22,490 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:06:22,495 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:06:22,497 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,498 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,498 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:06:22,498 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:06:22,499 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:06:22,499 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:06:22,500 - INFO - Matched count query; returning 3 records
+2025-09-06 18:06:22,500 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:06:22,503 - INFO - LLM health check requested
+2025-09-06 18:06:22,503 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:06:22,509 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:06:22,511 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,511 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,512 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:06:22,512 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:06:22,512 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:06:22,513 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:06:22,513 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:06:22,514 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:06:22,514 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:06:22,514 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:06:22,520 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:06:22,522 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,522 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:06:22,523 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:06:22,523 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:06:22,524 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:06:22,524 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:06:22,525 - INFO - Matched count query; returning 3 records
+2025-09-06 18:06:22,525 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:41:10,665 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 18:41:10,675 - INFO - Query data: {'query': 'What is the average temperature?'}
+2025-09-06 18:41:10,676 - INFO - LLM module imported successfully
+2025-09-06 18:41:10,676 - INFO - Processing query: What is the average temperature?
+2025-09-06 18:41:10,676 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:41:10,712 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:41:10,716 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:10,716 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:10,720 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:10,721 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:10,721 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:10,722 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:10,722 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:10,722 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:10,723 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:41:10,723 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:41:10,730 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:41:10,733 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:10,733 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:10,733 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:10,734 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:10,734 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:10,734 - INFO - Processing query: 'what is the average temperature?'
+2025-09-06 18:41:10,751 - INFO - Matched mixed query
+2025-09-06 18:41:10,751 - INFO - Used deterministic handler for query: 'What is the average temperature?'
+2025-09-06 18:41:10,751 - INFO - LLM query processed successfully
+2025-09-06 18:41:25,891 - INFO - LLM health check requested
+2025-09-06 18:41:25,891 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:41:25,898 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:41:25,901 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,901 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,902 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:25,902 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:25,902 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:25,903 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:25,903 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:25,904 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:25,904 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:41:25,904 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:41:25,910 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:41:25,912 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,912 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,913 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:25,913 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:25,913 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:25,914 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:41:25,917 - INFO - Matched count query; returning 3 records
+2025-09-06 18:41:25,917 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:41:25,920 - INFO - LLM health check requested
+2025-09-06 18:41:25,920 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:41:25,926 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:41:25,928 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,928 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,928 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:25,929 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:25,929 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:25,929 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:25,930 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:25,930 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:25,930 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:41:25,930 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:41:25,935 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:41:25,937 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,937 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:41:25,938 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:41:25,938 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:41:25,938 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:41:25,938 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:41:25,940 - INFO - Matched count query; returning 3 records
+2025-09-06 18:41:25,940 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:46:00,534 - INFO - C:\LLM\LLMV2\SBMS-Y3S1G4\llm\static_remote_LLM\main.py changed, reloading.
+2025-09-06 18:46:23,972 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:46:23,973 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:46:23,973 - INFO - LLM module imported successfully
+2025-09-06 18:46:23,973 - INFO - Processing query: What is the average temperature?
+2025-09-06 18:46:23,973 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:46:24,004 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:46:24,005 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:46:24,007 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:46:24,007 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:46:24,112 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:46:24,113 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:46:24,303 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:46:24,303 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:46:24,303 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:46:24,303 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:46:24,303 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:46:24,304 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:46:24,304 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:46:24,304 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:46:24,304 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:46:24,304 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:24,304 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:46:24,304 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:24,331 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:46:24,332 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:46:24,332 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:46:24,332 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:46:24,332 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:46:24,332 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:24,470 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:24,472 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:24,475 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:24,478 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:24,480 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:24,481 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:24,482 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:24,482 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:24,482 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:24,482 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:24,483 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:24,483 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:24,483 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:24,483 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:24,484 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:24,484 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:24,484 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:24,484 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:24,485 - INFO - Data loaded, rows: 3
+2025-09-06 18:46:24,485 - INFO - Data loaded, rows: 3
+2025-09-06 18:46:24,485 - INFO - Data loaded, rows: 3
+2025-09-06 18:46:24,486 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:24,486 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:24,487 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:24,487 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:24,487 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:24,488 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:24,488 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:24,488 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:24,488 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:24,489 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:46:24,489 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:46:24,489 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:46:24,489 - INFO - Documents created: 0
+2025-09-06 18:46:24,489 - INFO - Documents created: 0
+2025-09-06 18:46:24,489 - INFO - Documents created: 0
+2025-09-06 18:46:24,490 - INFO - Loading existing vector store
+2025-09-06 18:46:24,490 - INFO - Loading existing vector store
+2025-09-06 18:46:24,490 - INFO - Loading existing vector store
+2025-09-06 18:46:25,580 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 18:46:25,580 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 18:46:25,581 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 18:46:25,775 - INFO - No new documents to add to vector store
+2025-09-06 18:46:25,776 - INFO - Vector store initialized
+2025-09-06 18:46:25,789 - INFO - No new documents to add to vector store
+2025-09-06 18:46:25,792 - INFO - Vector store initialized
+2025-09-06 18:46:25,804 - INFO - No new documents to add to vector store
+2025-09-06 18:46:25,811 - INFO - Vector store initialized
+2025-09-06 18:46:26,420 - INFO - QA chain initialized successfully
+2025-09-06 18:46:26,420 - INFO - QA chain initialized
+2025-09-06 18:46:26,421 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:46:26,421 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:26,426 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:26,427 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,427 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,428 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,428 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,429 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,429 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,429 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,430 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,430 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:46:26,430 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:26,434 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:26,436 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,436 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,436 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,437 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,437 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,437 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:46:26,438 - INFO - Matched count query; returning 3 records
+2025-09-06 18:46:26,438 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:46:26,467 - INFO - QA chain initialized successfully
+2025-09-06 18:46:26,467 - INFO - QA chain initialized
+2025-09-06 18:46:26,467 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:46:26,468 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:26,472 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:26,474 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,474 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,475 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,475 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,475 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,476 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,476 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,476 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,477 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:46:26,477 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:26,479 - INFO - QA chain initialized successfully
+2025-09-06 18:46:26,479 - INFO - QA chain initialized
+2025-09-06 18:46:26,480 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:46:26,480 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:26,483 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:26,485 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,485 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,485 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,486 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,486 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,487 - INFO - Processing query: 'what is the average temperature?'
+2025-09-06 18:46:26,489 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:26,492 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,492 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,492 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,493 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,494 - INFO - Matched mixed query
+2025-09-06 18:46:26,494 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,494 - INFO - Used deterministic handler for query: 'What is the average temperature?'
+2025-09-06 18:46:26,495 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,495 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,496 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,496 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:46:26,496 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:46:26,501 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:46:26,503 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,503 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:46:26,504 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:46:26,504 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:46:26,504 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:46:26,504 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:46:26,505 - INFO - Matched count query; returning 3 records
+2025-09-06 18:46:26,505 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:46:26,760 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:46:26,767 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:46:26,767 - INFO - LLM query processed successfully
+2025-09-06 18:46:27,025 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:33,296 - INFO - LLM health check requested
+2025-09-06 18:51:33,296 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:33,297 - INFO - LLM health check requested
+2025-09-06 18:51:33,297 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:33,303 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:33,305 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:33,307 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,309 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,309 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,309 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,310 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:33,310 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:33,310 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:33,311 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:33,311 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:33,311 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:33,312 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:33,312 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:33,312 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:33,313 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:33,313 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:33,313 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:33,313 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:33,314 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:33,314 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:33,314 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:33,321 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:33,324 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:33,326 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,328 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,328 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,328 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:33,328 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:33,329 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:33,329 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:33,329 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:33,330 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:33,330 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:33,330 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:51:33,330 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:51:33,332 - INFO - Matched count query; returning 3 records
+2025-09-06 18:51:33,333 - INFO - Matched count query; returning 3 records
+2025-09-06 18:51:33,333 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:51:33,333 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:51:33,369 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:33,378 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:47,837 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:51:47,837 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:51:47,865 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:51:47,865 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:51:47,865 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:51:47,866 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:51:48,157 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:51:48,157 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:51:48,157 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:51:48,168 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:51:48,168 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:51:48,168 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:48,292 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:48,294 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:48,294 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:48,295 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:48,295 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:48,295 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:48,295 - INFO - Data loaded, rows: 3
+2025-09-06 18:51:48,296 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:48,296 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:48,296 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:48,296 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:48,297 - INFO - Documents created: 0
+2025-09-06 18:51:48,297 - INFO - Loading existing vector store
+2025-09-06 18:51:49,154 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 18:51:49,311 - INFO - No new documents to add to vector store
+2025-09-06 18:51:49,312 - INFO - Vector store initialized
+2025-09-06 18:51:49,554 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 18:51:49,555 - INFO - Query data: {'query': 'What is the average temperature?'}
+2025-09-06 18:51:49,555 - INFO - LLM module imported successfully
+2025-09-06 18:51:49,555 - INFO - Processing query: What is the average temperature?
+2025-09-06 18:51:49,555 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 18:51:49,555 - ERROR - LLM query failed: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-06 18:51:49,556 - ERROR - Internal Server Error: /api/llm/query/
+2025-09-06 18:51:49,824 - INFO - QA chain initialized successfully
+2025-09-06 18:51:49,825 - INFO - QA chain initialized
+2025-09-06 18:51:49,825 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:51:49,825 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:49,830 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:49,831 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:49,832 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:49,832 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:49,832 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:49,832 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:49,833 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:49,833 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:49,833 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:49,833 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:49,833 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:49,837 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:49,839 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:49,839 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:49,840 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:49,840 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:49,840 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:49,840 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:51:49,842 - INFO - Matched count query; returning 3 records
+2025-09-06 18:51:49,842 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:51:50,148 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:51:50,148 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:51:50,148 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:51:50,163 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:51:50,163 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:51:50,163 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:50,172 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:50,173 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:50,174 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:50,174 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:50,174 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:50,175 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:50,175 - INFO - Data loaded, rows: 3
+2025-09-06 18:51:50,175 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:50,175 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:50,176 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:50,176 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:50,176 - INFO - Documents created: 0
+2025-09-06 18:51:50,176 - INFO - Loading existing vector store
+2025-09-06 18:51:50,183 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:50,734 - INFO - No new documents to add to vector store
+2025-09-06 18:51:50,735 - INFO - Vector store initialized
+2025-09-06 18:51:51,244 - INFO - QA chain initialized successfully
+2025-09-06 18:51:51,244 - INFO - QA chain initialized
+2025-09-06 18:51:51,245 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:51:51,245 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:51,249 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:51,250 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:51,250 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:51,251 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:51,251 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:51,251 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:51,251 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:51,252 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:51,252 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:51,252 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:51,252 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:51,256 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:51,257 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:51,258 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:51,258 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:51,258 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:51,258 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:51,258 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:51:51,260 - INFO - Matched count query; returning 3 records
+2025-09-06 18:51:51,260 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:51:51,541 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:55,011 - INFO - LLM health check requested
+2025-09-06 18:51:55,011 - INFO - LLM health check requested
+2025-09-06 18:51:55,011 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:55,012 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:55,017 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:55,020 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:55,021 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,023 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,023 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,023 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,023 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:55,024 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:55,024 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:55,024 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:55,024 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:55,025 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:55,025 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:55,025 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:55,026 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:55,026 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:55,026 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:55,027 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:55,027 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:55,027 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:55,027 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:55,027 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:55,032 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:55,035 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:55,036 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,038 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,038 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,038 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:55,039 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:55,039 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:55,039 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:55,039 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:55,040 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:55,040 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:55,040 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:51:55,040 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:51:55,041 - INFO - Matched count query; returning 3 records
+2025-09-06 18:51:55,042 - INFO - Matched count query; returning 3 records
+2025-09-06 18:51:55,042 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:51:55,042 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:51:55,079 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:55,301 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:56,004 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 18:51:56,005 - INFO - Query data: {'query': 'What is the average temperature?'}
+2025-09-06 18:51:56,005 - INFO - LLM module imported successfully
+2025-09-06 18:51:56,005 - INFO - Processing query: What is the average temperature?
+2025-09-06 18:51:56,005 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:56,010 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:56,012 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:56,013 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:56,013 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:56,014 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:56,014 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:56,014 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:56,015 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:56,015 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:56,015 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:51:56,015 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:51:56,020 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:51:56,022 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:56,023 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:51:56,023 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:51:56,023 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:51:56,024 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:51:56,024 - INFO - Processing query: 'what is the average temperature?'
+2025-09-06 18:51:56,026 - INFO - Matched mixed query
+2025-09-06 18:51:56,026 - INFO - Used deterministic handler for query: 'What is the average temperature?'
+2025-09-06 18:51:56,063 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:51:56,063 - INFO - LLM query processed successfully
+2025-09-06 18:53:43,222 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:53:43,222 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:53:43,250 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:53:43,250 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:53:43,251 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:53:43,251 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:53:43,536 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:53:43,536 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:53:43,536 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:53:43,538 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:53:43,538 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:53:43,538 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:53:43,665 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:53:43,668 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:43,668 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:43,668 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:43,668 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:43,669 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:43,669 - INFO - Data loaded, rows: 3
+2025-09-06 18:53:43,669 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:43,669 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:43,670 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:43,670 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:53:43,670 - INFO - Documents created: 0
+2025-09-06 18:53:43,670 - INFO - Loading existing vector store
+2025-09-06 18:53:44,558 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 18:53:44,713 - INFO - No new documents to add to vector store
+2025-09-06 18:53:44,714 - INFO - Vector store initialized
+2025-09-06 18:53:45,210 - INFO - QA chain initialized successfully
+2025-09-06 18:53:45,211 - INFO - QA chain initialized
+2025-09-06 18:53:45,211 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:53:45,211 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:53:45,215 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:53:45,217 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:45,217 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:45,217 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:45,217 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:45,218 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:45,218 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:45,218 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:45,219 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:45,219 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:53:45,219 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:53:45,222 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:53:45,224 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:45,224 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:45,224 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:45,225 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:45,225 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:45,225 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:53:45,226 - INFO - Matched count query; returning 3 records
+2025-09-06 18:53:45,226 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:53:45,434 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:53:45,535 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:53:45,536 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:53:45,536 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:53:45,546 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:53:45,546 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:53:45,546 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:53:45,555 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:53:45,557 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:45,557 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:45,557 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:45,557 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:45,558 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:45,558 - INFO - Data loaded, rows: 3
+2025-09-06 18:53:45,558 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:45,558 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:45,559 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:45,559 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:53:45,559 - INFO - Documents created: 0
+2025-09-06 18:53:45,559 - INFO - Loading existing vector store
+2025-09-06 18:53:46,101 - INFO - No new documents to add to vector store
+2025-09-06 18:53:46,102 - INFO - Vector store initialized
+2025-09-06 18:53:46,607 - INFO - QA chain initialized successfully
+2025-09-06 18:53:46,607 - INFO - QA chain initialized
+2025-09-06 18:53:46,607 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:53:46,607 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:53:46,612 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:53:46,614 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:46,614 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:46,614 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:46,614 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:46,615 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:46,615 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:46,615 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:46,615 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:46,616 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:53:46,616 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:53:46,620 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:53:46,621 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:46,621 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:53:46,621 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:53:46,622 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:53:46,622 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:53:46,622 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:53:46,623 - INFO - Matched count query; returning 3 records
+2025-09-06 18:53:46,623 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:53:46,940 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:54:09,496 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 18:54:09,496 - INFO - Query data: {'query': 'What is the average temperature?'}
+2025-09-06 18:54:09,496 - INFO - LLM module imported successfully
+2025-09-06 18:54:09,496 - INFO - Processing query: What is the average temperature?
+2025-09-06 18:54:09,497 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:54:09,501 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:54:09,502 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:54:09,502 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:54:09,503 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:54:09,503 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:54:09,503 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:54:09,503 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:54:09,504 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:54:09,504 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:54:09,504 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:54:09,504 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:54:09,508 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:54:09,510 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:54:09,511 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:54:09,511 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:54:09,511 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:54:09,511 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:54:09,512 - INFO - Processing query: 'what is the average temperature?'
+2025-09-06 18:54:09,514 - INFO - Matched mixed query
+2025-09-06 18:54:09,514 - INFO - Used deterministic handler for query: 'What is the average temperature?'
+2025-09-06 18:54:09,558 - ERROR - Error logging prompt to MongoDB: user is not allowed to do action [insert] on [prompt_logs.queries], full error: {'ok': 0, 'errmsg': 'user is not allowed to do action [insert] on [prompt_logs.queries]', 'code': 8000, 'codeName': 'AtlasError'}
+2025-09-06 18:54:09,558 - INFO - LLM query processed successfully
+2025-09-06 18:57:13,317 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:57:13,317 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 18:57:13,346 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:57:13,346 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 18:57:13,346 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:57:13,346 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 18:57:13,632 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:57:13,632 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:57:13,632 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:57:13,634 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:57:13,634 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:57:13,634 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:13,755 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:13,757 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:13,757 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:13,757 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:13,758 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:13,758 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:13,758 - INFO - Data loaded, rows: 3
+2025-09-06 18:57:13,758 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:13,759 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:13,759 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:13,759 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:57:13,759 - INFO - Documents created: 0
+2025-09-06 18:57:13,759 - INFO - Loading existing vector store
+2025-09-06 18:57:14,590 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 18:57:14,745 - INFO - No new documents to add to vector store
+2025-09-06 18:57:14,746 - INFO - Vector store initialized
+2025-09-06 18:57:15,232 - INFO - QA chain initialized successfully
+2025-09-06 18:57:15,232 - INFO - QA chain initialized
+2025-09-06 18:57:15,232 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:57:15,232 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:15,237 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:15,238 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:15,239 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:15,239 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:15,239 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:15,239 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:15,240 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:15,240 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:15,240 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:15,240 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:57:15,240 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:15,244 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:15,246 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:15,246 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:15,246 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:15,246 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:15,247 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:15,247 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:57:15,248 - INFO - Matched count query; returning 3 records
+2025-09-06 18:57:15,248 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:57:15,580 - INFO - Logged prompt to MongoDB with ID: 68bc138b984238ff7c6b5898
+2025-09-06 18:57:15,629 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 18:57:15,629 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 18:57:15,630 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 18:57:15,640 - INFO - Loaded 43 existing document hashes
+2025-09-06 18:57:15,644 - INFO - RoomLogAnalyzer instance created
+2025-09-06 18:57:15,644 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:15,652 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:15,654 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:15,654 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:15,654 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:15,654 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:15,655 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:15,655 - INFO - Data loaded, rows: 3
+2025-09-06 18:57:15,655 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:15,656 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:15,656 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:15,656 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:57:15,656 - INFO - Documents created: 0
+2025-09-06 18:57:15,656 - INFO - Loading existing vector store
+2025-09-06 18:57:16,218 - INFO - No new documents to add to vector store
+2025-09-06 18:57:16,219 - INFO - Vector store initialized
+2025-09-06 18:57:16,707 - INFO - QA chain initialized successfully
+2025-09-06 18:57:16,707 - INFO - QA chain initialized
+2025-09-06 18:57:16,707 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 18:57:16,707 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:16,711 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:16,713 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:16,713 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:16,713 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:16,714 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:16,714 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:16,714 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:16,715 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:16,715 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:16,715 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:57:16,715 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:16,720 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:16,721 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:16,721 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:16,722 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:16,722 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:16,722 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:16,722 - INFO - Processing query: 'how many records are there?'
+2025-09-06 18:57:16,723 - INFO - Matched count query; returning 3 records
+2025-09-06 18:57:16,723 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 18:57:17,034 - INFO - Logged prompt to MongoDB with ID: 68bc138c984238ff7c6b5899
+2025-09-06 18:57:22,341 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 18:57:22,341 - INFO - Query data: {'query': 'What is the average temperature?'}
+2025-09-06 18:57:22,341 - INFO - LLM module imported successfully
+2025-09-06 18:57:22,341 - INFO - Processing query: What is the average temperature?
+2025-09-06 18:57:22,341 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:22,346 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:22,347 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:22,347 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:22,348 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:22,348 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:22,349 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:22,349 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:22,349 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:22,350 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:22,350 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:57:22,350 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:57:22,354 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:57:22,357 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:22,357 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:57:22,357 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:57:22,358 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:57:22,358 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:57:22,358 - INFO - Processing query: 'what is the average temperature?'
+2025-09-06 18:57:22,360 - INFO - Matched mixed query
+2025-09-06 18:57:22,360 - INFO - Used deterministic handler for query: 'What is the average temperature?'
+2025-09-06 18:57:22,408 - INFO - Logged prompt to MongoDB with ID: 68bc1392984238ff7c6b589a
+2025-09-06 18:57:22,409 - INFO - LLM query processed successfully
+2025-09-06 18:58:08,046 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 18:58:08,047 - INFO - Query data: {'query': 'what is the highest temperature'}
+2025-09-06 18:58:08,047 - INFO - LLM module imported successfully
+2025-09-06 18:58:08,047 - INFO - Processing query: what is the highest temperature
+2025-09-06 18:58:08,047 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:58:08,051 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:58:08,054 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:58:08,054 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:58:08,054 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:58:08,055 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:58:08,055 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:58:08,055 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:58:08,056 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:58:08,056 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:58:08,056 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 18:58:08,056 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 18:58:08,062 - INFO - Retrieved 9 sensor records from database
+2025-09-06 18:58:08,064 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:58:08,064 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 18:58:08,065 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 18:58:08,065 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 18:58:08,065 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 18:58:08,066 - INFO - Processing query: 'what is the highest temperature'
+2025-09-06 18:58:08,067 - INFO - Matched mixed query
+2025-09-06 18:58:08,067 - INFO - Used deterministic handler for query: 'what is the highest temperature'
+2025-09-06 18:58:08,115 - INFO - Logged prompt to MongoDB with ID: 68bc13c0984238ff7c6b589b
+2025-09-06 18:58:08,115 - INFO - LLM query processed successfully
+2025-09-06 19:10:54,664 - INFO - C:\LLM\LLMV2\SBMS-Y3S1G4\llm\static_remote_LLM\main.py changed, reloading.
+2025-09-06 19:27:45,600 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 19:27:45,600 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-06 19:27:45,628 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 19:27:45,628 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 19:27:45,629 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 19:27:45,630 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-06 19:27:45,921 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 19:27:45,921 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 19:27:45,921 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 19:27:45,921 - INFO - Loaded 43 existing document hashes
+2025-09-06 19:27:45,922 - INFO - RoomLogAnalyzer instance created
+2025-09-06 19:27:45,922 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:46,057 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:46,059 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:46,059 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:46,060 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:46,060 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:46,060 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:46,061 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:46,061 - INFO - Data loaded, rows: 3
+2025-09-06 19:27:46,061 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:46,061 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:46,062 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:46,062 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 19:27:46,062 - INFO - Documents created: 0
+2025-09-06 19:27:46,062 - INFO - Loading existing vector store
+2025-09-06 19:27:46,944 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 19:27:47,098 - INFO - No new documents to add to vector store
+2025-09-06 19:27:47,099 - INFO - Vector store initialized
+2025-09-06 19:27:47,614 - INFO - QA chain initialized successfully
+2025-09-06 19:27:47,615 - INFO - QA chain initialized
+2025-09-06 19:27:47,615 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 19:27:47,615 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:47,620 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:47,622 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:47,623 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:47,623 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:47,623 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:47,624 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:47,624 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:47,624 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:47,624 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:47,625 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:47,625 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 19:27:47,625 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:47,630 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:47,631 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:47,631 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:47,632 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:47,632 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:47,632 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:47,632 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:47,632 - INFO - Processing query: 'how many records are there?'
+2025-09-06 19:27:47,633 - INFO - Matched count query; returning 3 records
+2025-09-06 19:27:47,633 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 19:27:47,903 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-06 19:27:47,904 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-06 19:27:47,904 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-06 19:27:47,914 - INFO - Logged prompt to MongoDB with ID: 68bc1ab3ba305335460decc5
+2025-09-06 19:27:47,916 - INFO - Loaded 43 existing document hashes
+2025-09-06 19:27:47,920 - INFO - RoomLogAnalyzer instance created
+2025-09-06 19:27:47,920 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:47,929 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:47,931 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:47,931 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:47,931 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:47,932 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:47,932 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:47,932 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:47,932 - INFO - Data loaded, rows: 3
+2025-09-06 19:27:47,933 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:47,933 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:47,933 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:47,933 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 19:27:47,933 - INFO - Documents created: 0
+2025-09-06 19:27:47,934 - INFO - Loading existing vector store
+2025-09-06 19:27:48,498 - INFO - No new documents to add to vector store
+2025-09-06 19:27:48,498 - INFO - Vector store initialized
+2025-09-06 19:27:49,000 - INFO - QA chain initialized successfully
+2025-09-06 19:27:49,000 - INFO - QA chain initialized
+2025-09-06 19:27:49,000 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-06 19:27:49,000 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:49,005 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:49,006 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:49,007 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:49,007 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:49,007 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:49,007 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:49,007 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:49,008 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:49,008 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:49,008 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:49,008 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 19:27:49,008 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:49,013 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:49,014 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:49,014 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:49,015 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:49,015 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:49,015 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:49,016 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:49,016 - INFO - Processing query: 'how many records are there?'
+2025-09-06 19:27:49,017 - INFO - Matched count query; returning 3 records
+2025-09-06 19:27:49,017 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 19:27:49,325 - INFO - Logged prompt to MongoDB with ID: 68bc1ab5ba305335460decc6
+2025-09-06 19:27:56,215 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 19:27:56,215 - INFO - Query data: {'query': 'what is the highest temperature in the room'}
+2025-09-06 19:27:56,215 - INFO - LLM module imported successfully
+2025-09-06 19:27:56,215 - INFO - Processing query: what is the highest temperature in the room
+2025-09-06 19:27:56,216 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:56,220 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:56,222 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:56,223 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:56,223 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:56,223 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:56,224 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:56,224 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:56,224 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:56,225 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:56,225 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:56,225 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 19:27:56,225 - INFO - Attempting to load data from PostgreSQL
+2025-09-06 19:27:56,230 - INFO - Retrieved 9 sensor records from database
+2025-09-06 19:27:56,232 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:56,232 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-06 19:27:56,232 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 19:27:56,233 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 19:27:56,233 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 19:27:56,233 - INFO - Logged 0 records to MongoDB
+2025-09-06 19:27:56,233 - INFO - Processing query: 'what is the highest temperature in the room'
+2025-09-06 19:27:56,236 - INFO - Matched mixed query
+2025-09-06 19:27:56,237 - INFO - Used deterministic handler for query: 'what is the highest temperature in the room'
+2025-09-06 19:27:56,284 - INFO - Logged prompt to MongoDB with ID: 68bc1abcba305335460decc7
+2025-09-06 19:27:56,284 - INFO - LLM query processed successfully
