@@ -31,8 +31,9 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2'
     '127.0.0.1',
     'localhost',
     '10.0.2.2',
-    '10.147.134.29',  # Add your computer's IP address
-    '0.0.0.0',       # Allow all IPs (for development only)
+    '192.168.1.38',  # Add your computer's IP address
+    '0.0.0.0',  
+    '192.168.1.1'     # Allow all IPs (for development only)
 ]
 
 

@@ -1,0 +1,154 @@
+2025-09-06 13:27:22,347 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 13:27:22,348 - INFO - Database adapter initialized successfully
+2025-09-06 13:27:22,348 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:27:22,518 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:27:22,519 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:27:22,520 - INFO - Created 3 new documents, skipped 0 duplicates
+2025-09-06 13:27:22,520 - INFO - Creating new vector store
+2025-09-06 13:27:23,628 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 13:27:23,903 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-06 13:27:24,605 - INFO - QA chain initialized successfully
+2025-09-06 13:27:24,606 - INFO - Analyzer initialized successfully
+2025-09-06 13:27:24,606 - INFO - LLM module imported successfully
+2025-09-06 13:27:24,606 - INFO - Processing query: what is the lowest temperature and highest energy
+2025-09-06 13:27:24,606 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:27:24,612 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:27:24,613 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:27:24,613 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:27:24,614 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:27:24,614 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:27:24,614 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:27:24,614 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:27:24,619 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:27:24,620 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:27:24,620 - INFO - Processing query: 'what is the lowest temperature and highest energy'
+2025-09-06 13:27:24,624 - INFO - Matched mixed query
+2025-09-06 13:27:24,624 - INFO - Used deterministic handler for query: 'what is the lowest temperature and highest energy'
+2025-09-06 13:27:24,624 - INFO - LLM query processed successfully
+2025-09-06 13:27:27,463 - INFO - Latest sensor data requested
+2025-09-06 13:27:27,514 - INFO - Returning 1 sensor readings
+2025-09-06 13:27:37,391 - INFO - Latest sensor data requested
+2025-09-06 13:27:37,530 - INFO - Returning 1 sensor readings
+2025-09-06 13:27:47,404 - INFO - Latest sensor data requested
+2025-09-06 13:27:47,450 - INFO - Returning 1 sensor readings
+2025-09-06 13:27:57,413 - INFO - Latest sensor data requested
+2025-09-06 13:27:57,445 - INFO - Returning 1 sensor readings
+2025-09-06 13:28:07,844 - INFO - Latest sensor data requested
+2025-09-06 13:28:07,892 - INFO - Returning 1 sensor readings
+2025-09-06 13:28:17,845 - INFO - Latest sensor data requested
+2025-09-06 13:28:17,878 - INFO - Returning 1 sensor readings
+2025-09-06 13:28:27,858 - INFO - Latest sensor data requested
+2025-09-06 13:28:27,890 - INFO - Returning 1 sensor readings
+2025-09-06 13:28:37,859 - INFO - Latest sensor data requested
+2025-09-06 13:28:37,905 - INFO - Returning 1 sensor readings
+2025-09-06 13:28:47,969 - INFO - Latest sensor data requested
+2025-09-06 13:28:48,003 - INFO - Returning 1 sensor readings
+2025-09-06 13:28:57,884 - INFO - Latest sensor data requested
+2025-09-06 13:28:57,917 - INFO - Returning 1 sensor readings
+2025-09-06 13:29:07,898 - INFO - Latest sensor data requested
+2025-09-06 13:29:07,946 - INFO - Returning 1 sensor readings
+2025-09-06 13:29:08,625 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 13:29:08,626 - INFO - Query data: {'query': 'what is the highest temperature'}
+2025-09-06 13:29:08,626 - INFO - LLM module imported successfully
+2025-09-06 13:29:08,626 - INFO - Processing query: what is the highest temperature
+2025-09-06 13:29:08,626 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:29:08,634 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:29:08,635 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:29:08,636 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:29:08,636 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:29:08,636 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:29:08,636 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:29:08,637 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:29:08,642 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:29:08,643 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:29:08,643 - INFO - Processing query: 'what is the highest temperature'
+2025-09-06 13:29:08,645 - INFO - Matched mixed query
+2025-09-06 13:29:08,645 - INFO - Used deterministic handler for query: 'what is the highest temperature'
+2025-09-06 13:29:08,645 - INFO - LLM query processed successfully
+2025-09-06 13:29:18,033 - INFO - Latest sensor data requested
+2025-09-06 13:29:18,084 - INFO - Returning 1 sensor readings
+2025-09-06 13:29:27,918 - INFO - Latest sensor data requested
+2025-09-06 13:29:27,950 - INFO - Returning 1 sensor readings
+2025-09-06 13:29:37,538 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 13:29:37,539 - INFO - Query data: {'query': 'what is the highest humidity'}
+2025-09-06 13:29:37,539 - INFO - LLM module imported successfully
+2025-09-06 13:29:37,539 - INFO - Processing query: what is the highest humidity
+2025-09-06 13:29:37,539 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:29:37,545 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:29:37,546 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:29:37,546 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:29:37,547 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:29:37,547 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:29:37,547 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:29:37,547 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:29:37,551 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:29:37,552 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:29:37,552 - INFO - Processing query: 'what is the highest humidity'
+2025-09-06 13:29:37,554 - INFO - Matched mixed query
+2025-09-06 13:29:37,554 - INFO - Used deterministic handler for query: 'what is the highest humidity'
+2025-09-06 13:29:37,554 - INFO - LLM query processed successfully
+2025-09-06 13:29:37,927 - INFO - Latest sensor data requested
+2025-09-06 13:29:37,974 - INFO - Returning 1 sensor readings
+2025-09-06 13:29:47,936 - INFO - Latest sensor data requested
+2025-09-06 13:29:47,968 - INFO - Returning 1 sensor readings
+2025-09-06 13:29:57,942 - INFO - Latest sensor data requested
+2025-09-06 13:29:57,989 - INFO - Returning 1 sensor readings
+2025-09-06 13:30:07,959 - INFO - Latest sensor data requested
+2025-09-06 13:30:08,009 - INFO - Returning 1 sensor readings
+2025-09-06 13:30:17,954 - INFO - Latest sensor data requested
+2025-09-06 13:30:17,988 - INFO - Returning 1 sensor readings
+2025-09-06 13:30:27,661 - INFO - LLM query received: POST /api/llm/query/
+2025-09-06 13:30:27,662 - INFO - Query data: {'query': 'what is the highest humidity'}
+2025-09-06 13:30:27,662 - INFO - LLM module imported successfully
+2025-09-06 13:30:27,662 - INFO - Processing query: what is the highest humidity
+2025-09-06 13:30:27,662 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:30:27,666 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:30:27,667 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:30:27,668 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:30:27,668 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:30:27,668 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:30:27,668 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:30:27,669 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:30:27,672 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:30:27,673 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:30:27,673 - INFO - Processing query: 'what is the highest humidity'
+2025-09-06 13:30:27,674 - INFO - Matched mixed query
+2025-09-06 13:30:27,674 - INFO - Used deterministic handler for query: 'what is the highest humidity'
+2025-09-06 13:30:27,675 - INFO - LLM query processed successfully
+2025-09-06 13:30:27,954 - INFO - Latest sensor data requested
+2025-09-06 13:30:28,002 - INFO - Returning 1 sensor readings
+2025-09-06 13:30:37,958 - INFO - Latest sensor data requested
+2025-09-06 13:30:37,992 - INFO - Returning 1 sensor readings
+2025-09-06 13:30:47,970 - INFO - Latest sensor data requested
+2025-09-06 13:30:48,005 - INFO - Returning 1 sensor readings
+2025-09-06 13:31:41,430 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 13:31:41,431 - INFO - Database adapter initialized successfully
+2025-09-06 13:31:41,440 - INFO - Loaded 3 existing document hashes
+2025-09-06 13:31:41,440 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:31:41,608 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:31:41,609 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:31:41,609 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:31:41,610 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:31:41,610 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:31:41,610 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:31:41,610 - INFO - Loading existing vector store
+2025-09-06 13:31:42,540 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 13:31:42,704 - INFO - No new documents to add to vector store
+2025-09-06 13:31:43,237 - INFO - QA chain initialized successfully
+2025-09-06 13:31:43,237 - INFO - Analyzer initialized successfully
+2025-09-06 13:31:43,237 - INFO - LLM module imported successfully
+2025-09-06 13:31:43,237 - INFO - Processing query: what is the highest humidity
+2025-09-06 13:31:43,238 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:31:43,242 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:31:43,243 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:31:43,243 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:31:43,244 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:31:43,244 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:31:43,244 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:31:43,244 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:31:43,249 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:31:43,249 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:31:43,250 - INFO - Processing query: 'what is the highest humidity'
+2025-09-06 13:31:43,252 - INFO - Matched mixed query
+2025-09-06 13:31:43,253 - INFO - Used deterministic handler for query: 'what is the highest humidity'
+2025-09-06 13:31:43,253 - INFO - LLM query processed successfully

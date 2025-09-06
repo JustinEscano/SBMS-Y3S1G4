@@ -4673,3 +4673,59 @@
 2025-08-28 19:27:49,767 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
 2025-08-28 19:27:59,637 - INFO - Query: 'can you give me all the readings of room_logs?' - Response generated using LLM
 2025-08-28 19:27:59,637 - INFO - Response: {'answer': 'Based on the provided data, I can extract the following readings:\n\n* Energy consumption:\n\t+ 2025-03-07 18:00:00: 0.12 kWh\n\t+ 2025-03-03 18:00:00: 0.1 kWh\n\t+ 2025-03-03 00:00:00: 0.05 kWh\n\t+ 2025-03-09 18:00:00: 0.05 kWh\n* Lighting power:\n\t+ 2025-03-07 18:00:00: 30W\n\t+ 2025-03-03 18:00:00: 20W\n\t+ 2025-03-03 00:00:00: 10W\n\t+ 2025-03-09 18:00:00: 10W\n* HVAC power:\n\t+ 2025-03-07 18:00:00: 30W\n\t+ 2025-03-03 18:00:00: 25W\n\t+ 2025-03-03 00:00:00: 15W\n\t+ 2025-03-09 18:00:00: 15W\n* Standby power:\n\t+ 2025-03-07 18:00:00: 30W\n\t+ 2025-03-03 18:00:00: 30W\n\t+ 2025-03-03 00:00:00: 25W\n\t+ 2025-03-09 18:00:00: 25W\n* Temperature:\n\t+ 2025-03-07 18:00:00: 25.0°C\n\t+ 2025-03-03 18:00:00: 24.5°C\n\t+ 2025-03-03 00:00:00: 25.0°C\n\t+ 2025-03-09 18:00:00: 25.8°C\n* Humidity:\n\t+ 2025-03-07 18:00:00: 68%\n\t+ 2025-03-03 18:00:00: 65%\n\t+ 2025-03-03 00:00:00: 70%\n\t+ 2025-03-09 18:00:00: 71%\n\nNote that I did not find information on the "room_logs" in the provided data.', 'sources': [{'content': 'At 2025-03-07 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.12 kWh. Lighting power: 30W, HVAC power: 30W, Standby power: 30W, Total power: 90W. Lights usage: 11.0 hours, AC usage: 7.0 hours, Projector usage: 2.0 hours, Computers usage: 11.0 hours. Temperature: 25.0°C, Humidity: 68%.', 'metadata': {'doc_hash': '939671a700c5eb6a275aa52e7b9352ee', 'timestamp': '2025-03-07 18:00:00', 'occupancy_count': 0, 'humidity': 68.0, 'temperature': 25.0, 'power_total': 90.0, 'energy_kwh': 0.12}}, {'content': 'At 2025-03-03 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.1 kWh. Lighting power: 20W, HVAC power: 25W, Standby power: 30W, Total power: 75W. Lights usage: 10.0 hours, AC usage: 9.0 hours, Projector usage: 2.5 hours, Computers usage: 10.0 hours. Temperature: 24.5°C, Humidity: 65%.', 'metadata': {'timestamp': '2025-03-03 18:00:00', 'power_total': 75.0, 'energy_kwh': 0.1, 'humidity': 65.0, 'doc_hash': '3211f4cbe2064c4457bc52df4a1eea4a', 'occupancy_count': 0, 'temperature': 24.5}}, {'content': 'At 2025-03-03 00:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 0.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 0.0 hours. Temperature: 25.0°C, Humidity: 70%.', 'metadata': {'doc_hash': '843a02888293d76cc41f8689e977c75a', 'occupancy_count': 0, 'timestamp': '2025-03-03 00:00:00', 'power_total': 50.0, 'humidity': 70.0, 'temperature': 25.0, 'energy_kwh': 0.05}}, {'content': 'At 2025-03-09 18:00:00, the room was unoccupied with 0 people. Energy consumption: 0.05 kWh. Lighting power: 10W, HVAC power: 15W, Standby power: 25W, Total power: 50W. Lights usage: 10.0 hours, AC usage: 0.0 hours, Projector usage: 0.0 hours, Computers usage: 10.0 hours. Temperature: 25.8°C, Humidity: 71%.', 'metadata': {'humidity': 71.0, 'timestamp': '2025-03-09 18:00:00', 'power_total': 50.0, 'occupancy_count': 0, 'energy_kwh': 0.05, 'temperature': 25.8, 'doc_hash': '7a0b3714ec5873b017b8962af13965e2'}}]}
+2025-09-06 13:26:03,244 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 13:26:03,244 - INFO - Database adapter initialized successfully
+2025-09-06 13:26:03,245 - INFO - Loaded 40 existing document hashes
+2025-09-06 13:26:03,245 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:26:03,637 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:26:03,640 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:26:03,641 - INFO - Created 3 new documents, skipped 0 duplicates
+2025-09-06 13:26:03,642 - INFO - Loading existing vector store
+2025-09-06 13:26:04,895 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-06 13:26:05,296 - INFO - Adding 3 new documents to existing vector store
+2025-09-06 13:26:18,425 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-06 13:26:19,006 - INFO - QA chain initialized successfully
+2025-09-06 13:26:19,007 - INFO - Analyzer initialized successfully
+2025-09-06 13:26:19,035 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 13:26:19,044 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:26:19,083 - INFO - Database connection closed
+2025-09-06 13:26:19,131 - INFO - Successfully connected to PostgreSQL database
+2025-09-06 13:26:19,131 - INFO - Database adapter initialized successfully
+2025-09-06 13:26:19,142 - INFO - Loaded 43 existing document hashes
+2025-09-06 13:26:19,146 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:26:19,154 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:26:19,155 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:26:19,155 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:26:19,156 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:26:19,156 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:26:19,156 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:26:19,156 - INFO - Loading existing vector store
+2025-09-06 13:26:19,700 - INFO - No new documents to add to vector store
+2025-09-06 13:26:20,225 - INFO - QA chain initialized successfully
+2025-09-06 13:26:20,225 - INFO - Analyzer initialized successfully
+2025-09-06 13:26:20,225 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:26:20,230 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:26:20,231 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:26:20,231 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:26:20,232 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:26:20,232 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:26:20,232 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:26:20,232 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:26:20,236 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:26:20,237 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:26:20,237 - INFO - Processing query: 'how many records are there?'
+2025-09-06 13:26:20,240 - INFO - Matched count query; returning 3 records
+2025-09-06 13:26:20,240 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-06 13:26:20,240 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:26:20,244 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:26:20,245 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:26:20,245 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-06 13:26:20,246 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-06 13:26:20,246 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-06 13:26:20,246 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-06 13:26:20,246 - INFO - Loading data from PostgreSQL database
+2025-09-06 13:26:20,250 - INFO - Retrieved 9 sensor records from database
+2025-09-06 13:26:20,251 - INFO - Loaded 3 unique occupied room records from database
+2025-09-06 13:26:20,251 - INFO - Processing query: 'what is the average temperature?'
+2025-09-06 13:26:20,254 - INFO - Matched mixed query
+2025-09-06 13:26:20,255 - INFO - Used deterministic handler for query: 'What is the average temperature?'
