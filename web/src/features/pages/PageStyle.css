@@ -92,7 +92,8 @@ html, body {
 
 .stat-info p.stat-label {
   font-size: 0.9rem;
-  color: var(--white);
+  font-weight: bold;
+  color: var(--black);
 }
 
 .table-controls {

@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./TopBar.css";
+import { useNavigate } from "react-router-dom";
+import ModalLogout from "./ModalLogout";
 
 type TopBarProps = {
   collapsed: boolean;
@@ -14,9 +16,11 @@ const TopBar: React.FC<TopBarProps> = ({
   darkMode,
   setDarkMode,
   handleLogout,
-  user = { initial: "G", name: "Geremald De Guzman", id: "97129", roleLabel: "Admin" },
+  user = { initial: "G", name: "Gemerald De Guzman", id: "97129", roleLabel: "Admin" },
 }) => {
+  const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +40,13 @@ const TopBar: React.FC<TopBarProps> = ({
     };
   }, []);
 
+  const handleConfirmLogout = () => {
+    setLogoutModalOpen(false);
+    handleLogout();
+  };
+
   return (
+    <>
     <header className={`topbar ${collapsed ? "collapsed" : ""}`}>
       <div className="topbar-left">
         <h1 className="topbar-title">Admin Panel</h1>
@@ -57,13 +67,13 @@ const TopBar: React.FC<TopBarProps> = ({
               <div className="dropdown-header">
                 <div className="avatar-large">{user.initial}</div>
                 <div>
-                  <h4>{user.name}</h4>
-                  <small>ID: {user.id}</small>
+                  <h3>{user.name}</h3>
+                  <small>Role: {user.roleLabel} | ID: {user.id}</small>
                 </div>
               </div>
 
               <div className="dropdown-links">
-                <button onClick={() => alert("Go to profile")}>My Profile</button>
+                <button onClick={() => navigate("/profile")}>My Profile</button>
                 <button onClick={() => alert("Go to settings")}>Settings</button>
                 <label className="switch">
                   <input
@@ -79,8 +89,7 @@ const TopBar: React.FC<TopBarProps> = ({
               </div>
 
               <div className="dropdown-footer">
-                <a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>
-                <button className="logout-btn" onClick={handleLogout}>
+                <button className="logout-btn" onClick={() => setLogoutModalOpen(true)}>
                   Logout
                 </button>
               </div>
@@ -89,6 +98,13 @@ const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
     </header>
+
+      <ModalLogout
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirmLogout={handleConfirmLogout}
+      />
+    </>
   );
 };
 

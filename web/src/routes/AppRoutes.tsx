@@ -3,6 +3,7 @@ import LoginScreen from "../features/pages/LoginScreen";
 import DashboardScreen from "../features/pages/DashboardScreen";
 import RegSignUpForm from "../features/pages/SignUpForm";
 import { useAuth } from "../features/context/authContext";
+import { useNavigate } from "react-router-dom";
 import type { JSX } from "react";
 import GenericEquipmentPage from "../features/pages/EquipmentPage";
 import UsagePage from "../features/pages/UsagePage";
@@ -11,7 +12,7 @@ import NotificationPage from "../features/pages/NotificationPage";
 import LLMChatPage from "../features/pages/LLMChatPage";
 import AboutPage from "../features/pages/AboutPage";
 import { PAGE_TYPES } from "../features/constants/constant";
-
+import ProfilePage from "../features/pages/ProfilePage";
 
 // ✅ Reusable wrapper for route protection
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -21,6 +22,14 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  function handleLogout(): void {
+    logout();
+    navigate("/login");
+  }
 
   return (
     <Routes>
@@ -67,6 +76,7 @@ const AppRoutes = () => {
       <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
       <Route path="/llm" element={<ProtectedRoute><LLMChatPage /></ProtectedRoute>} />
       <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage handleLogout={handleLogout} /></ProtectedRoute>} />
     </Routes>
   );
 };

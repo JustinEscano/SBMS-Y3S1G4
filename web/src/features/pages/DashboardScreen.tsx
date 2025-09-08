@@ -105,6 +105,15 @@ const DashboardScreen: React.FC = () => {
               <p className="stat-label">Labs</p>
             </div>
           </div>
+          <div className="stat-box">
+            <div className="stat-icon">🚪</div>
+            <div className="stat-info">
+              <p className="stat-number">
+                {rooms.filter((r) => r.type === "Others").length}
+              </p>
+              <p className="stat-label">Other Rooms</p>
+            </div>
+          </div>
         </div>
 
         {/* Table Controls */}
