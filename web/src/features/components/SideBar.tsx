@@ -1,15 +1,17 @@
-import React, { type JSX } from "react";
+import React, { useState, type JSX } from "react";
 import "./SideBar.css";
 import { Home, Bell, BarChart2, LogOut, ChevronLeft, ChevronRight, Info, Bot } from "lucide-react";
 import OrbitLogo from "../../assets/ORBIT.png";
 import CompanyNameLogo from "../../assets/Logo-Name.png";
 import { useNavigate, useLocation } from "react-router-dom";
+import ModalLogout from "./ModalLogout";
 
 interface SideBarProps {
   collapsed: boolean;
   onToggle: () => void;
   selectedSection: { parent: string; child?: string }; // <-- add this
   onSelectSection: (section: { parent: string; child?: string }) => void; // <-- add this
+  handleLogout: () => void;
 }
 
 
@@ -38,9 +40,11 @@ const sections: Section[] = [
   { id: "About", label: "About Us", icon: <Info size={18} /> },
 ];
 
-const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle }) => {
+const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle, handleLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  
 
   // Helper: determine active parent/subitem from path
   const getActiveSection = () => {
@@ -58,7 +62,13 @@ const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle }) => {
 
   const active = getActiveSection();
 
+  const handleConfirmLogout = () => {
+    setLogoutModalOpen(false);
+    handleLogout();
+  };
+
   return (
+    <>
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       <div className="sidebar-top">
         <div className="logo-container">
@@ -124,11 +134,18 @@ const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle }) => {
       </ul>
 
       {/* Logout */}
-      <div className="sidebar-logout" onClick={() => navigate("/logout")}>
+      <div className="sidebar-logout" onClick={() => setLogoutModalOpen(true)}>
         <LogOut size={18} />
         {!collapsed && <span>Logout</span>}
       </div>
     </aside>
+
+    <ModalLogout
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirmLogout={handleConfirmLogout}
+      />
+      </>
   );
 };
 

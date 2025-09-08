@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SideBar from "../components/SideBar";
-import TopBar from "../components/topBar";
+import TopBar from "../components/TopBar";
 import { useAuth } from "../context/authContext";
 import "./PageStyle.css";
 
@@ -37,6 +37,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ initialSection, children }) => 
         onToggle={() => setCollapsed(!collapsed)}
         selectedSection={selectedSection}
         onSelectSection={setSelectedSection}
+        handleLogout={handleLogout}
       />
 
       <TopBar
@@ -44,7 +45,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ initialSection, children }) => 
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         handleLogout={handleLogout}
-        user={{ initial: "G", name: "Geremald De Guzman", id: "97129", roleLabel: "Admin" }}
+        user={{ initial: "G", name: "Gemerald De Guzman", id: "97129", roleLabel: "Admin" }}
       />
 
       <div className={`dashboard-content ${collapsed ? "expanded" : ""}`}>
