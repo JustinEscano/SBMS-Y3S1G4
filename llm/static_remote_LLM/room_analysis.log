@@ -4729,3 +4729,540 @@
 2025-09-06 13:26:20,251 - INFO - Processing query: 'what is the average temperature?'
 2025-09-06 13:26:20,254 - INFO - Matched mixed query
 2025-09-06 13:26:20,255 - INFO - Used deterministic handler for query: 'What is the average temperature?'
+2025-09-10 03:24:22,827 - INFO - ==================================================
+2025-09-10 03:24:22,827 - INFO - LLM SYSTEM HEALTH CHECK
+2025-09-10 03:24:22,827 - INFO - ==================================================
+2025-09-10 03:24:22,827 - INFO - Timestamp: 2025-09-10 03:24:22.827571
+2025-09-10 03:24:22,827 - INFO - 
+2025-09-10 03:24:22,827 - INFO - Running PostgreSQL Connection...
+2025-09-10 03:24:22,827 - INFO - Testing PostgreSQL connection...
+2025-09-10 03:24:30,076 - ERROR - Error connecting to database: could not translate host name "db" to address: Name or service not known
+
+2025-09-10 03:24:30,092 - INFO - 
+2025-09-10 03:24:30,092 - INFO - Running MongoDB Connection...
+2025-09-10 03:24:30,093 - INFO - Testing MongoDB Atlas connection...
+2025-09-10 03:24:35,352 - INFO - 
+2025-09-10 03:24:35,352 - INFO - Running LLM Initialization...
+2025-09-10 03:24:35,352 - INFO - Testing LLM system initialization...
+2025-09-10 03:24:38,037 - ERROR - Error connecting to database: could not translate host name "db" to address: Name or service not known
+
+2025-09-10 03:24:38,037 - ERROR - Failed to initialize PostgreSQL adapter: could not translate host name "db" to address: Name or service not known
+
+2025-09-10 03:24:38,041 - INFO - 
+2025-09-10 03:24:38,041 - INFO - Running Simple Query...
+2025-09-10 03:24:38,041 - INFO - Testing simple query...
+2025-09-10 03:24:38,041 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-10 03:24:40,733 - ERROR - Error connecting to database: could not translate host name "db" to address: Name or service not known
+
+2025-09-10 03:24:40,733 - ERROR - Failed to initialize PostgreSQL adapter: could not translate host name "db" to address: Name or service not known
+
+2025-09-10 03:24:40,733 - ERROR - Error initializing analyzer: PostgreSQL database connection required but failed: could not translate host name "db" to address: Name or service not known
+
+2025-09-10 03:24:40,735 - INFO - 
+2025-09-10 03:24:40,735 - INFO - ==================================================
+2025-09-10 03:24:40,735 - INFO - HEALTH CHECK SUMMARY
+2025-09-10 03:24:40,735 - INFO - ==================================================
+2025-09-10 03:24:40,739 - INFO - 
+2025-09-10 03:25:25,343 - INFO - Database-Only Mode Test
+2025-09-10 03:25:25,343 - INFO - ==================================================
+2025-09-10 03:25:25,344 - INFO - Timestamp: 2025-09-10 03:25:25.344075
+2025-09-10 03:25:25,344 - INFO - 
+2025-09-10 03:25:25,344 - INFO - Testing Database-Only Mode
+2025-09-10 03:25:25,344 - INFO - ========================================
+2025-09-10 03:25:25,373 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 03:25:25,373 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-10 03:25:25,377 - ERROR - Failed to initialize MongoDB Atlas: database names cannot contain the character ' '
+2025-09-10 03:25:25,377 - WARNING - Continuing without MongoDB logging functionality
+2025-09-10 03:25:25,384 - INFO - Loading data from PostgreSQL
+2025-09-10 03:25:25,714 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:25:25,719 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:25:25,719 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:25:25,723 - INFO - Created 3 new documents, skipped 0 duplicates
+2025-09-10 03:25:25,725 - INFO - Creating new vector store
+2025-09-10 03:25:26,647 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-10 03:25:28,001 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:25:28,643 - INFO - QA chain initialized successfully
+2025-09-10 03:25:28,645 - INFO - Loading data from PostgreSQL
+2025-09-10 03:25:28,650 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:25:28,652 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:25:28,653 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:25:28,653 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:25:28,653 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:25:28,653 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:25:28,654 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:25:28,654 - INFO - Loading data from PostgreSQL
+2025-09-10 03:25:28,658 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:25:28,660 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:25:28,661 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:25:28,661 - INFO - Processing query: 'how many records are there?'
+2025-09-10 03:25:28,664 - INFO - Matched count query; returning 3 records
+2025-09-10 03:25:28,664 - INFO - Used deterministic handler for query: 'How many records are there?'
+2025-09-10 03:25:28,664 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:25:28,671 - INFO - 
+2025-09-10 03:25:28,671 - INFO - ==================================================
+2025-09-10 03:25:28,671 - INFO - TEST SUMMARY
+2025-09-10 03:25:28,671 - INFO - ==================================================
+2025-09-10 03:25:28,673 - INFO - The system correctly:
+2025-09-10 03:25:28,674 - INFO - - Requires database connection
+2025-09-10 03:25:28,674 - INFO - - Fails gracefully when database is unavailable
+2025-09-10 03:25:28,674 - INFO - - Does not attempt JSON fallback
+2025-09-10 03:25:28,674 - INFO - - Provides clear error messages
+2025-09-10 03:51:39,260 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-10 03:51:39,261 - INFO - Using prompt type: base_enhancement
+2025-09-10 03:51:39,261 - INFO - Using document template: standard
+2025-09-10 03:51:39,290 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 03:51:39,290 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-10 03:51:39,293 - ERROR - Failed to initialize MongoDB Atlas: database names cannot contain the character ' '
+2025-09-10 03:51:39,294 - WARNING - Continuing without MongoDB logging functionality
+2025-09-10 03:51:39,306 - INFO - Loaded 3 existing document hashes
+2025-09-10 03:51:39,307 - INFO - Room-specific handlers initialized successfully
+2025-09-10 03:51:39,307 - INFO - RoomLogAnalyzer instance created
+2025-09-10 03:51:39,307 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:39,458 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:39,460 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:39,460 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:39,460 - INFO - Data loaded, rows: 3
+2025-09-10 03:51:39,461 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:51:39,461 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:51:39,461 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:51:39,461 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:51:39,461 - INFO - Documents created: 0
+2025-09-10 03:51:39,462 - INFO - Loading existing vector store
+2025-09-10 03:51:40,384 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-10 03:51:40,550 - INFO - No new documents to add to vector store
+2025-09-10 03:51:40,551 - INFO - Vector store initialized
+2025-09-10 03:51:41,072 - INFO - QA chain initialized successfully
+2025-09-10 03:51:41,072 - INFO - QA chain initialized
+2025-09-10 03:51:41,073 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-10 03:51:41,073 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:41,078 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:41,079 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:41,079 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:41,080 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:51:41,080 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:51:41,080 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:51:41,081 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:51:41,081 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:41,085 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:41,087 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:41,087 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:41,087 - INFO - Processing query: 'what rooms are available?'
+2025-09-10 03:51:41,091 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:41,094 - INFO - Found 0 records for room 'What'
+2025-09-10 03:51:41,121 - WARNING - Room-specific handler error: No data found for 'What'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:51:41,122 - WARNING - No deterministic match for query: 'what rooms are available?'; falling back to LLM
+2025-09-10 03:51:42,011 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:51:53,507 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:51:57,214 - INFO - Query: 'What rooms are available?' - Response generated using LLM
+2025-09-10 03:51:57,214 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:51:57,220 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,220 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:51:57,221 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:57,225 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,227 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,227 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,231 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:57,236 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,237 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,237 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,238 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:51:57,238 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:51:57,238 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:51:57,239 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:51:57,239 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:57,244 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,246 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,246 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,246 - INFO - Processing query: 'what are the predictions for room 1?'
+2025-09-10 03:51:57,251 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,251 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:51:57,252 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:51:57,260 - INFO - Used deterministic handler for query: 'What are the predictions for Room 1?'
+2025-09-10 03:51:57,260 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:51:57,261 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:57,265 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,267 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,267 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,268 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:51:57,268 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:51:57,268 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:51:57,268 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:51:57,268 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:57,273 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,275 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,275 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,276 - INFO - Processing query: 'room a current status'
+2025-09-10 03:51:57,280 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,281 - INFO - Found 0 records for room 'A'
+2025-09-10 03:51:57,282 - WARNING - Room-specific handler error: No data found for 'A'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:51:57,285 - INFO - Used deterministic handler for query: 'Room A current status'
+2025-09-10 03:51:57,286 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:51:57,286 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:57,291 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,293 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,293 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,293 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:51:57,293 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:51:57,294 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:51:57,294 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:51:57,294 - INFO - Loading data from PostgreSQL
+2025-09-10 03:51:57,299 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,300 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,301 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:51:57,301 - INFO - Processing query: 'energy consumption in room 2'
+2025-09-10 03:51:57,305 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:51:57,306 - INFO - Found 0 records for room 'Room 2'
+2025-09-10 03:51:57,307 - WARNING - Room-specific handler error: No data found for 'Room 2'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:51:57,307 - WARNING - No deterministic match for query: 'energy consumption in room 2'; falling back to LLM
+2025-09-10 03:51:58,352 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:52:09,813 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:52:17,031 - INFO - Query: 'Energy consumption in Room 2' - Response generated using LLM
+2025-09-10 03:52:17,032 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:52:17,032 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:17,037 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,039 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,039 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,040 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:52:17,040 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:52:17,040 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:52:17,040 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:52:17,040 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:17,046 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,048 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,048 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,049 - INFO - Processing query: 'maintenance needed for room 1'
+2025-09-10 03:52:17,055 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,057 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:52:17,057 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:52:17,060 - INFO - Used deterministic handler for query: 'Maintenance needed for Room 1'
+2025-09-10 03:52:17,060 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:52:17,061 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:17,067 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,069 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,069 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,070 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:52:17,070 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:52:17,070 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:52:17,070 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:52:17,071 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:17,076 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,079 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,080 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,080 - INFO - Processing query: 'predict equipment failures in room 1'
+2025-09-10 03:52:17,087 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,088 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:52:17,088 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:52:17,092 - INFO - Used deterministic handler for query: 'Predict equipment failures in Room 1'
+2025-09-10 03:52:17,092 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:52:17,093 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:17,098 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,101 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,101 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,101 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:52:17,102 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:52:17,102 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:52:17,102 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:52:17,102 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:17,108 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,110 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,110 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:17,110 - INFO - Processing query: 'anomalies detected in room 1'
+2025-09-10 03:52:17,117 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:17,118 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:52:17,118 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:52:17,119 - WARNING - No deterministic match for query: 'anomalies detected in room 1'; falling back to LLM
+2025-09-10 03:52:17,966 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:52:29,453 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:52:32,840 - INFO - Query: 'Anomalies detected in Room 1' - Response generated using LLM
+2025-09-10 03:52:32,841 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:52:32,841 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:32,845 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:32,847 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:32,847 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:32,847 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:52:32,848 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:52:32,848 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:52:32,848 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:52:32,848 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:32,853 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:32,855 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:32,855 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:32,855 - INFO - Processing query: 'energy optimization for room 1'
+2025-09-10 03:52:32,859 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:32,860 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:52:32,861 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:52:32,861 - WARNING - No deterministic match for query: 'energy optimization for room 1'; falling back to LLM
+2025-09-10 03:52:39,253 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:52:50,606 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:52:57,947 - INFO - Query: 'Energy optimization for Room 1' - Response generated using LLM
+2025-09-10 03:52:57,947 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:52:57,947 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:57,953 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:57,954 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:57,955 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:57,955 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:52:57,955 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:52:57,955 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:52:57,956 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:52:57,956 - INFO - Loading data from PostgreSQL
+2025-09-10 03:52:57,961 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:57,962 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:57,962 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:52:57,963 - INFO - Processing query: 'room 1 utilization patterns'
+2025-09-10 03:52:57,967 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:52:57,968 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:52:57,969 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:52:57,969 - WARNING - No deterministic match for query: 'room 1 utilization patterns'; falling back to LLM
+2025-09-10 03:52:58,978 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:53:10,361 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:53:19,042 - INFO - Query: 'Room 1 utilization patterns' - Response generated using LLM
+2025-09-10 03:53:19,042 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:53:19,043 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:19,047 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:19,049 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,049 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,049 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:53:19,049 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:53:19,050 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:53:19,050 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:53:19,050 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:19,059 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:19,061 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,061 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,061 - INFO - Processing query: 'room one predictions'
+2025-09-10 03:53:19,065 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:19,066 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:53:19,067 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:53:19,069 - INFO - Used deterministic handler for query: 'Room One predictions'
+2025-09-10 03:53:19,069 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:53:19,070 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:19,074 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:19,076 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,076 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,076 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:53:19,077 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:53:19,077 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:53:19,077 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:53:19,077 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:19,081 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:19,083 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,083 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:19,083 - INFO - Processing query: 'room 1 status'
+2025-09-10 03:53:19,087 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:19,088 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:53:19,089 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:53:19,089 - WARNING - No deterministic match for query: 'room 1 status'; falling back to LLM
+2025-09-10 03:53:22,190 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:53:33,579 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:53:33,891 - INFO - Query: 'room 1 status' - Response generated using LLM
+2025-09-10 03:53:33,891 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:53:33,892 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:33,896 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,898 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,898 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,899 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:53:33,899 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:53:33,899 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:53:33,899 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:53:33,899 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:33,904 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,906 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,906 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,906 - INFO - Processing query: 'room 1 energy trends'
+2025-09-10 03:53:33,911 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,912 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:53:33,913 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:53:33,915 - INFO - Used deterministic handler for query: 'ROOM 1 energy trends'
+2025-09-10 03:53:33,915 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:53:33,916 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:33,920 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,921 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,922 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,922 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:53:33,922 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:53:33,922 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:53:33,922 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:53:33,923 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:33,927 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,928 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,928 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,929 - INFO - Processing query: 'for room 1 what maintenance is needed?'
+2025-09-10 03:53:33,933 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,934 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:53:33,935 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:53:33,937 - INFO - Used deterministic handler for query: 'for Room 1 what maintenance is needed?'
+2025-09-10 03:53:33,937 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:53:33,938 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:33,942 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,945 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,945 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,945 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:53:33,945 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:53:33,946 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:53:33,946 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:53:33,946 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:33,950 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,952 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,952 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:33,952 - INFO - Processing query: 'in room 1 detect anomalies'
+2025-09-10 03:53:33,957 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:33,958 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:53:33,959 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:53:33,959 - WARNING - No deterministic match for query: 'in room 1 detect anomalies'; falling back to LLM
+2025-09-10 03:53:34,795 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:53:45,994 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:53:57,351 - INFO - Query: 'in Room 1 detect anomalies' - Response generated using LLM
+2025-09-10 03:53:57,352 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:53:57,352 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:57,356 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:57,359 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:57,359 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:57,360 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:53:57,360 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:53:57,360 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:53:57,360 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:53:57,360 - INFO - Loading data from PostgreSQL
+2025-09-10 03:53:57,367 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:57,369 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:57,370 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:53:57,370 - INFO - Processing query: 'compare room 1 energy usage'
+2025-09-10 03:53:57,374 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:53:57,375 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:53:57,376 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:53:57,376 - WARNING - No deterministic match for query: 'compare room 1 energy usage'; falling back to LLM
+2025-09-10 03:54:03,942 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:54:15,290 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:54:22,025 - INFO - Query: 'Compare Room 1 energy usage' - Response generated using LLM
+2025-09-10 03:54:22,025 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:54:22,026 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:22,030 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:22,033 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,033 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,033 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:54:22,034 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:54:22,034 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:54:22,034 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:54:22,034 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:22,039 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:22,042 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,042 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,042 - INFO - Processing query: 'which room needs maintenance first?'
+2025-09-10 03:54:22,046 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:22,047 - INFO - Found 0 records for room 'Needs'
+2025-09-10 03:54:22,048 - WARNING - Room-specific handler error: No data found for 'Needs'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:54:22,050 - INFO - Used deterministic handler for query: 'Which room needs maintenance first?'
+2025-09-10 03:54:22,050 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:54:22,051 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:22,056 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:22,058 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,058 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,058 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:54:22,059 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:54:22,059 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:54:22,059 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:54:22,059 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:22,064 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:22,066 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,066 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:22,067 - INFO - Processing query: 'most efficient room analysis'
+2025-09-10 03:54:22,071 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:22,072 - INFO - Found 0 records for room 'Analysis'
+2025-09-10 03:54:22,073 - WARNING - Room-specific handler error: No data found for 'Analysis'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:54:22,073 - WARNING - No deterministic match for query: 'most efficient room analysis'; falling back to LLM
+2025-09-10 03:54:23,094 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:54:34,178 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:54:43,391 - INFO - Query: 'Most efficient room analysis' - Response generated using LLM
+2025-09-10 03:54:43,391 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:54:43,392 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,396 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,398 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,398 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,398 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:54:43,399 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:54:43,399 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:54:43,399 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:54:43,399 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,404 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,405 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,405 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,406 - INFO - Processing query: 'what are the predictions for room 1?'
+2025-09-10 03:54:43,409 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,410 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:54:43,411 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:54:43,413 - INFO - Used deterministic handler for query: 'What are the predictions for Room 1?'
+2025-09-10 03:54:43,413 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:54:43,414 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,418 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,420 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,420 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,421 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:54:43,421 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:54:43,421 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:54:43,421 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:54:43,421 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,426 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,427 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,428 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,428 - INFO - Processing query: 'room 1 current status'
+2025-09-10 03:54:43,432 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,432 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:54:43,433 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:54:43,436 - INFO - Used deterministic handler for query: 'Room 1 current status'
+2025-09-10 03:54:43,436 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:54:43,436 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,440 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,442 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,442 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,442 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:54:43,442 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:54:43,443 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:54:43,443 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:54:43,443 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,447 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,448 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,448 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,449 - INFO - Processing query: 'room 1 energy consumption trends'
+2025-09-10 03:54:43,452 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,453 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:54:43,454 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:54:43,454 - INFO - Used deterministic handler for query: 'Room 1 energy consumption trends'
+2025-09-10 03:54:43,455 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:54:43,455 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,459 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,460 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,461 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,461 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:54:43,461 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:54:43,461 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:54:43,461 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:54:43,462 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,466 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,467 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,467 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,467 - INFO - Processing query: 'maintenance needed for room 1'
+2025-09-10 03:54:43,471 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,472 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:54:43,472 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:54:43,474 - INFO - Used deterministic handler for query: 'Maintenance needed for Room 1'
+2025-09-10 03:54:43,475 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-10 03:54:43,475 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,479 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,480 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,480 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,481 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-10 03:54:43,481 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-10 03:54:43,481 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-10 03:54:43,481 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-10 03:54:43,482 - INFO - Loading data from PostgreSQL
+2025-09-10 03:54:43,486 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,487 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,487 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-10 03:54:43,487 - INFO - Processing query: 'detect anomalies in room 1'
+2025-09-10 03:54:43,491 - INFO - Retrieved 9 sensor records from database
+2025-09-10 03:54:43,492 - INFO - Found 0 records for room 'Room 1'
+2025-09-10 03:54:43,493 - WARNING - Room-specific handler error: No data found for 'Room 1'. Available rooms: Conference Room A, Conference Room B, Server Room A
+2025-09-10 03:54:43,493 - WARNING - No deterministic match for query: 'detect anomalies in room 1'; falling back to LLM
+2025-09-10 03:54:44,484 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-10 03:54:55,677 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-10 03:55:00,999 - INFO - Query: 'Detect anomalies in Room 1' - Response generated using LLM
+2025-09-10 03:55:00,999 - ERROR - MongoDB not initialized; cannot log prompt

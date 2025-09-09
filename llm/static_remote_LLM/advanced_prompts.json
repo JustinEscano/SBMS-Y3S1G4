@@ -1,0 +1,133 @@
+{
+  "system_prompts": {
+    "predictive_maintenance": "You are an AI-powered predictive maintenance analyst. Analyze sensor data to identify potential equipment failures and maintenance needs.\n\nYour capabilities:\n- Detect anomalies in power consumption, temperature, and usage patterns\n- Predict equipment failures before they occur\n- Suggest specific maintenance actions\n- Prioritize maintenance tasks by urgency\n- Identify cost-saving opportunities\n\nAnalysis Guidelines:\n1. Look for unusual patterns in equipment usage\n2. Identify gradual degradation trends\n3. Flag sudden changes that indicate potential failures\n4. Consider environmental factors (temperature, humidity)\n5. Provide specific, actionable maintenance recommendations\n6. Include confidence levels and timeframes\n\nQuery: {query}\n\nProvide detailed predictive maintenance analysis:",
+
+    "anomaly_detection": "You are an anomaly detection specialist analyzing building sensor data. Your task is to identify unusual patterns, outliers, and potential issues.\n\nDetection Focus Areas:\n- Unusual energy consumption spikes or drops\n- Temperature/humidity anomalies\n- Equipment runtime irregularities\n- Occupancy vs energy usage mismatches\n- Gradual performance degradation\n\nFor each anomaly found:\n1. Describe the anomaly clearly\n2. Assess severity (Low/Medium/High/Critical)\n3. Suggest possible causes\n4. Recommend immediate actions\n5. Indicate if maintenance is needed\n\nQuery: {query}\n\nAnalyze for anomalies and provide detailed findings:",
+
+    "energy_insights": "You are an energy efficiency consultant providing insights on building energy consumption patterns and optimization opportunities.\n\nInsight Categories:\n- Energy consumption trends and patterns\n- Peak usage identification\n- Efficiency opportunities\n- Cost optimization suggestions\n- Environmental impact analysis\n- Comparative analysis across time periods\n\nProvide insights that are:\n- Data-driven and specific\n- Actionable with clear next steps\n- Cost-benefit focused\n- Environmentally conscious\n- Easy to understand for facility managers\n\nQuery: {query}\n\nProvide comprehensive energy insights:",
+
+    "maintenance_scheduler": "You are a maintenance scheduling AI that analyzes equipment data to create optimal maintenance schedules and prioritize tasks.\n\nScheduling Considerations:\n- Equipment criticality and usage patterns\n- Historical failure rates\n- Current condition indicators\n- Resource availability\n- Cost optimization\n- Minimal disruption to operations\n\nFor maintenance recommendations:\n1. Specify equipment/system\n2. Maintenance type (preventive/corrective/emergency)\n3. Urgency level (1-5 scale)\n4. Estimated time and resources needed\n5. Optimal scheduling window\n6. Risk of deferring maintenance\n\nQuery: {query}\n\nProvide maintenance scheduling recommendations:",
+
+    "weekly_summary": "You are generating an automated weekly summary report for facility management. Provide a comprehensive overview of building performance, energy usage, and key insights.\n\nReport Structure:\n1. Executive Summary (key highlights)\n2. Energy Performance Overview\n3. Equipment Status and Alerts\n4. Occupancy Patterns\n5. Maintenance Recommendations\n6. Cost Analysis\n7. Next Week's Focus Areas\n\nMake the summary:\n- Executive-friendly with clear metrics\n- Action-oriented with specific recommendations\n- Trend-focused showing week-over-week changes\n- Cost-conscious highlighting savings opportunities\n\nQuery: {query}\n\nGenerate weekly facility management summary:",
+
+    "chat_assistant": "You are a helpful building management assistant. Answer questions about facility operations, energy usage, equipment status, and provide insights in a conversational, easy-to-understand manner.\n\nYour expertise covers:\n- Energy consumption and efficiency\n- Equipment performance and maintenance\n- Occupancy patterns and space utilization\n- Environmental conditions\n- Cost analysis and optimization\n- Troubleshooting common issues\n\nCommunication style:\n- Friendly and professional\n- Clear and concise explanations\n- Use specific data when available\n- Provide actionable advice\n- Ask clarifying questions when needed\n\nQuery: {query}\n\nProvide helpful assistance:",
+
+    "context_aware": "You are a context-aware building intelligence system. Analyze the current situation, recent trends, and provide insights that consider the broader operational context.\n\nContext Analysis:\n- Current time of day/week/season\n- Recent operational changes\n- Historical patterns for comparison\n- External factors (weather, events)\n- Interconnected system impacts\n- User behavior patterns\n\nProvide responses that:\n- Consider multiple data sources\n- Account for temporal context\n- Identify cause-and-effect relationships\n- Suggest context-appropriate actions\n- Anticipate follow-up questions\n\nQuery: {query}\n\nProvide context-aware analysis:"
+  },
+
+  "document_templates": {
+    "maintenance_analysis": "MAINTENANCE DATA - {timestamp}\nEquipment Status: {occupancy_status} room with {occupancy_count} occupants\nPower Analysis: Total {total_power}W (Baseline variance: check for anomalies)\n- Lighting: {lighting_power}W (Runtime: {lights_hours}h)\n- HVAC: {hvac_power}W (Runtime: {ac_hours}h) \n- AC Compressor: {ac_compressor_power}W\n- Computers: {computer_power}W (Runtime: {computer_hours}h)\n- Projector: {projector_power}W (Runtime: {projector_hours}h)\n- Standby Systems: {standby_power}W\nEnvironmental: {temperature}°C, {humidity}% RH\nEnergy Consumption: {energy_consumption_kwh} kWh\nMaintenance Indicators: Monitor for unusual patterns",
+
+    "anomaly_detection": "ANOMALY SCAN - {timestamp}\nRoom: {occupancy_status} ({occupancy_count} people)\nPower Profile: {total_power}W total consumption\nComponent Analysis:\n• Lighting: {lighting_power}W ({lights_hours}h runtime)\n• HVAC Fan: {hvac_power}W \n• AC Compressor: {ac_compressor_power}W ({ac_hours}h runtime)\n• IT Equipment: {computer_power}W ({computer_hours}h runtime)\n• Projector: {projector_power}W ({projector_hours}h runtime)\n• Standby: {standby_power}W\nEnvironmental: {temperature}°C, {humidity}%\nEnergy: {energy_consumption_kwh} kWh\nANOMALY FLAGS: Check for deviations from normal patterns",
+
+    "energy_report": "ENERGY REPORT - {timestamp}\nOccupancy: {occupancy_count} people ({occupancy_status})\nTotal Energy: {energy_consumption_kwh} kWh\nPower Breakdown:\n├─ Lighting: {lighting_power}W ({lights_hours}h)\n├─ HVAC: {hvac_power}W \n├─ AC: {ac_compressor_power}W ({ac_hours}h)\n├─ IT: {computer_power}W ({computer_hours}h)\n├─ AV: {projector_power}W ({projector_hours}h)\n└─ Standby: {standby_power}W\nEnvironmental: {temperature}°C, {humidity}%\nEfficiency Metrics: {total_power}W total demand",
+
+    "maintenance_alert": "MAINTENANCE ALERT - {timestamp}\nLocation: Room with {occupancy_count} occupants\nAlert Level: Monitor equipment performance\nPower Systems:\n⚡ Total Load: {total_power}W\n💡 Lighting: {lighting_power}W (Active: {lights_hours}h)\n🌡️ HVAC: {hvac_power}W + AC: {ac_compressor_power}W (Active: {ac_hours}h)\n💻 IT Systems: {computer_power}W (Active: {computer_hours}h)\n📽️ AV Equipment: {projector_power}W (Active: {projector_hours}h)\n⏸️ Standby: {standby_power}W\nConditions: {temperature}°C, {humidity}% humidity\nEnergy Usage: {energy_consumption_kwh} kWh\nAction Required: Analyze for maintenance needs",
+
+    "summary_report": "FACILITY SUMMARY - {timestamp}\nOccupancy: {occupancy_count} people present\nOperational Status: {occupancy_status}\nEnergy Performance: {energy_consumption_kwh} kWh consumed\nSystem Status:\n• Lighting: {lighting_power}W ({lights_hours}h operation)\n• Climate: HVAC {hvac_power}W + AC {ac_compressor_power}W ({ac_hours}h)\n• Technology: {computer_power}W computers + {projector_power}W AV ({computer_hours}h + {projector_hours}h)\n• Baseline: {standby_power}W standby load\nEnvironment: {temperature}°C temperature, {humidity}% humidity\nTotal Demand: {total_power}W"
+  },
+
+  "response_templates": {
+    "maintenance_suggestion": "🔧 MAINTENANCE RECOMMENDATION\nEquipment: {equipment}\nIssue: {issue}\nUrgency: {urgency}\nAction: {action}\nTimeframe: {timeframe}\nEstimated Cost: {cost}\nRisk if Deferred: {risk}",
+
+    "anomaly_alert": "🚨 ANOMALY DETECTED\nType: {anomaly_type}\nSeverity: {severity}\nLocation: {location}\nDescription: {description}\nPossible Causes: {causes}\nRecommended Actions: {actions}\nMonitoring: {monitoring}",
+
+    "energy_insight": "💡 ENERGY INSIGHT\nMetric: {metric}\nCurrent Value: {current_value}\nTrend: {trend}\nBenchmark: {benchmark}\nOpportunity: {opportunity}\nPotential Savings: {savings}\nNext Steps: {next_steps}",
+
+    "weekly_summary_header": "📊 WEEKLY FACILITY REPORT\nPeriod: {period}\nTotal Energy: {total_energy} kWh\nAverage Occupancy: {avg_occupancy}\nKey Alerts: {alert_count}\nMaintenance Items: {maintenance_count}\nCost Impact: {cost_impact}",
+
+    "most_used_room": "🏢 ROOM UTILIZATION ANALYSIS\nMost Used Room: {room_name}\nOccupancy Rate: {occupancy_rate}%\nTotal Hours: {total_hours}h\nPeak Usage: {peak_time}\nEnergy Consumption: {energy_usage} kWh\nEfficiency Rating: {efficiency}",
+
+    "energy_trends": "📈 ENERGY TREND ANALYSIS\nPeriod: {period}\nTrend Direction: {trend_direction}\nChange Rate: {change_rate}%\nPeak Consumption: {peak_consumption} kWh\nAverage Daily: {avg_daily} kWh\nCost Impact: {cost_impact}\nRecommendations: {recommendations}",
+
+    "maintenance_prediction": "🔮 PREDICTIVE MAINTENANCE\nEquipment: {equipment}\nPredicted Issue: {predicted_issue}\nProbability: {probability}%\nEstimated Timeline: {timeline}\nPreventive Action: {preventive_action}\nCost Avoidance: {cost_avoidance}\nSchedule By: {schedule_date}"
+  },
+
+  "query_patterns": {
+    "maintenance_queries": [
+      "maintenance",
+      "repair",
+      "service",
+      "failure",
+      "breakdown",
+      "equipment issue",
+      "needs attention",
+      "preventive",
+      "schedule maintenance"
+    ],
+    "anomaly_queries": [
+      "anomaly",
+      "unusual",
+      "abnormal",
+      "strange",
+      "unexpected",
+      "outlier",
+      "irregular",
+      "deviation",
+      "alert"
+    ],
+    "energy_queries": [
+      "energy trend",
+      "consumption pattern",
+      "efficiency",
+      "usage analysis",
+      "cost analysis",
+      "energy saving",
+      "optimization"
+    ],
+    "room_utilization": [
+      "most used room",
+      "room usage",
+      "occupancy pattern",
+      "space utilization",
+      "room efficiency",
+      "popular room"
+    ],
+    "predictive_queries": [
+      "predict",
+      "forecast",
+      "future",
+      "trend",
+      "projection",
+      "estimate",
+      "anticipate"
+    ],
+    "summary_queries": [
+      "summary",
+      "overview",
+      "report",
+      "weekly",
+      "monthly",
+      "dashboard",
+      "status"
+    ]
+  },
+
+  "maintenance_rules": {
+    "power_anomaly_threshold": 1.5,
+    "temperature_anomaly_range": [18, 28],
+    "humidity_anomaly_range": [30, 70],
+    "runtime_anomaly_threshold": 12,
+    "energy_spike_threshold": 2.0,
+    "maintenance_urgency_levels": {
+      "critical": "Immediate action required",
+      "high": "Schedule within 24 hours", 
+      "medium": "Schedule within 1 week",
+      "low": "Schedule within 1 month",
+      "routine": "Include in next scheduled maintenance"
+    }
+  },
+
+  "insights_config": {
+    "trend_analysis_days": 7,
+    "anomaly_detection_sensitivity": 0.8,
+    "cost_per_kwh": 0.12,
+    "baseline_power_threshold": 50,
+    "efficiency_benchmarks": {
+      "excellent": 0.8,
+      "good": 0.6,
+      "average": 0.4,
+      "poor": 0.2
+    }
+  }
+}
