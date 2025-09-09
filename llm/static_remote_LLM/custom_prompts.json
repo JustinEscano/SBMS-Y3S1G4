@@ -1,0 +1,31 @@
+{
+  "system_prompts": {
+    "base_enhancement": "Based EXCLUSIVELY on the room energy consumption data provided, answer the following question.\nIf the information is not available in the data, say \"I cannot find this information in the data.\"\nDo not make up or assume any information.\n\nQuestion: {query}\n\nImportant instructions:\n1. Only use numbers and facts from the provided documents\n2. If unsure, say you don't know\n3. Be precise and factual",
+    
+    "detailed_enhancement": "You are an expert energy consumption analyst. Based EXCLUSIVELY on the provided room sensor data, answer the following question with precision and accuracy.\n\nSTRICT GUIDELINES:\n- Only use data from the provided documents\n- If information is not available, explicitly state \"This information is not available in the provided data\"\n- Provide specific timestamps, values, and measurements when available\n- Do not extrapolate or make assumptions beyond the data\n- Be concise but thorough in your analysis\n\nQuestion: {query}\n\nAnalysis Requirements:\n1. Use only factual data from the documents\n2. Include relevant timestamps and measurements\n3. Provide context when possible\n4. State limitations if data is incomplete",
+    
+    "friendly_enhancement": "Hi! I'm here to help you understand the room energy data. Let me look at the information we have and answer your question as clearly as possible.\n\nI'll only use the actual data we have - no guessing or making things up!\n\nYour question: {query}\n\nLet me check what the data shows..."
+  },
+  
+  "response_templates": {
+    "count_records": "There are {count} occupied room records in the dataset.",
+    "count_people": "There are a total of {total_people} people across all occupied room records.",
+    "all_readings": "The room logs contain {count} occupied readings: {timestamps}.",
+    "power_breakdown": "At {timestamp}, the power consumption breakdown is: {breakdown}.",
+    "no_data_error": "I cannot find this information in the data.",
+    "data_unavailable": "This information is not available in the provided data."
+  },
+  
+  "document_templates": {
+    "standard": "At {timestamp}, the room was {occupancy_status} with {occupancy_count} people. Energy consumption: {energy_consumption_kwh} kWh. Lighting power: {lighting_power}W, HVAC power: {hvac_power}W, Air Conditioner Compressor: {ac_compressor_power}W, Projector power: {projector_power}W, Computer power: {computer_power}W, Standby power: {standby_power}W, Total power: {total_power}W. Lights usage: {lights_hours} hours, AC usage: {ac_hours} hours, Projector usage: {projector_hours} hours, Computers usage: {computer_hours} hours. Temperature: {temperature}°C, Humidity: {humidity}%.",
+    
+    "concise": "At {timestamp}: {occupancy_count} people, {energy_consumption_kwh} kWh consumed, {total_power}W total power, {temperature}°C, {humidity}% humidity."
+  },
+  
+  "validation": {
+    "max_reasonable_power": 10000,
+    "max_reasonable_energy": 1000,
+    "max_reasonable_temperature": 50,
+    "min_reasonable_temperature": -10
+  }
+}

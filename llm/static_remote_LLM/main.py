@@ -1,4 +1,3 @@
-import json
 import pandas as pd
 import os
 import hashlib
@@ -14,6 +13,9 @@ import re
 from database_adapter import DatabaseAdapter
 from pymongo import MongoClient
 from dotenv import load_dotenv
+from prompts_config import PromptsConfig
+from advanced_llm_handlers import AdvancedLLMHandlers
+from room_specific_handlers import RoomSpecificHandlers
 
 # Load environment variables
 load_dotenv()
@@ -30,19 +32,19 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class RoomLogAnalyzer:
-    def __init__(self, json_file_path=None, chroma_dir=None, use_database=True,
+    def __init__(self, chroma_dir=None, use_database=True,
                  mongo_uri=None, mongo_db_name=None, mongo_collection_name=None,
-                 prompt_logs_db_name=None, prompt_logs_collection_name=None):
+                 prompt_logs_db_name=None, prompt_logs_collection_name=None,
+                 prompts_config_file=None, prompt_type="base_enhancement",
+                 document_template="standard"):
         # Dynamically set paths relative to the script location
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.json_file_path = json_file_path or os.path.join(script_dir, "../room_logs.json")
         self.chroma_dir = chroma_dir or os.path.join(script_dir, "chroma_room_logs")
         self.use_database = use_database
         self.vector_store = None
         self.qa_chain = None
         self.processed_hashes = set()
         self.df = None  # Cache the dataframe
-        self.last_modified = None  # Track last file modification time for change detection
         self.db_adapter = None
         self.mongo_client = None
         self.mongo_db = None
@@ -51,6 +53,21 @@ class RoomLogAnalyzer:
         # Prompt logging setup
         self.prompt_logs_db = None
         self.prompt_logs_collection = None
+        
+        # Initialize prompts configuration
+        config_path = prompts_config_file or os.path.join(script_dir, "custom_prompts.json")
+        self.prompts = PromptsConfig(config_path if os.path.exists(config_path) else None)
+        self.prompt_type = prompt_type
+        self.document_template = document_template
+        
+        logger.info(f"Using prompt type: {prompt_type}")
+        logger.info(f"Using document template: {document_template}")
+        
+        # Initialize advanced handlers
+        self.advanced_handlers = AdvancedLLMHandlers(self.prompts)
+        
+        # Room handlers will be initialized after database setup
+        self.room_handlers = None
         
         # Load environment variables if not provided
         if mongo_uri is None:
@@ -71,7 +88,7 @@ class RoomLogAnalyzer:
                 logger.info("PostgreSQL database adapter initialized successfully")
             except Exception as e:
                 logger.error(f"Failed to initialize PostgreSQL adapter: {e}")
-                self.use_database = False
+                raise ValueError(f"PostgreSQL database connection required but failed: {e}")
             
             try:
                 if mongo_uri:
@@ -87,14 +104,22 @@ class RoomLogAnalyzer:
                     logger.info(f"Main data: database: {mongo_db_name}, collection: {mongo_collection_name}")
                     logger.info(f"Prompt logs: database: {prompt_logs_db_name}, collection: {prompt_logs_collection_name}")
                 else:
-                    logger.warning("MongoDB URI not provided, skipping MongoDB initialization")
-                    self.use_database = False
+                    logger.warning("MongoDB URI not provided, continuing without MongoDB logging")
             except Exception as e:
                 logger.error(f"Failed to initialize MongoDB Atlas: {e}")
-                self.use_database = False
+                logger.warning("Continuing without MongoDB logging functionality")
         
         # Load existing processed hashes if they exist
         self._load_processed_hashes()
+        
+        # Initialize room-specific handlers after database setup
+        if self.use_database and self.db_adapter:
+            try:
+                self.room_handlers = RoomSpecificHandlers(self.prompts, self.db_adapter)
+                logger.info("Room-specific handlers initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize room handlers: {e}")
+                self.room_handlers = None
     
     def log_prompt_to_mongodb(self, query, response, sources=None, error=None):
         """Log a prompt and its response to MongoDB"""
@@ -246,79 +271,28 @@ class RoomLogAnalyzer:
     def load_and_process_data(self, force_reload=False, limit=None):
         """Load and process the room logs data from PostgreSQL and log to MongoDB"""
         try:
-            if self.use_database and self.db_adapter is not None:
-                logger.info("Attempting to load data from PostgreSQL")
-                df = self.load_from_postgresql(limit=limit)
-                if df is None or df.empty:
-                    logger.warning("No data loaded from PostgreSQL; falling back to JSON")
-                else:
-                    logger.info(f"Loaded {len(df)} unique occupied room records from PostgreSQL")
-                    self.df = df
-                    
-                    # LOG TO MONGODB - This is the key addition
-                    if self.use_database and self.mongo_collection is not None:
-                        logged_count = 0
-                        for _, row in df.iterrows():
-                            if self.log_to_mongodb(row.to_dict()):
-                                logged_count += 1
-                        logger.info(f"Logged {logged_count} records to MongoDB")
-                    
-                    return df
+            if not self.use_database or self.db_adapter is None:
+                logger.error("Database not initialized; cannot load data")
+                raise ValueError("Database connection required but not available")
             
-            # Fallback to JSON file if PostgreSQL fails
-            current_mtime = os.path.getmtime(self.json_file_path)
-            if not force_reload and self.df is not None and self.last_modified == current_mtime:
-                logger.info("No changes detected in JSON file; using cached DataFrame")
-                return self.df
+            logger.info("Loading data from PostgreSQL")
+            df = self.load_from_postgresql(limit=limit)
             
-            logger.info(f"Changes detected or first load; reloading JSON data from {self.json_file_path}")
-            with open(self.json_file_path, "r") as file:
-                data = json.load(file)
-                logger.info(f"Raw JSON data loaded: {data}")
-            
-            df = pd.json_normalize(data["logs"])
             if df is None or df.empty:
-                logger.warning("Normalized DataFrame is empty; check JSON structure")
-                raise ValueError("No valid data in JSON logs")
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
-            df = df[df["occupancy_status"] == "occupied"]
+                logger.error("No data loaded from PostgreSQL")
+                raise ValueError("No data available from PostgreSQL database")
             
-            numeric_cols = [
-                "occupancy_count", "energy_consumption_kwh",
-                "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
-                "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
-                "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
-                "power_consumption_watts.total", "equipment_usage.lights_on_hours",
-                "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
-                "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
-                "environmental_data.humidity_percent"
-            ]
-            for col in numeric_cols:
-                if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors="coerce")
+            logger.info(f"Loaded {len(df)} unique occupied room records from PostgreSQL")
+            self.df = df
             
-            dedup_columns = [
-                "timestamp", "occupancy_count", "energy_consumption_kwh",
-                "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
-                "power_consumption_watts.air_conditioner_compressor", "power_consumption_watts.projector",
-                "power_consumption_watts.computer", "power_consumption_watts.standby_misc",
-                "power_consumption_watts.total", "equipment_usage.lights_on_hours",
-                "equipment_usage.air_conditioner_on_hours", "equipment_usage.projector_on_hours",
-                "equipment_usage.computer_on_hours", "environmental_data.temperature_celsius",
-                "environmental_data.humidity_percent"
-            ]
-            df = df.drop_duplicates(subset=[col for col in dedup_columns if col in df.columns])
-            
+            # Log to MongoDB if available
             if self.use_database and self.mongo_collection is not None:
                 logged_count = 0
                 for _, row in df.iterrows():
                     if self.log_to_mongodb(row.to_dict()):
                         logged_count += 1
-                logger.info(f"Logged {logged_count} records to MongoDB from JSON")
+                logger.info(f"Logged {logged_count} records to MongoDB")
             
-            logger.info(f"Loaded {len(df)} unique occupied room records after deduplication")
-            self.df = df
-            self.last_modified = current_mtime
             return df
         
         except Exception as e:
@@ -326,28 +300,34 @@ class RoomLogAnalyzer:
             raise
     
     def _create_document_from_row(self, row):
-        """Create a Document object from a DataFrame row"""
+        """Create a Document object from a DataFrame row using configurable template"""
         try:
             timestamp_str = row['timestamp'].strftime("%Y-%m-%d %H:%M:%S")
         except:
             timestamp_str = str(row['timestamp'])
         
-        page_content = (
-            f"At {timestamp_str}, the room was {row['occupancy_status']} with "
-            f"{row['occupancy_count']} people. Energy consumption: {row['energy_consumption_kwh']} kWh. "
-            f"Lighting power: {row['power_consumption_watts.lighting']}W, "
-            f"HVAC power: {row['power_consumption_watts.hvac_fan']}W, "
-            f"Air Conditioner Compressor: {row.get('power_consumption_watts.air_conditioner_compressor', 0)}W, "
-            f"Projector power: {row.get('power_consumption_watts.projector', 0)}W, "
-            f"Computer power: {row.get('power_consumption_watts.computer', 0)}W, "
-            f"Standby power: {row['power_consumption_watts.standby_misc']}W, "
-            f"Total power: {row['power_consumption_watts.total']}W. "
-            f"Lights usage: {row['equipment_usage.lights_on_hours']} hours, "
-            f"AC usage: {row['equipment_usage.air_conditioner_on_hours']} hours, "
-            f"Projector usage: {row['equipment_usage.projector_on_hours']} hours, "
-            f"Computers usage: {row['equipment_usage.computer_on_hours']} hours. "
-            f"Temperature: {row['environmental_data.temperature_celsius']}°C, "
-            f"Humidity: {row['environmental_data.humidity_percent']}%."
+        # Get document template from prompts config
+        template = self.prompts.get_document_template(self.document_template)
+        
+        # Format the template with row data
+        page_content = template.format(
+            timestamp=timestamp_str,
+            occupancy_status=row['occupancy_status'],
+            occupancy_count=row['occupancy_count'],
+            energy_consumption_kwh=row['energy_consumption_kwh'],
+            lighting_power=row['power_consumption_watts.lighting'],
+            hvac_power=row['power_consumption_watts.hvac_fan'],
+            ac_compressor_power=row.get('power_consumption_watts.air_conditioner_compressor', 0),
+            projector_power=row.get('power_consumption_watts.projector', 0),
+            computer_power=row.get('power_consumption_watts.computer', 0),
+            standby_power=row['power_consumption_watts.standby_misc'],
+            total_power=row['power_consumption_watts.total'],
+            lights_hours=row['equipment_usage.lights_on_hours'],
+            ac_hours=row['equipment_usage.air_conditioner_on_hours'],
+            projector_hours=row['equipment_usage.projector_on_hours'],
+            computer_hours=row['equipment_usage.computer_on_hours'],
+            temperature=row['environmental_data.temperature_celsius'],
+            humidity=row['environmental_data.humidity_percent']
         )
         
         doc_hash = self._generate_document_hash(row)
@@ -577,6 +557,54 @@ class RoomLogAnalyzer:
         
         logger.info(f"Processing query: '{q_lower}'")
         
+        # Check for room-specific queries first
+        if self.room_handlers and any(keyword in q_lower for keyword in ["room", "for room", "in room"]):
+            try:
+                room_result = self.room_handlers.handle_room_specific_query(query)
+                if room_result and "error" not in room_result:
+                    logger.info(f"Used room-specific handler for query: '{query}'")
+                    return room_result
+                elif "error" in room_result:
+                    logger.warning(f"Room-specific handler error: {room_result['error']}")
+            except Exception as e:
+                logger.error(f"Error in room-specific handler: {e}")
+        
+        # Check for advanced query types
+        if any(keyword in q_lower for keyword in ["most used room", "room usage", "room utilization"]):
+            return self.advanced_handlers.handle_most_used_room_query(df)
+        
+        if any(keyword in q_lower for keyword in ["energy trend", "energy pattern", "consumption trend"]):
+            return self.advanced_handlers.handle_energy_trends_query(df)
+        
+        if any(keyword in q_lower for keyword in ["weekly summary", "weekly report", "summary"]):
+            return self.advanced_handlers.generate_weekly_summary(df)
+        
+        if any(keyword in q_lower for keyword in ["anomaly", "unusual", "abnormal", "alert"]):
+            anomalies = self.advanced_handlers.detect_anomalies(df)
+            if anomalies:
+                anomaly_descriptions = [f"{a.anomaly_type}: {a.description}" for a in anomalies[:3]]
+                return {
+                    "answer": f"Detected {len(anomalies)} anomalies: {'; '.join(anomaly_descriptions)}",
+                    "anomalies": [{"type": a.anomaly_type, "severity": a.severity, "description": a.description} for a in anomalies]
+                }
+            else:
+                return {"answer": "No anomalies detected in the current data."}
+        
+        if any(keyword in q_lower for keyword in ["maintenance", "repair", "service", "predict"]):
+            anomalies = self.advanced_handlers.detect_anomalies(df)
+            maintenance_alerts = self.advanced_handlers.generate_maintenance_suggestions(df, anomalies)
+            if maintenance_alerts:
+                alert_descriptions = [f"{m.equipment}: {m.issue} (Urgency: {m.urgency})" for m in maintenance_alerts[:3]]
+                return {
+                    "answer": f"Generated {len(maintenance_alerts)} maintenance suggestions: {'; '.join(alert_descriptions)}",
+                    "maintenance_alerts": [{"equipment": m.equipment, "issue": m.issue, "urgency": m.urgency, "action": m.action} for m in maintenance_alerts]
+                }
+            else:
+                return {"answer": "No immediate maintenance needs detected."}
+        
+        if any(keyword in q_lower for keyword in ["context", "current", "situation"]):
+            return self.advanced_handlers.handle_context_aware_query(query, df)
+        
         if any(keyword in q_lower for keyword in ["all readings", "all logs", "all records", "all room_logs"]):
             timestamps = []
             for _, row in df.iterrows():
@@ -750,20 +778,9 @@ class RoomLogAnalyzer:
         return None
     
     def _enhance_query_for_llm(self, query):
-        """Add context and instructions to reduce hallucinations"""
-        enhanced_query = f"""
-        Based EXCLUSIVELY on the room energy consumption data provided, answer the following question.
-        If the information is not available in the data, say "I cannot find this information in the data."
-        Do not make up or assume any information.
-        
-        Question: {query}
-        
-        Important instructions:
-        1. Only use numbers and facts from the provided documents
-        2. If unsure, say you don't know
-        3. Be precise and factual
-        """
-        return enhanced_query
+        """Add context and instructions to reduce hallucinations using configurable prompts"""
+        system_prompt = self.prompts.get_system_prompt(self.prompt_type)
+        return system_prompt.format(query=query)
     
     def ask(self, query):
         """Ask a question about the room logs"""
