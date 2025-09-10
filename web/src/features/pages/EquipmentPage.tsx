@@ -145,21 +145,21 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
       <div className="content-container">
         {/* Stats */}
         <div className="stats-boxes">
-          <div className="stat-box">
+          <div className="stats-box">
             <div className="stat-icon">{icon}</div>
             <div className="stat-info">
               <p className="stat-number">{filteredByType.length}</p>
               <p className="stat-label">Total Units</p>
             </div>
           </div>
-          <div className="stat-box">
+          <div className="stats-box">
             <div className="stat-icon">✅</div>
             <div className="stat-info">
               <p className="stat-number">{filteredByType.filter((e) => e.status === "online").length}</p>
               <p className="stat-label">Online Units</p>
             </div>
           </div>
-          <div className="stat-box">
+          <div className="stats-box">
             <div className="stat-icon">❌</div>
             <div className="stat-info">
               <p className="stat-number">{filteredByType.filter((e) => e.status === "offline").length}</p>

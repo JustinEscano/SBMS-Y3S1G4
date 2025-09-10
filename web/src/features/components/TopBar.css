@@ -90,7 +90,7 @@
   position: absolute;
   top: 110%;
   right: 0;
-  width: 400px;
+  width: 260px;
   background: #1a1f3d;
   border-radius: 10px;
   overflow: hidden;
@@ -99,7 +99,6 @@
 }
 
 .dropdown-header {
-  font-size: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -108,7 +107,6 @@
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 .avatar-large {
-  margin: 0 1px;
   background: #4a90e2;
   color: white;
   font-weight: bold;
@@ -118,9 +116,9 @@
   display: grid;
   place-items: center;
 }
-.dropdown-header h3 {
+.dropdown-header h4 {
   margin: 0;
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
 }
 .dropdown-header small { color: gray; }
@@ -132,7 +130,6 @@
   padding: 12px;
 }
 .dropdown-links button {
-  font-size: 16px;
   background: none;
   border: none;
   color: #ddd;
@@ -185,8 +182,4 @@
   color: red;
   cursor: pointer;
   font-size: 13px;
-}
-
-.switch {
-  cursor: pointer;
 }
