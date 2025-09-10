@@ -692,7 +692,7 @@ class RoomLogAnalyzer:
         logger.warning(f"No deterministic match for query: '{q_lower}'; falling back to LLM")
         return None
     
-    def _handle_min_max_query(self, q_lower, df, operation):
+   
         """Handle minimum/maximum queries for single columns"""
         col_map = {
             "total": "power_consumption_watts.total",
@@ -748,7 +748,7 @@ class RoomLogAnalyzer:
         
         return None
     
-    def _handle_avg_query(self, q_lower, df):
+
         """Handle average queries deterministically"""
         col_map = {
             "power": "power_consumption_watts.total",
