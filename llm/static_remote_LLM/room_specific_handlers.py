@@ -1,11 +1,12 @@
 """
-Room-Specific LLM Handlers
+Room-Specific LLM Handlers with Fuzzy Matching
 Handles room-specific queries like "What are the predictions for Room 1?"
 """
 
 import pandas as pd
 import numpy as np
 import logging
+import re
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from advanced_llm_handlers import AdvancedLLMHandlers, MaintenanceAlert, AnomalyDetection, EnergyInsight
@@ -14,38 +15,251 @@ logger = logging.getLogger(__name__)
 
 class RoomSpecificHandlers:
     """
-    Handles room-specific queries and analysis
+    Handles room-specific queries and analysis with fuzzy matching
     """
     
     def __init__(self, prompts_config, db_adapter):
         self.prompts = prompts_config
         self.db_adapter = db_adapter
         self.advanced_handlers = AdvancedLLMHandlers(prompts_config)
+        self._available_rooms_cache = None
+        self._room_mappings_cache = None
     
-    def get_available_rooms(self) -> List[Dict[str, Any]]:
-        """Get list of all available rooms"""
+    def get_available_rooms(self, refresh: bool = False) -> List[Dict[str, Any]]:
+        """Get list of all available rooms with caching"""
+        if self._available_rooms_cache is None or refresh:
+            try:
+                self._available_rooms_cache = self.db_adapter.get_rooms_list()
+                # Build room mappings for fuzzy matching
+                self._build_room_mappings()
+            except Exception as e:
+                logger.error(f"Error getting rooms list: {e}")
+                self._available_rooms_cache = []
+        return self._available_rooms_cache
+    
+    def _build_room_mappings(self):
+        """Build various mappings for room name matching"""
+        if not self._available_rooms_cache:
+            return
+            
+        self._room_mappings_cache = {
+            'exact_names': [],
+            'lower_names': [],
+            'normalized_names': [],
+            'aliases': {}
+        }
+        
+        for room in self._available_rooms_cache:
+            room_name = room.get('name', '')
+            self._room_mappings_cache['exact_names'].append(room_name)
+            self._room_mappings_cache['lower_names'].append(room_name.lower())
+            
+            # Normalized name (remove spaces, special chars)
+            normalized = re.sub(r'[^a-z0-9]', '', room_name.lower())
+            self._room_mappings_cache['normalized_names'].append(normalized)
+            
+            # Common aliases
+            if room_name.lower().startswith('room'):
+                room_num = room_name.lower().replace('room', '').strip()
+                if room_num.isdigit():
+                    self._room_mappings_cache['aliases'][room_num] = room_name
+                    self._room_mappings_cache['aliases'][f"r{room_num}"] = room_name
+    
+    def fuzzy_match_room(self, query_room: str) -> Optional[str]:
+        """Fuzzy match room name from query to available rooms using fuzzywuzzy"""
+        if not query_room or not self._room_mappings_cache:
+            return None
+        
+        query_lower = query_room.lower().strip()
+        query_normalized = re.sub(r'[^a-z0-9]', '', query_lower)
+        
+        # 1. Exact match (case-insensitive)
+        if query_lower in self._room_mappings_cache['lower_names']:
+            idx = self._room_mappings_cache['lower_names'].index(query_lower)
+            return self._room_mappings_cache['exact_names'][idx]
+        
+        # 2. Check aliases
+        if query_lower in self._room_mappings_cache['aliases']:
+            return self._room_mappings_cache['aliases'][query_lower]
+        
+        # 3. Normalized match
+        if query_normalized in self._room_mappings_cache['normalized_names']:
+            idx = self._room_mappings_cache['normalized_names'].index(query_normalized)
+            return self._room_mappings_cache['exact_names'][idx]
+        
+        # 4. Partial matches
+        for room_name in self._room_mappings_cache['exact_names']:
+            room_lower = room_name.lower()
+            # Check if query contains room name or vice versa
+            if (query_lower in room_lower or room_lower in query_lower) and len(room_lower) > 2:
+                return room_name
+        
+        # 5. Use fuzzywuzzy for advanced fuzzy matching
         try:
-            return self.db_adapter.get_rooms_list()
-        except Exception as e:
-            logger.error(f"Error getting rooms list: {e}")
-            return []
+            from fuzzywuzzy import process, fuzz
+            
+            matches = process.extract(
+                query_lower, 
+                self._room_mappings_cache['lower_names'], 
+                limit=3, 
+                scorer=fuzz.partial_ratio
+            )
+            
+            for match, score in matches:
+                if score > 70:  # Reasonable confidence threshold
+                    idx = self._room_mappings_cache['lower_names'].index(match)
+                    return self._room_mappings_cache['exact_names'][idx]
+                    
+        except ImportError:
+            logger.warning("fuzzywuzzy not available, using fallback matching")
+            # Fallback to simple string similarity
+            best_match = None
+            best_score = 0
+            
+            for room_name in self._room_mappings_cache['exact_names']:
+                room_lower = room_name.lower()
+                score = self._calculate_similarity_score(query_lower, room_lower)
+                
+                if score > best_score and score > 0.6:
+                    best_score = score
+                    best_match = room_name
+            
+            if best_match:
+                return best_match
+        
+        return None
+    
+    def _calculate_similarity_score(self, s1: str, s2: str) -> float:
+        """Calculate similarity score between two strings (0-1)"""
+        if not s1 or not s2:
+            return 0.0
+        
+        # Simple Jaccard similarity on word sets
+        words1 = set(s1.split())
+        words2 = set(s2.split())
+        
+        if not words1 or not words2:
+            return 0.0
+        
+        intersection = words1.intersection(words2)
+        union = words1.union(words2)
+        
+        return len(intersection) / len(union) if union else 0.0
+    
+    def parse_room_query(self, query: str) -> Optional[str]:
+        """Extract room name from query with fuzzy matching"""
+        query_lower = query.lower()
+        
+        # First, try to extract room name using patterns
+        room_patterns = [
+            r'room\s+([a-z0-9]+)',  # Room 1, Room A, Room 101
+            r'([a-z0-9]+)\s+room',  # 1 Room, A Room
+            r'in\s+([a-z0-9\s]+?)(?:\s+room|$)',  # in room 1, in conference room
+            r'for\s+([a-z0-9\s]+?)(?:\s+room|$)',  # for room 1, for meeting room
+            r'([a-z0-9]+)(?:\'s|\s+)(?:data|status|energy)',  # room1's data, room 2 status
+            r'r([0-9]+)',  # r1, r2, r101
+            r'room\s+([a-z0-9]+)\'s',  # room 1's temperature
+        ]
+        
+        potential_rooms = []
+        
+        for pattern in room_patterns:
+            matches = re.findall(pattern, query_lower)
+            for match in matches:
+                if match.strip():  # Skip empty matches
+                    potential_rooms.append(match.strip())
+        
+        # Also look for any words that might be room names
+        words = query_lower.split()
+        for word in words:
+            if len(word) > 2 and word not in ['the', 'and', 'for', 'what', 'how', 'about', 'status', 'data', 'energy']:
+                potential_rooms.append(word)
+        
+        # Try to match each potential room name
+        for room_candidate in potential_rooms:
+            matched_room = self.fuzzy_match_room(room_candidate)
+            if matched_room:
+                return matched_room
+        
+        # If no pattern match, try to match the entire query as a room name
+        return self.fuzzy_match_room(query_lower)
     
     def get_room_data(self, room_name: str, limit: int = None) -> pd.DataFrame:
-        """Get sensor data for a specific room"""
+        """Get sensor data for a specific room with better matching"""
         try:
+            # First ensure we have room mappings
+            self.get_available_rooms()
+            
             # Get all data first
             df = self.db_adapter.get_sensor_data_as_dataframe(limit=limit)
             
             if df is None or df.empty:
+                logger.warning(f"No sensor data available")
                 return pd.DataFrame()
             
-            # Filter by room name (case-insensitive)
-            if 'room_name' in df.columns:
-                room_df = df[df['room_name'].str.lower() == room_name.lower()]
-            else:
-                # If no room_name column, return empty DataFrame
+            # Check if we have a room_name column
+            if 'room_name' not in df.columns:
                 logger.warning("No room_name column found in data")
                 return pd.DataFrame()
+            
+            # Try exact match first (case-insensitive)
+            room_df = df[df['room_name'].str.lower() == room_name.lower()]
+            
+            if room_df.empty:
+                # Try partial matching within the data
+                room_names_in_data = df['room_name'].unique()
+                
+                # Use fuzzy matching to find the best match in the actual data
+                best_match = None
+                best_score = 0
+                
+                for data_room_name in room_names_in_data:
+                    if pd.isna(data_room_name):
+                        continue
+                        
+                    # Try multiple matching strategies
+                    data_room_lower = str(data_room_name).lower()
+                    query_room_lower = room_name.lower()
+                    
+                    # 1. Exact substring match
+                    if query_room_lower in data_room_lower or data_room_lower in query_room_lower:
+                        best_match = data_room_name
+                        break
+                    
+                    # 2. Fuzzy matching
+                    try:
+                        from fuzzywuzzy import fuzz
+                        score = fuzz.partial_ratio(query_room_lower, data_room_lower)
+                        if score > best_score and score > 70:
+                            best_score = score
+                            best_match = data_room_name
+                    except ImportError:
+                        # Fallback to simple similarity
+                        similarity = self._calculate_similarity_score(query_room_lower, data_room_lower)
+                        if similarity > best_score and similarity > 0.6:
+                            best_score = similarity
+                            best_match = data_room_name
+                
+                if best_match:
+                    room_df = df[df['room_name'] == best_match]
+                    logger.info(f"Fuzzy matched '{room_name}' to '{best_match}' in sensor data")
+            
+            # If still empty, try to see if there are any room-like patterns
+            if room_df.empty:
+                # Look for patterns like "Conference", "Room A", etc.
+                for data_room_name in df['room_name'].unique():
+                    if pd.isna(data_room_name):
+                        continue
+                        
+                    data_room_lower = str(data_room_name).lower()
+                    # Check if both contain "room" or other common patterns
+                    if ('room' in query_room_lower and 'room' in data_room_lower) or \
+                       ('conference' in query_room_lower and 'conference' in data_room_lower) or \
+                       ('server' in query_room_lower and 'server' in data_room_lower):
+                        room_df = df[df['room_name'] == data_room_name]
+                        if not room_df.empty:
+                            logger.info(f"Pattern matched '{room_name}' to '{data_room_name}'")
+                            break
             
             logger.info(f"Found {len(room_df)} records for room '{room_name}'")
             return room_df
@@ -54,56 +268,66 @@ class RoomSpecificHandlers:
             logger.error(f"Error getting room data for '{room_name}': {e}")
             return pd.DataFrame()
     
-    def parse_room_query(self, query: str) -> Optional[str]:
-        """Extract room name from query"""
-        query_lower = query.lower()
-        
-        # Common room name patterns
-        room_patterns = [
-            r'room\s+(\w+)',
-            r'room\s+(\d+)',
-            r'(\w+)\s+room',
-            r'in\s+(\w+)',
-            r'for\s+(\w+)',
-        ]
-        
-        import re
-        for pattern in room_patterns:
-            match = re.search(pattern, query_lower)
-            if match:
-                room_name = match.group(1)
-                # Convert common variations
-                if room_name.isdigit():
-                    return f"Room {room_name}"
-                elif room_name in ['one', '1']:
-                    return "Room 1"
-                elif room_name in ['two', '2']:
-                    return "Room 2"
-                elif room_name in ['three', '3']:
-                    return "Room 3"
-                else:
-                    return room_name.title()
-        
-        return None
-    
     def handle_room_specific_query(self, query: str) -> Dict[str, Any]:
-        """Handle room-specific queries"""
+        """Handle room-specific queries with better error messages"""
+        # First, ensure we have room data
+        self.get_available_rooms()
+        
+        if not self._available_rooms_cache:
+            return {
+                "error": "No room information available. Please check database connection."
+            }
+        
         room_name = self.parse_room_query(query)
         
         if not room_name:
+            available_rooms = [room.get('name', 'Unknown') for room in self._available_rooms_cache]
             return {
-                "error": "Could not identify room from query. Please specify a room name (e.g., 'Room 1', 'Room A', etc.)"
+                "error": f"Could not identify room from query. Available rooms: {', '.join(available_rooms)}. Please specify like 'Room 1 status' or 'What's happening in Conference Room'"
             }
         
         # Get room data
         room_df = self.get_room_data(room_name)
         
         if room_df.empty:
-            available_rooms = self.get_available_rooms()
-            room_names = [room['name'] for room in available_rooms]
-            return {
-                "error": f"No data found for '{room_name}'. Available rooms: {', '.join(room_names) if room_names else 'None'}"
-            }
+            # Let's debug what rooms are actually in the sensor data
+            try:
+                df = self.db_adapter.get_sensor_data_as_dataframe(limit=100)
+                if df is not None and 'room_name' in df.columns:
+                    actual_rooms_in_data = df['room_name'].unique()
+                    logger.info(f"Actual rooms found in sensor data: {actual_rooms_in_data}")
+                    
+                    # Try to find the closest match in the actual data
+                    best_data_match = None
+                    best_score = 0
+                    
+                    for data_room in actual_rooms_in_data:
+                        if pd.isna(data_room):
+                            continue
+                        try:
+                            from fuzzywuzzy import fuzz
+                            score = fuzz.partial_ratio(room_name.lower(), str(data_room).lower())
+                            if score > best_score:
+                                best_score = score
+                                best_data_match = data_room
+                        except ImportError:
+                            similarity = self._calculate_similarity_score(room_name.lower(), str(data_room).lower())
+                            if similarity > best_score:
+                                best_score = similarity
+                                best_data_match = data_room
+                    
+                    if best_data_match and best_score > 60:
+                        error_msg = f"No data found for '{room_name}'. Did you mean '{best_data_match}'? Available rooms in data: {', '.join([str(r) for r in actual_rooms_in_data if not pd.isna(r)])}"
+                    else:
+                        error_msg = f"No data found for '{room_name}'. Available rooms in sensor data: {', '.join([str(r) for r in actual_rooms_in_data if not pd.isna(r)])}"
+                else:
+                    error_msg = f"No data found for '{room_name}'. No room data available in sensor records."
+                    
+            except Exception as e:
+                logger.error(f"Error debugging room data: {e}")
+                error_msg = f"No data found for '{room_name}'. Error checking sensor data: {e}"
+            
+            return {"error": error_msg}
         
         # Determine query type and handle accordingly
         query_lower = query.lower()
