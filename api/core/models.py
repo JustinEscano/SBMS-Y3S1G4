@@ -19,6 +19,12 @@ EQUIPMENT_TYPE_CHOICES = [
     ('monitor', 'Monitor'),
 ]
 
+OCCUPANCY_CHOICES = [
+    ("vacant", "Vacant"),
+    ("occupied", "Occupied"),
+    ("reserved", "Reserved"),
+]
+
 EQUIPMENT_MODE_CHOICES = [
     ('hvac', 'HVAC'),
     ('lighting', 'Lighting'),
@@ -76,6 +82,7 @@ class Room(models.Model):
     floor = models.IntegerField()
     capacity = models.IntegerField()
     type = models.CharField(max_length=100, choices=ROOM_TYPE_CHOICES)
+    occupancy = models.CharField(max_length=20, choices=OCCUPANCY_CHOICES, default="vacant",)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

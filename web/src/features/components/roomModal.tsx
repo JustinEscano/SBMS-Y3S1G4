@@ -17,6 +17,7 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
     floor: "",
     capacity: "",
     type: "",
+    occupancy: "",
   });
 
   // Pre-fill form for edit/delete
@@ -27,6 +28,7 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
         floor: room.floor.toString(),
         capacity: room.capacity?.toString() ?? "",
         type: room.type ?? "",
+        occupancy: room.occupancy ?? "vacant"
       });
     }
   }, [mode, room]);
@@ -45,6 +47,7 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
         floor: Number(formData.floor),
         capacity: Number(formData.capacity) || 0,
         type: formData.type,
+        occupancy: formData.occupancy as "vacant" | "occupied" | "reserved",
       });
     } else if (mode === "edit" && room) {
       onSubmit({
@@ -53,6 +56,7 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
         floor: Number(formData.floor),
         capacity: Number(formData.capacity) || 0,
         type: formData.type,
+        occupancy: formData.occupancy as "vacant" | "occupied" | "reserved",
       });
     } else if (mode === "delete" && room) {
       onSubmit({ id: room.id });
@@ -115,12 +119,21 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
             />
 
             <label>Type:</label>
-            <select name="type" value={formData.type} onChange={handleChange}>
-              <option value="">Select type</option>
-              <option value="Classroom">Classroom</option>
-              <option value="Office">Office</option>
-              <option value="Lab">Lab</option>
-              <option value="Other">Other</option>
+              <select name="type" value={formData.type} onChange={handleChange} required>
+                <option value="">Select type</option>
+                <option value="office">Office</option>
+                <option value="lab">Laboratory</option>
+                <option value="meeting">Meeting Room</option>
+                <option value="storage">Storage</option>
+                <option value="corridor">Corridor</option>
+                <option value="utility">Utility</option>
+            </select>
+
+            <label>Occupancy:</label>
+            <select name="occupancy" value={formData.occupancy} onChange={handleChange}>
+              <option value="vacant">Vacant</option>
+              <option value="occupied">Occupied</option>
+              <option value="reserved">Reserved</option>
             </select>
 
             <div className="modal-actions">

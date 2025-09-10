@@ -4729,3 +4729,68 @@
 2025-09-06 13:26:20,251 - INFO - Processing query: 'what is the average temperature?'
 2025-09-06 13:26:20,254 - INFO - Matched mixed query
 2025-09-06 13:26:20,255 - INFO - Used deterministic handler for query: 'What is the average temperature?'
+2025-09-10 11:27:51,304 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 11:27:52,297 - INFO - Retrieved 0 sensor records from database
+2025-09-10 11:27:52,482 - ERROR - Error getting equipment list: column core_room.occupancy does not exist
+LINE 1: ...oor", "core_room"."capacity", "core_room"."type", "core_room...
+                                                             ^
+
+2025-09-10 11:34:46,339 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 11:34:46,667 - INFO - Retrieved 0 sensor records from database
+2025-09-10 11:34:46,862 - INFO - Database connection closed
+2025-09-10 11:34:46,864 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-10 11:34:47,038 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 11:34:47,039 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-10 11:34:47,075 - ERROR - Failed to initialize MongoDB Atlas: database names cannot contain the character ' '
+2025-09-10 11:34:47,085 - INFO - Loaded 43 existing document hashes
+2025-09-10 11:34:47,086 - INFO - RoomLogAnalyzer instance created
+2025-09-10 11:34:47,087 - ERROR - Error loading data: [WinError 2] The system cannot find the file specified: 'c:\\SBMS-Y3S1G4\\llm\\static_remote_LLM\\../room_logs.json'
+2025-09-10 11:34:47,088 - ERROR - Error initializing analyzer: [WinError 2] The system cannot find the file specified: 'c:\\SBMS-Y3S1G4\\llm\\static_remote_LLM\\../room_logs.json'
+2025-09-10 12:21:28,828 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 12:21:29,214 - INFO - Retrieved 0 sensor records from database
+2025-09-10 12:21:29,422 - INFO - Database connection closed
+2025-09-10 12:21:29,424 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-10 12:21:29,620 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 12:21:29,620 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-10 12:21:30,580 - ERROR - Failed to initialize MongoDB Atlas: The DNS query name does not exist: _mongodb._tcp.cluster0.mongodb.net.
+2025-09-10 12:21:30,582 - INFO - Loaded 43 existing document hashes
+2025-09-10 12:21:30,582 - INFO - RoomLogAnalyzer instance created
+2025-09-10 12:21:30,583 - ERROR - Error loading data: [WinError 2] The system cannot find the file specified: 'c:\\SBMS-Y3S1G4\\llm\\static_remote_LLM\\../room_logs.json'
+2025-09-10 12:21:30,584 - ERROR - Error initializing analyzer: [WinError 2] The system cannot find the file specified: 'c:\\SBMS-Y3S1G4\\llm\\static_remote_LLM\\../room_logs.json'
+2025-09-10 15:56:18,262 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 15:56:18,898 - INFO - Retrieved 0 sensor records from database
+2025-09-10 15:56:19,133 - INFO - Database connection closed
+2025-09-10 15:56:19,135 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-10 15:56:19,350 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 15:56:19,351 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-10 15:56:19,871 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-10 15:56:19,871 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-10 15:56:19,872 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-10 15:56:19,875 - INFO - Loaded 43 existing document hashes
+2025-09-10 15:56:19,876 - INFO - RoomLogAnalyzer instance created
+2025-09-10 15:56:19,876 - INFO - Attempting to load data from PostgreSQL
+2025-09-10 15:56:19,901 - INFO - Retrieved 0 sensor records from database
+2025-09-10 15:56:19,914 - INFO - Loaded 0 unique occupied room records from PostgreSQL
+2025-09-10 15:56:19,915 - WARNING - No data loaded from PostgreSQL; falling back to JSON
+2025-09-10 15:56:19,917 - ERROR - Error loading data: [WinError 2] The system cannot find the file specified: 'c:\\SBMS-Y3S1G4\\llm\\static_remote_LLM\\../room_logs.json'
+2025-09-10 15:56:19,917 - ERROR - Error initializing analyzer: [WinError 2] The system cannot find the file specified: 'c:\\SBMS-Y3S1G4\\llm\\static_remote_LLM\\../room_logs.json'
+2025-09-10 16:00:07,838 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 16:00:08,182 - INFO - Retrieved 0 sensor records from database
+2025-09-10 16:00:08,360 - INFO - Database connection closed
+2025-09-10 16:00:08,362 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-10 16:00:08,542 - INFO - Successfully connected to PostgreSQL database
+2025-09-10 16:00:08,543 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-10 16:00:08,852 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-10 16:00:08,853 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-10 16:00:08,854 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-10 16:00:08,856 - INFO - Loaded 43 existing document hashes
+2025-09-10 16:00:08,856 - INFO - RoomLogAnalyzer instance created
+2025-09-10 16:00:08,857 - INFO - Attempting to load data from PostgreSQL
+2025-09-10 16:00:08,877 - INFO - Retrieved 0 sensor records from database
+2025-09-10 16:00:08,884 - INFO - Loaded 0 unique occupied room records from PostgreSQL
+2025-09-10 16:00:08,885 - WARNING - No data loaded from PostgreSQL; falling back to JSON
+2025-09-10 16:00:08,885 - INFO - Changes detected or first load; reloading JSON data from c:\SBMS-Y3S1G4\llm\static_remote_LLM\../room_logs.json
+2025-09-10 16:00:08,887 - INFO - Raw JSON data loaded: {'logs': []}
+2025-09-10 16:00:08,888 - WARNING - Normalized DataFrame is empty; check JSON structure
+2025-09-10 16:00:08,888 - ERROR - Error loading data: No valid data in JSON logs
+2025-09-10 16:00:08,889 - ERROR - Error initializing analyzer: No valid data in JSON logs

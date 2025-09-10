@@ -22,6 +22,11 @@
   --error: #f44336;
 }
 
+body.dashboard {
+  background: none;
+  background: #1f2235;
+}
+
 /* FIXED: Proper root scrolling setup */
 html {
   width: 100%;
@@ -34,6 +39,7 @@ html {
 }
 
 body {
+  all: unset;
   width: 100%;
   min-height: 100vh; /* CHANGED: Use min-height instead of height */
   overflow-x: hidden;
@@ -63,7 +69,6 @@ body {
   transition: margin-left 0.3s ease;
   
   /* FIXED: Allow content to expand naturally */
-  min-height: calc(100vh - var(--topbar-height));
   width: calc(100% - var(--sidebar-expanded));
   box-sizing: border-box;
 }
@@ -446,6 +451,106 @@ body {
   font-weight: 500;
 }
 
+/* Maintenance Request Section */
+.action-squares {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.action-square {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.4rem;
+  transition: transform 0.2s ease, background 0.2s ease;
+  color: #fff;
+}
+
+.action-square:hover {
+  transform: scale(1.1);
+}
+
+/* Different colors for each square */
+.action-square.blue {
+  background: #4c6ef5;
+}
+.action-square.green {
+  background: #2ecc71;
+}
+.action-square.purple {
+  background: #9b59b6;
+}
+.action-square.yellow {
+  background: #f39c12;
+}
+
+/* Maintenance popup (overlay style) */
+
+.maintenance-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: red;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+/* 🔧 Popup improvements */
+.maintenance-popup {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 350px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: darkblue;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1200;
+}
+
+.maintenance-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.maintenance-item {
+  border-bottom: 1px solid #eee;
+  padding: 8px 0;
+}
+
+.maintenance-item:last-child {
+  border-bottom: none;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between; /* H1 left, squares far right */
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative; /* so popup anchors here */
+}
+
+
 /* Stats Section */
 .stats-section {
   margin-bottom: 1.5rem;
@@ -463,18 +568,19 @@ body {
   margin-bottom: 16px;
 }
 
-.stat-box {
+.stats-box {
   background: var(--mid-bg);
   padding: 20px;
   border-radius: 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   transition: transform 0.2s ease;
 }
 
-.stat-box:hover {
+.stat-boxes:hover {
   transform: translateY(-3px);
 }
 
