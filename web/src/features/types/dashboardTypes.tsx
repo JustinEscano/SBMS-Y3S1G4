@@ -32,7 +32,6 @@ export interface Room {
   floor: number;
   capacity: number;
   type: string;
-  occupancy: "vacant" | "occupied" | "reserved";
   created_at: string;
   equipment?: Equipment[];
 }
