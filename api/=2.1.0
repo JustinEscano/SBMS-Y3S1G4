@@ -1,0 +1,19 @@
+Collecting pandas
+  Using cached pandas-2.3.2-cp313-cp313-win_amd64.whl.metadata (19 kB)
+Collecting numpy>=1.26.0 (from pandas)
+  Downloading numpy-2.3.2-cp313-cp313-win_amd64.whl.metadata (60 kB)
+Collecting python-dateutil>=2.8.2 (from pandas)
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting pytz>=2020.1 (from pandas)
+  Using cached pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+Requirement already satisfied: tzdata>=2022.7 in c:\sbms\sbms-y3s1g4\api\venv\lib\site-packages (from pandas) (2025.2)
+Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas)
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Using cached pandas-2.3.2-cp313-cp313-win_amd64.whl (11.0 MB)
+Downloading numpy-2.3.2-cp313-cp313-win_amd64.whl (12.8 MB)
+   -------------------------- 12.8/12.8 MB 23.9 MB/s eta 0:00:00
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Using cached pytz-2025.2-py2.py3-none-any.whl (509 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Installing collected packages: pytz, six, numpy, python-dateutil, pandas
+Successfully installed numpy-2.3.2 pandas-2.3.2 python-dateutil-2.9.0.post0 pytz-2025.2 six-1.17.0
