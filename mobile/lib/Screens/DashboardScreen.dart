@@ -8,6 +8,7 @@ import 'QRScannerScreen.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'LoginScreen.dart';
+import 'ChatScreen.dart';
 import '../Widgets/bottom_navbar.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -309,16 +310,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (value) {
       case 'analytics':
       case 'notifications':
-      case 'orb_chat':
       case 'about':
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${value.replaceAll('_', ' ').toUpperCase()} feature coming soon!')),
         );
         break;
+      case 'orb_chat':
+        _navigateToChatScreen(); // Navigate to chat instead of "coming soon"
+        break;
       case 'dashboard':
       default:
         break;
     }
+  }
+
+  void _navigateToChatScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          accessToken: widget.accessToken,
+          refreshToken: widget.refreshToken,
+        ),
+      ),
+    );
   }
 
   void _navigateToRoomManagement() {
@@ -927,6 +942,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const SizedBox(height: 8),
                               const Text(
                                 'QR Scanner',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Card(
+                      elevation: 3,
+                      child: InkWell(
+                        onTap: _navigateToChatScreen,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.chat,
+                                  color: Colors.blue,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'ORB Chat',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
