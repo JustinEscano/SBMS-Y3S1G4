@@ -1,0 +1,18 @@
+# LLM and AI dependencies
+langchain
+langchain-community
+langchain-core
+langchain-ollama
+pymongo
+chromadb
+ollama
+
+
+# Data processing - using versions with pre-compiled wheels
+pandas>=2.1.0
+numpy>=1.25.0
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.12.0
+
+# Utilities
+python-dotenv==1.0.1
