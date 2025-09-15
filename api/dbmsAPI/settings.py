@@ -11,13 +11,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-v#_fms+k$##9%b+f1+x%t30$u6)mrn9ixxr&9y)l+^@&rldf4-'
@@ -25,20 +22,16 @@ SECRET_KEY = 'django-insecure-v#_fms+k$##9%b+f1+x%t30$u6)mrn9ixxr&9y)l+^@&rldf4-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2'
+ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '10.0.2.2',
-    '192.168.1.38',  # Add your computer's IP address
-    '0.0.0.0',  
-    '192.168.1.1'     # Allow all IPs (for development only)
+    '192.168.1.38',
+    '192.168.1.1',
+    '0.0.0.0',  # For development only
 ]
 
-
 # Application definition
-
 AUTH_USER_MODEL = 'core.User'
 
 INSTALLED_APPS = [
@@ -50,18 +43,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'rest_framework',
+    'rest_framework_simplejwt',
     'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'dbmsAPI.urls'
@@ -83,10 +77,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'dbmsAPI.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -98,13 +89,22 @@ DATABASES = {
     }
 }
 
+# REST Framework settings
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
 }
 
+# File storage for MaintenanceAttachment
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # For development; restrict in production
+# CORS_ALLOWED_ORIGINS = ['http://localhost:3000']  # Uncomment and adjust for production
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -120,25 +120,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
