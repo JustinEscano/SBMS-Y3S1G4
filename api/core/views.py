@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from rest_framework import generics
-from rest_framework.decorators import api_view, permission_classes, action  # Added 'action' import
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +8,9 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Count
+from django.core.mail import send_mail
+from django.core.mail.backends.smtp import EmailBackend
+from django.conf import settings
 from .models import *
 from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -30,7 +33,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Add extra claims if needed
         token['role'] = user.role
         return token
 
@@ -62,11 +64,10 @@ class EquipmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save()
-        # Auto-generate QR code on create
         instance.generate_qr_code()
 
 class SensorLogViewSet(viewsets.ModelViewSet):
-    queryset = SensorLog.objects.all().order_by('-recorded_at')  # Latest first
+    queryset = SensorLog.objects.all().order_by('-recorded_at')
     serializer_class = SensorLogSerializer
     permission_classes = [RoleBasedPermission]
 
@@ -77,7 +78,6 @@ class AlertViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Filterable by query params, e.g., ?resolved=false&severity=high&type=motion
         resolved = self.request.query_params.get('resolved')
         if resolved is not None:
             resolved_bool = resolved.lower() == 'true'
@@ -101,29 +101,106 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [RoleBasedPermission]
 
     def perform_create(self, serializer):
-        instance = serializer.save(user=self.request.user)  # Ensure user is set
+        instance = serializer.save(user=self.request.user)
         logger.info(f"Maintenance request created: {instance.id} by {self.request.user.username}")
+        
+        # In-app notification for client
+        Notification.objects.create(
+            user=instance.user,
+            title=f"Maintenance Request Submitted: {instance.equipment.name}",
+            message=f"Your request #{instance.id} for {instance.equipment.name} has been submitted."
+        )
+        # Email to client (using Gmail from settings.py)
+        send_mail(
+            subject=f'SBMS: Maintenance Request Submitted - {instance.equipment.name}',
+            message=f'Your request #{instance.id} for {instance.equipment.name} has been submitted.\nIssue: {instance.issue}\nComments: {instance.comments or "None"}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[instance.user.email],
+            fail_silently=False,
+        )
+        
+        # In-app notification and email for admins
+        admins = User.objects.filter(role__in=['admin', 'superadmin'])
+        admin_email_backend = EmailBackend(
+            host='smtp.gmail.com',
+            port=587,
+            username=settings.ADMIN_EMAIL_USER,
+            password=settings.ADMIN_EMAIL_PASSWORD,
+            use_tls=True,
+        )
+        for admin in admins:
+            Notification.objects.create(
+                user=admin,
+                title=f"New Maintenance Request: {instance.equipment.name}",
+                message=f"Request #{instance.id} by {instance.user.username} needs review."
+            )
+            send_mail(
+                subject=f'SBMS: New Maintenance Request - {instance.equipment.name}',
+                message=f'Request #{instance.id} by {instance.user.username} needs review.\nIssue: {instance.issue}',
+                from_email=settings.ADMIN_FROM_EMAIL,
+                recipient_list=[admin.email],
+                fail_silently=False,
+                connection=admin_email_backend,
+            )
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        # Send notification on status change or assignment
         if 'status' in serializer.validated_data or 'assigned_to' in serializer.validated_data:
             old_status = getattr(self.get_object(), 'status', None)
             new_status = serializer.validated_data.get('status', old_status)
+            
+            # Notify client on status change
             if new_status != old_status:
-                # Notify user on resolution
-                if new_status == 'resolved':
+                Notification.objects.create(
+                    user=instance.user,
+                    title=f"Maintenance Request Updated: {instance.equipment.name}",
+                    message=f"Your request #{instance.id} is now {new_status}."
+                )
+                send_mail(
+                    subject=f'SBMS: Request Updated - {instance.equipment.name}',
+                    message=f'Your request #{instance.id} is now {new_status}.\nComments: {instance.comments or "None"}',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[instance.user.email],
+                    fail_silently=False,
+                )
+                
+                # Notify admins on status change
+                admins = User.objects.filter(role__in=['admin', 'superadmin'])
+                admin_email_backend = EmailBackend(
+                    host='smtp.gmail.com',
+                    port=587,
+                    username=settings.ADMIN_EMAIL_USER,
+                    password=settings.ADMIN_EMAIL_PASSWORD,
+                    use_tls=True,
+                )
+                for admin in admins:
                     Notification.objects.create(
-                        user=instance.user,
-                        title=f"Maintenance Request Resolved: {instance.equipment.name}",
-                        message=f"Your request for {instance.equipment.name} has been resolved."
+                        user=admin,
+                        title=f"Maintenance Request Updated: {instance.equipment.name}",
+                        message=f"Request #{instance.id} is now {new_status}."
                     )
+                    send_mail(
+                        subject=f'SBMS: Request Updated - {instance.equipment.name}',
+                        message=f'Request #{instance.id} is now {new_status}.',
+                        from_email=settings.ADMIN_FROM_EMAIL,
+                        recipient_list=[admin.email],
+                        fail_silently=False,
+                        connection=admin_email_backend,
+                    )
+            
             # Notify assignee on assignment
             if instance.assigned_to and 'assigned_to' in serializer.validated_data:
                 Notification.objects.create(
                     user=instance.assigned_to,
                     title=f"New Assignment: {instance.equipment.name}",
-                    message=f"You have been assigned to resolve the issue: {instance.issue[:100]}"
+                    message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}."
+                )
+                send_mail(
+                    subject=f'SBMS: New Assignment - {instance.equipment.name}',
+                    message=f'You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[instance.assigned_to.email],
+                    fail_silently=False,
                 )
 
     @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
@@ -153,6 +230,44 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 file_type=file_obj.content_type,
                 uploaded_by=request.user
             )
+
+            # Notify client
+            Notification.objects.create(
+                user=maintenance_request.user,
+                title=f"New Attachment: {maintenance_request.equipment.name}",
+                message=f"An attachment was added to your request #{maintenance_request.id}."
+            )
+            send_mail(
+                subject=f'SBMS: New Attachment Added - {maintenance_request.equipment.name}',
+                message=f'An attachment was added to your request #{maintenance_request.id}.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[maintenance_request.user.email],
+                fail_silently=False,
+            )
+
+            # Notify admins
+            admins = User.objects.filter(role__in=['admin', 'superadmin'])
+            admin_email_backend = EmailBackend(
+                host='smtp.gmail.com',
+                port=587,
+                username=settings.ADMIN_EMAIL_USER,
+                password=settings.ADMIN_EMAIL_PASSWORD,
+                use_tls=True,
+            )
+            for admin in admins:
+                Notification.objects.create(
+                    user=admin,
+                    title=f"New Attachment: {maintenance_request.equipment.name}",
+                    message=f"An attachment was added to request #{maintenance_request.id} by {request.user.username}."
+                )
+                send_mail(
+                    subject=f'SBMS: New Attachment - {maintenance_request.equipment.name}',
+                    message=f'An attachment was added to request #{maintenance_request.id} by {request.user.username}.',
+                    from_email=settings.ADMIN_FROM_EMAIL,
+                    recipient_list=[admin.email],
+                    fail_silently=False,
+                    connection=admin_email_backend,
+                )
 
             logger.info(f"Attachment uploaded: {attachment.id} for {maintenance_request.id}")
             return Response(
@@ -369,10 +484,9 @@ def check_anomalies(request):
                         status__in=['pending', 'in_progress']
                     ).exists()
                     if not recent_request:
-                        # Assign to first employee if available
                         assignee = User.objects.filter(role='employee').first()
                         MaintenanceRequest.objects.create(
-                            user_id=request.user.id,  # Or system user
+                            user_id=request.user.id,
                             equipment=equipment,
                             issue=f'Auto-generated: High temperature alert ({latest_log.temperature}°C)',
                             status='pending',
@@ -393,7 +507,6 @@ def check_anomalies(request):
                 )
 
             if latest_log.motion_detected:
-                # Check if motion was not detected in previous log to avoid spam
                 prev_log = SensorLog.objects.filter(equipment=equipment, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
                 if prev_log and not prev_log.motion_detected:
                     alert, created = Alert.objects.get_or_create(
@@ -408,7 +521,6 @@ def check_anomalies(request):
                     if created:
                         created_alerts.append(str(alert.id))
 
-            # Energy anomaly: simple check if > 2x avg
             avg_energy = recent_logs.aggregate(avg=Avg('energy_usage'))['avg']
             if avg_energy and latest_log.energy_usage > (avg_energy * 2):
                 Alert.objects.get_or_create(
@@ -457,7 +569,6 @@ def esp32_sensor_data(request):
     try:
         data = request.data
         
-        # Validate required fields
         required_fields = ['device_id', 'temperature', 'humidity', 'light_level', 'motion_detected']
         for field in required_fields:
             if field not in data:
@@ -467,7 +578,6 @@ def esp32_sensor_data(request):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        # Find equipment by device_id
         try:
             equipment = Equipment.objects.get(device_id=data['device_id'])
             logger.info(f"Found equipment: {equipment.name}")
@@ -478,24 +588,20 @@ def esp32_sensor_data(request):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Create sensor log entry
         sensor_log = SensorLog.objects.create(
             equipment=equipment,
             temperature=float(data['temperature']),
             humidity=float(data['humidity']),
             light_level=float(data['light_level']),
             motion_detected=bool(data['motion_detected']),
-            energy_usage=float(data.get('energy_usage', 0.0)),  # Optional field
+            energy_usage=float(data.get('energy_usage', 0.0)),
             recorded_at=timezone.now()
         )
 
-        # Update equipment status to online (using standardized value)
         equipment.status = 'online'
         equipment.save()
 
-        # Trigger alerts based on thresholds (2.7, 2.8, 2.9)
         created_alert_ids = []
-        # Temperature threshold
         if sensor_log.temperature > 40:
             alert, created = Alert.objects.get_or_create(
                 equipment=equipment,
@@ -509,7 +615,6 @@ def esp32_sensor_data(request):
             if created:
                 created_alert_ids.append(str(alert.id))
 
-        # Motion alert
         if sensor_log.motion_detected:
             prev_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').exclude(id=sensor_log.id).first()
             if prev_log and not prev_log.motion_detected:
@@ -525,9 +630,7 @@ def esp32_sensor_data(request):
                 if created:
                     created_alert_ids.append(str(alert.id))
 
-        # Auto-generate maintenance from anomaly (4.8)
         if created_alert_ids:
-            # Check for recent pending request
             recent_request = MaintenanceRequest.objects.filter(
                 equipment=equipment,
                 status__in=['pending', 'in_progress'],
@@ -536,13 +639,12 @@ def esp32_sensor_data(request):
             if not recent_request:
                 assignee = User.objects.filter(role='employee').first()
                 if not assignee:
-                    # Create fallback system user if no employee exists
                     assignee = User.objects.create_user(
                         username='system', email='system@example.com', 
                         password='systempass', role='employee'
                     )
                 MaintenanceRequest.objects.create(
-                    user=assignee,  # Use system user
+                    user=assignee,
                     equipment=equipment,
                     issue=f'Auto-generated from alert: Temperature/Motion anomaly',
                     status='pending',
@@ -594,7 +696,6 @@ def latest_sensor_data(request):
     """
     logger.info("Latest sensor data requested")
     try:
-        # Get latest sensor log for each ESP32 equipment
         latest_logs = []
         equipment_list = Equipment.objects.filter(type__in=['esp32'])
         
@@ -648,7 +749,7 @@ def esp32_heartbeat(request):
 
         try:
             equipment = Equipment.objects.get(device_id=device_id)
-            equipment.status = 'online'  # Use standardized value
+            equipment.status = 'online'
             equipment.save()
             
             logger.info(f"Heartbeat processed for {device_id}")
@@ -697,7 +798,6 @@ def llm_query(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Import LLM module
         try:
             from main import ask
             logger.info("LLM module imported successfully")
@@ -708,7 +808,6 @@ def llm_query(request):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        # Process the query
         logger.info(f"Processing query: {query_text}")
         result = ask(query_text)
         
@@ -719,7 +818,6 @@ def llm_query(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        # Save query to database if user_id provided
         if user_id:
             try:
                 user = User.objects.get(id=user_id)
@@ -759,10 +857,7 @@ def llm_health_check(request):
     logger.info("LLM health check requested")
     
     try:
-        # Try to import LLM module
         from main import ask
-        
-        # Test with a simple query
         result = ask("How many records are there?")
         
         if "error" in result:
