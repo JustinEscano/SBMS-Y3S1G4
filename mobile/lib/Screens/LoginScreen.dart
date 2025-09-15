@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'RegisterScreen.dart';
-import 'DashboardScreen.dart';
+import '../Screens/RegisterScreen.dart';
+import '../Screens/DashboardScreen.dart';
+import '../Config/api.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,8 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isCheckingStoredLogin = true;
   String _errorMessage = '';
-
-  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   // SharedPreferences keys
   static const String _accessTokenKey = 'access_token';
@@ -109,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<bool> _verifyToken(String accessToken) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/verify-token/'), // Adjust endpoint as needed
+        Uri.parse(ApiConfig.verifyToken), // Use ApiConfig.verifyToken
         headers: {
           'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',
@@ -126,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<Map<String, String>?> _refreshAccessToken(String refreshToken) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/token/refresh/'),
+        Uri.parse(ApiConfig.refreshToken), // Use ApiConfig.refreshToken
         headers: {
           'Content-Type': 'application/json',
         },
@@ -191,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('$baseUrl/token/'),
+        Uri.parse(ApiConfig.login), // Use ApiConfig.login
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

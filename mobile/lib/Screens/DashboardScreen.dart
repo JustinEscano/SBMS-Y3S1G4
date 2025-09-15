@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'ProfileScreen.dart';
-import 'RoomManagementScreen.dart';
-import 'EquipmentManagementScreen.dart';
-import 'MaintenanceManagementScreen.dart'; // Add this import
-import 'QRScannerScreen.dart';
+import '../Screens/ProfileScreen.dart';
+import '../Screens/RoomManagementScreen.dart';
+import '../Screens/EquipmentManagementScreen.dart';
+import '../Screens/MaintenanceManagementScreen.dart';
+import '../Screens/QRScannerScreen.dart';
 import 'dart:convert';
 import 'dart:async';
-import 'LoginScreen.dart';
-import 'ChatScreen.dart';
+import '../Screens/LoginScreen.dart';
+import '../Screens/ChatScreen.dart';
 import '../Widgets/bottom_navbar.dart';
+import '../Config/api.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String accessToken;
@@ -30,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> equipment = [];
   List<dynamic> sensorLogs = [];
   List<dynamic> latestSensorData = [];
-  List<dynamic> maintenanceRequests = []; // Add this line
+  List<dynamic> maintenanceRequests = [];
 
   // New data structures for the additional sections
   Map<String, dynamic> hvacData = {};
@@ -42,8 +43,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isAutoRefresh = true;
   String _errorMessage = '';
   Timer? _refreshTimer;
-
-  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   @override
   void initState() {
@@ -93,11 +92,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       };
 
       final responses = await Future.wait([
-        http.get(Uri.parse('$baseUrl/rooms/'), headers: headers),
-        http.get(Uri.parse('$baseUrl/equipment/'), headers: headers),
-        http.get(Uri.parse('$baseUrl/sensorlog/'), headers: headers),
-        http.get(Uri.parse('$baseUrl/esp32/latest/')),
-        http.get(Uri.parse('$baseUrl/maintenancerequest/'), headers: headers), // Add this line
+        http.get(Uri.parse(ApiConfig.rooms), headers: headers),
+        http.get(Uri.parse(ApiConfig.equipment), headers: headers),
+        http.get(Uri.parse(ApiConfig.sensorLog), headers: headers),
+        http.get(Uri.parse(ApiConfig.latestSensorData)),
+        http.get(Uri.parse(ApiConfig.maintenanceRequest), headers: headers),
       ]).timeout(const Duration(seconds: 15));
 
       if (responses[0].statusCode == 200) {
@@ -130,7 +129,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
 
-      // Add maintenance requests loading
       if (responses[4].statusCode == 200) {
         final maintenanceData = json.decode(responses[4].body);
         setState(() {
@@ -290,7 +288,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> loadLatestSensorData() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/esp32/latest/'),
+        Uri.parse(ApiConfig.latestSensorData), // Use ApiConfig.latestSensorData
       ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
@@ -316,7 +314,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
         break;
       case 'orb_chat':
-        _navigateToChatScreen(); // Navigate to chat instead of "coming soon"
+        _navigateToChatScreen();
         break;
       case 'dashboard':
       default:
@@ -364,7 +362,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  // Add this method
   void _navigateToMaintenanceManagement() {
     Navigator.push(
       context,
@@ -411,7 +408,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
                 if (systemType == 'Maintenance') {
-                  _navigateToMaintenanceManagement(); // Navigate to maintenance management
+                  _navigateToMaintenanceManagement();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('$systemType management coming soon!')),
@@ -628,7 +625,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _navigateToEquipmentManagement();
                           },
                         ),
-                        // Add maintenance management tile
                         _buildManagementTile(
                           icon: Icons.build,
                           title: 'Maintenance Management',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../Config/api.dart'; // Updated import to point to ../Config/api.dart
 
 class RoomManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -20,8 +21,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
   List<dynamic> rooms = [];
   bool isLoading = true;
   String _errorMessage = '';
-
-  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   // Standardized room type options - use these across web and mobile
   static const List<Map<String, String>> ROOM_TYPE_OPTIONS = [
@@ -47,7 +46,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/rooms/'),
+        Uri.parse(ApiConfig.rooms),
         headers: {
           'Authorization': 'Bearer ${widget.accessToken}',
           'Content-Type': 'application/json',
@@ -101,7 +100,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     if (confirmed == true) {
       try {
         final response = await http.delete(
-          Uri.parse('$baseUrl/rooms/$roomId/'),
+          Uri.parse('${ApiConfig.rooms}$roomId/'),
           headers: {
             'Authorization': 'Bearer ${widget.accessToken}',
             'Content-Type': 'application/json',
@@ -310,8 +309,8 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
       };
 
       final url = isEditing
-          ? '$baseUrl/rooms/$roomId/'
-          : '$baseUrl/rooms/';
+          ? '${ApiConfig.rooms}$roomId/'
+          : ApiConfig.rooms;
 
       final response = isEditing
           ? await http.put(

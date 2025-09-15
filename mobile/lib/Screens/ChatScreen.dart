@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../Services/llm_service.dart';
 import '../Models/chat_message.dart';
 import '../Providers/chat_provider.dart';
+import '../Config/api.dart'; // Added import for ApiConfig
 
 class ChatScreen extends StatefulWidget {
   final String accessToken;
@@ -27,7 +28,6 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _llmService = LLMService(
-      baseUrl: 'http://10.0.2.2:8000', // Adjust if needed to match backend
       accessToken: widget.accessToken,
     );
     _loadConversationHistory();

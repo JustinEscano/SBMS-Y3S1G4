@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'LoginScreen.dart';
+import '../Screens/LoginScreen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final String accessToken;

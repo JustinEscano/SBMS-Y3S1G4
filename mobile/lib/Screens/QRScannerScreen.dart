@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../Config/api.dart'; // Updated import to use ApiConfig
 
 class QRScannerScreen extends StatefulWidget {
   final String accessToken;
@@ -24,8 +25,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   bool isLoadingEquipment = true;
   String _errorMessage = '';
 
-  final String baseUrl = 'http://10.0.2.2:8000/api';
-
   @override
   void initState() {
     super.initState();
@@ -40,7 +39,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/equipment/'),
+        Uri.parse(ApiConfig.equipment),
         headers: {
           'Authorization': 'Bearer ${widget.accessToken}',
           'Content-Type': 'application/json',
