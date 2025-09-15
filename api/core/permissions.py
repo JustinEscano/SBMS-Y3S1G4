@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from .models import User, MaintenanceRequest, MaintenanceAttachment  # import your custom user model and relevant models
+from .models import User, MaintenanceRequest, MaintenanceAttachment, Notification
 
 class RoleBasedPermission(BasePermission):
     def has_permission(self, request, view):
@@ -30,12 +30,12 @@ class RoleBasedPermission(BasePermission):
             # Read-only for other models
             return request.method in SAFE_METHODS
 
-        # Client has limited access: read-only for most, full for own LLMQuery and MaintenanceRequest
+        # Client has limited access: read-only for most, full for own LLMQuery, MaintenanceRequest, MaintenanceAttachment, and Notification
         if role == "client":
             model = getattr(getattr(view, "queryset", None), "model", None)
             model_name = model.__name__.lower() if model else None
 
-            if model_name in ["llmquery", "maintenancerequest", "maintenanceattachment"]:
+            if model_name in ["llmquery", "maintenancerequest", "maintenanceattachment", "notification"]:
                 # Allow create/update for own records
                 if request.method in ['POST', 'PATCH', 'PUT']:
                     if model_name == "maintenancerequest" and request.data.get('user') != str(db_user.id):
@@ -53,7 +53,17 @@ class RoleBasedPermission(BasePermission):
                                     return False
                             except MaintenanceRequest.DoesNotExist:
                                 return False
-                return True
+                    if model_name == "notification":
+                        # Allow clients to update their own notifications (e.g., mark as read)
+                        notification_id = view.kwargs.get('pk')
+                        if notification_id and request.method in ['PUT', 'PATCH']:
+                            try:
+                                notification = Notification.objects.get(id=notification_id)
+                                if notification.user != db_user:
+                                    return False
+                            except Notification.DoesNotExist:
+                                return False
+                    return True
 
             # Read-only for other models
             return request.method in SAFE_METHODS
