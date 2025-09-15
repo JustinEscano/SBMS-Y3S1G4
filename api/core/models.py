@@ -40,6 +40,13 @@ MAINTENANCE_STATUS_CHOICES = [
     ('resolved', 'Resolved'),
 ]
 
+ROLE_CHOICES = [
+    ('client', 'Client'),
+    ('employee', 'Employee'),
+    ('admin', 'Admin'),
+    ('superadmin', 'Superadmin'),
+]
+
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role='client', **extra_fields):
         if not email:
