@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
+import '../Config/api.dart'; // Updated import to point to ../Config/api.dart
 
 class MaintenanceManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -24,8 +25,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   bool isLoading = true;
   String _errorMessage = '';
   String _filterStatus = 'all';
-
-  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   // Standardized status values only
   static const List<Map<String, String>> MAINTENANCE_STATUS_OPTIONS = [
@@ -55,11 +54,15 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       };
 
       developer.log('Request headers: $headers', name: 'MaintenanceScreen.LoadData');
+      developer.log('Request URLs:', name: 'MaintenanceScreen.LoadData');
+      developer.log('  - Maintenance Requests: ${ApiConfig.maintenanceRequest}', name: 'MaintenanceScreen.LoadData');
+      developer.log('  - Equipment: ${ApiConfig.equipment}', name: 'MaintenanceScreen.LoadData');
+      developer.log('  - Users: ${ApiConfig.users}', name: 'MaintenanceScreen.LoadData');
 
       final responses = await Future.wait([
-        http.get(Uri.parse('$baseUrl/maintenancerequest/'), headers: headers),
-        http.get(Uri.parse('$baseUrl/equipment/'), headers: headers),
-        http.get(Uri.parse('$baseUrl/users/'), headers: headers),
+        http.get(Uri.parse(ApiConfig.maintenanceRequest), headers: headers),
+        http.get(Uri.parse(ApiConfig.equipment), headers: headers),
+        http.get(Uri.parse(ApiConfig.users), headers: headers),
       ]).timeout(const Duration(seconds: 15));
 
       // Process Maintenance Requests Response
@@ -146,7 +149,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
 
     if (confirmed == true) {
       try {
-        final url = '$baseUrl/maintenancerequest/$requestId/';
+        final url = '${ApiConfig.maintenanceRequest}$requestId/';
         final headers = {
           'Authorization': 'Bearer ${widget.accessToken}',
           'Content-Type': 'application/json',
@@ -694,13 +697,16 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       developer.log('Request body: $requestBody', name: 'MaintenanceScreen.Save');
 
       final url = isEditing
-          ? '$baseUrl/maintenancerequest/$requestId/'
-          : '$baseUrl/maintenancerequest/';
+          ? '${ApiConfig.maintenanceRequest}$requestId/'
+          : ApiConfig.maintenanceRequest;
 
       final headers = {
         'Authorization': 'Bearer ${widget.accessToken}',
         'Content-Type': 'application/json',
       };
+
+      developer.log('Request URL: $url', name: 'MaintenanceScreen.Save');
+      developer.log('Request method: ${isEditing ? 'PUT' : 'POST'}', name: 'MaintenanceScreen.Save');
 
       final response = isEditing
           ? await http.put(

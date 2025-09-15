@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../Models/chat_message.dart';
-import '../config.dart'; // Import the config file
+import '../Config/api.dart'; // Updated import to use ApiConfig
 
 class LLMService {
-  final String baseUrl;
-  String accessToken;
+  final String accessToken;
 
-  LLMService({required this.baseUrl, required this.accessToken});
+  LLMService({required this.accessToken});
 
   // Send a query to the LLM
   Future<Map<String, dynamic>> queryLLM(String query, {String? userId}) async {
@@ -23,7 +22,7 @@ class LLMService {
         if (userId != null) 'user_id': userId,
       };
 
-      final url = Uri.parse('$baseUrl/api/llm/query/');
+      final url = Uri.parse(ApiConfig.llmQuery);
       print('Sending POST to: $url with body: ${json.encode(body)}'); // Debug log
       final response = await http.post(
         url,
@@ -61,7 +60,7 @@ class LLMService {
         'Accept': 'application/json',
       };
 
-      final url = Uri.parse('$baseUrl/api/llm/health/');
+      final url = Uri.parse(ApiConfig.llmHealth);
       print('Sending GET to: $url'); // Debug log
       final response = await http.get(
         url,
@@ -120,7 +119,7 @@ class LLMService {
         'Accept': 'application/json',
       };
 
-      final url = Uri.parse('$baseUrl/api/llm/query/');
+      final url = Uri.parse(ApiConfig.llmQuery);
       print('Sending GET to: $url'); // Debug log
       final response = await http.get(
         url,

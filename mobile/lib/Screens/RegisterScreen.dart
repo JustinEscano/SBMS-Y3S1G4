@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import '../Config/api.dart'; // Make sure this matches your project structure
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,8 +20,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   String _errorMessage = '';
   String _selectedRole = 'client';
-
-  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
@@ -48,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/register/'),
+        Uri.parse('${ApiConfig.baseUrl}/register/'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -59,14 +58,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please login with your email.'),
+            content: Text(
+              'Registration successful! Please login with your email.',
+            ),
             backgroundColor: Colors.green,
           ),
         );
         Navigator.pop(context);
       } else {
         setState(() {
-          _errorMessage = 'Registration failed. Status: ${response.statusCode}';
+          _errorMessage =
+          'Registration failed. Status: ${response.statusCode}';
         });
       }
     } catch (e) {

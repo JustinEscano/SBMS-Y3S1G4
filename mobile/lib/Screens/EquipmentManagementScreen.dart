@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
+import '../Config/api.dart'; // Updated import to point to ../Config/api.dart
 
 class EquipmentManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -25,8 +26,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   String _errorMessage = '';
   String _filterRoom = 'all';
   String _filterType = 'all';
-
-  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   // Standardized field values - use these across web and mobile
   static const List<Map<String, String>> EQUIPMENT_STATUS_OPTIONS = [
@@ -53,7 +52,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
   void _logAppInfo() {
     developer.log('=== EQUIPMENT MANAGEMENT SCREEN INITIALIZED ===', name: 'EquipmentScreen');
-    developer.log('Base URL: $baseUrl', name: 'EquipmentScreen');
+    developer.log('Base URL: ${ApiConfig.baseUrl}', name: 'EquipmentScreen');
     developer.log('Access Token Length: ${widget.accessToken.length}', name: 'EquipmentScreen');
     developer.log('Access Token Preview: ${widget.accessToken.substring(0, 20)}...', name: 'EquipmentScreen');
     developer.log('Refresh Token Length: ${widget.refreshToken.length}', name: 'EquipmentScreen');
@@ -103,14 +102,14 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
       // Log individual API calls
       developer.log('Making API calls to:', name: 'EquipmentScreen.LoadData');
-      developer.log('  - Equipment: $baseUrl/equipment/', name: 'EquipmentScreen.LoadData');
-      developer.log('  - Rooms: $baseUrl/rooms/', name: 'EquipmentScreen.LoadData');
+      developer.log('  - Equipment: ${ApiConfig.equipment}', name: 'EquipmentScreen.LoadData');
+      developer.log('  - Rooms: ${ApiConfig.rooms}', name: 'EquipmentScreen.LoadData');
 
       final stopwatch = Stopwatch()..start();
 
       final responses = await Future.wait([
-        _makeHttpRequest('$baseUrl/equipment/', headers, 'Equipment'),
-        _makeHttpRequest('$baseUrl/rooms/', headers, 'Rooms'),
+        _makeHttpRequest(ApiConfig.equipment, headers, 'Equipment'),
+        _makeHttpRequest(ApiConfig.rooms, headers, 'Rooms'),
       ]).timeout(
         const Duration(seconds: 15),
         onTimeout: () {
@@ -311,7 +310,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
     if (confirmed == true) {
       try {
-        final url = '$baseUrl/equipment/$equipmentId/';
+        final url = '${ApiConfig.equipment}$equipmentId/';
         final headers = {
           'Authorization': 'Bearer ${widget.accessToken}',
           'Content-Type': 'application/json',
@@ -825,8 +824,8 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       developer.log('Request body: $requestBody', name: 'EquipmentScreen.Save');
 
       final url = isEditing
-          ? '$baseUrl/equipment/$equipmentId/'
-          : '$baseUrl/equipment/';
+          ? '${ApiConfig.equipment}$equipmentId/'
+          : ApiConfig.equipment;
 
       developer.log('Request URL: $url', name: 'EquipmentScreen.Save');
       developer.log('Request method: ${isEditing ? 'PUT' : 'POST'}', name: 'EquipmentScreen.Save');
@@ -970,7 +969,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                   title: const Text('Debug Info'),
                   content: SingleChildScrollView(
                     child: Text(
-                      'Base URL: $baseUrl\n'
+                      'Base URL: ${ApiConfig.baseUrl}\n'
                           'Token Length: ${widget.accessToken.length}\n'
                           'Equipment Count: ${equipment.length}\n'
                           'Rooms Count: ${rooms.length}\n'
