@@ -78,6 +78,10 @@ class AlertViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            # Clients see alerts for their maintenance requests' equipment
+            queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
         resolved = self.request.query_params.get('resolved')
         if resolved is not None:
             resolved_bool = resolved.lower() == 'true'
@@ -95,10 +99,27 @@ class MaintenanceAttachmentViewSet(viewsets.ModelViewSet):
     serializer_class = MaintenanceAttachmentSerializer
     permission_classes = [RoleBasedPermission]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(maintenance_request__user=user)
+        return queryset
+
 class MaintenanceRequestViewSet(viewsets.ModelViewSet):
     queryset = MaintenanceRequest.objects.all()
     serializer_class = MaintenanceRequestSerializer
     permission_classes = [RoleBasedPermission]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(user=user)
+        elif hasattr(user, 'role') and user.role == 'employee':
+            # Employees see all maintenance, but you can filter if needed
+            return queryset
+        return queryset
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
@@ -111,9 +132,10 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             message=f"Your request #{instance.id} for {instance.equipment.name} has been submitted."
         )
         # Email to client (using Gmail from settings.py)
+        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
         send_mail(
             subject=f'SBMS: Maintenance Request Submitted - {instance.equipment.name}',
-            message=f'Your request #{instance.id} for {instance.equipment.name} has been submitted.\nIssue: {instance.issue}\nComments: {instance.comments or "None"}',
+            message=f'Your request #{instance.id} for {instance.equipment.name} has been submitted.\nIssue: {instance.issue}\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[instance.user.email],
             fail_silently=False,
@@ -136,7 +158,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             )
             send_mail(
                 subject=f'SBMS: New Maintenance Request - {instance.equipment.name}',
-                message=f'Request #{instance.id} by {instance.user.username} needs review.\nIssue: {instance.issue}',
+                message=f'Request #{instance.id} by {instance.user.username} needs review.\nIssue: {instance.issue}\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
                 from_email=settings.ADMIN_FROM_EMAIL,
                 recipient_list=[admin.email],
                 fail_silently=False,
@@ -148,17 +170,21 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
         if 'status' in serializer.validated_data or 'assigned_to' in serializer.validated_data:
             old_status = getattr(self.get_object(), 'status', None)
             new_status = serializer.validated_data.get('status', old_status)
+            old_assigned_to = getattr(self.get_object(), 'assigned_to', None)
+            new_assigned_to = serializer.validated_data.get('assigned_to', old_assigned_to)
+            
+            assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
             
             # Notify client on status change
             if new_status != old_status:
                 Notification.objects.create(
                     user=instance.user,
                     title=f"Maintenance Request Updated: {instance.equipment.name}",
-                    message=f"Your request #{instance.id} is now {new_status}."
+                    message=f"Your request #{instance.id} is now {new_status}. Assigned To: {assigned_to_name}"
                 )
                 send_mail(
                     subject=f'SBMS: Request Updated - {instance.equipment.name}',
-                    message=f'Your request #{instance.id} is now {new_status}.\nComments: {instance.comments or "None"}',
+                    message=f'Your request #{instance.id} is now {new_status}.\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[instance.user.email],
                     fail_silently=False,
@@ -177,19 +203,19 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                     Notification.objects.create(
                         user=admin,
                         title=f"Maintenance Request Updated: {instance.equipment.name}",
-                        message=f"Request #{instance.id} is now {new_status}."
+                        message=f"Request #{instance.id} is now {new_status}. Assigned To: {assigned_to_name}"
                     )
                     send_mail(
                         subject=f'SBMS: Request Updated - {instance.equipment.name}',
-                        message=f'Request #{instance.id} is now {new_status}.',
+                        message=f'Request #{instance.id} is now {new_status}.\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
                         from_email=settings.ADMIN_FROM_EMAIL,
                         recipient_list=[admin.email],
                         fail_silently=False,
                         connection=admin_email_backend,
                     )
             
-            # Notify assignee on assignment
-            if instance.assigned_to and 'assigned_to' in serializer.validated_data:
+            # Notify assignee on assignment change
+            if instance.assigned_to and new_assigned_to != old_assigned_to:
                 Notification.objects.create(
                     user=instance.assigned_to,
                     title=f"New Assignment: {instance.equipment.name}",
@@ -197,11 +223,95 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 )
                 send_mail(
                     subject=f'SBMS: New Assignment - {instance.equipment.name}',
-                    message=f'You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.',
+                    message=f'You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.\nComments: {instance.comments or "None"}',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[instance.assigned_to.email],
                     fail_silently=False,
                 )
+
+    @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
+    def respond(self, request, pk=None):
+        """
+        POST /maintenancerequest/{id}/respond/
+        Admin responds to a maintenance request by adding to comments and optionally updating assigned_to.
+        Expected JSON: {'response': 'string', 'assigned_to': 'uuid' (optional)}
+        """
+        logger.info(f"Response requested for maintenance request {pk}")
+        try:
+            maintenance_request = self.get_object()
+            response_text = request.data.get('response')
+            assigned_to_id = request.data.get('assigned_to')
+
+            if not response_text:
+                logger.error("Missing response field")
+                return Response(
+                    {'error': 'Response field is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Handle assigned_to update if provided
+            old_assigned_to = maintenance_request.assigned_to
+            if assigned_to_id:
+                try:
+                    new_assigned_to = User.objects.get(id=assigned_to_id)
+                    maintenance_request.assigned_to = new_assigned_to
+                except User.DoesNotExist:
+                    logger.error(f"User with id {assigned_to_id} not found")
+                    return Response(
+                        {'error': f'User with id {assigned_to_id} not found'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Append response to comments with timestamp and admin username
+            current_time = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+            new_comment = f"\n[{current_time}] {request.user.username} (Admin): {response_text}"
+            maintenance_request.comments = (maintenance_request.comments or '') + new_comment
+            maintenance_request.save()
+
+            # Get assigned_to name for notifications
+            assigned_to_name = maintenance_request.assigned_to.username if maintenance_request.assigned_to else "Not assigned"
+
+            # Notify client
+            Notification.objects.create(
+                user=maintenance_request.user,
+                title=f"Response to Maintenance Request: {maintenance_request.equipment.name}",
+                message=f"Admin responded to your request #{maintenance_request.id}: {response_text}\nAssigned To: {assigned_to_name}"
+            )
+            send_mail(
+                subject=f'SBMS: Response to Maintenance Request - {maintenance_request.equipment.name}',
+                message=f'Admin responded to your request #{maintenance_request.id}:\n{response_text}\n\nFull Comments:\n{maintenance_request.comments or "None"}\nAssigned To: {assigned_to_name}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[maintenance_request.user.email],
+                fail_silently=False,
+            )
+
+            # Notify assignee if changed
+            if assigned_to_id and maintenance_request.assigned_to != old_assigned_to:
+                Notification.objects.create(
+                    user=maintenance_request.assigned_to,
+                    title=f"New Assignment: {maintenance_request.equipment.name}",
+                    message=f"You have been assigned to resolve request #{maintenance_request.id}: {maintenance_request.issue[:100]}."
+                )
+                send_mail(
+                    subject=f'SBMS: New Assignment - {maintenance_request.equipment.name}',
+                    message=f'You have been assigned to resolve request #{maintenance_request.id}: {maintenance_request.issue[:100]}.\nComments: {maintenance_request.comments or "None"}',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[maintenance_request.assigned_to.email],
+                    fail_silently=False,
+                )
+
+            logger.info(f"Response added to maintenance request {pk} by {request.user.username}")
+            return Response(
+                MaintenanceRequestSerializer(maintenance_request).data,
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.error(f"Error adding response: {str(e)}")
+            return Response(
+                {'error': f'Server error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
     def upload_attachment(self, request, pk=None):
@@ -288,12 +398,23 @@ class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = [RoleBasedPermission]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role in ['client', 'employee']:
+            return queryset.filter(user=user)
+        return queryset
 
 class LLMQueryViewSet(viewsets.ModelViewSet):
     queryset = LLMQuery.objects.all()
     serializer_class = LLMQuerySerializer
     permission_classes = [RoleBasedPermission]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(user=user)
+        return queryset
 
 class LLMSummaryViewSet(viewsets.ModelViewSet):
     queryset = LLMSummary.objects.all()
