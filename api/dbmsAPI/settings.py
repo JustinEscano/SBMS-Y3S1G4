@@ -132,7 +132,6 @@ STATIC_URL = 'static/'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 # Email configuration for SMTP (using Gmail for now)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -140,11 +139,16 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # Client Gmail configuration
-EMAIL_HOST_USER = 'acephilipdenulan12@gmail.com'  # Replace with your client Gmail (e.g., client@example.com)
-EMAIL_HOST_PASSWORD = 'sdhr xwht waog pydf'  # Replace with Gmail app password from Step 2
-DEFAULT_FROM_EMAIL = 'SBMS Notifications <acephilipdenulan12@gmail.com>'  # Same as EMAIL_HOST_USER
+EMAIL_HOST_USER = 'acephilipdenulan12@gmail.com'
+EMAIL_HOST_PASSWORD = 'sdhr xwht waog pydf'
+DEFAULT_FROM_EMAIL = 'SBMS Notifications <acephilipdenulan12@gmail.com>'
 
 # Admin Gmail configuration
-ADMIN_EMAIL_USER = 'acephilipgclass18@gmail.com'  # Replace with your admin Gmail
-ADMIN_EMAIL_PASSWORD = 'wctv uzrt kopv mtze'  # Replace with admin Gmail app password
+ADMIN_EMAIL_USER = 'acephilipgclass18@gmail.com'
+ADMIN_EMAIL_PASSWORD = 'wctv uzrt kopv mtze'
 ADMIN_FROM_EMAIL = 'SBMS Admin <acephilipgclass18@gmail.com>'
+
+# Employee Gmail configuration
+EMPLOYEE_EMAIL_USER = 'acedenulan20@gmail.com'
+EMPLOYEE_EMAIL_PASSWORD = 'syyk evbk siux omwo'
+EMPLOYEE_FROM_EMAIL = 'SBMS Employee <acedenulan20@gmail.com>'

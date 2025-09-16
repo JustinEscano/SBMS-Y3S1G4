@@ -114,12 +114,13 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
-        if hasattr(user, 'role') and user.role == 'client':
-            return queryset.filter(user=user)
-        elif hasattr(user, 'role') and user.role == 'employee':
-            # Employees see all maintenance, but you can filter if needed
-            return queryset
-        return queryset
+        if hasattr(user, 'role'):
+            if user.role == 'client':
+                return queryset.filter(user=user)
+            elif user.role == 'employee':
+                # Employees see requests assigned to them
+                return queryset.filter(assigned_to=user)
+        return queryset  # Admins/superadmins see all requests
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
@@ -163,6 +164,29 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 recipient_list=[admin.email],
                 fail_silently=False,
                 connection=admin_email_backend,
+            )
+        
+        # Email to assigned employee (if any)
+        if instance.assigned_to:
+            employee_email_backend = EmailBackend(
+                host='smtp.gmail.com',
+                port=587,
+                username=settings.EMPLOYEE_EMAIL_USER,
+                password=settings.EMPLOYEE_EMAIL_PASSWORD,
+                use_tls=True,
+            )
+            Notification.objects.create(
+                user=instance.assigned_to,
+                title=f"New Assignment: {instance.equipment.name}",
+                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}."
+            )
+            send_mail(
+                subject=f'SBMS: New Assignment - {instance.equipment.name}',
+                message=f'You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.\nComments: {instance.comments or "None"}',
+                from_email=settings.EMPLOYEE_FROM_EMAIL,
+                recipient_list=[instance.assigned_to.email],
+                fail_silently=False,
+                connection=employee_email_backend,
             )
 
     def perform_update(self, serializer):
@@ -216,6 +240,13 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             
             # Notify assignee on assignment change
             if instance.assigned_to and new_assigned_to != old_assigned_to:
+                employee_email_backend = EmailBackend(
+                    host='smtp.gmail.com',
+                    port=587,
+                    username=settings.EMPLOYEE_EMAIL_USER,
+                    password=settings.EMPLOYEE_EMAIL_PASSWORD,
+                    use_tls=True,
+                )
                 Notification.objects.create(
                     user=instance.assigned_to,
                     title=f"New Assignment: {instance.equipment.name}",
@@ -224,9 +255,10 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 send_mail(
                     subject=f'SBMS: New Assignment - {instance.equipment.name}',
                     message=f'You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.\nComments: {instance.comments or "None"}',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    from_email=settings.EMPLOYEE_FROM_EMAIL,
                     recipient_list=[instance.assigned_to.email],
                     fail_silently=False,
+                    connection=employee_email_backend,
                 )
 
     @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
@@ -287,6 +319,13 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
 
             # Notify assignee if changed
             if assigned_to_id and maintenance_request.assigned_to != old_assigned_to:
+                employee_email_backend = EmailBackend(
+                    host='smtp.gmail.com',
+                    port=587,
+                    username=settings.EMPLOYEE_EMAIL_USER,
+                    password=settings.EMPLOYEE_EMAIL_PASSWORD,
+                    use_tls=True,
+                )
                 Notification.objects.create(
                     user=maintenance_request.assigned_to,
                     title=f"New Assignment: {maintenance_request.equipment.name}",
@@ -295,9 +334,10 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 send_mail(
                     subject=f'SBMS: New Assignment - {maintenance_request.equipment.name}',
                     message=f'You have been assigned to resolve request #{maintenance_request.id}: {maintenance_request.issue[:100]}.\nComments: {maintenance_request.comments or "None"}',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    from_email=settings.EMPLOYEE_FROM_EMAIL,
                     recipient_list=[maintenance_request.assigned_to.email],
                     fail_silently=False,
+                    connection=employee_email_backend,
                 )
 
             logger.info(f"Response added to maintenance request {pk} by {request.user.username}")
@@ -628,7 +668,7 @@ def check_anomalies(request):
                 )
 
             if latest_log.motion_detected:
-                prev_log = SensorLog.objects.filter(equipment=equipment, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
+                prev_log = SensorLog.objects.filter(equipment=employee, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
                 if prev_log and not prev_log.motion_detected:
                     alert, created = Alert.objects.get_or_create(
                         equipment=equipment,
