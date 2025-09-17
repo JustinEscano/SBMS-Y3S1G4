@@ -11,6 +11,8 @@ from django.db.models import Avg, Count
 from django.core.mail import send_mail
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from .models import *
 from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -132,11 +134,30 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             title=f"Maintenance Request Submitted: {instance.equipment.name}",
             message=f"Your request #{instance.id} for {instance.equipment.name} has been submitted."
         )
-        # Email to client (using Gmail from settings.py)
+
+        # Prepare context for email templates
         assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
+        context = {
+            'request_id': instance.id,
+            'equipment_name': instance.equipment.name,
+            'issue': instance.issue,
+            'comments': instance.comments or "None",
+            'assigned_to': assigned_to_name,
+            'user': instance.user.username,
+            'year': timezone.now().year,
+            'status': instance.status,
+        }
+
+        # Email to client
+        html_message = render_to_string('emails/maintenance_request_submitted.html', {
+            **context,
+            'recipient': instance.user.username,
+        })
+        plain_message = strip_tags(html_message)
         send_mail(
             subject=f'SBMS: Maintenance Request Submitted - {instance.equipment.name}',
-            message=f'Your request #{instance.id} for {instance.equipment.name} has been submitted.\nIssue: {instance.issue}\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
+            message=plain_message,
+            html_message=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[instance.user.email],
             fail_silently=False,
@@ -157,9 +178,15 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 title=f"New Maintenance Request: {instance.equipment.name}",
                 message=f"Request #{instance.id} by {instance.user.username} needs review."
             )
+            html_message = render_to_string('emails/maintenance_request_submitted.html', {
+                **context,
+                'recipient': admin.username,
+            })
+            plain_message = strip_tags(html_message)
             send_mail(
                 subject=f'SBMS: New Maintenance Request - {instance.equipment.name}',
-                message=f'Request #{instance.id} by {instance.user.username} needs review.\nIssue: {instance.issue}\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
+                message=plain_message,
+                html_message=html_message,
                 from_email=settings.ADMIN_FROM_EMAIL,
                 recipient_list=[admin.email],
                 fail_silently=False,
@@ -180,9 +207,15 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 title=f"New Assignment: {instance.equipment.name}",
                 message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}."
             )
+            html_message = render_to_string('emails/maintenance_request_submitted.html', {
+                **context,
+                'recipient': instance.assigned_to.username,
+            })
+            plain_message = strip_tags(html_message)
             send_mail(
                 subject=f'SBMS: New Assignment - {instance.equipment.name}',
-                message=f'You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.\nComments: {instance.comments or "None"}',
+                message=plain_message,
+                html_message=html_message,
                 from_email=settings.EMPLOYEE_FROM_EMAIL,
                 recipient_list=[instance.assigned_to.email],
                 fail_silently=False,
@@ -190,56 +223,83 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             )
 
     def perform_update(self, serializer):
+        logger.info(f"Updating maintenance request {self.get_object().id} by user {self.request.user.username}")
         instance = serializer.save()
-        if 'status' in serializer.validated_data or 'assigned_to' in serializer.validated_data:
-            old_status = getattr(self.get_object(), 'status', None)
-            new_status = serializer.validated_data.get('status', old_status)
-            old_assigned_to = getattr(self.get_object(), 'assigned_to', None)
-            new_assigned_to = serializer.validated_data.get('assigned_to', old_assigned_to)
-            
-            assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
-            
-            # Notify client on status change
-            if new_status != old_status:
+        logger.info(f"Updated maintenance request {instance.id} with status {instance.status}")
+        
+        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
+        context = {
+            'request_id': instance.id,
+            'equipment_name': instance.equipment.name,
+            'issue': instance.issue,
+            'comments': instance.comments or "None",
+            'status': instance.status,
+            'assigned_to': assigned_to_name,
+            'user': instance.user.username,
+            'year': timezone.now().year,
+        }
+
+        # Notify client
+        try:
+            Notification.objects.create(
+                user=instance.user,
+                title=f"Maintenance Request Updated: {instance.equipment.name}",
+                message=f"Your request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}"
+            )
+            html_message = render_to_string('emails/maintenance_request_updated.html', {
+                **context,
+                'recipient': instance.user.username,
+            })
+            plain_message = strip_tags(html_message)
+            send_mail(
+                subject=f'SBMS: Request Updated - {instance.equipment.name}',
+                message=plain_message,
+                html_message=html_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[instance.user.email],
+                fail_silently=False,
+            )
+            logger.info(f"Email sent to client: {instance.user.email}")
+        except Exception as e:
+            logger.error(f"Failed to send email to client {instance.user.email}: {str(e)}")
+
+        # Notify admins
+        admins = User.objects.filter(role__in=['admin', 'superadmin'])
+        admin_email_backend = EmailBackend(
+            host='smtp.gmail.com',
+            port=587,
+            username=settings.ADMIN_EMAIL_USER,
+            password=settings.ADMIN_EMAIL_PASSWORD,
+            use_tls=True,
+        )
+        for admin in admins:
+            try:
                 Notification.objects.create(
-                    user=instance.user,
+                    user=admin,
                     title=f"Maintenance Request Updated: {instance.equipment.name}",
-                    message=f"Your request #{instance.id} is now {new_status}. Assigned To: {assigned_to_name}"
+                    message=f"Request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}"
                 )
+                html_message = render_to_string('emails/maintenance_request_updated.html', {
+                    **context,
+                    'recipient': admin.username,
+                })
+                plain_message = strip_tags(html_message)
                 send_mail(
                     subject=f'SBMS: Request Updated - {instance.equipment.name}',
-                    message=f'Your request #{instance.id} is now {new_status}.\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[instance.user.email],
+                    message=plain_message,
+                    html_message=html_message,
+                    from_email=settings.ADMIN_FROM_EMAIL,
+                    recipient_list=[admin.email],
                     fail_silently=False,
+                    connection=admin_email_backend,
                 )
-                
-                # Notify admins on status change
-                admins = User.objects.filter(role__in=['admin', 'superadmin'])
-                admin_email_backend = EmailBackend(
-                    host='smtp.gmail.com',
-                    port=587,
-                    username=settings.ADMIN_EMAIL_USER,
-                    password=settings.ADMIN_EMAIL_PASSWORD,
-                    use_tls=True,
-                )
-                for admin in admins:
-                    Notification.objects.create(
-                        user=admin,
-                        title=f"Maintenance Request Updated: {instance.equipment.name}",
-                        message=f"Request #{instance.id} is now {new_status}. Assigned To: {assigned_to_name}"
-                    )
-                    send_mail(
-                        subject=f'SBMS: Request Updated - {instance.equipment.name}',
-                        message=f'Request #{instance.id} is now {new_status}.\nComments: {instance.comments or "None"}\nAssigned To: {assigned_to_name}',
-                        from_email=settings.ADMIN_FROM_EMAIL,
-                        recipient_list=[admin.email],
-                        fail_silently=False,
-                        connection=admin_email_backend,
-                    )
-            
-            # Notify assignee on assignment change
-            if instance.assigned_to and new_assigned_to != old_assigned_to:
+                logger.info(f"Email sent to admin: {admin.email}")
+            except Exception as e:
+                logger.error(f"Failed to send email to admin {admin.email}: {str(e)}")
+
+        # Notify assignee if assigned_to is provided
+        if instance.assigned_to and 'assigned_to' in serializer.validated_data:
+            try:
                 employee_email_backend = EmailBackend(
                     host='smtp.gmail.com',
                     port=587,
@@ -252,14 +312,23 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                     title=f"New Assignment: {instance.equipment.name}",
                     message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}."
                 )
+                html_message = render_to_string('emails/maintenance_request_submitted.html', {
+                    **context,
+                    'recipient': instance.assigned_to.username,
+                })
+                plain_message = strip_tags(html_message)
                 send_mail(
                     subject=f'SBMS: New Assignment - {instance.equipment.name}',
-                    message=f'You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.\nComments: {instance.comments or "None"}',
+                    message=plain_message,
+                    html_message=html_message,
                     from_email=settings.EMPLOYEE_FROM_EMAIL,
                     recipient_list=[instance.assigned_to.email],
                     fail_silently=False,
                     connection=employee_email_backend,
                 )
+                logger.info(f"Email sent to assignee: {instance.assigned_to.email}")
+            except Exception as e:
+                logger.error(f"Failed to send email to assignee {instance.assigned_to.email}: {str(e)}")
 
     @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
     def respond(self, request, pk=None):
@@ -304,6 +373,19 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             assigned_to_name = maintenance_request.assigned_to.username if maintenance_request.assigned_to else "Not assigned"
 
             # Notify client
+            context = {
+                'request_id': maintenance_request.id,
+                'equipment_name': maintenance_request.equipment.name,
+                'response': response_text,
+                'comments': maintenance_request.comments or "None",
+                'assigned_to': assigned_to_name,
+                'user': maintenance_request.user.username,
+                'recipient': maintenance_request.user.username,
+                'year': timezone.now().year,
+                'status': maintenance_request.status,
+            }
+            html_message = render_to_string('emails/maintenance_request_responded.html', context)
+            plain_message = strip_tags(html_message)
             Notification.objects.create(
                 user=maintenance_request.user,
                 title=f"Response to Maintenance Request: {maintenance_request.equipment.name}",
@@ -311,7 +393,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             )
             send_mail(
                 subject=f'SBMS: Response to Maintenance Request - {maintenance_request.equipment.name}',
-                message=f'Admin responded to your request #{maintenance_request.id}:\n{response_text}\n\nFull Comments:\n{maintenance_request.comments or "None"}\nAssigned To: {assigned_to_name}',
+                message=plain_message,
+                html_message=html_message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[maintenance_request.user.email],
                 fail_silently=False,
@@ -326,6 +409,9 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                     password=settings.EMPLOYEE_EMAIL_PASSWORD,
                     use_tls=True,
                 )
+                context['recipient'] = maintenance_request.assigned_to.username
+                html_message = render_to_string('emails/maintenance_request_submitted.html', context)
+                plain_message = strip_tags(html_message)
                 Notification.objects.create(
                     user=maintenance_request.assigned_to,
                     title=f"New Assignment: {maintenance_request.equipment.name}",
@@ -333,7 +419,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 )
                 send_mail(
                     subject=f'SBMS: New Assignment - {maintenance_request.equipment.name}',
-                    message=f'You have been assigned to resolve request #{maintenance_request.id}: {maintenance_request.issue[:100]}.\nComments: {maintenance_request.comments or "None"}',
+                    message=plain_message,
+                    html_message=html_message,
                     from_email=settings.EMPLOYEE_FROM_EMAIL,
                     recipient_list=[maintenance_request.assigned_to.email],
                     fail_silently=False,
@@ -382,6 +469,17 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             )
 
             # Notify client
+            context = {
+                'request_id': maintenance_request.id,
+                'equipment_name': maintenance_request.equipment.name,
+                'file_name': file_name,
+                'user': maintenance_request.user.username,
+                'uploaded_by': request.user.username,
+                'recipient': maintenance_request.user.username,
+                'year': timezone.now().year,
+            }
+            html_message = render_to_string('emails/maintenance_attachment_uploaded.html', context)
+            plain_message = strip_tags(html_message)
             Notification.objects.create(
                 user=maintenance_request.user,
                 title=f"New Attachment: {maintenance_request.equipment.name}",
@@ -389,7 +487,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             )
             send_mail(
                 subject=f'SBMS: New Attachment Added - {maintenance_request.equipment.name}',
-                message=f'An attachment was added to your request #{maintenance_request.id}.',
+                message=plain_message,
+                html_message=html_message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[maintenance_request.user.email],
                 fail_silently=False,
@@ -405,6 +504,9 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 use_tls=True,
             )
             for admin in admins:
+                context['recipient'] = admin.username
+                html_message = render_to_string('emails/maintenance_attachment_uploaded.html', context)
+                plain_message = strip_tags(html_message)
                 Notification.objects.create(
                     user=admin,
                     title=f"New Attachment: {maintenance_request.equipment.name}",
@@ -412,7 +514,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 )
                 send_mail(
                     subject=f'SBMS: New Attachment - {maintenance_request.equipment.name}',
-                    message=f'An attachment was added to request #{maintenance_request.id} by {request.user.username}.',
+                    message=plain_message,
+                    html_message=html_message,
                     from_email=settings.ADMIN_FROM_EMAIL,
                     recipient_list=[admin.email],
                     fail_silently=False,
@@ -668,7 +771,7 @@ def check_anomalies(request):
                 )
 
             if latest_log.motion_detected:
-                prev_log = SensorLog.objects.filter(equipment=employee, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
+                prev_log = SensorLog.objects.filter(equipment=equipment, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
                 if prev_log and not prev_log.motion_detected:
                     alert, created = Alert.objects.get_or_create(
                         equipment=equipment,
