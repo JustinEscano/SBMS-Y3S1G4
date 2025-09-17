@@ -29,6 +29,252 @@ sys.path.append(llm_path)
 # Set up logging
 logger = logging.getLogger(__name__)
 
+class NotificationService:
+    """Centralized service for handling notifications (in-app and email)"""
+    
+    @staticmethod
+    def send_notification(user, title, message, email_template=None, email_context=None, email_backend=None):
+        """
+        Send both in-app notification and email to a user.
+        
+        Args:
+            user: User instance to receive the notification
+            title: Notification title (for in-app)
+            message: Notification message (for in-app)
+            email_template: Path to email template (e.g., 'emails/maintenance_request_submitted.html')
+            email_context: Dictionary for rendering email template
+            email_backend: Optional custom EmailBackend instance
+        """
+        try:
+            # Create in-app notification for frontend access
+            Notification.objects.create(
+                user=user,
+                title=title,
+                message=message,
+                read=False
+            )
+            logger.info(f"In-app notification created for {user.username}: {title}")
+
+            # Send email if template provided
+            if email_template and email_context:
+                html_message = render_to_string(email_template, email_context)
+                plain_message = strip_tags(html_message)
+                subject = f"SBMS: {title}"
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    html_message=html_message,
+                    from_email=email_backend.username if email_backend else settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                    connection=email_backend,
+                )
+                logger.info(f"Email sent to {user.email}: {subject}")
+                
+        except Exception as e:
+            logger.error(f"Failed to send notification to {user.email}: {str(e)}")
+
+    @staticmethod
+    def notify_maintenance_request_created(instance, request):
+        """Handle notifications for maintenance request creation"""
+        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
+        context = {
+            'request_id': instance.id,
+            'equipment_name': instance.equipment.name,
+            'issue': instance.issue,
+            'comments': instance.comments or "None",
+            'assigned_to': assigned_to_name,
+            'user': instance.user.username,
+            'year': timezone.now().year,
+            'status': instance.status,
+        }
+
+        # Notify client
+        NotificationService.send_notification(
+            user=instance.user,
+            title=f"Maintenance Request Submitted: {instance.equipment.name}",
+            message=f"Your request #{instance.id} for {instance.equipment.name} has been submitted.",
+            email_template='emails/maintenance_request_submitted.html',
+            email_context={**context, 'recipient': instance.user.username}
+        )
+
+        # Notify admins
+        admin_email_backend = EmailBackend(
+            host='smtp.gmail.com',
+            port=587,
+            username=settings.ADMIN_EMAIL_USER,
+            password=settings.ADMIN_EMAIL_PASSWORD,
+            use_tls=True,
+        )
+        for admin in User.objects.filter(role__in=['admin', 'superadmin']):
+            NotificationService.send_notification(
+                user=admin,
+                title=f"New Maintenance Request: {instance.equipment.name}",
+                message=f"Request #{instance.id} by {instance.user.username} needs review.",
+                email_template='emails/maintenance_request_submitted.html',
+                email_context={**context, 'recipient': admin.username},
+                email_backend=admin_email_backend
+            )
+
+        # Notify assigned employee (if any)
+        if instance.assigned_to:
+            employee_email_backend = EmailBackend(
+                host='smtp.gmail.com',
+                port=587,
+                username=settings.EMPLOYEE_EMAIL_USER,
+                password=settings.EMPLOYEE_EMAIL_PASSWORD,
+                use_tls=True,
+            )
+            NotificationService.send_notification(
+                user=instance.assigned_to,
+                title=f"New Assignment: {instance.equipment.name}",
+                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.",
+                email_template='emails/maintenance_request_submitted.html',
+                email_context={**context, 'recipient': instance.assigned_to.username},
+                email_backend=employee_email_backend
+            )
+
+    @staticmethod
+    def notify_maintenance_request_updated(instance, request, assigned_changed=False):
+        """Handle notifications for maintenance request updates"""
+        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
+        context = {
+            'request_id': instance.id,
+            'equipment_name': instance.equipment.name,
+            'issue': instance.issue,
+            'comments': instance.comments or "None",
+            'status': instance.status,
+            'assigned_to': assigned_to_name,
+            'user': instance.user.username,
+            'year': timezone.now().year,
+        }
+
+        # Notify client
+        NotificationService.send_notification(
+            user=instance.user,
+            title=f"Maintenance Request Updated: {instance.equipment.name}",
+            message=f"Your request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}",
+            email_template='emails/maintenance_request_updated.html',
+            email_context={**context, 'recipient': instance.user.username}
+        )
+
+        # Notify admins
+        admin_email_backend = EmailBackend(
+            host='smtp.gmail.com',
+            port=587,
+            username=settings.ADMIN_EMAIL_USER,
+            password=settings.ADMIN_EMAIL_PASSWORD,
+            use_tls=True,
+        )
+        for admin in User.objects.filter(role__in=['admin', 'superadmin']):
+            NotificationService.send_notification(
+                user=admin,
+                title=f"Maintenance Request Updated: {instance.equipment.name}",
+                message=f"Request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}",
+                email_template='emails/maintenance_request_updated.html',
+                email_context={**context, 'recipient': admin.username},
+                email_backend=admin_email_backend
+            )
+
+        # Notify assignee if changed
+        if assigned_changed and instance.assigned_to:
+            employee_email_backend = EmailBackend(
+                host='smtp.gmail.com',
+                port=587,
+                username=settings.EMPLOYEE_EMAIL_USER,
+                password=settings.EMPLOYEE_EMAIL_PASSWORD,
+                use_tls=True,
+            )
+            NotificationService.send_notification(
+                user=instance.assigned_to,
+                title=f"New Assignment: {instance.equipment.name}",
+                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.",
+                email_template='emails/maintenance_request_submitted.html',
+                email_context={**context, 'recipient': instance.assigned_to.username},
+                email_backend=employee_email_backend
+            )
+
+    @staticmethod
+    def notify_maintenance_request_responded(maintenance_request, response_text, request):
+        """Handle notifications for admin response to maintenance request"""
+        assigned_to_name = maintenance_request.assigned_to.username if maintenance_request.assigned_to else "Not assigned"
+        context = {
+            'request_id': maintenance_request.id,
+            'equipment_name': maintenance_request.equipment.name,
+            'response': response_text,
+            'comments': maintenance_request.comments or "None",
+            'assigned_to': assigned_to_name,
+            'user': maintenance_request.user.username,
+            'year': timezone.now().year,
+            'status': maintenance_request.status,
+        }
+
+        # Notify client
+        NotificationService.send_notification(
+            user=maintenance_request.user,
+            title=f"Response to Maintenance Request: {maintenance_request.equipment.name}",
+            message=f"Admin responded to your request #{maintenance_request.id}: {response_text}\nAssigned To: {assigned_to_name}",
+            email_template='emails/maintenance_request_responded.html',
+            email_context={**context, 'recipient': maintenance_request.user.username}
+        )
+
+        # Notify assignee if assigned
+        if maintenance_request.assigned_to:
+            employee_email_backend = EmailBackend(
+                host='smtp.gmail.com',
+                port=587,
+                username=settings.EMPLOYEE_EMAIL_USER,
+                password=settings.EMPLOYEE_EMAIL_PASSWORD,
+                use_tls=True,
+            )
+            NotificationService.send_notification(
+                user=maintenance_request.assigned_to,
+                title=f"Update on Assignment: {maintenance_request.equipment.name}",
+                message=f"Admin responded to request #{maintenance_request.id}: {response_text}",
+                email_template='emails/maintenance_request_responded.html',
+                email_context={**context, 'recipient': maintenance_request.assigned_to.username},
+                email_backend=employee_email_backend
+            )
+
+    @staticmethod
+    def notify_maintenance_attachment_uploaded(maintenance_request, attachment, request):
+        """Handle notifications for attachment uploads"""
+        context = {
+            'request_id': maintenance_request.id,
+            'equipment_name': maintenance_request.equipment.name,
+            'file_name': attachment.file_name,
+            'user': maintenance_request.user.username,
+            'uploaded_by': request.user.username,
+            'year': timezone.now().year,
+        }
+
+        # Notify client
+        NotificationService.send_notification(
+            user=maintenance_request.user,
+            title=f"New Attachment: {maintenance_request.equipment.name}",
+            message=f"An attachment was added to your request #{maintenance_request.id}.",
+            email_template='emails/maintenance_attachment_uploaded.html',
+            email_context={**context, 'recipient': maintenance_request.user.username}
+        )
+
+        # Notify admins
+        admin_email_backend = EmailBackend(
+            host='smtp.gmail.com',
+            port=587,
+            username=settings.ADMIN_EMAIL_USER,
+            password=settings.ADMIN_EMAIL_PASSWORD,
+            use_tls=True,
+        )
+        for admin in User.objects.filter(role__in=['admin', 'superadmin']):
+            NotificationService.send_notification(
+                user=admin,
+                title=f"New Attachment: {maintenance_request.equipment.name}",
+                message=f"An attachment was added to request #{maintenance_request.id} by {request.user.username}.",
+                email_template='emails/maintenance_attachment_uploaded.html',
+                email_context={**context, 'recipient': admin.username},
+                email_backend=admin_email_backend
+            )
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = User.EMAIL_FIELD  # force SimpleJWT to use email
 
@@ -82,7 +328,6 @@ class AlertViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         user = self.request.user
         if hasattr(user, 'role') and user.role == 'client':
-            # Clients see alerts for their maintenance requests' equipment
             queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
         resolved = self.request.query_params.get('resolved')
         if resolved is not None:
@@ -120,215 +365,21 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             if user.role == 'client':
                 return queryset.filter(user=user)
             elif user.role == 'employee':
-                # Employees see requests assigned to them
                 return queryset.filter(assigned_to=user)
         return queryset  # Admins/superadmins see all requests
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
         logger.info(f"Maintenance request created: {instance.id} by {self.request.user.username}")
-        
-        # In-app notification for client
-        Notification.objects.create(
-            user=instance.user,
-            title=f"Maintenance Request Submitted: {instance.equipment.name}",
-            message=f"Your request #{instance.id} for {instance.equipment.name} has been submitted."
-        )
-
-        # Prepare context for email templates
-        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
-        context = {
-            'request_id': instance.id,
-            'equipment_name': instance.equipment.name,
-            'issue': instance.issue,
-            'comments': instance.comments or "None",
-            'assigned_to': assigned_to_name,
-            'user': instance.user.username,
-            'year': timezone.now().year,
-            'status': instance.status,
-        }
-
-        # Email to client
-        html_message = render_to_string('emails/maintenance_request_submitted.html', {
-            **context,
-            'recipient': instance.user.username,
-        })
-        plain_message = strip_tags(html_message)
-        send_mail(
-            subject=f'SBMS: Maintenance Request Submitted - {instance.equipment.name}',
-            message=plain_message,
-            html_message=html_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[instance.user.email],
-            fail_silently=False,
-        )
-        
-        # In-app notification and email for admins
-        admins = User.objects.filter(role__in=['admin', 'superadmin'])
-        admin_email_backend = EmailBackend(
-            host='smtp.gmail.com',
-            port=587,
-            username=settings.ADMIN_EMAIL_USER,
-            password=settings.ADMIN_EMAIL_PASSWORD,
-            use_tls=True,
-        )
-        for admin in admins:
-            Notification.objects.create(
-                user=admin,
-                title=f"New Maintenance Request: {instance.equipment.name}",
-                message=f"Request #{instance.id} by {instance.user.username} needs review."
-            )
-            html_message = render_to_string('emails/maintenance_request_submitted.html', {
-                **context,
-                'recipient': admin.username,
-            })
-            plain_message = strip_tags(html_message)
-            send_mail(
-                subject=f'SBMS: New Maintenance Request - {instance.equipment.name}',
-                message=plain_message,
-                html_message=html_message,
-                from_email=settings.ADMIN_FROM_EMAIL,
-                recipient_list=[admin.email],
-                fail_silently=False,
-                connection=admin_email_backend,
-            )
-        
-        # Email to assigned employee (if any)
-        if instance.assigned_to:
-            employee_email_backend = EmailBackend(
-                host='smtp.gmail.com',
-                port=587,
-                username=settings.EMPLOYEE_EMAIL_USER,
-                password=settings.EMPLOYEE_EMAIL_PASSWORD,
-                use_tls=True,
-            )
-            Notification.objects.create(
-                user=instance.assigned_to,
-                title=f"New Assignment: {instance.equipment.name}",
-                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}."
-            )
-            html_message = render_to_string('emails/maintenance_request_submitted.html', {
-                **context,
-                'recipient': instance.assigned_to.username,
-            })
-            plain_message = strip_tags(html_message)
-            send_mail(
-                subject=f'SBMS: New Assignment - {instance.equipment.name}',
-                message=plain_message,
-                html_message=html_message,
-                from_email=settings.EMPLOYEE_FROM_EMAIL,
-                recipient_list=[instance.assigned_to.email],
-                fail_silently=False,
-                connection=employee_email_backend,
-            )
+        NotificationService.notify_maintenance_request_created(instance, self.request)
 
     def perform_update(self, serializer):
         logger.info(f"Updating maintenance request {self.get_object().id} by user {self.request.user.username}")
+        old_assigned_to = self.get_object().assigned_to
         instance = serializer.save()
+        assigned_changed = 'assigned_to' in serializer.validated_data and instance.assigned_to != old_assigned_to
         logger.info(f"Updated maintenance request {instance.id} with status {instance.status}")
-        
-        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
-        context = {
-            'request_id': instance.id,
-            'equipment_name': instance.equipment.name,
-            'issue': instance.issue,
-            'comments': instance.comments or "None",
-            'status': instance.status,
-            'assigned_to': assigned_to_name,
-            'user': instance.user.username,
-            'year': timezone.now().year,
-        }
-
-        # Notify client
-        try:
-            Notification.objects.create(
-                user=instance.user,
-                title=f"Maintenance Request Updated: {instance.equipment.name}",
-                message=f"Your request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}"
-            )
-            html_message = render_to_string('emails/maintenance_request_updated.html', {
-                **context,
-                'recipient': instance.user.username,
-            })
-            plain_message = strip_tags(html_message)
-            send_mail(
-                subject=f'SBMS: Request Updated - {instance.equipment.name}',
-                message=plain_message,
-                html_message=html_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[instance.user.email],
-                fail_silently=False,
-            )
-            logger.info(f"Email sent to client: {instance.user.email}")
-        except Exception as e:
-            logger.error(f"Failed to send email to client {instance.user.email}: {str(e)}")
-
-        # Notify admins
-        admins = User.objects.filter(role__in=['admin', 'superadmin'])
-        admin_email_backend = EmailBackend(
-            host='smtp.gmail.com',
-            port=587,
-            username=settings.ADMIN_EMAIL_USER,
-            password=settings.ADMIN_EMAIL_PASSWORD,
-            use_tls=True,
-        )
-        for admin in admins:
-            try:
-                Notification.objects.create(
-                    user=admin,
-                    title=f"Maintenance Request Updated: {instance.equipment.name}",
-                    message=f"Request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}"
-                )
-                html_message = render_to_string('emails/maintenance_request_updated.html', {
-                    **context,
-                    'recipient': admin.username,
-                })
-                plain_message = strip_tags(html_message)
-                send_mail(
-                    subject=f'SBMS: Request Updated - {instance.equipment.name}',
-                    message=plain_message,
-                    html_message=html_message,
-                    from_email=settings.ADMIN_FROM_EMAIL,
-                    recipient_list=[admin.email],
-                    fail_silently=False,
-                    connection=admin_email_backend,
-                )
-                logger.info(f"Email sent to admin: {admin.email}")
-            except Exception as e:
-                logger.error(f"Failed to send email to admin {admin.email}: {str(e)}")
-
-        # Notify assignee if assigned_to is provided
-        if instance.assigned_to and 'assigned_to' in serializer.validated_data:
-            try:
-                employee_email_backend = EmailBackend(
-                    host='smtp.gmail.com',
-                    port=587,
-                    username=settings.EMPLOYEE_EMAIL_USER,
-                    password=settings.EMPLOYEE_EMAIL_PASSWORD,
-                    use_tls=True,
-                )
-                Notification.objects.create(
-                    user=instance.assigned_to,
-                    title=f"New Assignment: {instance.equipment.name}",
-                    message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}."
-                )
-                html_message = render_to_string('emails/maintenance_request_submitted.html', {
-                    **context,
-                    'recipient': instance.assigned_to.username,
-                })
-                plain_message = strip_tags(html_message)
-                send_mail(
-                    subject=f'SBMS: New Assignment - {instance.equipment.name}',
-                    message=plain_message,
-                    html_message=html_message,
-                    from_email=settings.EMPLOYEE_FROM_EMAIL,
-                    recipient_list=[instance.assigned_to.email],
-                    fail_silently=False,
-                    connection=employee_email_backend,
-                )
-                logger.info(f"Email sent to assignee: {instance.assigned_to.email}")
-            except Exception as e:
-                logger.error(f"Failed to send email to assignee {instance.assigned_to.email}: {str(e)}")
+        NotificationService.notify_maintenance_request_updated(instance, self.request, assigned_changed)
 
     @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
     def respond(self, request, pk=None):
@@ -369,63 +420,12 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             maintenance_request.comments = (maintenance_request.comments or '') + new_comment
             maintenance_request.save()
 
-            # Get assigned_to name for notifications
-            assigned_to_name = maintenance_request.assigned_to.username if maintenance_request.assigned_to else "Not assigned"
-
-            # Notify client
-            context = {
-                'request_id': maintenance_request.id,
-                'equipment_name': maintenance_request.equipment.name,
-                'response': response_text,
-                'comments': maintenance_request.comments or "None",
-                'assigned_to': assigned_to_name,
-                'user': maintenance_request.user.username,
-                'recipient': maintenance_request.user.username,
-                'year': timezone.now().year,
-                'status': maintenance_request.status,
-            }
-            html_message = render_to_string('emails/maintenance_request_responded.html', context)
-            plain_message = strip_tags(html_message)
-            Notification.objects.create(
-                user=maintenance_request.user,
-                title=f"Response to Maintenance Request: {maintenance_request.equipment.name}",
-                message=f"Admin responded to your request #{maintenance_request.id}: {response_text}\nAssigned To: {assigned_to_name}"
-            )
-            send_mail(
-                subject=f'SBMS: Response to Maintenance Request - {maintenance_request.equipment.name}',
-                message=plain_message,
-                html_message=html_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[maintenance_request.user.email],
-                fail_silently=False,
-            )
+            # Send notifications
+            NotificationService.notify_maintenance_request_responded(maintenance_request, response_text, request)
 
             # Notify assignee if changed
             if assigned_to_id and maintenance_request.assigned_to != old_assigned_to:
-                employee_email_backend = EmailBackend(
-                    host='smtp.gmail.com',
-                    port=587,
-                    username=settings.EMPLOYEE_EMAIL_USER,
-                    password=settings.EMPLOYEE_EMAIL_PASSWORD,
-                    use_tls=True,
-                )
-                context['recipient'] = maintenance_request.assigned_to.username
-                html_message = render_to_string('emails/maintenance_request_submitted.html', context)
-                plain_message = strip_tags(html_message)
-                Notification.objects.create(
-                    user=maintenance_request.assigned_to,
-                    title=f"New Assignment: {maintenance_request.equipment.name}",
-                    message=f"You have been assigned to resolve request #{maintenance_request.id}: {maintenance_request.issue[:100]}."
-                )
-                send_mail(
-                    subject=f'SBMS: New Assignment - {maintenance_request.equipment.name}',
-                    message=plain_message,
-                    html_message=html_message,
-                    from_email=settings.EMPLOYEE_FROM_EMAIL,
-                    recipient_list=[maintenance_request.assigned_to.email],
-                    fail_silently=False,
-                    connection=employee_email_backend,
-                )
+                NotificationService.notify_maintenance_request_updated(maintenance_request, request, assigned_changed=True)
 
             logger.info(f"Response added to maintenance request {pk} by {request.user.username}")
             return Response(
@@ -468,59 +468,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 uploaded_by=request.user
             )
 
-            # Notify client
-            context = {
-                'request_id': maintenance_request.id,
-                'equipment_name': maintenance_request.equipment.name,
-                'file_name': file_name,
-                'user': maintenance_request.user.username,
-                'uploaded_by': request.user.username,
-                'recipient': maintenance_request.user.username,
-                'year': timezone.now().year,
-            }
-            html_message = render_to_string('emails/maintenance_attachment_uploaded.html', context)
-            plain_message = strip_tags(html_message)
-            Notification.objects.create(
-                user=maintenance_request.user,
-                title=f"New Attachment: {maintenance_request.equipment.name}",
-                message=f"An attachment was added to your request #{maintenance_request.id}."
-            )
-            send_mail(
-                subject=f'SBMS: New Attachment Added - {maintenance_request.equipment.name}',
-                message=plain_message,
-                html_message=html_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[maintenance_request.user.email],
-                fail_silently=False,
-            )
-
-            # Notify admins
-            admins = User.objects.filter(role__in=['admin', 'superadmin'])
-            admin_email_backend = EmailBackend(
-                host='smtp.gmail.com',
-                port=587,
-                username=settings.ADMIN_EMAIL_USER,
-                password=settings.ADMIN_EMAIL_PASSWORD,
-                use_tls=True,
-            )
-            for admin in admins:
-                context['recipient'] = admin.username
-                html_message = render_to_string('emails/maintenance_attachment_uploaded.html', context)
-                plain_message = strip_tags(html_message)
-                Notification.objects.create(
-                    user=admin,
-                    title=f"New Attachment: {maintenance_request.equipment.name}",
-                    message=f"An attachment was added to request #{maintenance_request.id} by {request.user.username}."
-                )
-                send_mail(
-                    subject=f'SBMS: New Attachment - {maintenance_request.equipment.name}',
-                    message=plain_message,
-                    html_message=html_message,
-                    from_email=settings.ADMIN_FROM_EMAIL,
-                    recipient_list=[admin.email],
-                    fail_silently=False,
-                    connection=admin_email_backend,
-                )
+            # Send notifications
+            NotificationService.notify_maintenance_attachment_uploaded(maintenance_request, attachment, request)
 
             logger.info(f"Attachment uploaded: {attachment.id} for {maintenance_request.id}")
             return Response(
@@ -546,6 +495,41 @@ class NotificationViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'role') and user.role in ['client', 'employee']:
             return queryset.filter(user=user)
         return queryset
+
+    @action(detail=False, methods=['post'], permission_classes=[RoleBasedPermission])
+    def mark_all_read(self, request):
+        """
+        POST /notification/mark_all_read/
+        Mark all unread notifications for the requesting user as read.
+        """
+        logger.info(f"Mark all read requested by user {request.user.username}")
+        try:
+            # Get notifications for the user based on role-based queryset
+            unread_notifications = self.get_queryset().filter(read=False)
+            count = unread_notifications.count()
+            
+            if count == 0:
+                logger.info("No unread notifications found")
+                return Response(
+                    {'success': True, 'message': 'No unread notifications to mark as read', 'count': 0},
+                    status=status.HTTP_200_OK
+                )
+
+            # Update all unread notifications to read=True
+            unread_notifications.update(read=True)
+            logger.info(f"Marked {count} notifications as read for user {request.user.username}")
+
+            return Response(
+                {'success': True, 'message': f'Marked {count} notifications as read', 'count': count},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            logger.error(f"Error marking all notifications as read: {str(e)}")
+            return Response(
+                {'error': f'Server error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class LLMQueryViewSet(viewsets.ModelViewSet):
     queryset = LLMQuery.objects.all()
@@ -907,7 +891,7 @@ def esp32_sensor_data(request):
                         username='system', email='system@example.com', 
                         password='systempass', role='employee'
                     )
-                MaintenanceRequest.objects.create(
+                maintenance_request = MaintenanceRequest.objects.create(
                     user=assignee,
                     equipment=equipment,
                     issue=f'Auto-generated from alert: Temperature/Motion anomaly',
@@ -915,6 +899,7 @@ def esp32_sensor_data(request):
                     assigned_to=assignee,
                     scheduled_date=timezone.now().date() + timezone.timedelta(days=1),
                 )
+                NotificationService.notify_maintenance_request_created(maintenance_request, request)
 
         logger.info(f"Sensor data saved successfully: {sensor_log.id}, Alerts: {created_alert_ids}")
         
