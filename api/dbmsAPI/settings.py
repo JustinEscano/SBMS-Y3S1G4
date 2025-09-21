@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -25,17 +24,22 @@ SECRET_KEY = 'django-insecure-v#_fms+k$##9%b+f1+x%t30$u6)mrn9ixxr&9y)l+^@&rldf4-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '10.0.2.2'
+# For production, use this instead (uncomment and adjust):
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',  # Adjust to your frontend's port
+#     'http://127.0.0.1:3000',
+#     'http://192.168.1.38:3000',  # If frontend is served from your local IP
+# ]
+
+ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '10.0.2.2',
-    '192.168.1.38',  # Add your computer's IP address
-    '0.0.0.0',  
-    '192.168.1.1'     # Allow all IPs (for development only)
+    '192.168.1.38',
 ]
-
 
 # Application definition
 
@@ -50,10 +54,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'rest_framework',
-    'corsheaders',
+    'rest_framework_simplejwt',
+    'corsheaders',  # Ensure this is included
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Moved to the top to fix CORS
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -61,7 +67,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'dbmsAPI.urls'
@@ -83,7 +88,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'dbmsAPI.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -100,7 +104,6 @@ DATABASES = {
 
 REST_FRAMEWORK = {
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -120,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -131,7 +133,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

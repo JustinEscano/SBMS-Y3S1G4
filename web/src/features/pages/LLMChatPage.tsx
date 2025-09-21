@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import PageLayout from "./PageLayout";
-import LLMService from "../../service/LLMService"; // Import the value (class instance)
-import type { ChatMessage } from "../../service/LLMService"; // Import the type (interface)
+import LLMService from "../../service/LLMService";
+import type { ChatMessage } from "../../service/LLMService";
 import "./LLMChatPage.css";
+
+// Define API endpoint types
+type QueryType = 'general' | 'maintenance' | 'anomalies' | 'energy' | 'utilization' | 'summary' | 'context';
 
 const LLMChatPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [llmHealth, setLlmHealth] = useState<string>("checking");
+  const [userRole, setUserRole] = useState<string>("viewer");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -24,15 +28,102 @@ const LLMChatPage: React.FC = () => {
   // Check LLM health on component mount
   useEffect(() => {
     checkLLMHealth();
+    // Get user role from localStorage or set default
+    const savedRole = localStorage.getItem("userRole") || "viewer";
+    setUserRole(savedRole);
   }, []);
 
   const checkLLMHealth = async () => {
     try {
-      const health = await LLMService.checkHealth();
+      const response = await fetch('http://localhost:5000/health');
+      const health = await response.json();
       setLlmHealth(health.status);
     } catch (error) {
       console.error("Health check failed:", error);
       setLlmHealth("unhealthy");
+    }
+  };
+
+  // Function to determine query type based on content
+  const determineQueryType = (query: string): QueryType => {
+    const lowerQuery = query.toLowerCase();
+    
+    if (lowerQuery.includes('maintenance') || lowerQuery.includes('repair') || 
+        lowerQuery.includes('fix') || lowerQuery.includes('broken')) {
+      return 'maintenance';
+    } else if (lowerQuery.includes('anomal') || lowerQuery.includes('unusual') || 
+               lowerQuery.includes('strange') || lowerQuery.includes('weird')) {
+      return 'anomalies';
+    } else if (lowerQuery.includes('energy') || lowerQuery.includes('power') || 
+               lowerQuery.includes('kwh') || lowerQuery.includes('consumption')) {
+      return 'energy';
+    } else if (lowerQuery.includes('room') || lowerQuery.includes('utilization') || 
+               lowerQuery.includes('usage') || lowerQuery.includes('occupied')) {
+      return 'utilization';
+    } else if (lowerQuery.includes('summary') || lowerQuery.includes('report') || 
+               lowerQuery.includes('week') || lowerQuery.includes('overview')) {
+      return 'summary';
+    } else if (lowerQuery.includes('context') || lowerQuery.includes('situation') || 
+               lowerQuery.includes('current state')) {
+      return 'context';
+    }
+    
+    return 'general';
+  };
+
+  // Function to call appropriate API endpoint
+  const callAPIEndpoint = async (query: string, type: QueryType) => {
+    let endpoint = '/llmquery';
+    let body = { query, type };
+    
+    switch (type) {
+      case 'maintenance':
+        endpoint = '/maintenance/predict';
+        body = { query: query || 'Analyze logs for maintenance suggestions' };
+        break;
+      case 'anomalies':
+        endpoint = '/anomalies/detect';
+        body = { sensitivity: 0.8 };
+        break;
+      case 'energy':
+        endpoint = '/insights/energy';
+        body = { analysis_type: 'trends' };
+        break;
+      case 'utilization':
+        endpoint = '/rooms/utilization';
+        body = {};
+        break;
+      case 'summary':
+        endpoint = '/reports/weekly';
+        body = { type: 'executive' };
+        break;
+      case 'context':
+        endpoint = '/context/analyze';
+        body = { query: query || 'Analyze current situation' };
+        break;
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Role': userRole,
+        },
+        body: JSON.stringify(body),
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(`Permission denied. Your role (${userRole}) doesn't have access to this feature.`);
+        }
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`API call failed for ${endpoint}:`, error);
+      throw error;
     }
   };
 
@@ -45,7 +136,7 @@ const LLMChatPage: React.FC = () => {
 
     // Add user message
     const userMessage: ChatMessage = {
-      id: LLMService.generateMessageId(),
+      id: Date.now().toString(),
       type: "user",
       content: messageText,
       timestamp: new Date(),
@@ -53,7 +144,7 @@ const LLMChatPage: React.FC = () => {
 
     // Add loading assistant message
     const loadingMessage: ChatMessage = {
-      id: LLMService.generateMessageId(),
+      id: (Date.now() + 1).toString(),
       type: "assistant",
       content: "Thinking...",
       timestamp: new Date(),
@@ -64,22 +155,43 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Get user ID from localStorage if available
-      const userId = localStorage.getItem("userId");
+      // Determine query type and call appropriate endpoint
+      const queryType = determineQueryType(messageText);
+      const response = await callAPIEndpoint(messageText, queryType);
       
-      const response = await LLMService.queryLLM({
-        query: messageText,
-        user_id: userId || undefined,
-      });
-
+      let answer = '';
+      
+      // Format response based on endpoint
+      switch (queryType) {
+        case 'maintenance':
+          answer = `Maintenance Analysis:\n\n${response.maintenance_suggestions.length} maintenance suggestions found.\n${response.anomalies.length} anomalies detected.\n\nKey suggestions:\n${response.maintenance_suggestions.slice(0, 3).map((m: any) => `• ${m.equipment}: ${m.issue} (${m.urgency})`).join('\n')}`;
+          break;
+        case 'anomalies':
+          answer = `Anomaly Detection:\n\n${response.anomalies.length} anomalies found (${response.summary.critical} critical).\n\nCritical issues:\n${response.anomalies.filter((a: any) => a.severity === 'Critical').slice(0, 3).map((a: any) => `• ${a.type} at ${a.location}`).join('\n')}`;
+          break;
+        case 'energy':
+          answer = `Energy Analysis:\n\n${response.insights || 'No specific energy insights available.'}`;
+          break;
+        case 'utilization':
+          answer = `Room Utilization:\n\n${response.summary || 'Room utilization data not available.'}`;
+          break;
+        case 'summary':
+          answer = `Weekly Summary:\n\n${response.executive_summary || 'No summary available.'}`;
+          break;
+        case 'context':
+          answer = `Context Analysis:\n\n${response.context_analysis || 'No context analysis available.'}`;
+          break;
+        default:
+          answer = response.answer || 'No response received.';
+      }
+      
       // Replace loading message with actual response
       setMessages(prev => 
         prev.map(msg => 
           msg.id === loadingMessage.id
             ? {
                 ...msg,
-                content: response.answer,
-                sources: response.sources,
+                content: answer,
                 isLoading: false,
               }
             : msg
@@ -118,6 +230,12 @@ const LLMChatPage: React.FC = () => {
     setMessages([]);
   };
 
+  // Function to change user role
+  const changeUserRole = (role: string) => {
+    setUserRole(role);
+    localStorage.setItem("userRole", role);
+  };
+
   const renderMessage = (message: ChatMessage) => (
     <div key={message.id} className={`orb-message orb-message-${message.type}`}>
       <div className="orb-message-content">
@@ -130,34 +248,7 @@ const LLMChatPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <>
-            <p>{message.content}</p>
-            {message.sources && message.sources.length > 0 && (
-              <div className="orb-sources">
-                <h4>Sources:</h4>
-                <div className="orb-sources-list">
-                  {message.sources.slice(0, 3).map((source, index) => (
-                    <div key={index} className="orb-source-item">
-                      <div className="orb-source-metadata">
-                        <span className="orb-source-time">
-                          {LLMService.formatTimestamp(source.metadata.timestamp)}
-                        </span>
-                        <span className="orb-source-temp">
-                          {source.metadata.temperature}°C
-                        </span>
-                        <span className="orb-source-energy">
-                          {source.metadata.energy_kwh} kWh
-                        </span>
-                      </div>
-                      <p className="orb-source-content">
-                        {source.page_content.substring(0, 150)}...
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+          <p>{message.content}</p>
         )}
       </div>
       <div className="orb-message-time">
@@ -165,6 +256,25 @@ const LLMChatPage: React.FC = () => {
       </div>
     </div>
   );
+
+  // Get suggested queries based on user role
+  const getRoleSpecificSuggestions = () => {
+    const baseSuggestions = [
+      "What's the most used room?",
+      "Any energy consumption trends?",
+      "Show me weekly summary",
+    ];
+    
+    if (userRole === 'admin' || userRole === 'facility_manager' || userRole === 'technician') {
+      return [...baseSuggestions, "Check for maintenance issues", "Detect anomalies"];
+    }
+    
+    if (userRole === 'admin' || userRole === 'energy_analyst') {
+      return [...baseSuggestions, "Analyze energy usage patterns"];
+    }
+    
+    return baseSuggestions;
+  };
 
   return (
     <PageLayout initialSection={{ parent: "LLM" }}>
@@ -178,6 +288,22 @@ const LLMChatPage: React.FC = () => {
               Retry
             </button>
           )}
+          
+          {/* Role selector */}
+          <span style={{ marginLeft: 'auto', marginRight: '10px' }}>
+            Role: 
+            <select 
+              value={userRole} 
+              onChange={(e) => changeUserRole(e.target.value)}
+              style={{ marginLeft: '5px', background: '#333', color: 'white', border: 'none', borderRadius: '4px', padding: '2px' }}
+            >
+              <option value="viewer">Viewer</option>
+              <option value="technician">Technician</option>
+              <option value="energy_analyst">Energy Analyst</option>
+              <option value="facility_manager">Facility Manager</option>
+              <option value="admin">Admin</option>
+            </select>
+          </span>
         </div>
 
         {messages.length === 0 ? (
@@ -185,12 +311,13 @@ const LLMChatPage: React.FC = () => {
             <div className="orb-greeting">
               <h2>Hello, I am Orb!</h2>
               <p>I can help you analyze your building's sensor data and energy consumption.</p>
+              <p>Your current role: <strong>{userRole}</strong></p>
               <p>Ask me questions about temperature, humidity, energy usage, and more!</p>
             </div>
 
             <div className="orb-suggestions">
               <h3>Try asking:</h3>
-              {LLMService.getSuggestedQueries().slice(0, 6).map((text, index) => (
+              {getRoleSpecificSuggestions().map((text, index) => (
                 <button 
                   key={index} 
                   className="orb-suggestion-button"
