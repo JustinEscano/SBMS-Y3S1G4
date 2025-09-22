@@ -519,9 +519,13 @@ body {
   background: darkblue;
   border: 1px solid #ddd;
   border-radius: 12px;
-  padding: 15px;
+  padding: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1200;
+}
+
+.maintenance-list-title {
+  padding: 0 12px;
 }
 
 .maintenance-list {
@@ -532,7 +536,11 @@ body {
 
 .maintenance-item {
   border-bottom: 1px solid #eee;
-  padding: 8px 0;
+  padding: 12px;
+}
+.maintenance-item:hover {
+  cursor: pointer;
+  background: var(--hover-blue);
 }
 
 .maintenance-item:last-child {

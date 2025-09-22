@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Room, MaintenanceRequest, User } from "../types/dashboardTypes";
+import type { Room, MaintenanceRequest, User, Equipment } from "../types/dashboardTypes";
 import RoomModal from "../components/roomModal";
 import { roomService } from "../services/roomService";
 import { maintenanceService } from "../services/maintenanceService";
 import { userService } from "../services/userService";
+import { equipmentService } from "../services/equipmentService";
 import PageLayout from "../pages/PageLayout";
 import Pagination from "../components/Pagination";
 import "../pages/PageStyle.css";
@@ -22,6 +23,7 @@ const DashboardScreen: React.FC = () => {
   const [showRequests, setShowRequests] = useState(false);
   const [maintenanceRequests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [equipments, setEquipments] = useState<Equipment[]>([]);
 
   const popupRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -39,6 +41,11 @@ const DashboardScreen: React.FC = () => {
   /** Fetch Users */
   useEffect(() => {
     userService.getAll().then(setUsers).catch(console.error);
+  }, []);
+
+  /** Fetch Equipments */
+  useEffect(() => {
+    equipmentService.getAll().then(setEquipments).catch(console.error);
   }, []);
 
   /** Reset pagination on search change */
@@ -97,6 +104,8 @@ const DashboardScreen: React.FC = () => {
 
   /** Map User ID → Username */
   const getUsername = (userId: string) => users.find((u) => u.id === userId)?.username ?? "Unknown";
+  const getEquipmentName = (userId: string) => equipments.find((u) => u.id === userId)?.name ?? "Unknown";
+
 
   return (
     <PageLayout initialSection={{ parent: "Dashboard" }}>
@@ -118,7 +127,7 @@ const DashboardScreen: React.FC = () => {
 
           {showRequests && (
             <div ref={popupRef} className="maintenance-popup">
-              <h4>Maintenance Requests</h4>
+              <h3 className="maintenance-list-title">Maintenance Requests</h3>
               <ul className="maintenance-list">
                 {pendingRequests.length > 0 ? (
                   pendingRequests.map((req) => (
@@ -131,6 +140,9 @@ const DashboardScreen: React.FC = () => {
                     >
                       <div className="maintenance-issue">
                         <strong>{req.issue}</strong>
+                      </div>
+                      <div className="maintenance-equiptment">
+                        Equipment: {getEquipmentName(req.equipment)}
                       </div>
                       <div className="maintenance-user">
                         User: {getUsername(req.user)}
