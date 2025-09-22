@@ -188,7 +188,7 @@ class NotificationService:
             NotificationService.send_notification(
                 user=instance.assigned_to,
                 title=f"New Assignment: {instance.equipment.name}",
-                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.",
+                message=f"You have been assigned to resolve request #{instance.id}: {issue[:100]}.",
                 email_template='emails/maintenance_request_submitted.html',
                 email_context={**context, 'recipient': instance.assigned_to.username},
                 email_backend=employee_email_backend
@@ -319,6 +319,11 @@ class SensorLogViewSet(viewsets.ModelViewSet):
     serializer_class = SensorLogSerializer
     permission_classes = [RoleBasedPermission]
 
+class HeartbeatLogViewSet(viewsets.ModelViewSet):
+    queryset = HeartbeatLog.objects.all().order_by('-recorded_at')
+    serializer_class = HeartbeatLogSerializer
+    permission_classes = [RoleBasedPermission]
+
 class AlertViewSet(viewsets.ModelViewSet):
     queryset = Alert.objects.all()
     serializer_class = AlertSerializer
@@ -366,7 +371,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                 return queryset.filter(user=user)
             elif user.role == 'employee':
                 return queryset.filter(assigned_to=user)
-        return queryset  # Admins/superadmins see all requests
+        return queryset
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
@@ -504,7 +509,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
         """
         logger.info(f"Mark all read requested by user {request.user.username}")
         try:
-            # Get notifications for the user based on role-based queryset
             unread_notifications = self.get_queryset().filter(read=False)
             count = unread_notifications.count()
             
@@ -515,7 +519,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_200_OK
                 )
 
-            # Update all unread notifications to read=True
             unread_notifications.update(read=True)
             logger.info(f"Marked {count} notifications as read for user {request.user.username}")
 
@@ -664,6 +667,10 @@ def room_realtime(request, pk):
                     'light_level': latest_log.light_level,
                     'motion_detected': latest_log.motion_detected,
                     'energy_usage': latest_log.energy_usage,
+                    'voltage': latest_log.voltage,
+                    'current': latest_log.current,
+                    'power': latest_log.power,
+                    'energy': latest_log.energy,
                     'recorded_at': latest_log.recorded_at.isoformat(),
                     'status': equipment.status,
                     'alerts': AlertSerializer(Alert.objects.filter(equipment=equipment, resolved=False), many=True).data,
@@ -725,7 +732,6 @@ def check_anomalies(request):
                 )
                 if created:
                     created_alerts.append(str(alert.id))
-                    # Auto-create maintenance if no recent request
                     recent_request = MaintenanceRequest.objects.filter(
                         equipment=equipment,
                         created_at__gte=cutoff,
@@ -769,17 +775,19 @@ def check_anomalies(request):
                     if created:
                         created_alerts.append(str(alert.id))
 
-            avg_energy = recent_logs.aggregate(avg=Avg('energy_usage'))['avg']
-            if avg_energy and latest_log.energy_usage > (avg_energy * 2):
-                Alert.objects.get_or_create(
+            avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
+            if avg_power and latest_log.power > (avg_power * 2):
+                alert, created = Alert.objects.get_or_create(
                     equipment=equipment,
                     type='energy_anomaly',
                     resolved=False,
                     defaults={
-                        'message': f'Energy usage anomaly: {latest_log.energy_usage} vs avg {avg_energy:.2f}',
+                        'message': f'Energy usage anomaly: {latest_log.power}W vs avg {avg_power:.2f}W',
                         'severity': 'low'
                     }
                 )
+                if created:
+                    created_alerts.append(str(alert.id))
 
         return Response({
             'success': True,
@@ -808,7 +816,11 @@ def esp32_sensor_data(request):
         "humidity": 45.2,
         "light_level": 1250,
         "motion_detected": false,
-        "energy_usage": 12.3
+        "energy_usage": 12.3,
+        "voltage": 230.0,
+        "current": 0.50,
+        "power": 12.3,
+        "energy": 0.025
     }
     """
     logger.info(f"ESP32 sensor data received: {request.method} {request.path}")
@@ -843,6 +855,10 @@ def esp32_sensor_data(request):
             light_level=float(data['light_level']),
             motion_detected=bool(data['motion_detected']),
             energy_usage=float(data.get('energy_usage', 0.0)),
+            voltage=float(data.get('voltage', 0.0)),
+            current=float(data.get('current', 0.0)),
+            power=float(data.get('power', 0.0)),
+            energy=float(data.get('energy', 0.0)),
             recorded_at=timezone.now()
         )
 
@@ -878,6 +894,25 @@ def esp32_sensor_data(request):
                 if created:
                     created_alert_ids.append(str(alert.id))
 
+        if sensor_log.power > 0:
+            recent_logs = SensorLog.objects.filter(
+                equipment=equipment,
+                recorded_at__gte=timezone.now() - timezone.timedelta(hours=1)
+            )
+            avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
+            if avg_power and sensor_log.power > (avg_power * 2):
+                alert, created = Alert.objects.get_or_create(
+                    equipment=equipment,
+                    type='energy_anomaly',
+                    resolved=False,
+                    defaults={
+                        'message': f'Energy usage anomaly: {sensor_log.power}W vs avg {avg_power:.2f}W',
+                        'severity': 'low'
+                    }
+                )
+                if created:
+                    created_alert_ids.append(str(alert.id))
+
         if created_alert_ids:
             recent_request = MaintenanceRequest.objects.filter(
                 equipment=equipment,
@@ -894,7 +929,7 @@ def esp32_sensor_data(request):
                 maintenance_request = MaintenanceRequest.objects.create(
                     user=assignee,
                     equipment=equipment,
-                    issue=f'Auto-generated from alert: Temperature/Motion anomaly',
+                    issue=f'Auto-generated from alert: Temperature/Motion/Energy anomaly',
                     status='pending',
                     assigned_to=assignee,
                     scheduled_date=timezone.now().date() + timezone.timedelta(days=1),
@@ -960,6 +995,10 @@ def latest_sensor_data(request):
                     'light_level': latest_log.light_level,
                     'motion_detected': latest_log.motion_detected,
                     'energy_usage': latest_log.energy_usage,
+                    'voltage': latest_log.voltage,
+                    'current': latest_log.current,
+                    'power': latest_log.power,
+                    'energy': latest_log.energy,
                     'recorded_at': latest_log.recorded_at.isoformat(),
                     'status': equipment.status
                 })
@@ -983,13 +1022,27 @@ def latest_sensor_data(request):
 def esp32_heartbeat(request):
     """
     Endpoint for ESP32 to send heartbeat and update status
+    Expected JSON format:
+    {
+        "device_id": "ESP32_001",
+        "timestamp": 123456,
+        "dht22_working": true,
+        "pzem_working": true,
+        "success_rate": 95.0,
+        "wifi_signal": -50,
+        "uptime": 123,
+        "sensor_type": "DHT22_3PIN_MODULE_GPIO5_PZEM_SERIAL2",
+        "current_temp": 22.0,
+        "current_humidity": 50.0,
+        "current_power": 115.0
+    }
     """
     logger.info(f"ESP32 heartbeat received: {request.method} {request.path}")
     logger.info(f"Heartbeat data: {request.data}")
     
     try:
-        device_id = request.data.get('device_id')
-        if not device_id:
+        data = request.data
+        if not data.get('device_id'):
             logger.error("Missing device_id in heartbeat")
             return Response(
                 {'error': 'device_id is required'},
@@ -997,24 +1050,44 @@ def esp32_heartbeat(request):
             )
 
         try:
-            equipment = Equipment.objects.get(device_id=device_id)
+            equipment = Equipment.objects.get(device_id=data['device_id'])
             equipment.status = 'online'
             equipment.save()
             
-            logger.info(f"Heartbeat processed for {device_id}")
+            HeartbeatLog.objects.create(
+                equipment=equipment,
+                timestamp=int(data.get('timestamp', 0)),
+                dht22_working=bool(data.get('dht22_working', False)),
+                pzem_working=bool(data.get('pzem_working', True)),
+                success_rate=float(data.get('success_rate', 0.0)),
+                wifi_signal=int(data.get('wifi_signal', 0)),
+                uptime=int(data.get('uptime', 0)),
+                sensor_type=data.get('sensor_type', ''),
+                current_temp=float(data.get('current_temp', 0.0)),
+                current_humidity=float(data.get('current_humidity', 0.0)),
+                current_power=float(data.get('current_power', 0.0)),
+            )
+            
+            logger.info(f"Heartbeat saved for {data['device_id']}")
             return Response({
                 'success': True,
-                'message': f'Heartbeat received from {device_id}',
+                'message': f'Heartbeat received from {data["device_id"]}',
                 'timestamp': timezone.now().isoformat()
             })
 
         except Equipment.DoesNotExist:
-            logger.error(f"Equipment with device_id {device_id} not found")
+            logger.error(f"Equipment with device_id {data['device_id']} not found")
             return Response(
-                {'error': f'Equipment with device_id {device_id} not found'},
+                {'error': f'Equipment with device_id {data["device_id"]} not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    except ValueError as e:
+        logger.error(f"Invalid data format: {str(e)}")
+        return Response(
+            {'error': f'Invalid data format: {str(e)}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     except Exception as e:
         logger.error(f"Server error in heartbeat: {str(e)}")
         return Response(
