@@ -17,7 +17,6 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
     floor: "",
     capacity: "",
     type: "",
-    occupancy: "",
   });
 
   // Pre-fill form for edit/delete
@@ -28,7 +27,6 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
         floor: room.floor.toString(),
         capacity: room.capacity?.toString() ?? "",
         type: room.type ?? "",
-        occupancy: room.occupancy ?? "vacant"
       });
     }
   }, [mode, room]);
@@ -47,7 +45,6 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
         floor: Number(formData.floor),
         capacity: Number(formData.capacity) || 0,
         type: formData.type,
-        occupancy: formData.occupancy as "vacant" | "occupied" | "reserved",
       });
     } else if (mode === "edit" && room) {
       onSubmit({
@@ -56,7 +53,6 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
         floor: Number(formData.floor),
         capacity: Number(formData.capacity) || 0,
         type: formData.type,
-        occupancy: formData.occupancy as "vacant" | "occupied" | "reserved",
       });
     } else if (mode === "delete" && room) {
       onSubmit({ id: room.id });
@@ -127,13 +123,6 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
                 <option value="storage">Storage</option>
                 <option value="corridor">Corridor</option>
                 <option value="utility">Utility</option>
-            </select>
-
-            <label>Occupancy:</label>
-            <select name="occupancy" value={formData.occupancy} onChange={handleChange}>
-              <option value="vacant">Vacant</option>
-              <option value="occupied">Occupied</option>
-              <option value="reserved">Reserved</option>
             </select>
 
             <div className="modal-actions">

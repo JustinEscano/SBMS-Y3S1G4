@@ -194,7 +194,6 @@ const DashboardScreen: React.FC = () => {
               <th>Floor</th>
               <th>Capacity</th>
               <th>Type</th>
-              <th>Occupancy</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -206,7 +205,6 @@ const DashboardScreen: React.FC = () => {
                   <td>{room.floor}</td>
                   <td>{room.capacity}</td>
                   <td>{room.type.toUpperCase()}</td>
-                  <td>{room.occupancy.toUpperCase()}</td>
                   <td>
                     <button
                       className="edt-btn"
