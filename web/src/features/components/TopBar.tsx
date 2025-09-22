@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./TopBar.css";
+import { useNavigate } from "react-router-dom";
+import ModalLogout from "./ModalLogout";
 
 type TopBarProps = {
   collapsed: boolean;
@@ -14,10 +16,17 @@ const TopBar: React.FC<TopBarProps> = ({
   darkMode,
   setDarkMode,
   handleLogout,
-  user = { initial: "G", name: "Geremald De Guzman", id: "97129", roleLabel: "Admin" },
+  user = { initial: "G", name: "Gemerald De Guzman", id: "97129", roleLabel: "Admin" },
 }) => {
+  const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+
+  const handleConfirmLogout = () => {
+    setLogoutModalOpen(false);
+    handleLogout();
+  };
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -63,7 +72,7 @@ const TopBar: React.FC<TopBarProps> = ({
               </div>
 
               <div className="dropdown-links">
-                <button onClick={() => alert("Go to profile")}>My Profile</button>
+                <button onClick={() => navigate("/profile")}>My Profile</button>
                 <button onClick={() => alert("Go to settings")}>Settings</button>
                 <label className="switch">
                   <input
@@ -79,8 +88,7 @@ const TopBar: React.FC<TopBarProps> = ({
               </div>
 
               <div className="dropdown-footer">
-                <a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>
-                <button className="logout-btn" onClick={handleLogout}>
+                <button className="logout-btn" onClick={() => setLogoutModalOpen(true)}>
                   Logout
                 </button>
               </div>
@@ -88,6 +96,12 @@ const TopBar: React.FC<TopBarProps> = ({
           )}
         </div>
       </div>
+
+      <ModalLogout
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirmLogout={handleConfirmLogout}
+      />
     </header>
   );
 };
