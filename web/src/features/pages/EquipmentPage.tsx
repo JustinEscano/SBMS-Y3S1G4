@@ -221,7 +221,7 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
                     <td>{eq.floor}</td>
                     <td>{eq.name}</td>
                     <td>{eq.type}</td>
-                    <td>{eq.status}</td>
+                    <td><span className={`status-color status-color-${eq.status.toLowerCase()}`}>{eq.status.toUpperCase()}</span></td>
                     <td>{eq.qr_code}</td>
                     <td>{new Date(eq.created_at).toLocaleDateString()}</td>
                     <td>

@@ -687,6 +687,41 @@ table tbody td {
   text-align: center;
 }
 
+.status-color {
+  font-weight: bold;
+  color: var(--white);
+  padding: 5px 20px;
+  border-radius: 12px;
+}
+
+.status-color-online {
+  background-color: var(--success);
+}
+
+.status-color-offline {
+  background-color: var(--gray);
+}
+
+.status-color-maintenance {
+  background-color: var(--warning);
+}
+
+.status-color-error {
+  background-color: var(--error);
+}
+
+.status-color-pending {
+  background-color: var(--warning);
+}
+
+.status-color-in_progress {
+  background-color: var(--light-blue);
+}
+
+.status-color-resolved {
+  background-color: var(--success);
+}
+
 .edt-btn,
 .dlt-btn {
   padding: 6px 12px;
