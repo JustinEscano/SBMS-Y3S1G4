@@ -14,9 +14,13 @@
   --white: #ffffff;
   --off-white: #f5f5f5;
   --light-purple: #a6b1ff;
+  --purple: #9b59b6;
+  --brown: #a0522d;
   --black: #000000;
   --gray: #aaa;
   --light-gray: #ddd;
+  --blue-gray: #607D8B;
+  --lime-green: #32cd32;
   --success: #4CAF50;
   --warning: #ff9800;
   --error: #f44336;
@@ -580,7 +584,7 @@ body {
   transition: transform 0.2s ease;
 }
 
-.stat-boxes:hover {
+.stats-box:hover {
   transform: translateY(-3px);
 }
 
@@ -720,6 +724,32 @@ table tbody td {
 
 .status-color-resolved {
   background-color: var(--success);
+}
+
+.type-color {
+  font-weight: bold;
+  color: var(--white);
+  padding: 5px 20px;
+  border-radius: 12px;
+}
+
+.type-color-lab {
+  background-color: var(--purple);
+}
+.type-color-meeting {
+  background-color: var(--warning);
+}
+.type-color-storage {
+  background-color: var(--brown);
+}
+.type-color-office {
+  background-color: var(--blue)
+}
+.type-color-corridor {
+  background-color: var(--blue-gray);
+}
+.type-color-utility {
+  background-color: var(--lime-green); 
 }
 
 .edt-btn,

@@ -168,12 +168,39 @@ const DashboardScreen: React.FC = () => {
             </div>
           </div>
           <div className="stats-box">
+            <div className="stat-icon">🔬</div>
+            <div className="stat-info">
+              <p className="stat-number">
+                {rooms.filter((r) => r.type.toLowerCase() === "lab").length}
+              </p>
+              <p className="stat-label">Laboratory</p>
+            </div>
+          </div>
+          <div className="stats-box">
+            <div className="stat-icon">📢</div>
+            <div className="stat-info">
+              <p className="stat-number">
+                {rooms.filter((r) => r.type.toLowerCase() === "meeting").length}
+              </p>
+              <p className="stat-label">Meeting Room</p>
+            </div>
+          </div>
+          <div className="stats-box">
+            <div className="stat-icon">📦</div>
+            <div className="stat-info">
+              <p className="stat-number">
+                {rooms.filter((r) => r.type.toLowerCase() === "storage").length}
+              </p>
+              <p className="stat-label">Storage</p>
+            </div>
+          </div>
+          <div className="stats-box">
             <div className="stat-icon">🚪</div>
             <div className="stat-info">
               <p className="stat-number">
-                {rooms.filter((r) => r.type.toLowerCase() === "other").length}
+                {rooms.filter((r) => r.type.toLowerCase() === "corridor").length}
               </p>
-              <p className="stat-label">Other Rooms</p>
+              <p className="stat-label">Corridor</p>
             </div>
           </div>
         </div>
@@ -204,7 +231,7 @@ const DashboardScreen: React.FC = () => {
                   <td>{room.name}</td>
                   <td>{room.floor}</td>
                   <td>{room.capacity}</td>
-                  <td>{room.type.toUpperCase()}</td>
+                  <td><span className={`type-color type-color-${room.type.toLowerCase()}`}>{room.type.toUpperCase()}</span></td>
                   <td>
                     <button
                       className="edt-btn"
