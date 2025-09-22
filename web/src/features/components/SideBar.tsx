@@ -1,4 +1,4 @@
-import React, { type JSX } from "react";
+import React, { useState, type JSX } from "react";
 import "./SideBar.css";
 import {
   Home,
@@ -13,10 +13,12 @@ import {
 import OrbitLogo from "../../assets/ORBIT.png";
 import CompanyNameLogo from "../../assets/Logo-Name.png";
 import { useNavigate, useLocation } from "react-router-dom";
+import ModalLogout from "./ModalLogout";
 
 interface SideBarProps {
   collapsed: boolean;
   onToggle: () => void;
+  handleLogout: () => void;
 }
 
 interface Section {
@@ -52,9 +54,15 @@ const sections: Section[] = [
   { id: "About", label: "About Us", icon: <Info size={18} />, path: "/about" },
 ];
 
-const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle }) => {
+const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle, handleLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+
+  const handleConfirmLogout = () => {
+    setLogoutModalOpen(false);
+    handleLogout();
+  };
 
   // Determine active section + subItem
   const getActiveSection = () => {
@@ -138,10 +146,16 @@ const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle }) => {
       </ul>
 
       {/* Logout */}
-      <div className="sidebar-logout" onClick={() => navigate("/logout")}>
+      <div className="sidebar-logout" onClick={() => setLogoutModalOpen(true)}>
         <LogOut size={18} />
         {!collapsed && <span>Logout</span>}
       </div>
+
+      <ModalLogout
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirmLogout={handleConfirmLogout}
+      />
     </aside>
   );
 };

@@ -39,6 +39,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
         <SideBar
           collapsed={collapsed}
           onToggle={() => setCollapsed(!collapsed)}
+          handleLogout={handleLogout}
         />
 
         <TopBar
