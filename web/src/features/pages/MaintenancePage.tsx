@@ -125,7 +125,7 @@ const MaintenancePage: React.FC = () => {
                 <td>{users.find((u) => u.id === req.user)?.username || req.user}</td>
                 <td>{equipments.find((eq) => eq.id === req.equipment)?.name || req.equipment}</td>
                 <td>{req.issue}</td>
-                <td>{req.status}</td>
+                <td><span className={`status-color status-color-${req.status.toLowerCase()}`}>{req.status.toUpperCase()}</span></td>
                 <td>{req.scheduled_date}</td>
                 <td>{req.resolved_at || "-"}</td>
                 <td>
