@@ -3,8 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 import uuid
 from django.db.models import Avg
 
-# Add these constants at the top for standardized field values
-
+# Constants for standardized field values
 ROLE_CHOICES = [
     ('client', 'Client'),
     ('admin', 'Admin'),
@@ -109,7 +108,7 @@ class Equipment(models.Model):
     type = models.CharField(max_length=100, choices=EQUIPMENT_TYPE_CHOICES)
     status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')
     device_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
-    qr_code = models.CharField(max_length=255, null=True, blank=True)  # Will store base64 or URL
+    qr_code = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def generate_qr_code(self):
@@ -121,7 +120,7 @@ class Equipment(models.Model):
             import base64
             from io import BytesIO
             qr = qrcode.QRCode(version=1, box_size=10, border=5)
-            qr.add_data(f"https://yourapp.com/equipment/{self.id}/scan")  # Replace with actual scan URL
+            qr.add_data(f"https://yourapp.com/equipment/{self.id}/scan")
             qr.make(fit=True)
             img = qr.make_image(fill_color="black", back_color="white")
             buffer = BytesIO()
@@ -131,7 +130,6 @@ class Equipment(models.Model):
             self.save()
             return self.qr_code
         except ImportError:
-            # Fallback if qrcode not installed
             self.qr_code = f"eq:{self.id}"
             self.save()
             return self.qr_code
@@ -147,6 +145,10 @@ class SensorLog(models.Model):
     light_level = models.FloatField()
     motion_detected = models.BooleanField()
     energy_usage = models.FloatField()
+    voltage = models.FloatField(default=0.0)
+    current = models.FloatField(default=0.0)
+    power = models.FloatField(default=0.0)
+    energy = models.FloatField(default=0.0)
     recorded_at = models.DateTimeField()
 
     class Meta:
@@ -154,6 +156,27 @@ class SensorLog(models.Model):
 
     def __str__(self):
         return f"{self.equipment.name} - {self.recorded_at}"
+
+class HeartbeatLog(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE)
+    timestamp = models.BigIntegerField()
+    dht22_working = models.BooleanField()
+    pzem_working = models.BooleanField(default=True)
+    success_rate = models.FloatField()
+    wifi_signal = models.IntegerField()
+    uptime = models.BigIntegerField()
+    sensor_type = models.CharField(max_length=100)
+    current_temp = models.FloatField()
+    current_humidity = models.FloatField()
+    current_power = models.FloatField(default=0.0)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at']
+
+    def __str__(self):
+        return f"{self.equipment.name} - Heartbeat {self.recorded_at}"
 
 class Alert(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -188,17 +211,19 @@ class MaintenanceRequest(models.Model):
 
     def __str__(self):
         return f"{self.equipment.name} - {self.issue[:50]}"
+
 class MaintenanceAttachment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     maintenance_request = models.ForeignKey('MaintenanceRequest', on_delete=models.CASCADE, related_name='attachments')
     file = models.FileField(upload_to='maintenance_attachments/%Y/%m/%d/')
     file_name = models.CharField(max_length=255)
-    file_type = models.CharField(max_length=100)  # e.g., 'image/jpeg', 'application/pdf'
+    file_type = models.CharField(max_length=100)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"Attachment for {self.maintenance_request} - {self.file_name}"
+
 class Notification(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey('User', on_delete=models.CASCADE)

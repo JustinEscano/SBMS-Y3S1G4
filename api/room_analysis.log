@@ -4575,3 +4575,1427 @@
 2025-09-10 09:15:22,923 - INFO - Used deterministic handler for query: 'can you tell more details about conference room a'
 2025-09-10 09:15:22,976 - INFO - Logged prompt to MongoDB with ID: 68c0d12ad293bb7f916b4461
 2025-09-10 09:15:22,976 - INFO - LLM query processed successfully
+2025-09-18 15:56:58,147 - INFO - LLM module imported successfully
+2025-09-18 15:56:58,149 - INFO - Processing query: hello
+2025-09-18 15:56:58,149 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-18 15:56:58,151 - INFO - Using prompt type: base_enhancement
+2025-09-18 15:56:58,151 - INFO - Using document template: standard
+2025-09-18 15:56:58,333 - INFO - Successfully connected to PostgreSQL database
+2025-09-18 15:56:58,334 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-18 15:57:01,744 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-18 15:57:01,744 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-18 15:57:01,745 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-18 15:57:01,746 - INFO - Loaded 3 existing document hashes
+2025-09-18 15:57:01,747 - INFO - Room-specific handlers initialized successfully
+2025-09-18 15:57:01,747 - INFO - RoomLogAnalyzer instance created
+2025-09-18 15:57:01,747 - INFO - Loading data from PostgreSQL
+2025-09-18 15:57:02,143 - INFO - Latest sensor data requested
+2025-09-18 15:57:02,334 - INFO - Retrieved 554 sensor records from database
+2025-09-18 15:57:02,338 - INFO - Returning 1 sensor readings
+2025-09-18 15:57:02,348 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:02,350 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:05,685 - INFO - Logged data to MongoDB with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:05,830 - INFO - Logged data to MongoDB with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:06,580 - INFO - Logged data to MongoDB with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:06,963 - INFO - Logged data to MongoDB with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:07,361 - INFO - Logged data to MongoDB with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:07,587 - INFO - Logged data to MongoDB with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:07,802 - INFO - Logged data to MongoDB with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:07,885 - INFO - Logged data to MongoDB with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:08,016 - INFO - Logged data to MongoDB with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:08,106 - INFO - Logged data to MongoDB with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:08,279 - INFO - Logged data to MongoDB with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:08,518 - INFO - Logged data to MongoDB with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:08,911 - INFO - Logged data to MongoDB with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:09,048 - INFO - Logged data to MongoDB with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:09,147 - INFO - Logged data to MongoDB with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:09,326 - INFO - Logged data to MongoDB with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:09,656 - INFO - Logged data to MongoDB with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:09,806 - INFO - Logged data to MongoDB with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:09,905 - INFO - Logged data to MongoDB with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:10,059 - INFO - Logged data to MongoDB with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:10,136 - INFO - Logged data to MongoDB with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:10,219 - INFO - Logged data to MongoDB with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:10,356 - INFO - Logged data to MongoDB with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:10,546 - INFO - Logged data to MongoDB with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:10,664 - INFO - Logged data to MongoDB with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:10,897 - INFO - Logged data to MongoDB with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:10,978 - INFO - Logged data to MongoDB with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:11,108 - INFO - Logged data to MongoDB with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:11,195 - INFO - Logged data to MongoDB with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:11,480 - INFO - Logged data to MongoDB with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:11,805 - INFO - Logged data to MongoDB with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:11,884 - INFO - Logged data to MongoDB with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:12,011 - INFO - Logged data to MongoDB with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:12,030 - INFO - Latest sensor data requested
+2025-09-18 15:57:12,067 - INFO - Returning 1 sensor readings
+2025-09-18 15:57:12,090 - INFO - Logged data to MongoDB with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:12,183 - INFO - Logged data to MongoDB with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:12,299 - INFO - Logged data to MongoDB with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:12,384 - INFO - Logged data to MongoDB with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:12,521 - INFO - Logged data to MongoDB with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:12,622 - INFO - Logged data to MongoDB with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:12,747 - INFO - Logged data to MongoDB with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:12,915 - INFO - Logged data to MongoDB with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:13,102 - INFO - Logged data to MongoDB with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:13,183 - INFO - Logged data to MongoDB with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:13,297 - INFO - Logged data to MongoDB with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:13,397 - INFO - Logged data to MongoDB with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:13,509 - INFO - Logged data to MongoDB with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:13,726 - INFO - Logged data to MongoDB with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:13,941 - INFO - Logged data to MongoDB with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:14,046 - INFO - Logged data to MongoDB with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:14,164 - INFO - Logged data to MongoDB with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:14,245 - INFO - Logged data to MongoDB with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:14,291 - INFO - Logged data to MongoDB with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:14,339 - INFO - Logged data to MongoDB with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:14,396 - INFO - Logged data to MongoDB with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:14,474 - INFO - Logged data to MongoDB with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:14,600 - INFO - Logged data to MongoDB with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:14,695 - INFO - Logged data to MongoDB with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:14,760 - INFO - Logged data to MongoDB with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:14,855 - INFO - Logged data to MongoDB with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:14,973 - INFO - Logged data to MongoDB with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:15,072 - INFO - Logged data to MongoDB with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:15,226 - INFO - Logged data to MongoDB with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:15,324 - INFO - Logged data to MongoDB with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:15,432 - INFO - Logged data to MongoDB with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:15,546 - INFO - Logged data to MongoDB with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:15,767 - INFO - Logged data to MongoDB with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:15,962 - INFO - Logged data to MongoDB with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:16,039 - INFO - Logged data to MongoDB with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:16,129 - INFO - Logged data to MongoDB with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:16,420 - INFO - Logged data to MongoDB with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:16,497 - INFO - Logged data to MongoDB with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:16,547 - INFO - Logged data to MongoDB with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:16,692 - INFO - Logged data to MongoDB with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:16,788 - INFO - Logged data to MongoDB with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:16,867 - INFO - Logged data to MongoDB with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:16,991 - INFO - Logged data to MongoDB with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:17,134 - INFO - Logged data to MongoDB with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:17,226 - INFO - Logged data to MongoDB with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:17,367 - INFO - Logged data to MongoDB with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:17,480 - INFO - Logged data to MongoDB with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:17,639 - INFO - Logged data to MongoDB with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:17,734 - INFO - Logged data to MongoDB with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:17,840 - INFO - Logged data to MongoDB with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:18,064 - INFO - Logged data to MongoDB with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:18,143 - INFO - Logged data to MongoDB with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:18,231 - INFO - Logged data to MongoDB with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:18,392 - INFO - Logged data to MongoDB with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:18,541 - INFO - Logged data to MongoDB with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:18,919 - INFO - Logged data to MongoDB with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:19,168 - INFO - Logged data to MongoDB with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:19,260 - INFO - Logged data to MongoDB with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:19,390 - INFO - Logged data to MongoDB with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:19,579 - INFO - Logged data to MongoDB with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:19,721 - INFO - Logged data to MongoDB with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:19,905 - INFO - Logged data to MongoDB with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:20,080 - INFO - Logged data to MongoDB with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:20,269 - INFO - Logged data to MongoDB with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:20,455 - INFO - Logged data to MongoDB with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:20,705 - INFO - Logged data to MongoDB with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:20,881 - INFO - Logged data to MongoDB with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:21,204 - INFO - Logged data to MongoDB with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:21,418 - INFO - Logged data to MongoDB with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:21,496 - INFO - Logged data to MongoDB with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:21,663 - INFO - Logged data to MongoDB with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:22,022 - INFO - Logged data to MongoDB with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:22,033 - INFO - Latest sensor data requested
+2025-09-18 15:57:22,070 - INFO - Returning 1 sensor readings
+2025-09-18 15:57:22,445 - INFO - Logged data to MongoDB with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:22,528 - INFO - Logged data to MongoDB with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:22,722 - INFO - Logged data to MongoDB with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:22,906 - INFO - Logged data to MongoDB with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:23,108 - INFO - Logged data to MongoDB with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:23,332 - INFO - Logged data to MongoDB with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:23,632 - INFO - Logged data to MongoDB with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:23,829 - INFO - Logged data to MongoDB with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:23,903 - INFO - Logged data to MongoDB with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:23,908 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:23,910 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:23,911 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:23,912 - INFO - Logged 114 records to MongoDB
+2025-09-18 15:57:23,913 - INFO - Data loaded, rows: 117
+2025-09-18 15:57:23,915 - INFO - Skipping duplicate document with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:23,916 - INFO - Skipping duplicate document with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:23,917 - INFO - Skipping duplicate document with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:23,918 - INFO - Skipping duplicate document with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:23,920 - INFO - Skipping duplicate document with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:23,921 - INFO - Skipping duplicate document with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:23,922 - INFO - Skipping duplicate document with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:23,924 - INFO - Skipping duplicate document with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:23,925 - INFO - Skipping duplicate document with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:23,926 - INFO - Skipping duplicate document with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:23,927 - INFO - Skipping duplicate document with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:23,928 - INFO - Skipping duplicate document with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:23,929 - INFO - Skipping duplicate document with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:23,930 - INFO - Skipping duplicate document with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:23,931 - INFO - Skipping duplicate document with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:23,932 - INFO - Skipping duplicate document with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:23,932 - INFO - Skipping duplicate document with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:23,933 - INFO - Skipping duplicate document with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:23,934 - INFO - Skipping duplicate document with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:23,936 - INFO - Skipping duplicate document with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:23,937 - INFO - Skipping duplicate document with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:23,938 - INFO - Skipping duplicate document with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:23,940 - INFO - Skipping duplicate document with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:23,940 - INFO - Skipping duplicate document with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:23,941 - INFO - Skipping duplicate document with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:23,943 - INFO - Skipping duplicate document with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:23,943 - INFO - Skipping duplicate document with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:23,945 - INFO - Skipping duplicate document with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:23,946 - INFO - Skipping duplicate document with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:23,947 - INFO - Skipping duplicate document with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:23,948 - INFO - Skipping duplicate document with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:23,949 - INFO - Skipping duplicate document with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:23,950 - INFO - Skipping duplicate document with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:23,951 - INFO - Skipping duplicate document with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:23,952 - INFO - Skipping duplicate document with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:23,953 - INFO - Skipping duplicate document with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:23,954 - INFO - Skipping duplicate document with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:23,955 - INFO - Skipping duplicate document with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:23,956 - INFO - Skipping duplicate document with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:23,957 - INFO - Skipping duplicate document with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:23,958 - INFO - Skipping duplicate document with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:23,958 - INFO - Skipping duplicate document with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:23,959 - INFO - Skipping duplicate document with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:23,960 - INFO - Skipping duplicate document with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:23,961 - INFO - Skipping duplicate document with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:23,962 - INFO - Skipping duplicate document with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:23,963 - INFO - Skipping duplicate document with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:23,964 - INFO - Skipping duplicate document with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:23,964 - INFO - Skipping duplicate document with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:23,965 - INFO - Skipping duplicate document with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:23,965 - INFO - Skipping duplicate document with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:23,966 - INFO - Skipping duplicate document with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:23,966 - INFO - Skipping duplicate document with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:23,967 - INFO - Skipping duplicate document with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:23,968 - INFO - Skipping duplicate document with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:23,969 - INFO - Skipping duplicate document with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:23,970 - INFO - Skipping duplicate document with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:23,971 - INFO - Skipping duplicate document with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:23,971 - INFO - Skipping duplicate document with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:23,972 - INFO - Skipping duplicate document with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:23,972 - INFO - Skipping duplicate document with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:23,973 - INFO - Skipping duplicate document with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:23,974 - INFO - Skipping duplicate document with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:23,975 - INFO - Skipping duplicate document with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:23,976 - INFO - Skipping duplicate document with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:23,977 - INFO - Skipping duplicate document with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:23,978 - INFO - Skipping duplicate document with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:23,979 - INFO - Skipping duplicate document with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:23,980 - INFO - Skipping duplicate document with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:23,981 - INFO - Skipping duplicate document with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:23,982 - INFO - Skipping duplicate document with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:23,983 - INFO - Skipping duplicate document with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:23,983 - INFO - Skipping duplicate document with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:23,984 - INFO - Skipping duplicate document with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:23,985 - INFO - Skipping duplicate document with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:23,985 - INFO - Skipping duplicate document with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:23,986 - INFO - Skipping duplicate document with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:23,987 - INFO - Skipping duplicate document with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:23,987 - INFO - Skipping duplicate document with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:23,988 - INFO - Skipping duplicate document with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:23,989 - INFO - Skipping duplicate document with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:23,990 - INFO - Skipping duplicate document with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:23,991 - INFO - Skipping duplicate document with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:23,991 - INFO - Skipping duplicate document with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:23,992 - INFO - Skipping duplicate document with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:23,993 - INFO - Skipping duplicate document with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:23,994 - INFO - Skipping duplicate document with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:23,994 - INFO - Skipping duplicate document with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:23,995 - INFO - Skipping duplicate document with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:23,995 - INFO - Skipping duplicate document with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:23,996 - INFO - Skipping duplicate document with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:23,997 - INFO - Skipping duplicate document with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:23,997 - INFO - Skipping duplicate document with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:23,998 - INFO - Skipping duplicate document with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:23,999 - INFO - Skipping duplicate document with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:24,000 - INFO - Skipping duplicate document with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:24,001 - INFO - Skipping duplicate document with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:24,001 - INFO - Skipping duplicate document with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:24,002 - INFO - Skipping duplicate document with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:24,003 - INFO - Skipping duplicate document with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:24,004 - INFO - Skipping duplicate document with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:24,005 - INFO - Skipping duplicate document with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:24,006 - INFO - Skipping duplicate document with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:24,007 - INFO - Skipping duplicate document with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:24,008 - INFO - Skipping duplicate document with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:24,009 - INFO - Skipping duplicate document with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:24,009 - INFO - Skipping duplicate document with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:24,010 - INFO - Skipping duplicate document with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:24,010 - INFO - Skipping duplicate document with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:24,011 - INFO - Skipping duplicate document with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:24,012 - INFO - Skipping duplicate document with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:24,012 - INFO - Skipping duplicate document with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:24,013 - INFO - Skipping duplicate document with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:24,014 - INFO - Skipping duplicate document with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:24,015 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:24,016 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:24,017 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:24,017 - INFO - Created 0 new documents, skipped 117 duplicates
+2025-09-18 15:57:24,017 - INFO - Documents created: 0
+2025-09-18 15:57:24,018 - INFO - Loading existing vector store
+2025-09-18 15:57:26,247 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-18 15:57:26,694 - INFO - No new documents to add to vector store
+2025-09-18 15:57:26,695 - INFO - Vector store initialized
+2025-09-18 15:57:27,775 - INFO - QA chain initialized successfully
+2025-09-18 15:57:27,775 - INFO - QA chain initialized
+2025-09-18 15:57:27,776 - INFO - Analyzer initialized successfully with MongoDB Atlas
+2025-09-18 15:57:27,776 - INFO - Loading data from PostgreSQL
+2025-09-18 15:57:27,798 - INFO - Retrieved 554 sensor records from database
+2025-09-18 15:57:27,802 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:27,803 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:27,805 - INFO - Skipping duplicate document with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:27,806 - INFO - Skipping duplicate document with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:27,806 - INFO - Skipping duplicate document with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:27,807 - INFO - Skipping duplicate document with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:27,807 - INFO - Skipping duplicate document with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:27,808 - INFO - Skipping duplicate document with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:27,808 - INFO - Skipping duplicate document with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:27,809 - INFO - Skipping duplicate document with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:27,809 - INFO - Skipping duplicate document with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:27,810 - INFO - Skipping duplicate document with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:27,811 - INFO - Skipping duplicate document with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:27,811 - INFO - Skipping duplicate document with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:27,812 - INFO - Skipping duplicate document with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:27,812 - INFO - Skipping duplicate document with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:27,813 - INFO - Skipping duplicate document with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:27,813 - INFO - Skipping duplicate document with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:27,814 - INFO - Skipping duplicate document with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:27,814 - INFO - Skipping duplicate document with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:27,814 - INFO - Skipping duplicate document with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:27,815 - INFO - Skipping duplicate document with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:27,815 - INFO - Skipping duplicate document with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:27,816 - INFO - Skipping duplicate document with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:27,816 - INFO - Skipping duplicate document with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:27,817 - INFO - Skipping duplicate document with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:27,817 - INFO - Skipping duplicate document with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:27,818 - INFO - Skipping duplicate document with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:27,818 - INFO - Skipping duplicate document with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:27,818 - INFO - Skipping duplicate document with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:27,819 - INFO - Skipping duplicate document with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:27,819 - INFO - Skipping duplicate document with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:27,820 - INFO - Skipping duplicate document with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:27,820 - INFO - Skipping duplicate document with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:27,821 - INFO - Skipping duplicate document with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:27,821 - INFO - Skipping duplicate document with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:27,822 - INFO - Skipping duplicate document with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:27,822 - INFO - Skipping duplicate document with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:27,822 - INFO - Skipping duplicate document with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:27,823 - INFO - Skipping duplicate document with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:27,823 - INFO - Skipping duplicate document with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:27,824 - INFO - Skipping duplicate document with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:27,824 - INFO - Skipping duplicate document with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:27,824 - INFO - Skipping duplicate document with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:27,825 - INFO - Skipping duplicate document with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:27,825 - INFO - Skipping duplicate document with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:27,826 - INFO - Skipping duplicate document with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:27,826 - INFO - Skipping duplicate document with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:27,827 - INFO - Skipping duplicate document with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:27,827 - INFO - Skipping duplicate document with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:27,828 - INFO - Skipping duplicate document with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:27,828 - INFO - Skipping duplicate document with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:27,829 - INFO - Skipping duplicate document with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:27,829 - INFO - Skipping duplicate document with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:27,830 - INFO - Skipping duplicate document with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:27,830 - INFO - Skipping duplicate document with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:27,830 - INFO - Skipping duplicate document with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:27,831 - INFO - Skipping duplicate document with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:27,831 - INFO - Skipping duplicate document with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:27,832 - INFO - Skipping duplicate document with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:27,832 - INFO - Skipping duplicate document with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:27,832 - INFO - Skipping duplicate document with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:27,833 - INFO - Skipping duplicate document with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:27,833 - INFO - Skipping duplicate document with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:27,834 - INFO - Skipping duplicate document with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:27,834 - INFO - Skipping duplicate document with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:27,835 - INFO - Skipping duplicate document with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:27,835 - INFO - Skipping duplicate document with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:27,836 - INFO - Skipping duplicate document with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:27,836 - INFO - Skipping duplicate document with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:27,837 - INFO - Skipping duplicate document with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:27,837 - INFO - Skipping duplicate document with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:27,838 - INFO - Skipping duplicate document with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:27,839 - INFO - Skipping duplicate document with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:27,839 - INFO - Skipping duplicate document with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:27,840 - INFO - Skipping duplicate document with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:27,840 - INFO - Skipping duplicate document with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:27,841 - INFO - Skipping duplicate document with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:27,841 - INFO - Skipping duplicate document with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:27,841 - INFO - Skipping duplicate document with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:27,842 - INFO - Skipping duplicate document with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:27,842 - INFO - Skipping duplicate document with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:27,843 - INFO - Skipping duplicate document with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:27,843 - INFO - Skipping duplicate document with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:27,843 - INFO - Skipping duplicate document with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:27,844 - INFO - Skipping duplicate document with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:27,844 - INFO - Skipping duplicate document with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:27,845 - INFO - Skipping duplicate document with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:27,845 - INFO - Skipping duplicate document with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:27,845 - INFO - Skipping duplicate document with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:27,846 - INFO - Skipping duplicate document with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:27,846 - INFO - Skipping duplicate document with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:27,847 - INFO - Skipping duplicate document with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:27,847 - INFO - Skipping duplicate document with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:27,847 - INFO - Skipping duplicate document with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:27,848 - INFO - Skipping duplicate document with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:27,848 - INFO - Skipping duplicate document with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:27,849 - INFO - Skipping duplicate document with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:27,849 - INFO - Skipping duplicate document with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:27,850 - INFO - Skipping duplicate document with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:27,850 - INFO - Skipping duplicate document with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:27,851 - INFO - Skipping duplicate document with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:27,851 - INFO - Skipping duplicate document with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:27,852 - INFO - Skipping duplicate document with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:27,852 - INFO - Skipping duplicate document with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:27,853 - INFO - Skipping duplicate document with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:27,853 - INFO - Skipping duplicate document with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:27,854 - INFO - Skipping duplicate document with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:27,854 - INFO - Skipping duplicate document with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:27,855 - INFO - Skipping duplicate document with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:27,855 - INFO - Skipping duplicate document with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:27,856 - INFO - Skipping duplicate document with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:27,856 - INFO - Skipping duplicate document with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:27,856 - INFO - Skipping duplicate document with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:27,857 - INFO - Skipping duplicate document with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:27,857 - INFO - Skipping duplicate document with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:27,858 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:27,858 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:27,858 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:27,858 - INFO - Logged 0 records to MongoDB
+2025-09-18 15:57:27,859 - INFO - Skipping duplicate document with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:27,860 - INFO - Skipping duplicate document with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:27,860 - INFO - Skipping duplicate document with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:27,861 - INFO - Skipping duplicate document with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:27,861 - INFO - Skipping duplicate document with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:27,862 - INFO - Skipping duplicate document with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:27,862 - INFO - Skipping duplicate document with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:27,863 - INFO - Skipping duplicate document with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:27,863 - INFO - Skipping duplicate document with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:27,863 - INFO - Skipping duplicate document with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:27,864 - INFO - Skipping duplicate document with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:27,864 - INFO - Skipping duplicate document with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:27,864 - INFO - Skipping duplicate document with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:27,865 - INFO - Skipping duplicate document with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:27,866 - INFO - Skipping duplicate document with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:27,866 - INFO - Skipping duplicate document with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:27,867 - INFO - Skipping duplicate document with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:27,867 - INFO - Skipping duplicate document with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:27,868 - INFO - Skipping duplicate document with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:27,869 - INFO - Skipping duplicate document with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:27,869 - INFO - Skipping duplicate document with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:27,871 - INFO - Skipping duplicate document with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:27,872 - INFO - Skipping duplicate document with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:27,873 - INFO - Skipping duplicate document with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:27,873 - INFO - Skipping duplicate document with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:27,874 - INFO - Skipping duplicate document with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:27,874 - INFO - Skipping duplicate document with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:27,875 - INFO - Skipping duplicate document with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:27,875 - INFO - Skipping duplicate document with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:27,876 - INFO - Skipping duplicate document with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:27,876 - INFO - Skipping duplicate document with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:27,877 - INFO - Skipping duplicate document with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:27,877 - INFO - Skipping duplicate document with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:27,878 - INFO - Skipping duplicate document with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:27,878 - INFO - Skipping duplicate document with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:27,878 - INFO - Skipping duplicate document with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:27,879 - INFO - Skipping duplicate document with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:27,879 - INFO - Skipping duplicate document with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:27,880 - INFO - Skipping duplicate document with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:27,880 - INFO - Skipping duplicate document with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:27,881 - INFO - Skipping duplicate document with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:27,882 - INFO - Skipping duplicate document with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:27,882 - INFO - Skipping duplicate document with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:27,882 - INFO - Skipping duplicate document with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:27,883 - INFO - Skipping duplicate document with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:27,884 - INFO - Skipping duplicate document with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:27,884 - INFO - Skipping duplicate document with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:27,886 - INFO - Skipping duplicate document with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:27,887 - INFO - Skipping duplicate document with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:27,888 - INFO - Skipping duplicate document with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:27,889 - INFO - Skipping duplicate document with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:27,889 - INFO - Skipping duplicate document with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:27,890 - INFO - Skipping duplicate document with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:27,890 - INFO - Skipping duplicate document with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:27,890 - INFO - Skipping duplicate document with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:27,891 - INFO - Skipping duplicate document with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:27,891 - INFO - Skipping duplicate document with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:27,892 - INFO - Skipping duplicate document with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:27,892 - INFO - Skipping duplicate document with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:27,893 - INFO - Skipping duplicate document with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:27,894 - INFO - Skipping duplicate document with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:27,894 - INFO - Skipping duplicate document with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:27,895 - INFO - Skipping duplicate document with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:27,896 - INFO - Skipping duplicate document with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:27,896 - INFO - Skipping duplicate document with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:27,897 - INFO - Skipping duplicate document with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:27,897 - INFO - Skipping duplicate document with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:27,898 - INFO - Skipping duplicate document with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:27,898 - INFO - Skipping duplicate document with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:27,899 - INFO - Skipping duplicate document with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:27,899 - INFO - Skipping duplicate document with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:27,900 - INFO - Skipping duplicate document with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:27,900 - INFO - Skipping duplicate document with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:27,901 - INFO - Skipping duplicate document with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:27,901 - INFO - Skipping duplicate document with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:27,902 - INFO - Skipping duplicate document with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:27,902 - INFO - Skipping duplicate document with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:27,903 - INFO - Skipping duplicate document with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:27,903 - INFO - Skipping duplicate document with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:27,904 - INFO - Skipping duplicate document with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:27,904 - INFO - Skipping duplicate document with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:27,905 - INFO - Skipping duplicate document with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:27,905 - INFO - Skipping duplicate document with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:27,906 - INFO - Skipping duplicate document with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:27,906 - INFO - Skipping duplicate document with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:27,907 - INFO - Skipping duplicate document with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:27,907 - INFO - Skipping duplicate document with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:27,908 - INFO - Skipping duplicate document with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:27,908 - INFO - Skipping duplicate document with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:27,909 - INFO - Skipping duplicate document with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:27,909 - INFO - Skipping duplicate document with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:27,909 - INFO - Skipping duplicate document with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:27,910 - INFO - Skipping duplicate document with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:27,910 - INFO - Skipping duplicate document with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:27,910 - INFO - Skipping duplicate document with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:27,911 - INFO - Skipping duplicate document with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:27,911 - INFO - Skipping duplicate document with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:27,911 - INFO - Skipping duplicate document with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:27,912 - INFO - Skipping duplicate document with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:27,913 - INFO - Skipping duplicate document with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:27,913 - INFO - Skipping duplicate document with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:27,913 - INFO - Skipping duplicate document with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:27,914 - INFO - Skipping duplicate document with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:27,914 - INFO - Skipping duplicate document with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:27,915 - INFO - Skipping duplicate document with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:27,915 - INFO - Skipping duplicate document with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:27,915 - INFO - Skipping duplicate document with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:27,916 - INFO - Skipping duplicate document with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:27,916 - INFO - Skipping duplicate document with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:27,917 - INFO - Skipping duplicate document with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:27,917 - INFO - Skipping duplicate document with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:27,918 - INFO - Skipping duplicate document with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:27,918 - INFO - Skipping duplicate document with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:27,919 - INFO - Skipping duplicate document with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:27,919 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:27,920 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:27,920 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:27,920 - INFO - Created 0 new documents, skipped 117 duplicates
+2025-09-18 15:57:27,921 - INFO - Loading data from PostgreSQL
+2025-09-18 15:57:27,943 - INFO - Retrieved 554 sensor records from database
+2025-09-18 15:57:27,948 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:27,948 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:27,949 - INFO - Skipping duplicate document with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:27,950 - INFO - Skipping duplicate document with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:27,951 - INFO - Skipping duplicate document with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:27,952 - INFO - Skipping duplicate document with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:27,952 - INFO - Skipping duplicate document with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:27,953 - INFO - Skipping duplicate document with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:27,953 - INFO - Skipping duplicate document with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:27,955 - INFO - Skipping duplicate document with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:27,956 - INFO - Skipping duplicate document with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:27,957 - INFO - Skipping duplicate document with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:27,957 - INFO - Skipping duplicate document with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:27,958 - INFO - Skipping duplicate document with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:27,958 - INFO - Skipping duplicate document with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:27,959 - INFO - Skipping duplicate document with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:27,960 - INFO - Skipping duplicate document with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:27,960 - INFO - Skipping duplicate document with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:27,961 - INFO - Skipping duplicate document with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:27,961 - INFO - Skipping duplicate document with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:27,962 - INFO - Skipping duplicate document with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:27,962 - INFO - Skipping duplicate document with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:27,963 - INFO - Skipping duplicate document with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:27,963 - INFO - Skipping duplicate document with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:27,964 - INFO - Skipping duplicate document with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:27,965 - INFO - Skipping duplicate document with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:27,965 - INFO - Skipping duplicate document with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:27,966 - INFO - Skipping duplicate document with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:27,966 - INFO - Skipping duplicate document with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:27,967 - INFO - Skipping duplicate document with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:27,967 - INFO - Skipping duplicate document with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:27,968 - INFO - Skipping duplicate document with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:27,969 - INFO - Skipping duplicate document with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:27,969 - INFO - Skipping duplicate document with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:27,971 - INFO - Skipping duplicate document with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:27,972 - INFO - Skipping duplicate document with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:27,973 - INFO - Skipping duplicate document with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:27,973 - INFO - Skipping duplicate document with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:27,974 - INFO - Skipping duplicate document with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:27,975 - INFO - Skipping duplicate document with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:27,976 - INFO - Skipping duplicate document with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:27,976 - INFO - Skipping duplicate document with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:27,977 - INFO - Skipping duplicate document with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:27,978 - INFO - Skipping duplicate document with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:27,978 - INFO - Skipping duplicate document with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:27,979 - INFO - Skipping duplicate document with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:27,979 - INFO - Skipping duplicate document with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:27,980 - INFO - Skipping duplicate document with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:27,980 - INFO - Skipping duplicate document with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:27,981 - INFO - Skipping duplicate document with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:27,981 - INFO - Skipping duplicate document with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:27,982 - INFO - Skipping duplicate document with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:27,982 - INFO - Skipping duplicate document with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:27,983 - INFO - Skipping duplicate document with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:27,984 - INFO - Skipping duplicate document with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:27,984 - INFO - Skipping duplicate document with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:27,985 - INFO - Skipping duplicate document with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:27,987 - INFO - Skipping duplicate document with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:27,988 - INFO - Skipping duplicate document with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:27,988 - INFO - Skipping duplicate document with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:27,989 - INFO - Skipping duplicate document with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:27,990 - INFO - Skipping duplicate document with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:27,991 - INFO - Skipping duplicate document with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:27,992 - INFO - Skipping duplicate document with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:27,992 - INFO - Skipping duplicate document with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:27,993 - INFO - Skipping duplicate document with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:27,993 - INFO - Skipping duplicate document with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:27,994 - INFO - Skipping duplicate document with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:27,994 - INFO - Skipping duplicate document with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:27,995 - INFO - Skipping duplicate document with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:27,996 - INFO - Skipping duplicate document with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:27,997 - INFO - Skipping duplicate document with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:27,997 - INFO - Skipping duplicate document with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:27,998 - INFO - Skipping duplicate document with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:27,999 - INFO - Skipping duplicate document with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:27,999 - INFO - Skipping duplicate document with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:28,000 - INFO - Skipping duplicate document with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:28,001 - INFO - Skipping duplicate document with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:28,001 - INFO - Skipping duplicate document with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:28,002 - INFO - Skipping duplicate document with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:28,002 - INFO - Skipping duplicate document with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:28,003 - INFO - Skipping duplicate document with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:28,003 - INFO - Skipping duplicate document with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:28,004 - INFO - Skipping duplicate document with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:28,004 - INFO - Skipping duplicate document with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:28,004 - INFO - Skipping duplicate document with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:28,005 - INFO - Skipping duplicate document with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:28,006 - INFO - Skipping duplicate document with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:28,007 - INFO - Skipping duplicate document with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:28,008 - INFO - Skipping duplicate document with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:28,009 - INFO - Skipping duplicate document with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:28,010 - INFO - Skipping duplicate document with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:28,011 - INFO - Skipping duplicate document with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:28,011 - INFO - Skipping duplicate document with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:28,012 - INFO - Skipping duplicate document with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:28,012 - INFO - Skipping duplicate document with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:28,013 - INFO - Skipping duplicate document with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:28,014 - INFO - Skipping duplicate document with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:28,014 - INFO - Skipping duplicate document with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:28,015 - INFO - Skipping duplicate document with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:28,015 - INFO - Skipping duplicate document with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:28,016 - INFO - Skipping duplicate document with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:28,017 - INFO - Skipping duplicate document with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:28,018 - INFO - Skipping duplicate document with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:28,018 - INFO - Skipping duplicate document with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:28,019 - INFO - Skipping duplicate document with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:28,020 - INFO - Skipping duplicate document with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:28,020 - INFO - Skipping duplicate document with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:28,021 - INFO - Skipping duplicate document with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:28,022 - INFO - Skipping duplicate document with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:28,022 - INFO - Skipping duplicate document with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:28,022 - INFO - Skipping duplicate document with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:28,023 - INFO - Skipping duplicate document with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:28,023 - INFO - Skipping duplicate document with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:28,024 - INFO - Skipping duplicate document with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:28,024 - INFO - Skipping duplicate document with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:28,024 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:28,025 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:28,025 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:28,025 - INFO - Logged 0 records to MongoDB
+2025-09-18 15:57:28,026 - INFO - Processing query: 'hello'
+2025-09-18 15:57:28,026 - WARNING - No deterministic match for query: 'hello'; falling back to LLM
+2025-09-18 15:57:30,544 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-09-18 15:57:31,989 - INFO - Latest sensor data requested
+2025-09-18 15:57:32,048 - INFO - Returning 1 sensor readings
+2025-09-18 15:57:42,004 - INFO - Latest sensor data requested
+2025-09-18 15:57:42,069 - INFO - Returning 1 sensor readings
+2025-09-18 15:57:50,497 - INFO - LLM query received: POST /api/llm/query/
+2025-09-18 15:57:50,497 - INFO - Query data: {'query': 'what are the maintenance requests'}
+2025-09-18 15:57:50,498 - INFO - LLM module imported successfully
+2025-09-18 15:57:50,498 - INFO - Processing query: what are the maintenance requests
+2025-09-18 15:57:50,498 - INFO - Loading data from PostgreSQL
+2025-09-18 15:57:50,525 - INFO - Retrieved 554 sensor records from database
+2025-09-18 15:57:50,530 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:50,531 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:50,532 - INFO - Skipping duplicate document with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:50,533 - INFO - Skipping duplicate document with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:50,534 - INFO - Skipping duplicate document with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:50,534 - INFO - Skipping duplicate document with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:50,535 - INFO - Skipping duplicate document with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:50,535 - INFO - Skipping duplicate document with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:50,536 - INFO - Skipping duplicate document with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:50,537 - INFO - Skipping duplicate document with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:50,537 - INFO - Skipping duplicate document with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:50,538 - INFO - Skipping duplicate document with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:50,538 - INFO - Skipping duplicate document with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:50,538 - INFO - Skipping duplicate document with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:50,539 - INFO - Skipping duplicate document with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:50,540 - INFO - Skipping duplicate document with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:50,540 - INFO - Skipping duplicate document with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:50,540 - INFO - Skipping duplicate document with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:50,541 - INFO - Skipping duplicate document with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:50,541 - INFO - Skipping duplicate document with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:50,542 - INFO - Skipping duplicate document with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:50,542 - INFO - Skipping duplicate document with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:50,543 - INFO - Skipping duplicate document with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:50,544 - INFO - Skipping duplicate document with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:50,544 - INFO - Skipping duplicate document with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:50,545 - INFO - Skipping duplicate document with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:50,545 - INFO - Skipping duplicate document with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:50,546 - INFO - Skipping duplicate document with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:50,546 - INFO - Skipping duplicate document with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:50,547 - INFO - Skipping duplicate document with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:50,547 - INFO - Skipping duplicate document with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:50,548 - INFO - Skipping duplicate document with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:50,548 - INFO - Skipping duplicate document with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:50,549 - INFO - Skipping duplicate document with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:50,550 - INFO - Skipping duplicate document with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:50,550 - INFO - Skipping duplicate document with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:50,551 - INFO - Skipping duplicate document with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:50,551 - INFO - Skipping duplicate document with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:50,552 - INFO - Skipping duplicate document with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:50,552 - INFO - Skipping duplicate document with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:50,553 - INFO - Skipping duplicate document with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:50,554 - INFO - Skipping duplicate document with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:50,554 - INFO - Skipping duplicate document with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:50,555 - INFO - Skipping duplicate document with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:50,555 - INFO - Skipping duplicate document with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:50,556 - INFO - Skipping duplicate document with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:50,557 - INFO - Skipping duplicate document with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:50,557 - INFO - Skipping duplicate document with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:50,558 - INFO - Skipping duplicate document with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:50,558 - INFO - Skipping duplicate document with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:50,559 - INFO - Skipping duplicate document with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:50,559 - INFO - Skipping duplicate document with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:50,560 - INFO - Skipping duplicate document with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:50,560 - INFO - Skipping duplicate document with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:50,561 - INFO - Skipping duplicate document with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:50,561 - INFO - Skipping duplicate document with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:50,562 - INFO - Skipping duplicate document with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:50,563 - INFO - Skipping duplicate document with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:50,564 - INFO - Skipping duplicate document with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:50,564 - INFO - Skipping duplicate document with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:50,565 - INFO - Skipping duplicate document with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:50,566 - INFO - Skipping duplicate document with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:50,567 - INFO - Skipping duplicate document with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:50,568 - INFO - Skipping duplicate document with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:50,568 - INFO - Skipping duplicate document with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:50,569 - INFO - Skipping duplicate document with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:50,569 - INFO - Skipping duplicate document with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:50,570 - INFO - Skipping duplicate document with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:50,570 - INFO - Skipping duplicate document with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:50,571 - INFO - Skipping duplicate document with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:50,571 - INFO - Skipping duplicate document with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:50,572 - INFO - Skipping duplicate document with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:50,573 - INFO - Skipping duplicate document with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:50,573 - INFO - Skipping duplicate document with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:50,574 - INFO - Skipping duplicate document with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:50,574 - INFO - Skipping duplicate document with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:50,575 - INFO - Skipping duplicate document with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:50,575 - INFO - Skipping duplicate document with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:50,576 - INFO - Skipping duplicate document with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:50,576 - INFO - Skipping duplicate document with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:50,578 - INFO - Skipping duplicate document with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:50,578 - INFO - Skipping duplicate document with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:50,579 - INFO - Skipping duplicate document with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:50,579 - INFO - Skipping duplicate document with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:50,580 - INFO - Skipping duplicate document with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:50,580 - INFO - Skipping duplicate document with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:50,581 - INFO - Skipping duplicate document with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:50,581 - INFO - Skipping duplicate document with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:50,582 - INFO - Skipping duplicate document with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:50,582 - INFO - Skipping duplicate document with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:50,583 - INFO - Skipping duplicate document with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:50,583 - INFO - Skipping duplicate document with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:50,584 - INFO - Skipping duplicate document with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:50,584 - INFO - Skipping duplicate document with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:50,585 - INFO - Skipping duplicate document with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:50,585 - INFO - Skipping duplicate document with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:50,586 - INFO - Skipping duplicate document with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:50,586 - INFO - Skipping duplicate document with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:50,587 - INFO - Skipping duplicate document with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:50,587 - INFO - Skipping duplicate document with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:50,588 - INFO - Skipping duplicate document with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:50,588 - INFO - Skipping duplicate document with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:50,589 - INFO - Skipping duplicate document with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:50,589 - INFO - Skipping duplicate document with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:50,589 - INFO - Skipping duplicate document with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:50,590 - INFO - Skipping duplicate document with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:50,591 - INFO - Skipping duplicate document with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:50,591 - INFO - Skipping duplicate document with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:50,593 - INFO - Skipping duplicate document with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:50,594 - INFO - Skipping duplicate document with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:50,594 - INFO - Skipping duplicate document with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:50,595 - INFO - Skipping duplicate document with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:50,596 - INFO - Skipping duplicate document with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:50,596 - INFO - Skipping duplicate document with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:50,597 - INFO - Skipping duplicate document with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:50,597 - INFO - Skipping duplicate document with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:50,598 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:50,598 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:50,599 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:50,599 - INFO - Logged 0 records to MongoDB
+2025-09-18 15:57:50,601 - INFO - Skipping duplicate document with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:50,601 - INFO - Skipping duplicate document with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:50,602 - INFO - Skipping duplicate document with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:50,602 - INFO - Skipping duplicate document with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:50,603 - INFO - Skipping duplicate document with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:50,604 - INFO - Skipping duplicate document with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:50,604 - INFO - Skipping duplicate document with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:50,605 - INFO - Skipping duplicate document with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:50,605 - INFO - Skipping duplicate document with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:50,606 - INFO - Skipping duplicate document with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:50,607 - INFO - Skipping duplicate document with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:50,607 - INFO - Skipping duplicate document with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:50,608 - INFO - Skipping duplicate document with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:50,608 - INFO - Skipping duplicate document with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:50,609 - INFO - Skipping duplicate document with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:50,609 - INFO - Skipping duplicate document with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:50,610 - INFO - Skipping duplicate document with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:50,610 - INFO - Skipping duplicate document with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:50,611 - INFO - Skipping duplicate document with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:50,611 - INFO - Skipping duplicate document with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:50,612 - INFO - Skipping duplicate document with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:50,612 - INFO - Skipping duplicate document with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:50,612 - INFO - Skipping duplicate document with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:50,613 - INFO - Skipping duplicate document with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:50,613 - INFO - Skipping duplicate document with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:50,614 - INFO - Skipping duplicate document with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:50,615 - INFO - Skipping duplicate document with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:50,615 - INFO - Skipping duplicate document with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:50,616 - INFO - Skipping duplicate document with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:50,617 - INFO - Skipping duplicate document with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:50,617 - INFO - Skipping duplicate document with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:50,618 - INFO - Skipping duplicate document with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:50,618 - INFO - Skipping duplicate document with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:50,619 - INFO - Skipping duplicate document with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:50,619 - INFO - Skipping duplicate document with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:50,620 - INFO - Skipping duplicate document with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:50,620 - INFO - Skipping duplicate document with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:50,621 - INFO - Skipping duplicate document with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:50,621 - INFO - Skipping duplicate document with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:50,622 - INFO - Skipping duplicate document with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:50,622 - INFO - Skipping duplicate document with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:50,623 - INFO - Skipping duplicate document with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:50,623 - INFO - Skipping duplicate document with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:50,624 - INFO - Skipping duplicate document with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:50,624 - INFO - Skipping duplicate document with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:50,625 - INFO - Skipping duplicate document with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:50,625 - INFO - Skipping duplicate document with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:50,626 - INFO - Skipping duplicate document with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:50,626 - INFO - Skipping duplicate document with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:50,627 - INFO - Skipping duplicate document with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:50,627 - INFO - Skipping duplicate document with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:50,628 - INFO - Skipping duplicate document with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:50,628 - INFO - Skipping duplicate document with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:50,629 - INFO - Skipping duplicate document with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:50,629 - INFO - Skipping duplicate document with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:50,630 - INFO - Skipping duplicate document with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:50,630 - INFO - Skipping duplicate document with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:50,631 - INFO - Skipping duplicate document with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:50,631 - INFO - Skipping duplicate document with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:50,632 - INFO - Skipping duplicate document with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:50,632 - INFO - Skipping duplicate document with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:50,632 - INFO - Skipping duplicate document with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:50,633 - INFO - Skipping duplicate document with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:50,633 - INFO - Skipping duplicate document with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:50,633 - INFO - Skipping duplicate document with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:50,634 - INFO - Skipping duplicate document with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:50,634 - INFO - Skipping duplicate document with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:50,635 - INFO - Skipping duplicate document with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:50,635 - INFO - Skipping duplicate document with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:50,636 - INFO - Skipping duplicate document with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:50,636 - INFO - Skipping duplicate document with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:50,636 - INFO - Skipping duplicate document with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:50,637 - INFO - Skipping duplicate document with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:50,637 - INFO - Skipping duplicate document with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:50,638 - INFO - Skipping duplicate document with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:50,639 - INFO - Skipping duplicate document with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:50,639 - INFO - Skipping duplicate document with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:50,640 - INFO - Skipping duplicate document with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:50,640 - INFO - Skipping duplicate document with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:50,641 - INFO - Skipping duplicate document with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:50,641 - INFO - Skipping duplicate document with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:50,641 - INFO - Skipping duplicate document with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:50,642 - INFO - Skipping duplicate document with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:50,642 - INFO - Skipping duplicate document with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:50,643 - INFO - Skipping duplicate document with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:50,643 - INFO - Skipping duplicate document with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:50,643 - INFO - Skipping duplicate document with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:50,644 - INFO - Skipping duplicate document with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:50,644 - INFO - Skipping duplicate document with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:50,645 - INFO - Skipping duplicate document with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:50,645 - INFO - Skipping duplicate document with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:50,645 - INFO - Skipping duplicate document with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:50,646 - INFO - Skipping duplicate document with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:50,646 - INFO - Skipping duplicate document with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:50,647 - INFO - Skipping duplicate document with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:50,647 - INFO - Skipping duplicate document with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:50,648 - INFO - Skipping duplicate document with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:50,648 - INFO - Skipping duplicate document with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:50,648 - INFO - Skipping duplicate document with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:50,649 - INFO - Skipping duplicate document with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:50,649 - INFO - Skipping duplicate document with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:50,649 - INFO - Skipping duplicate document with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:50,650 - INFO - Skipping duplicate document with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:50,650 - INFO - Skipping duplicate document with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:50,651 - INFO - Skipping duplicate document with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:50,651 - INFO - Skipping duplicate document with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:50,651 - INFO - Skipping duplicate document with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:50,652 - INFO - Skipping duplicate document with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:50,652 - INFO - Skipping duplicate document with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:50,653 - INFO - Skipping duplicate document with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:50,653 - INFO - Skipping duplicate document with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:50,655 - INFO - Skipping duplicate document with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:50,655 - INFO - Skipping duplicate document with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:50,656 - INFO - Skipping duplicate document with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:50,656 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:50,657 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:50,657 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:50,657 - INFO - Created 0 new documents, skipped 117 duplicates
+2025-09-18 15:57:50,658 - INFO - Loading data from PostgreSQL
+2025-09-18 15:57:50,679 - INFO - Retrieved 554 sensor records from database
+2025-09-18 15:57:50,684 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:50,684 - INFO - Loaded 117 unique occupied room records from PostgreSQL
+2025-09-18 15:57:50,685 - INFO - Skipping duplicate document with hash 823b09c312d77b73d191d51642a3c2b9
+2025-09-18 15:57:50,686 - INFO - Skipping duplicate document with hash eadecaf6d5783a791d6b875aa497c39a
+2025-09-18 15:57:50,686 - INFO - Skipping duplicate document with hash 6270322bd8e294dbaee80a897ec47516
+2025-09-18 15:57:50,687 - INFO - Skipping duplicate document with hash 6571eefe415ee563adeafe236aa0cc86
+2025-09-18 15:57:50,687 - INFO - Skipping duplicate document with hash 4631932131bef8d81816f4f0fc32387d
+2025-09-18 15:57:50,688 - INFO - Skipping duplicate document with hash b4b2a1544e271463e09d02f1644bb545
+2025-09-18 15:57:50,688 - INFO - Skipping duplicate document with hash 5a914bdf33389430f9cce2bda5244132
+2025-09-18 15:57:50,688 - INFO - Skipping duplicate document with hash 6286c4b2d0d63fcefb9d3e9656a5e9b7
+2025-09-18 15:57:50,689 - INFO - Skipping duplicate document with hash 46a4d1afa6b9bb81c77a00400bca61ef
+2025-09-18 15:57:50,689 - INFO - Skipping duplicate document with hash f64cc42ead3fed368911c60f61ecef98
+2025-09-18 15:57:50,689 - INFO - Skipping duplicate document with hash 6247e941210ec9f19b10a6fb8bffc49b
+2025-09-18 15:57:50,690 - INFO - Skipping duplicate document with hash 0a0b3e1db20981b0521af6dabf216fd6
+2025-09-18 15:57:50,690 - INFO - Skipping duplicate document with hash 86dc015f70b939bcd47f1f7930d3f445
+2025-09-18 15:57:50,691 - INFO - Skipping duplicate document with hash c50737cfab56c477ac7353d8e366227a
+2025-09-18 15:57:50,691 - INFO - Skipping duplicate document with hash 34e7481fd1bf55e27555ce6957a86fc4
+2025-09-18 15:57:50,691 - INFO - Skipping duplicate document with hash c0c3a86a9125c2719e8bddb32fb5e7b7
+2025-09-18 15:57:50,692 - INFO - Skipping duplicate document with hash d68f7368ed760f9a75c2c8554b9dc3ff
+2025-09-18 15:57:50,692 - INFO - Skipping duplicate document with hash 45f10da3007ed9bb51a8de8d4a026115
+2025-09-18 15:57:50,693 - INFO - Skipping duplicate document with hash 812b31d88d8fbd23c914c1bb11ddc0a0
+2025-09-18 15:57:50,693 - INFO - Skipping duplicate document with hash f5a1013e260d3a347110e0c82984da58
+2025-09-18 15:57:50,693 - INFO - Skipping duplicate document with hash 1e468b5ad645aa757b34a8d0c6734a08
+2025-09-18 15:57:50,694 - INFO - Skipping duplicate document with hash 7819ebdef82bfea19dd0aa00b328e335
+2025-09-18 15:57:50,694 - INFO - Skipping duplicate document with hash baaa9070e8208fa5e3239ebe6ed5f516
+2025-09-18 15:57:50,695 - INFO - Skipping duplicate document with hash ebfa2fb345a8e640be4f0b60adc897c5
+2025-09-18 15:57:50,695 - INFO - Skipping duplicate document with hash acbb3edab5eeb9180f5d1db56ab950f0
+2025-09-18 15:57:50,696 - INFO - Skipping duplicate document with hash 231af4522cb4558a77d30b962edca252
+2025-09-18 15:57:50,696 - INFO - Skipping duplicate document with hash 148ccd8e7356b7b9c02b37735f99feb5
+2025-09-18 15:57:50,697 - INFO - Skipping duplicate document with hash 3261e4aa0ce2990adeaccd77e0d50d04
+2025-09-18 15:57:50,697 - INFO - Skipping duplicate document with hash fdb264542ee674294b088e2876e709f5
+2025-09-18 15:57:50,698 - INFO - Skipping duplicate document with hash 22753a3bb7bf309bbc51951c8e2a5525
+2025-09-18 15:57:50,698 - INFO - Skipping duplicate document with hash 00baf25fe8aea099f09354d55697586a
+2025-09-18 15:57:50,698 - INFO - Skipping duplicate document with hash cdcee28a5ca2ec941a328ddc39b123e4
+2025-09-18 15:57:50,699 - INFO - Skipping duplicate document with hash d404c7affb6685adc2da8a8ad3ea2767
+2025-09-18 15:57:50,699 - INFO - Skipping duplicate document with hash b7ddc54e849fded3c73d7fbe9f068d1e
+2025-09-18 15:57:50,700 - INFO - Skipping duplicate document with hash cabe4efac10bf9a448e471ed7d1cfacf
+2025-09-18 15:57:50,700 - INFO - Skipping duplicate document with hash 48b1a7928a9330904307d4ebe7390883
+2025-09-18 15:57:50,701 - INFO - Skipping duplicate document with hash fce4509303f2cb640966833af0df163e
+2025-09-18 15:57:50,701 - INFO - Skipping duplicate document with hash a3bfdc089b87741abd84250c58fda5db
+2025-09-18 15:57:50,702 - INFO - Skipping duplicate document with hash 334f6c5f22ec556c262efae4ade7fd51
+2025-09-18 15:57:50,702 - INFO - Skipping duplicate document with hash 888ea8e7e57fc99ed642c6616ab8b519
+2025-09-18 15:57:50,703 - INFO - Skipping duplicate document with hash cb3cffbd84e498593670e3f7743bff01
+2025-09-18 15:57:50,703 - INFO - Skipping duplicate document with hash b6e79435445cfbc1255e513926c3b1a2
+2025-09-18 15:57:50,703 - INFO - Skipping duplicate document with hash fb1f1a5dcebd1fb5b87d75171e37e554
+2025-09-18 15:57:50,704 - INFO - Skipping duplicate document with hash a22777197b3fa93fc0180b15f86fa05e
+2025-09-18 15:57:50,704 - INFO - Skipping duplicate document with hash 5723de85e25abbed60018edaeae1b9f3
+2025-09-18 15:57:50,705 - INFO - Skipping duplicate document with hash 00e4fe97273519894cfba26a5e4668f3
+2025-09-18 15:57:50,705 - INFO - Skipping duplicate document with hash fc0d22984d7845c04d40dabad5453637
+2025-09-18 15:57:50,706 - INFO - Skipping duplicate document with hash da4e85454f34fe5a3ffdf26aac6becc9
+2025-09-18 15:57:50,706 - INFO - Skipping duplicate document with hash 0b0b0e77aca7b640f71633fc22d6bbae
+2025-09-18 15:57:50,706 - INFO - Skipping duplicate document with hash 0dc43633730c248aa69c4061e91f0790
+2025-09-18 15:57:50,707 - INFO - Skipping duplicate document with hash f60d9d5be6398e7ef857e3c80e3a3e88
+2025-09-18 15:57:50,707 - INFO - Skipping duplicate document with hash d4eac0811ece75a1da33d959086610f4
+2025-09-18 15:57:50,708 - INFO - Skipping duplicate document with hash 312d8d2f826654a5aa3b115a26580804
+2025-09-18 15:57:50,708 - INFO - Skipping duplicate document with hash e51e4c90f2d58fe71951e825de931156
+2025-09-18 15:57:50,708 - INFO - Skipping duplicate document with hash 9d9cfb515d0be4bd91980d96f555cf3a
+2025-09-18 15:57:50,709 - INFO - Skipping duplicate document with hash ca642ef16b950b67006bd429e3d922af
+2025-09-18 15:57:50,709 - INFO - Skipping duplicate document with hash c332e94499a54c529dd7c1c9e8aa14d8
+2025-09-18 15:57:50,710 - INFO - Skipping duplicate document with hash 2ea19f41023c8a57a29c0df43c370b15
+2025-09-18 15:57:50,710 - INFO - Skipping duplicate document with hash 0b2fc472cb469d0cdd1b9c0a6c9d91bc
+2025-09-18 15:57:50,710 - INFO - Skipping duplicate document with hash 8df2da3334b4356d3c67b046f31563c3
+2025-09-18 15:57:50,711 - INFO - Skipping duplicate document with hash cc44a7dab571fe14d5878ca1c233b694
+2025-09-18 15:57:50,711 - INFO - Skipping duplicate document with hash e6239f2a813ad637260313f358378370
+2025-09-18 15:57:50,712 - INFO - Skipping duplicate document with hash a4034b1e16c3bddee8c4aedfc30c915b
+2025-09-18 15:57:50,712 - INFO - Skipping duplicate document with hash ecac60b40d3cf4e38e36840bf01aca6c
+2025-09-18 15:57:50,713 - INFO - Skipping duplicate document with hash dc33f20814d52b7e08c8c80dc1e00a25
+2025-09-18 15:57:50,713 - INFO - Skipping duplicate document with hash 116a5292a06a09de2c4ad0a243e5f377
+2025-09-18 15:57:50,713 - INFO - Skipping duplicate document with hash 94926d5b6238bb8e7f2a00f6bee04645
+2025-09-18 15:57:50,714 - INFO - Skipping duplicate document with hash 1b81b73f7ea0904097b10716a00169b7
+2025-09-18 15:57:50,714 - INFO - Skipping duplicate document with hash 4e9b6963e6e7496d080e5e1a7f7764fd
+2025-09-18 15:57:50,715 - INFO - Skipping duplicate document with hash 1fa1a7f745abfa05dc1fd6f1e337814c
+2025-09-18 15:57:50,715 - INFO - Skipping duplicate document with hash 0e31cbe2aac894d3e6ed4f2248b93d0e
+2025-09-18 15:57:50,716 - INFO - Skipping duplicate document with hash 5cb7f9efa458024482e6c028df66c947
+2025-09-18 15:57:50,716 - INFO - Skipping duplicate document with hash 7a975c23999516260948b58cb09ac0a8
+2025-09-18 15:57:50,717 - INFO - Skipping duplicate document with hash e497c88adfbdf66fa1119adb78fb5186
+2025-09-18 15:57:50,717 - INFO - Skipping duplicate document with hash ed3351a26112c512f948188622c2375e
+2025-09-18 15:57:50,718 - INFO - Skipping duplicate document with hash eecedc21844a44ddea4c0ebab76f236a
+2025-09-18 15:57:50,718 - INFO - Skipping duplicate document with hash 90dab873691a121d594ec7327e689d79
+2025-09-18 15:57:50,718 - INFO - Skipping duplicate document with hash 00d3f862860fc517f5d7acee62684bd8
+2025-09-18 15:57:50,719 - INFO - Skipping duplicate document with hash f1a2f5c5a561c1ca0821097c53c37b99
+2025-09-18 15:57:50,719 - INFO - Skipping duplicate document with hash 589ca9e43ddf9d3e58ba6663588f23ae
+2025-09-18 15:57:50,720 - INFO - Skipping duplicate document with hash 497bc568721a0560e1762d07ef0b1abf
+2025-09-18 15:57:50,720 - INFO - Skipping duplicate document with hash bd6d0b897724a0ddc21b9d1f093dd930
+2025-09-18 15:57:50,721 - INFO - Skipping duplicate document with hash ba924de39dacd44e8f96714afb554d16
+2025-09-18 15:57:50,721 - INFO - Skipping duplicate document with hash ef93c70131e0ae9d35ce222ee2d0feb5
+2025-09-18 15:57:50,721 - INFO - Skipping duplicate document with hash f37a126cca23479a371f648e25b990b5
+2025-09-18 15:57:50,722 - INFO - Skipping duplicate document with hash 473c4aca54e1084e5523c1b93b00e6d3
+2025-09-18 15:57:50,722 - INFO - Skipping duplicate document with hash b10b745bacec23c9d53391de48a896b6
+2025-09-18 15:57:50,723 - INFO - Skipping duplicate document with hash df3e2d1e070cb4825920bc2a9d7b0323
+2025-09-18 15:57:50,723 - INFO - Skipping duplicate document with hash 5e14df787b3c409359810e87195352e6
+2025-09-18 15:57:50,723 - INFO - Skipping duplicate document with hash 48e98ab80093aea9dcbf0938346152ef
+2025-09-18 15:57:50,724 - INFO - Skipping duplicate document with hash 70a8d07fb004f88d3ea068e6448fa72e
+2025-09-18 15:57:50,724 - INFO - Skipping duplicate document with hash 63173e90759e71da7881136cf5bb85fd
+2025-09-18 15:57:50,725 - INFO - Skipping duplicate document with hash b03efa0dff15d5f03d4c259464e14560
+2025-09-18 15:57:50,725 - INFO - Skipping duplicate document with hash 5c32709e4b98b857a0be2c0da8a03800
+2025-09-18 15:57:50,726 - INFO - Skipping duplicate document with hash 4b6731ab3b9240b4f51537a5fbeab706
+2025-09-18 15:57:50,726 - INFO - Skipping duplicate document with hash dfaff8a5b455f0a3028a5ff9a5ec0ec1
+2025-09-18 15:57:50,726 - INFO - Skipping duplicate document with hash cfc33399c8b6ccfb77ece4ebedb9c04a
+2025-09-18 15:57:50,727 - INFO - Skipping duplicate document with hash 67c99c26f3217f2e962cb29d7cc37f96
+2025-09-18 15:57:50,727 - INFO - Skipping duplicate document with hash 0586c970a6677b191aacc8e307cb50ed
+2025-09-18 15:57:50,728 - INFO - Skipping duplicate document with hash 2a25e8946fba691d4cf0997f9261f63b
+2025-09-18 15:57:50,728 - INFO - Skipping duplicate document with hash b110e1183cee820fd4c4142a81f6408e
+2025-09-18 15:57:50,728 - INFO - Skipping duplicate document with hash db9ab5e1d9f845095be8ff7e7abdbf4c
+2025-09-18 15:57:50,729 - INFO - Skipping duplicate document with hash 4105be7453d58d16b0779e8d9a95790e
+2025-09-18 15:57:50,729 - INFO - Skipping duplicate document with hash f491fa0325faedc23767dc1095748296
+2025-09-18 15:57:50,730 - INFO - Skipping duplicate document with hash f8748a2b400eb80e673befb8dcc04a64
+2025-09-18 15:57:50,730 - INFO - Skipping duplicate document with hash 308e04520998c75e33fe3803badb473f
+2025-09-18 15:57:50,731 - INFO - Skipping duplicate document with hash 204ef7a7cd08475cdc5ffeb288640026
+2025-09-18 15:57:50,732 - INFO - Skipping duplicate document with hash bfe092d5d04c541ec4d979b9b6c3d91f
+2025-09-18 15:57:50,732 - INFO - Skipping duplicate document with hash 5c3e50583cfde24ea613d6c7fdc050c9
+2025-09-18 15:57:50,733 - INFO - Skipping duplicate document with hash d929e1451efa75dc80158ac6f21a8bac
+2025-09-18 15:57:50,733 - INFO - Skipping duplicate document with hash 0e5850413ff1a9696d693a5dd45d7fc6
+2025-09-18 15:57:50,734 - INFO - Skipping duplicate document with hash 68e144b0b799b195412be35710a4741c
+2025-09-18 15:57:50,734 - INFO - Skipping duplicate document with hash dadec30b583ad794a646add83949398c
+2025-09-18 15:57:50,734 - INFO - Skipping duplicate document with hash f0d45072a0a99a13b2becf3dadd79e52
+2025-09-18 15:57:50,735 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-18 15:57:50,735 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-18 15:57:50,736 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-18 15:57:50,736 - INFO - Logged 0 records to MongoDB
+2025-09-18 15:57:50,736 - INFO - Processing query: 'what are the maintenance requests'
+2025-09-18 15:57:50,835 - INFO - Used deterministic handler for query: 'what are the maintenance requests'
+2025-09-18 15:57:51,188 - INFO - Logged prompt to MongoDB with ID: 68cbbb7efa9da4f067194fdd
+2025-09-18 15:57:51,189 - INFO - LLM query processed successfully
+2025-09-18 15:57:51,991 - INFO - Latest sensor data requested
+2025-09-18 15:57:52,031 - INFO - Returning 1 sensor readings
+2025-09-18 15:57:52,608 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-09-18 15:58:02,001 - INFO - Latest sensor data requested
+2025-09-18 15:58:02,055 - INFO - Returning 1 sensor readings
+2025-09-18 15:58:03,881 - INFO - Query: 'hello' - Response generated using LLM
+2025-09-18 15:58:04,068 - INFO - Logged prompt to MongoDB with ID: 68cbbb8bfa9da4f067194fde
+2025-09-18 15:58:04,069 - INFO - LLM query processed successfully
+2025-09-18 15:58:11,989 - INFO - Latest sensor data requested
+2025-09-18 15:58:12,036 - INFO - Returning 1 sensor readings
+2025-09-18 15:58:12,539 - INFO - Latest sensor data requested
+2025-09-18 15:58:12,708 - INFO - Returning 1 sensor readings
+2025-09-18 15:58:16,175 - WARNING - Not Found: /api/users/me/
+2025-09-18 15:58:21,992 - INFO - Latest sensor data requested
+2025-09-18 15:58:22,042 - INFO - Returning 1 sensor readings
+2025-09-18 15:58:31,994 - INFO - Latest sensor data requested
+2025-09-18 15:58:32,044 - INFO - Returning 1 sensor readings
+2025-09-18 15:58:41,997 - INFO - Latest sensor data requested
+2025-09-18 15:58:42,053 - INFO - Returning 1 sensor readings
+2025-09-18 15:58:47,752 - INFO - Latest sensor data requested
+2025-09-18 15:58:47,820 - INFO - Returning 1 sensor readings
+2025-09-18 15:58:51,989 - INFO - Latest sensor data requested
+2025-09-18 15:58:52,026 - INFO - Returning 1 sensor readings
+2025-09-18 15:59:01,988 - INFO - Latest sensor data requested
+2025-09-18 15:59:02,030 - INFO - Returning 1 sensor readings
+2025-09-18 15:59:12,064 - INFO - Latest sensor data requested
+2025-09-18 15:59:12,276 - INFO - Returning 1 sensor readings
+2025-09-18 15:59:22,050 - INFO - Latest sensor data requested
+2025-09-18 15:59:22,151 - INFO - Returning 1 sensor readings
+2025-09-18 15:59:31,993 - INFO - Latest sensor data requested
+2025-09-18 15:59:32,038 - INFO - Returning 1 sensor readings
+2025-09-18 15:59:41,991 - INFO - Latest sensor data requested
+2025-09-18 15:59:42,033 - INFO - Returning 1 sensor readings
+2025-09-18 15:59:52,012 - INFO - Latest sensor data requested
+2025-09-18 15:59:52,167 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:01,997 - INFO - Latest sensor data requested
+2025-09-18 16:00:02,045 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:10,771 - WARNING - Not Found: /api/users/me/
+2025-09-18 16:00:11,990 - INFO - Latest sensor data requested
+2025-09-18 16:00:12,040 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:12,610 - INFO - Latest sensor data requested
+2025-09-18 16:00:12,679 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:22,021 - INFO - Latest sensor data requested
+2025-09-18 16:00:22,073 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:32,020 - INFO - Latest sensor data requested
+2025-09-18 16:00:32,174 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:41,995 - INFO - Latest sensor data requested
+2025-09-18 16:00:42,046 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:51,996 - INFO - Latest sensor data requested
+2025-09-18 16:00:52,051 - INFO - Returning 1 sensor readings
+2025-09-18 16:00:55,122 - INFO - Latest sensor data requested
+2025-09-18 16:00:55,210 - INFO - Returning 1 sensor readings
+2025-09-18 16:01:01,989 - INFO - Latest sensor data requested
+2025-09-18 16:01:02,031 - INFO - Returning 1 sensor readings
+2025-09-18 16:01:02,465 - WARNING - Not Found: /api/users/me/
+2025-09-18 16:01:11,993 - INFO - Latest sensor data requested
+2025-09-18 16:01:12,057 - INFO - Returning 1 sensor readings
+2025-09-18 16:01:21,987 - INFO - Latest sensor data requested
+2025-09-18 16:01:22,023 - INFO - Returning 1 sensor readings
+2025-09-18 16:01:31,994 - INFO - Latest sensor data requested
+2025-09-18 16:01:32,051 - INFO - Returning 1 sensor readings
+2025-09-18 16:01:41,990 - INFO - Latest sensor data requested
+2025-09-18 16:01:42,026 - INFO - Returning 1 sensor readings
+2025-09-18 16:01:51,988 - INFO - Latest sensor data requested
+2025-09-18 16:01:52,026 - INFO - Returning 1 sensor readings
+2025-09-18 16:02:01,992 - INFO - Latest sensor data requested
+2025-09-18 16:02:02,036 - INFO - Returning 1 sensor readings
+2025-09-18 16:02:11,988 - INFO - Latest sensor data requested
+2025-09-18 16:02:12,139 - INFO - Returning 1 sensor readings
+2025-09-18 16:02:21,990 - INFO - Latest sensor data requested
+2025-09-18 16:02:22,138 - INFO - Returning 1 sensor readings
+2025-09-18 16:02:31,991 - INFO - Latest sensor data requested
+2025-09-18 16:02:32,133 - INFO - Returning 1 sensor readings
+2025-09-18 16:02:41,995 - INFO - Latest sensor data requested
+2025-09-18 16:02:42,065 - INFO - Returning 1 sensor readings
+2025-09-18 16:02:51,989 - INFO - Latest sensor data requested
+2025-09-18 16:02:52,057 - INFO - Returning 1 sensor readings
+2025-09-18 16:03:01,987 - INFO - Latest sensor data requested
+2025-09-18 16:03:02,025 - INFO - Returning 1 sensor readings
+2025-09-18 16:03:11,990 - INFO - Latest sensor data requested
+2025-09-18 16:03:12,031 - INFO - Returning 1 sensor readings
+2025-09-18 16:03:21,990 - INFO - Latest sensor data requested
+2025-09-18 16:03:22,041 - INFO - Returning 1 sensor readings
+2025-09-18 16:03:31,989 - INFO - Latest sensor data requested
+2025-09-18 16:03:32,152 - INFO - Returning 1 sensor readings
+2025-09-18 16:03:41,989 - INFO - Latest sensor data requested
+2025-09-18 16:03:42,037 - INFO - Returning 1 sensor readings
+2025-09-18 16:03:51,994 - INFO - Latest sensor data requested
+2025-09-18 16:03:52,037 - INFO - Returning 1 sensor readings
+2025-09-18 16:04:01,991 - INFO - Latest sensor data requested
+2025-09-18 16:04:02,036 - INFO - Returning 1 sensor readings
+2025-09-18 16:04:11,989 - INFO - Latest sensor data requested
+2025-09-18 16:04:12,037 - INFO - Returning 1 sensor readings
+2025-09-18 16:04:21,988 - INFO - Latest sensor data requested
+2025-09-18 16:04:22,138 - INFO - Returning 1 sensor readings
+2025-09-18 16:04:31,990 - INFO - Latest sensor data requested
+2025-09-18 16:04:32,137 - INFO - Returning 1 sensor readings
+2025-09-18 16:04:41,990 - INFO - Latest sensor data requested
+2025-09-18 16:04:42,140 - INFO - Returning 1 sensor readings
+2025-09-18 16:04:51,996 - INFO - Latest sensor data requested
+2025-09-18 16:04:52,037 - INFO - Returning 1 sensor readings
+2025-09-18 16:05:01,998 - INFO - Latest sensor data requested
+2025-09-18 16:05:02,039 - INFO - Returning 1 sensor readings
+2025-09-18 16:05:11,991 - INFO - Latest sensor data requested
+2025-09-18 16:05:12,037 - INFO - Returning 1 sensor readings
+2025-09-18 16:05:21,988 - INFO - Latest sensor data requested
+2025-09-18 16:05:22,031 - INFO - Returning 1 sensor readings
+2025-09-18 16:05:31,987 - INFO - Latest sensor data requested
+2025-09-18 16:05:32,137 - INFO - Returning 1 sensor readings
+2025-09-18 16:05:41,990 - INFO - Latest sensor data requested
+2025-09-18 16:05:42,129 - INFO - Returning 1 sensor readings
+2025-09-18 16:05:51,989 - INFO - Latest sensor data requested
+2025-09-18 16:05:52,127 - INFO - Returning 1 sensor readings
+2025-09-18 16:06:01,990 - INFO - Latest sensor data requested
+2025-09-18 16:06:02,042 - INFO - Returning 1 sensor readings
+2025-09-18 16:06:11,993 - INFO - Latest sensor data requested
+2025-09-18 16:06:12,047 - INFO - Returning 1 sensor readings
+2025-09-18 16:06:21,994 - INFO - Latest sensor data requested
+2025-09-18 16:06:22,042 - INFO - Returning 1 sensor readings
+2025-09-18 16:06:31,989 - INFO - Latest sensor data requested
+2025-09-18 16:06:32,024 - INFO - Returning 1 sensor readings
+2025-09-18 16:11:25,049 - WARNING - Not Found: /api/verify-token/
+2025-09-18 16:11:27,168 - INFO - Latest sensor data requested
+2025-09-18 16:11:27,309 - INFO - Returning 1 sensor readings
+2025-09-18 16:11:34,685 - WARNING - Not Found: /api/users/me/
+2025-09-18 16:11:36,167 - INFO - Latest sensor data requested
+2025-09-18 16:11:36,210 - INFO - Returning 1 sensor readings
+2025-09-18 16:11:46,183 - INFO - Latest sensor data requested
+2025-09-18 16:11:46,576 - INFO - Returning 1 sensor readings
+2025-09-18 16:11:56,168 - INFO - Latest sensor data requested
+2025-09-18 16:11:56,355 - INFO - Returning 1 sensor readings
+2025-09-18 16:12:06,168 - INFO - Latest sensor data requested
+2025-09-18 16:12:06,349 - INFO - Returning 1 sensor readings
+2025-09-18 16:12:16,257 - INFO - Latest sensor data requested
+2025-09-18 16:12:16,404 - INFO - Returning 1 sensor readings
+2025-09-18 16:12:26,172 - INFO - Latest sensor data requested
+2025-09-18 16:12:26,311 - INFO - Returning 1 sensor readings
+2025-09-18 16:12:26,334 - INFO - Latest sensor data requested
+2025-09-18 16:12:26,497 - INFO - Returning 1 sensor readings
+2025-09-18 16:12:29,466 - WARNING - Method Not Allowed: /api/llm/query/
+2025-09-18 16:12:36,248 - INFO - Latest sensor data requested
+2025-09-18 16:12:36,403 - INFO - Returning 1 sensor readings
+2025-09-18 16:12:46,167 - INFO - Latest sensor data requested
+2025-09-18 16:12:46,221 - INFO - Returning 1 sensor readings
+2025-09-18 16:12:56,193 - INFO - Latest sensor data requested
+2025-09-18 16:12:56,257 - INFO - Returning 1 sensor readings
+2025-09-18 16:13:06,180 - INFO - Latest sensor data requested
+2025-09-18 16:13:06,223 - INFO - Returning 1 sensor readings
+2025-09-18 16:13:16,174 - INFO - Latest sensor data requested
+2025-09-18 16:13:16,211 - INFO - Returning 1 sensor readings
+2025-09-18 16:13:26,168 - INFO - Latest sensor data requested
+2025-09-18 16:13:26,211 - INFO - Returning 1 sensor readings
+2025-09-18 16:13:36,170 - INFO - Latest sensor data requested
+2025-09-18 16:13:36,212 - INFO - Returning 1 sensor readings
+2025-09-18 16:13:46,168 - INFO - Latest sensor data requested
+2025-09-18 16:13:46,210 - INFO - Returning 1 sensor readings
+2025-09-18 16:13:56,168 - INFO - Latest sensor data requested
+2025-09-18 16:13:56,235 - INFO - Returning 1 sensor readings
+2025-09-18 16:14:06,178 - INFO - Latest sensor data requested
+2025-09-18 16:14:06,231 - INFO - Returning 1 sensor readings
+2025-09-18 16:14:16,168 - INFO - Latest sensor data requested
+2025-09-18 16:14:16,216 - INFO - Returning 1 sensor readings
+2025-09-18 16:14:26,172 - INFO - Latest sensor data requested
+2025-09-18 16:14:26,219 - INFO - Returning 1 sensor readings
+2025-09-18 16:14:36,172 - INFO - Latest sensor data requested
+2025-09-18 16:14:36,336 - INFO - Returning 1 sensor readings
+2025-09-18 16:14:46,172 - INFO - Latest sensor data requested
+2025-09-18 16:14:46,331 - INFO - Returning 1 sensor readings
+2025-09-18 16:14:56,169 - INFO - Latest sensor data requested
+2025-09-18 16:14:56,213 - INFO - Returning 1 sensor readings
+2025-09-18 16:15:06,166 - INFO - Latest sensor data requested
+2025-09-18 16:15:06,207 - INFO - Returning 1 sensor readings
+2025-09-18 16:15:16,174 - INFO - Latest sensor data requested
+2025-09-18 16:15:16,211 - INFO - Returning 1 sensor readings
+2025-09-18 16:15:26,169 - INFO - Latest sensor data requested
+2025-09-18 16:15:26,208 - INFO - Returning 1 sensor readings
+2025-09-18 16:15:36,172 - INFO - Latest sensor data requested
+2025-09-18 16:15:36,215 - INFO - Returning 1 sensor readings
+2025-09-18 16:15:46,169 - INFO - Latest sensor data requested
+2025-09-18 16:15:46,216 - INFO - Returning 1 sensor readings
+2025-09-18 16:15:56,170 - INFO - Latest sensor data requested
+2025-09-18 16:15:56,212 - INFO - Returning 1 sensor readings
+2025-09-18 16:16:06,171 - INFO - Latest sensor data requested
+2025-09-18 16:16:06,213 - INFO - Returning 1 sensor readings
+2025-09-18 16:16:16,183 - INFO - Latest sensor data requested
+2025-09-18 16:16:16,232 - INFO - Returning 1 sensor readings
+2025-09-18 16:16:26,170 - INFO - Latest sensor data requested
+2025-09-18 16:16:26,231 - INFO - Returning 1 sensor readings
+2025-09-18 16:16:36,168 - INFO - Latest sensor data requested
+2025-09-18 16:16:36,217 - INFO - Returning 1 sensor readings
+2025-09-18 16:16:46,177 - INFO - Latest sensor data requested
+2025-09-18 16:16:46,216 - INFO - Returning 1 sensor readings
+2025-09-18 16:16:56,170 - INFO - Latest sensor data requested
+2025-09-18 16:16:56,208 - INFO - Returning 1 sensor readings
+2025-09-18 16:17:06,167 - INFO - Latest sensor data requested
+2025-09-18 16:17:06,209 - INFO - Returning 1 sensor readings
+2025-09-18 16:17:16,173 - INFO - Latest sensor data requested
+2025-09-18 16:17:16,332 - INFO - Returning 1 sensor readings
+2025-09-18 16:17:26,169 - INFO - Latest sensor data requested
+2025-09-18 16:17:26,217 - INFO - Returning 1 sensor readings
+2025-09-18 16:17:36,172 - INFO - Latest sensor data requested
+2025-09-18 16:17:36,217 - INFO - Returning 1 sensor readings
+2025-09-18 16:17:46,171 - INFO - Latest sensor data requested
+2025-09-18 16:17:46,329 - INFO - Returning 1 sensor readings
+2025-09-18 16:17:56,168 - INFO - Latest sensor data requested
+2025-09-18 16:17:56,207 - INFO - Returning 1 sensor readings
+2025-09-18 16:18:06,171 - INFO - Latest sensor data requested
+2025-09-18 16:18:06,224 - INFO - Returning 1 sensor readings
+2025-09-18 16:18:16,168 - INFO - Latest sensor data requested
+2025-09-18 16:18:16,209 - INFO - Returning 1 sensor readings
+2025-09-18 16:18:26,168 - INFO - Latest sensor data requested
+2025-09-18 16:18:26,209 - INFO - Returning 1 sensor readings
+2025-09-18 16:18:36,168 - INFO - Latest sensor data requested
+2025-09-18 16:18:36,204 - INFO - Returning 1 sensor readings
+2025-09-18 16:18:46,168 - INFO - Latest sensor data requested
+2025-09-18 16:18:46,207 - INFO - Returning 1 sensor readings
+2025-09-18 16:18:56,167 - INFO - Latest sensor data requested
+2025-09-18 16:18:56,199 - INFO - Returning 1 sensor readings
+2025-09-18 16:19:06,171 - INFO - Latest sensor data requested
+2025-09-18 16:19:06,314 - INFO - Returning 1 sensor readings
+2025-09-18 16:19:16,171 - INFO - Latest sensor data requested
+2025-09-18 16:19:16,209 - INFO - Returning 1 sensor readings
+2025-09-18 16:19:26,166 - INFO - Latest sensor data requested
+2025-09-18 16:19:26,214 - INFO - Returning 1 sensor readings
+2025-09-18 16:19:36,168 - INFO - Latest sensor data requested
+2025-09-18 16:19:36,312 - INFO - Returning 1 sensor readings
+2025-09-18 16:19:46,167 - INFO - Latest sensor data requested
+2025-09-18 16:19:46,205 - INFO - Returning 1 sensor readings
+2025-09-18 16:19:56,167 - INFO - Latest sensor data requested
+2025-09-18 16:19:56,207 - INFO - Returning 1 sensor readings
+2025-09-18 16:20:06,174 - INFO - Latest sensor data requested
+2025-09-18 16:20:06,221 - INFO - Returning 1 sensor readings
+2025-09-18 16:20:16,172 - INFO - Latest sensor data requested
+2025-09-18 16:20:16,330 - INFO - Returning 1 sensor readings
+2025-09-18 16:20:26,171 - INFO - Latest sensor data requested
+2025-09-18 16:20:26,210 - INFO - Returning 1 sensor readings
+2025-09-18 16:20:36,174 - INFO - Latest sensor data requested
+2025-09-18 16:20:36,327 - INFO - Returning 1 sensor readings
+2025-09-18 16:20:46,175 - INFO - Latest sensor data requested
+2025-09-18 16:20:46,221 - INFO - Returning 1 sensor readings
+2025-09-18 16:20:56,168 - INFO - Latest sensor data requested
+2025-09-18 16:20:56,220 - INFO - Returning 1 sensor readings
+2025-09-18 16:21:06,170 - INFO - Latest sensor data requested
+2025-09-18 16:21:06,218 - INFO - Returning 1 sensor readings
+2025-09-18 16:21:16,171 - INFO - Latest sensor data requested
+2025-09-18 16:21:16,229 - INFO - Returning 1 sensor readings
+2025-09-18 16:21:26,166 - INFO - Latest sensor data requested
+2025-09-18 16:21:26,205 - INFO - Returning 1 sensor readings
+2025-09-18 16:21:36,172 - INFO - Latest sensor data requested
+2025-09-18 16:21:36,211 - INFO - Returning 1 sensor readings
+2025-09-18 16:21:46,173 - INFO - Latest sensor data requested
+2025-09-18 16:21:46,216 - INFO - Returning 1 sensor readings
+2025-09-18 16:21:56,180 - INFO - Latest sensor data requested
+2025-09-18 16:21:56,229 - INFO - Returning 1 sensor readings
+2025-09-18 16:22:06,169 - INFO - Latest sensor data requested
+2025-09-18 16:22:06,213 - INFO - Returning 1 sensor readings
+2025-09-18 16:22:16,167 - INFO - Latest sensor data requested
+2025-09-18 16:22:16,209 - INFO - Returning 1 sensor readings
+2025-09-18 16:22:26,169 - INFO - Latest sensor data requested
+2025-09-18 16:22:26,209 - INFO - Returning 1 sensor readings
+2025-09-18 16:22:36,170 - INFO - Latest sensor data requested
+2025-09-18 16:22:36,213 - INFO - Returning 1 sensor readings
+2025-09-18 16:22:46,168 - INFO - Latest sensor data requested
+2025-09-18 16:22:46,218 - INFO - Returning 1 sensor readings
+2025-09-18 16:22:56,172 - INFO - Latest sensor data requested
+2025-09-18 16:22:56,216 - INFO - Returning 1 sensor readings
+2025-09-18 16:23:06,168 - INFO - Latest sensor data requested
+2025-09-18 16:23:06,215 - INFO - Returning 1 sensor readings
+2025-09-18 16:23:16,168 - INFO - Latest sensor data requested
+2025-09-18 16:23:16,312 - INFO - Returning 1 sensor readings
+2025-09-18 16:23:26,167 - INFO - Latest sensor data requested
+2025-09-18 16:23:26,212 - INFO - Returning 1 sensor readings
+2025-09-18 16:23:36,173 - INFO - Latest sensor data requested
+2025-09-18 16:23:36,317 - INFO - Returning 1 sensor readings
+2025-09-18 16:23:46,171 - INFO - Latest sensor data requested
+2025-09-18 16:23:46,221 - INFO - Returning 1 sensor readings
+2025-09-18 16:30:24,541 - WARNING - Not Found: /api/verify-token/
+2025-09-18 16:30:26,380 - INFO - Latest sensor data requested
+2025-09-18 16:30:26,452 - INFO - Returning 1 sensor readings
+2025-09-18 16:30:29,575 - WARNING - Not Found: /api/users/me/
+2025-09-18 16:30:35,807 - INFO - Latest sensor data requested
+2025-09-18 16:30:35,844 - INFO - Returning 1 sensor readings
+2025-09-18 16:30:45,754 - INFO - Latest sensor data requested
+2025-09-18 16:30:45,801 - INFO - Returning 1 sensor readings
+2025-09-18 16:30:55,804 - INFO - Latest sensor data requested
+2025-09-18 16:30:55,851 - INFO - Returning 1 sensor readings
+2025-09-18 16:30:57,158 - INFO - Attachment upload requested for maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6
+2025-09-18 16:30:57,296 - INFO - In-app notification created for AceClient: New Attachment: Example
+2025-09-18 16:31:03,910 - INFO - Email sent to acephilipdenulan12@gmail.com: SBMS: New Attachment: Example
+2025-09-18 16:31:03,930 - INFO - In-app notification created for admin: New Attachment: Example
+2025-09-18 16:31:05,756 - INFO - Latest sensor data requested
+2025-09-18 16:31:05,795 - INFO - Returning 1 sensor readings
+2025-09-18 16:31:09,352 - INFO - Email sent to example@gmail.com: SBMS: New Attachment: Example
+2025-09-18 16:31:09,357 - INFO - In-app notification created for aceadmin: New Attachment: Example
+2025-09-18 16:31:14,356 - INFO - Email sent to aceadmin@example.com: SBMS: New Attachment: Example
+2025-09-18 16:31:14,359 - INFO - In-app notification created for sirTaposNaPo: New Attachment: Example
+2025-09-18 16:31:15,752 - INFO - Latest sensor data requested
+2025-09-18 16:31:15,795 - INFO - Returning 1 sensor readings
+2025-09-18 16:31:17,911 - INFO - Latest sensor data requested
+2025-09-18 16:31:18,064 - INFO - Returning 1 sensor readings
+2025-09-18 16:31:20,967 - INFO - Email sent to stnp@example.com: SBMS: New Attachment: Example
+2025-09-18 16:31:20,972 - INFO - In-app notification created for dummy: New Attachment: Example
+2025-09-18 16:31:25,754 - INFO - Latest sensor data requested
+2025-09-18 16:31:25,793 - INFO - Returning 1 sensor readings
+2025-09-18 16:31:25,909 - INFO - Email sent to dummy@example.com: SBMS: New Attachment: Example
+2025-09-18 16:31:25,913 - INFO - In-app notification created for AceAdmin: New Attachment: Example
+2025-09-18 16:31:30,431 - INFO - Email sent to acephilipgclass18@gmail.com: SBMS: New Attachment: Example
+2025-09-18 16:31:30,433 - INFO - Attachment uploaded: daf92ed5-16e9-40d6-b2ca-827b4b6223df for 6ba64ecf-b5f0-45d5-be6c-1833db0338c6
+2025-09-18 16:31:35,753 - INFO - Latest sensor data requested
+2025-09-18 16:31:35,799 - INFO - Returning 1 sensor readings
+2025-09-18 16:31:45,757 - INFO - Latest sensor data requested
+2025-09-18 16:31:45,805 - INFO - Returning 1 sensor readings
+2025-09-18 16:31:55,752 - INFO - Latest sensor data requested
+2025-09-18 16:31:55,783 - INFO - Returning 1 sensor readings
+2025-09-18 16:32:05,766 - INFO - Latest sensor data requested
+2025-09-18 16:32:05,825 - INFO - Returning 1 sensor readings
+2025-09-18 16:32:15,752 - INFO - Latest sensor data requested
+2025-09-18 16:32:15,790 - INFO - Returning 1 sensor readings
+2025-09-18 16:32:25,752 - INFO - Latest sensor data requested
+2025-09-18 16:32:25,796 - INFO - Returning 1 sensor readings
+2025-09-18 16:32:35,754 - INFO - Latest sensor data requested
+2025-09-18 16:32:35,905 - INFO - Returning 1 sensor readings
+2025-09-18 16:32:45,752 - INFO - Latest sensor data requested
+2025-09-18 16:32:45,782 - INFO - Returning 1 sensor readings
+2025-09-18 16:32:55,755 - INFO - Latest sensor data requested
+2025-09-18 16:32:55,796 - INFO - Returning 1 sensor readings
+2025-09-18 16:33:05,756 - INFO - Latest sensor data requested
+2025-09-18 16:33:05,809 - INFO - Returning 1 sensor readings
+2025-09-18 16:33:15,753 - INFO - Latest sensor data requested
+2025-09-18 16:33:15,795 - INFO - Returning 1 sensor readings
+2025-09-18 16:33:25,755 - INFO - Latest sensor data requested
+2025-09-18 16:33:25,798 - INFO - Returning 1 sensor readings
+2025-09-18 16:33:35,754 - INFO - Latest sensor data requested
+2025-09-18 16:33:35,796 - INFO - Returning 1 sensor readings
+2025-09-18 16:33:45,754 - INFO - Latest sensor data requested
+2025-09-18 16:33:45,898 - INFO - Returning 1 sensor readings
+2025-09-18 16:33:55,757 - INFO - Latest sensor data requested
+2025-09-18 16:33:55,801 - INFO - Returning 1 sensor readings
+2025-09-18 16:34:05,759 - INFO - Latest sensor data requested
+2025-09-18 16:34:05,815 - INFO - Returning 1 sensor readings
+2025-09-18 16:34:15,762 - INFO - Latest sensor data requested
+2025-09-18 16:34:15,824 - INFO - Returning 1 sensor readings
+2025-09-18 16:34:25,757 - INFO - Latest sensor data requested
+2025-09-18 16:34:25,800 - INFO - Returning 1 sensor readings
+2025-09-18 16:34:35,754 - INFO - Latest sensor data requested
+2025-09-18 16:34:35,795 - INFO - Returning 1 sensor readings
+2025-09-18 16:34:45,754 - INFO - Latest sensor data requested
+2025-09-18 16:34:45,798 - INFO - Returning 1 sensor readings
+2025-09-18 16:34:55,756 - INFO - Latest sensor data requested
+2025-09-18 16:34:55,916 - INFO - Returning 1 sensor readings
+2025-09-18 16:35:05,758 - INFO - Latest sensor data requested
+2025-09-18 16:35:05,826 - INFO - Returning 1 sensor readings
+2025-09-18 16:35:15,753 - INFO - Latest sensor data requested
+2025-09-18 16:35:15,799 - INFO - Returning 1 sensor readings
+2025-09-18 16:35:25,758 - INFO - Latest sensor data requested
+2025-09-18 16:35:25,801 - INFO - Returning 1 sensor readings
+2025-09-18 16:35:35,754 - INFO - Latest sensor data requested
+2025-09-18 16:35:35,787 - INFO - Returning 1 sensor readings
+2025-09-18 16:35:45,755 - INFO - Latest sensor data requested
+2025-09-18 16:35:45,810 - INFO - Returning 1 sensor readings
+2025-09-18 16:35:55,755 - INFO - Latest sensor data requested
+2025-09-18 16:35:55,793 - INFO - Returning 1 sensor readings
+2025-09-18 16:36:05,759 - INFO - Latest sensor data requested
+2025-09-18 16:36:05,794 - INFO - Returning 1 sensor readings
+2025-09-18 16:36:15,753 - INFO - Latest sensor data requested
+2025-09-18 16:36:15,800 - INFO - Returning 1 sensor readings
+2025-09-18 16:36:25,765 - INFO - Latest sensor data requested
+2025-09-18 16:36:25,830 - INFO - Returning 1 sensor readings
+2025-09-18 16:36:35,757 - INFO - Latest sensor data requested
+2025-09-18 16:36:35,915 - INFO - Returning 1 sensor readings
+2025-09-18 16:36:45,772 - INFO - Latest sensor data requested
+2025-09-18 16:36:45,813 - INFO - Returning 1 sensor readings
+2025-09-18 16:36:55,755 - INFO - Latest sensor data requested
+2025-09-18 16:36:55,798 - INFO - Returning 1 sensor readings
+2025-09-18 16:37:05,756 - INFO - Latest sensor data requested
+2025-09-18 16:37:05,806 - INFO - Returning 1 sensor readings
+2025-09-18 16:37:15,754 - INFO - Latest sensor data requested
+2025-09-18 16:37:15,794 - INFO - Returning 1 sensor readings
+2025-09-18 16:37:25,753 - INFO - Latest sensor data requested
+2025-09-18 16:37:25,793 - INFO - Returning 1 sensor readings
+2025-09-18 16:37:35,752 - INFO - Latest sensor data requested
+2025-09-18 16:37:35,787 - INFO - Returning 1 sensor readings
+2025-09-18 16:37:45,757 - INFO - Latest sensor data requested
+2025-09-18 16:37:45,799 - INFO - Returning 1 sensor readings
+2025-09-18 16:37:55,753 - INFO - Latest sensor data requested
+2025-09-18 16:37:55,794 - INFO - Returning 1 sensor readings
+2025-09-18 16:38:11,423 - WARNING - Not Found: /api/verify-token/
+2025-09-18 16:38:18,629 - INFO - Latest sensor data requested
+2025-09-18 16:38:18,850 - INFO - Returning 1 sensor readings
+2025-09-18 16:38:27,491 - INFO - Latest sensor data requested
+2025-09-18 16:38:27,535 - INFO - Returning 1 sensor readings
+2025-09-18 16:38:28,023 - INFO - Latest sensor data requested
+2025-09-18 16:38:28,091 - INFO - Returning 1 sensor readings
+2025-09-18 16:38:34,833 - WARNING - Not Found: /api/users/me/
+2025-09-18 16:38:37,491 - INFO - Latest sensor data requested
+2025-09-18 16:38:37,582 - INFO - Latest sensor data requested
+2025-09-18 16:38:37,668 - INFO - Returning 1 sensor readings
+2025-09-18 16:38:37,670 - INFO - Returning 1 sensor readings
+2025-09-18 16:38:47,287 - WARNING - Method Not Allowed: /api/llm/query/
+2025-09-18 16:38:47,490 - INFO - Latest sensor data requested
+2025-09-18 16:38:47,533 - INFO - Returning 1 sensor readings
+2025-09-18 16:38:57,495 - INFO - Latest sensor data requested
+2025-09-18 16:38:57,540 - INFO - Returning 1 sensor readings
+2025-09-18 16:39:07,488 - INFO - Latest sensor data requested
+2025-09-18 16:39:07,524 - INFO - Returning 1 sensor readings
+2025-09-18 16:40:00,219 - INFO - Latest sensor data requested
+2025-09-18 16:40:00,262 - INFO - Returning 1 sensor readings
+2025-09-18 16:40:10,217 - INFO - Latest sensor data requested
+2025-09-18 16:40:10,258 - INFO - Returning 1 sensor readings
+2025-09-18 16:40:20,219 - INFO - Latest sensor data requested
+2025-09-18 16:40:20,363 - INFO - Returning 1 sensor readings
+2025-09-18 16:42:50,164 - INFO - Latest sensor data requested
+2025-09-18 16:42:50,380 - INFO - Returning 1 sensor readings
+2025-09-18 16:43:06,589 - INFO - Latest sensor data requested
+2025-09-18 16:43:06,646 - INFO - Returning 1 sensor readings
+2025-09-18 16:43:08,747 - INFO - Latest sensor data requested
+2025-09-18 16:43:08,787 - INFO - Returning 1 sensor readings
