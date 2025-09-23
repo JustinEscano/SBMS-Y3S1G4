@@ -1,11 +1,14 @@
-import axiosInstance from "../../service/AppService";
+import axiosInstance from "../../service/AppService.tsx";
 import type { RoomAnalytics } from "../types/sensorLogTypes";
 import type { Room } from "../types/dashboardTypes";
 
 const ROOM_API = "/api/rooms/";
 
+console.log('🚀 [RoomService] axiosInstance imported:', axiosInstance);
+
 export const roomService = {
   getAll: async (): Promise<Room[]> => {
+    console.log('🔍 [RoomService] Token exists?', localStorage.getItem('access_token') ? 'YES' : 'NO');
     const { data } = await axiosInstance.get<Room[]>(ROOM_API);
     return data;
   },
