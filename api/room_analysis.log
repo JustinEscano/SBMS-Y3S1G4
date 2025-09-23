@@ -5999,3 +5999,38 @@
 2025-09-18 16:43:06,646 - INFO - Returning 1 sensor readings
 2025-09-18 16:43:08,747 - INFO - Latest sensor data requested
 2025-09-18 16:43:08,787 - INFO - Returning 1 sensor readings
+2025-09-23 20:42:25,535 - INFO - Starting analyzer initialization with MongoDB Atlas
+2025-09-23 20:42:25,536 - INFO - Using prompt type: base_enhancement
+2025-09-23 20:42:25,536 - INFO - Using document template: standard
+2025-09-23 20:42:25,609 - INFO - Successfully connected to PostgreSQL database
+2025-09-23 20:42:25,610 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-23 20:42:30,232 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-23 20:42:30,233 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-23 20:42:30,235 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-23 20:42:30,237 - INFO - Loaded 117 existing document hashes
+2025-09-23 20:42:30,243 - INFO - Room-specific handlers initialized successfully
+2025-09-23 20:42:30,244 - INFO - RoomLogAnalyzer instance created
+2025-09-23 20:42:30,246 - INFO - Loading data from PostgreSQL
+2025-09-23 20:42:30,672 - INFO - Retrieved 30 sensor records from database
+2025-09-23 20:42:30,688 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-23 20:42:30,703 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-23 20:42:31,249 - INFO - Logged data to MongoDB with hash 26034432740aab749706484ae6edfddc
+2025-09-23 20:42:31,326 - INFO - Logged data to MongoDB with hash 1d27f3748e2bffc80a765c78fc2db1fa
+2025-09-23 20:42:31,404 - INFO - Logged data to MongoDB with hash 767079f0bf894fe468df7a000a7d8cd5
+2025-09-23 20:42:31,404 - INFO - Logged 3 records to MongoDB
+2025-09-23 20:42:31,405 - INFO - Data loaded, rows: 3
+2025-09-23 20:42:31,406 - INFO - Skipping duplicate document with hash 26034432740aab749706484ae6edfddc
+2025-09-23 20:42:31,408 - INFO - Skipping duplicate document with hash 1d27f3748e2bffc80a765c78fc2db1fa
+2025-09-23 20:42:31,409 - INFO - Skipping duplicate document with hash 767079f0bf894fe468df7a000a7d8cd5
+2025-09-23 20:42:31,415 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-23 20:42:31,416 - INFO - Documents created: 0
+2025-09-23 20:42:31,419 - INFO - Loading existing vector store
+2025-09-23 20:42:33,944 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-23 20:42:34,584 - INFO - No new documents to add to vector store
+2025-09-23 20:42:34,586 - INFO - Vector store initialized
+2025-09-23 20:42:34,591 - ERROR - Error initializing QA chain: Vector store not initialized
+2025-09-23 20:42:34,593 - ERROR - Error initializing analyzer: Vector store not initialized
+2025-09-23 20:42:34,603 - ERROR - Service Unavailable: /api/llm/health/
+2025-09-23 20:42:34,648 - INFO - LLM health check requested
+2025-09-23 20:42:34,649 - ERROR - Error processing query: QA chain not initialized. Call initialize_qa_chain() first.
+2025-09-23 20:42:34,650 - ERROR - Service Unavailable: /api/llm/health/
