@@ -19,12 +19,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .permissions import RoleBasedPermission
 import logging
-import sys
-import os
-
-# Add LLM module to path
-llm_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'llm', 'static_remote_LLM')
-sys.path.append(llm_path)
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -316,7 +310,7 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         logger.info(f"Equipment created: {instance.id} - {instance.name}")
 
 class SensorLogViewSet(viewsets.ModelViewSet):
-    queryset = SensorLog.objects.all().order_by('-recorded_at')
+    queryset = SensorLog.objects.all().order_by('-recorded_at') # Latest first
     serializer_class = SensorLogSerializer
     permission_classes = [RoleBasedPermission]
 
@@ -538,19 +532,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
 class LLMQueryViewSet(viewsets.ModelViewSet):
     queryset = LLMQuery.objects.all()
     serializer_class = LLMQuerySerializer
-    permission_classes = [RoleBasedPermission]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if hasattr(user, 'role') and user.role == 'client':
-            return queryset.filter(user=user)
-        return queryset
 
 class LLMSummaryViewSet(viewsets.ModelViewSet):
     queryset = LLMSummary.objects.all()
     serializer_class = LLMSummarySerializer
-    permission_classes = [RoleBasedPermission]
 
 class AuthTokenViewSet(viewsets.ModelViewSet):
     queryset = AuthToken.objects.all()
@@ -855,11 +840,7 @@ def esp32_sensor_data(request):
             humidity=float(data['humidity']),
             light_level=float(data['light_level']),
             motion_detected=bool(data['motion_detected']),
-            energy_usage=float(data.get('energy_usage', 0.0)),
-            voltage=float(data.get('voltage', 0.0)),
-            current=float(data.get('current', 0.0)),
-            power=float(data.get('power', 0.0)),
-            energy=float(data.get('energy', 0.0)),
+            energy_usage=float(data.get('energy_usage', 0.0)), # Optional field
             recorded_at=timezone.now()
         )
 
@@ -1051,8 +1032,8 @@ def esp32_heartbeat(request):
             )
 
         try:
-            equipment = Equipment.objects.get(device_id=data['device_id'])
-            equipment.status = 'online'
+            equipment = Equipment.objects.get(device_id=device_id)
+            equipment.status = 'online' # Use standardized value
             equipment.save()
             
             HeartbeatLog.objects.create(
@@ -1096,6 +1077,7 @@ def esp32_heartbeat(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+# LLM Integration Endpoints
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def llm_query(request):
@@ -1121,6 +1103,7 @@ def llm_query(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Import LLM module
         try:
             from main import ask
             logger.info("LLM module imported successfully")
@@ -1131,6 +1114,7 @@ def llm_query(request):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
+        # Process the query
         logger.info(f"Processing query: {query_text}")
         result = ask(query_text)
         
@@ -1141,6 +1125,7 @@ def llm_query(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+        # Save query to database if user_id provided
         if user_id:
             try:
                 user = User.objects.get(id=user_id)
@@ -1180,7 +1165,10 @@ def llm_health_check(request):
     logger.info("LLM health check requested")
     
     try:
+        # Try to import LLM module
         from main import ask
+        
+        # Test with a simple query
         result = ask("How many records are there?")
         
         if "error" in result:

@@ -31,11 +31,6 @@ urlpatterns = [
     path('esp32/health/', esp32_health_check, name='esp32_health_check'),
     path('esp32/latest/', latest_sensor_data, name='latest_sensor_data'),
     path('esp32/heartbeat/', esp32_heartbeat, name='esp32_heartbeat'),
-    
-    # LLM specific endpoints
-    path('llm/query/', llm_query, name='llm_query'),
-    path('llm/health/', llm_health_check, name='llm_health_check'),
-    
     # New endpoint for field options
     path('equipment/field-options/', equipment_field_options, name='equipment_field_options'),
 ]
