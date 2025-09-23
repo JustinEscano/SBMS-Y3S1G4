@@ -1,4 +1,4 @@
-import axiosInstance from "../../service/AppService";
+import axiosInstance from "../../service/AppService.tsx";
 import type { User } from "../types/dashboardTypes"
 
 const USER_API = "/api/users/";

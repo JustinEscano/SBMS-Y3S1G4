@@ -1,8 +1,8 @@
-import axiosInstance from '../../service/AppService';
+import axiosInstance from '../../service/AppService.tsx';
 
 interface LoginResponse {
   access: string;
-  refresh?: string;
+  refresh: string;
 }
 
 export const loginUser = async (
@@ -13,5 +13,12 @@ export const loginUser = async (
     email,
     password,
   });
-  return res.data as LoginResponse;
+
+  const data = res.data as LoginResponse;
+
+  // ✅ Save tokens so interceptors can attach them immediately
+  localStorage.setItem('access_token', data.access);
+  localStorage.setItem('refresh_token', data.refresh);
+
+  return data;
 };

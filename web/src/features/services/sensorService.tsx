@@ -1,24 +1,22 @@
 // src/services/sensorService.ts
+import axiosInstance from "../../service/AppService.tsx";
 import type { ESP32Response } from "../types/sensorLogTypes";
 
-class SensorService {
-  private baseUrl = "/api/esp32";
+const SENSOR_API = "/api/esp32/";
 
-  async fetchLatest(): Promise<ESP32Response> {
-    const response = await fetch(`${this.baseUrl}/latest/`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch sensor data");
-    }
-    return response.json();
-  }
+export const sensorService = {
+  // ✅ Get latest sensor data
+  fetchLatest: async (): Promise<ESP32Response> => {
+    const { data } = await axiosInstance.get<ESP32Response>(`${SENSOR_API}latest/`);
+    return data;
+  },
 
-  async fetchByPageType(pageType: string): Promise<ESP32Response> {
-    const response = await fetch(`${this.baseUrl}/latest/?pageType=${pageType}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch sensor data for page type");
-    }
-    return response.json();
-  }
-}
-
-export const sensorService = new SensorService();
+  // ✅ Get latest sensor data filtered by pageType
+  fetchByPageType: async (pageType: string): Promise<ESP32Response> => {
+    const { data } = await axiosInstance.get<ESP32Response>(
+      `${SENSOR_API}latest/`,
+      { params: { pageType } }
+    );
+    return data;
+  },
+};

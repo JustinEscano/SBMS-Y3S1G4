@@ -1,4 +1,4 @@
-import axiosInstance from "../../service/AppService";
+import axiosInstance from "../../service/AppService.tsx";
 import type { LLMQueryRequest, LLMQueryResponse, LLMHealthResponse } from "../types/llmTypes";
 
 class LLMService {

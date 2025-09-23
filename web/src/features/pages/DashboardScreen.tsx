@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import type { Room, MaintenanceRequest, User, Equipment } from "../types/dashboardTypes";
+import type { Room, Equipment } from "../types/dashboardTypes";
 import RoomModal from "../components/roomModal";
 import { roomService } from "../services/roomService";
-import { maintenanceService } from "../services/maintenanceService";
-import { userService } from "../services/userService";
 import { equipmentService } from "../services/equipmentService";
 import PageLayout from "../pages/PageLayout";
 import Pagination from "../components/Pagination";
@@ -21,26 +18,13 @@ const DashboardScreen: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [showRequests, setShowRequests] = useState(false);
-  const [maintenanceRequests, setRequests] = useState<MaintenanceRequest[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
 
   const popupRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   /** Fetch Rooms */
   useEffect(() => {
     roomService.getAll().then(setRooms).catch(console.error);
-  }, []);
-
-  /** Fetch Maintenance Requests */
-  useEffect(() => {
-    maintenanceService.getAll().then(setRequests).catch(console.error);
-  }, []);
-
-  /** Fetch Users */
-  useEffect(() => {
-    userService.getAll().then(setUsers).catch(console.error);
   }, []);
 
   /** Fetch Equipments */
@@ -96,69 +80,10 @@ const DashboardScreen: React.FC = () => {
     }
   };
 
-  /** Maintenance Requests → only pending */
-  const pendingRequests = useMemo(
-    () => maintenanceRequests.filter((req) => req.status.toLowerCase() === "pending"),
-    [maintenanceRequests]
-  );
-
-  /** Map User ID → Username */
-  const getUsername = (userId: string) => users.find((u) => u.id === userId)?.username ?? "Unknown";
-  const getEquipmentName = (userId: string) => equipments.find((u) => u.id === userId)?.name ?? "Unknown";
-
-
   return (
     <PageLayout initialSection={{ parent: "Dashboard" }}>
       <div className="page-header">
         <h1>Dashboard &gt; Rooms</h1>
-        <div className="header-actions">
-          <div className="action-square blue">📊</div>
-          <div className="action-square green">🔌</div>
-          <div className="action-square purple">📁</div>
-          <div
-            className="action-square yellow relative"
-            onClick={() => setShowRequests(!showRequests)}
-          >
-            🛠️
-            {pendingRequests.length > 0 && (
-              <span className="maintenance-badge">{pendingRequests.length}</span>
-            )}
-          </div>
-
-          {showRequests && (
-            <div ref={popupRef} className="maintenance-popup">
-              <h3 className="maintenance-list-title">Maintenance Requests</h3>
-              <ul className="maintenance-list">
-                {pendingRequests.length > 0 ? (
-                  pendingRequests.map((req) => (
-                    <li
-                      key={req.id}
-                      className="maintenance-item"
-                      onClick={() =>
-                        navigate(`/dashboard/maintenance?search=${encodeURIComponent(req.issue)}`)
-                      }
-                    >
-                      <div className="maintenance-issue">
-                        <strong>{req.issue}</strong>
-                      </div>
-                      <div className="maintenance-equiptment">
-                        Equipment: {getEquipmentName(req.equipment)}
-                      </div>
-                      <div className="maintenance-user">
-                        User: {getUsername(req.user)}
-                      </div>
-                      <div className="maintenance-date">
-                        Scheduled: {new Date(req.scheduled_date).toLocaleDateString()}
-                      </div>
-                    </li>
-                  ))
-                ) : (
-                  <li className="maintenance-empty">No pending requests</li>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="content-container">

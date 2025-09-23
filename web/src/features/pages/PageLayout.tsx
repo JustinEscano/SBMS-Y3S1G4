@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SideBar from "../components/SideBar";
 import TopBar from "../components/TopBar";
-import { useAuth } from "../context/authContext";
+import { useAuth } from "../context/AuthContext";
 import "./PageStyle.css";
 
 interface SelectedSection {
