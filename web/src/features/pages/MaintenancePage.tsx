@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import type { MaintenanceRequest, Equipment, User } from "../types/dashboardTypes";
 import MaintenanceModal from "../components/maintenanceModal";
 import { maintenanceService } from "../services/maintenanceService";
@@ -9,7 +10,6 @@ import Pagination from "../components/Pagination";
 import "../pages/PageStyle.css";
 
 type MaintenanceModalMode = "add" | "edit" | "delete";
-
 const ITEMS_PER_PAGE = 5;
 
 const MaintenancePage: React.FC = () => {
@@ -17,10 +17,13 @@ const MaintenancePage: React.FC = () => {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
-  const [modalMode, setModalMode] = useState<MaintenanceModalMode | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | undefined>(undefined);
-  const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [modalMode, setModalMode] = useState<MaintenanceModalMode | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [searchParams] = useSearchParams();
+  const roomFilter = searchParams.get("room");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,17 +39,21 @@ const MaintenancePage: React.FC = () => {
     fetchData();
   }, []);
 
+  useEffect(() => setCurrentPage(1), [search, statusFilter, roomFilter]);
+
   useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter]);
+  const query = searchParams.get("search");
+  if (query) setSearch(query);
+  }, [searchParams]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((r) => {
       const matchesSearch = r.issue.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesRoom = !roomFilter || r.equipment === roomFilter;
+      return matchesSearch && matchesStatus && matchesRoom;
     });
-  }, [requests, search, statusFilter]);
+  }, [requests, search, statusFilter, roomFilter]);
 
   const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE);
   const paginatedRequests = useMemo(() => {
@@ -55,7 +62,10 @@ const MaintenancePage: React.FC = () => {
   }, [filteredRequests, currentPage]);
 
   const handleSubmit = async (data: Partial<MaintenanceRequest>) => {
+<<<<<<< HEAD
     // Simple status transformation - just this one change!
+=======
+>>>>>>> web-only
     const dataToSend = { ...data };
     if (dataToSend.status) {
       if (dataToSend.status === "Pending") dataToSend.status = "pending" as any;
@@ -68,9 +78,13 @@ const MaintenancePage: React.FC = () => {
       setRequests((prev) => [...prev, newReq]);
     } else if (modalMode === "edit" && data.id) {
       const updated = await maintenanceService.update(data.id, dataToSend);
+<<<<<<< HEAD
       setRequests((prev) =>
         prev.map((r) => (r.id === data.id ? { ...r, ...updated } : r))
       );
+=======
+      setRequests((prev) => prev.map((r) => (r.id === data.id ? { ...r, ...updated } : r)));
+>>>>>>> web-only
     } else if (modalMode === "delete" && data.id) {
       await maintenanceService.remove(data.id);
       setRequests((prev) => prev.filter((r) => r.id !== data.id));
@@ -84,7 +98,6 @@ const MaintenancePage: React.FC = () => {
       <h1>Dashboard &gt; Maintenance Requests</h1>
 
       <div className="content-container">
-        {/* Search + Filter */}
         <div className="table-controls">
           <input
             type="text"
@@ -92,7 +105,6 @@ const MaintenancePage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -105,7 +117,6 @@ const MaintenancePage: React.FC = () => {
           </select>
         </div>
 
-        {/* Table */}
         <table>
           <thead>
             <tr>
@@ -124,7 +135,7 @@ const MaintenancePage: React.FC = () => {
                 <td>{users.find((u) => u.id === req.user)?.username || req.user}</td>
                 <td>{equipments.find((eq) => eq.id === req.equipment)?.name || req.equipment}</td>
                 <td>{req.issue}</td>
-                <td>{req.status}</td>
+                <td><span className={`status-color status-color-${req.status.toLowerCase()}`}>{req.status.toUpperCase()}</span></td>
                 <td>{req.scheduled_date}</td>
                 <td>{req.resolved_at || "-"}</td>
                 <td>
@@ -157,7 +168,6 @@ const MaintenancePage: React.FC = () => {
           </tbody>
         </table>
 
-        {/* Add button */}
         <button
           className="add-btn-main"
           onClick={() => {
@@ -168,7 +178,6 @@ const MaintenancePage: React.FC = () => {
           + Add Maintenance Request
         </button>
 
-        {/* Pagination */}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -176,7 +185,6 @@ const MaintenancePage: React.FC = () => {
           showRange
         />
 
-        {/* Modal */}
         {modalMode && (
           <MaintenanceModal
             mode={modalMode}

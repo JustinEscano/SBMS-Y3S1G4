@@ -115,12 +115,14 @@ const RoomModal: React.FC<RoomModalProps> = ({ mode, room, onClose, onSubmit }) 
             />
 
             <label>Type:</label>
-            <select name="type" value={formData.type} onChange={handleChange}>
-              <option value="">Select type</option>
-              <option value="Classroom">Classroom</option>
-              <option value="Office">Office</option>
-              <option value="Lab">Lab</option>
-              <option value="Other">Other</option>
+              <select name="type" value={formData.type} onChange={handleChange} required>
+                <option value="">Select type</option>
+                <option value="office">Office</option>
+                <option value="lab">Laboratory</option>
+                <option value="meeting">Meeting Room</option>
+                <option value="storage">Storage</option>
+                <option value="corridor">Corridor</option>
+                <option value="utility">Utility</option>
             </select>
 
             <div className="modal-actions">

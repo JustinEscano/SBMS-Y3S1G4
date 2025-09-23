@@ -31,6 +31,7 @@ html {
   font-family: 'Segoe UI', sans-serif;
   margin: 0;
   padding: 0;
+<<<<<<< HEAD
 }
 
 body {
@@ -44,6 +45,11 @@ body {
   background: #1f2235; /* Match dashboard background */
 }
 
+=======
+  background: #1f2235; /* Match dashboard background */
+}
+
+>>>>>>> web-only
 /* FIXED: App container setup */
 #root {
   width: 100%;
@@ -463,18 +469,19 @@ body {
   margin-bottom: 16px;
 }
 
-.stat-box {
+.stats-box {
   background: var(--mid-bg);
   padding: 20px;
   border-radius: 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   transition: transform 0.2s ease;
 }
 
-.stat-box:hover {
+.stat-boxes:hover {
   transform: translateY(-3px);
 }
 
@@ -507,6 +514,20 @@ body {
 .rooms-section h2 {
   margin-bottom: 1rem;
   color: var(--white);
+}
+
+.table-controls .search-btn,
+.table-controls .filter-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--blue);
+  color: var(--white);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  text-transform: uppercase; /* Consistent with dashboard style */
 }
 
 .table-controls {
@@ -561,6 +582,7 @@ table {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  outline: 2px solid var(--white);
 }
 
 table thead {
@@ -743,6 +765,70 @@ table tbody td {
   }
 }
 
+<<<<<<< HEAD
+=======
+.status-color {
+  font-weight: bold;
+  color: var(--white);
+  padding: 5px 20px;
+  border-radius: 12px;
+}
+
+.status-color-online {
+  background-color: var(--success);
+}
+
+.status-color-offline {
+  background-color: var(--gray);
+}
+
+.status-color-maintenance {
+  background-color: var(--warning);
+}
+
+.status-color-error {
+  background-color: var(--error);
+}
+
+.status-color-pending {
+  background-color: var(--warning);
+}
+
+.status-color-in_progress {
+  background-color: var(--light-blue);
+}
+
+.status-color-resolved {
+  background-color: var(--success);
+}
+
+.type-color {
+  font-weight: bold;
+  color: var(--white);
+  padding: 5px 20px;
+  border-radius: 12px;
+}
+
+.type-color-lab {
+  background-color: var(--purple);
+}
+.type-color-meeting {
+  background-color: var(--warning);
+}
+.type-color-storage {
+  background-color: var(--brown);
+}
+.type-color-office {
+  background-color: var(--blue)
+}
+.type-color-corridor {
+  background-color: var(--blue-gray);
+}
+.type-color-utility {
+  background-color: var(--lime-green); 
+}
+
+>>>>>>> web-only
 @media (max-width: 480px) {
   .sensor-card {
     padding: 1rem;
