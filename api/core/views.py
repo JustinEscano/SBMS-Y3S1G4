@@ -1,18 +1,11 @@
 from rest_framework import viewsets
 from rest_framework import generics
-from rest_framework.decorators import api_view, permission_classes, action, action
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django.db.models import Avg, Count
-from django.core.mail import send_mail
-from django.core.mail.backends.smtp import EmailBackend
-from django.conf import settings
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Count
 from django.core.mail import send_mail
@@ -25,260 +18,6 @@ from .serializers import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .permissions import RoleBasedPermission
-import logging
-import sys
-import os
-
-# Add LLM module to path
-llm_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'llm', 'static_remote_LLM')
-sys.path.append(llm_path)
-
-# Set up logging
-logger = logging.getLogger(__name__)
-
-class NotificationService:
-    """Centralized service for handling notifications (in-app and email)"""
-    
-    @staticmethod
-    def send_notification(user, title, message, email_template=None, email_context=None, email_backend=None):
-        """
-        Send both in-app notification and email to a user.
-        
-        Args:
-            user: User instance to receive the notification
-            title: Notification title (for in-app)
-            message: Notification message (for in-app)
-            email_template: Path to email template (e.g., 'emails/maintenance_request_submitted.html')
-            email_context: Dictionary for rendering email template
-            email_backend: Optional custom EmailBackend instance
-        """
-        try:
-            # Create in-app notification for frontend access
-            Notification.objects.create(
-                user=user,
-                title=title,
-                message=message,
-                read=False
-            )
-
-            # Send email if template provided
-            if email_template and email_context:
-                html_message = render_to_string(email_template, email_context)
-                plain_message = strip_tags(html_message)
-                subject = f"SBMS: {title}"
-                send_mail(
-                    subject=subject,
-                    message=plain_message,
-                    html_message=html_message,
-                    from_email=email_backend.username if email_backend else settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                    connection=email_backend,
-                )
-                
-        except Exception:
-            pass
-
-    @staticmethod
-    def notify_maintenance_request_created(instance, request):
-        """Handle notifications for maintenance request creation"""
-        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
-        context = {
-            'request_id': instance.id,
-            'equipment_name': instance.equipment.name,
-            'issue': instance.issue,
-            'comments': instance.comments or "None",
-            'assigned_to': assigned_to_name,
-            'user': instance.user.username,
-            'year': timezone.now().year,
-            'status': instance.status,
-        }
-
-        # Notify client
-        NotificationService.send_notification(
-            user=instance.user,
-            title=f"Maintenance Request Submitted: {instance.equipment.name}",
-            message=f"Your request #{instance.id} for {instance.equipment.name} has been submitted.",
-            email_template='emails/maintenance_request_submitted.html',
-            email_context={**context, 'recipient': instance.user.username}
-        )
-
-        # Notify admins
-        admin_email_backend = EmailBackend(
-            host='smtp.gmail.com',
-            port=587,
-            username=settings.ADMIN_EMAIL_USER,
-            password=settings.ADMIN_EMAIL_PASSWORD,
-            use_tls=True,
-        )
-        for admin in User.objects.filter(role__in=['admin', 'superadmin']):
-            NotificationService.send_notification(
-                user=admin,
-                title=f"New Maintenance Request: {instance.equipment.name}",
-                message=f"Request #{instance.id} by {instance.user.username} needs review.",
-                email_template='emails/maintenance_request_submitted.html',
-                email_context={**context, 'recipient': admin.username},
-                email_backend=admin_email_backend
-            )
-
-        # Notify assigned employee (if any)
-        if instance.assigned_to:
-            employee_email_backend = EmailBackend(
-                host='smtp.gmail.com',
-                port=587,
-                username=settings.EMPLOYEE_EMAIL_USER,
-                password=settings.EMPLOYEE_EMAIL_PASSWORD,
-                use_tls=True,
-            )
-            NotificationService.send_notification(
-                user=instance.assigned_to,
-                title=f"New Assignment: {instance.equipment.name}",
-                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.",
-                email_template='emails/maintenance_request_submitted.html',
-                email_context={**context, 'recipient': instance.assigned_to.username},
-                email_backend=employee_email_backend
-            )
-
-    @staticmethod
-    def notify_maintenance_request_updated(instance, request, assigned_changed=False):
-        """Handle notifications for maintenance request updates"""
-        assigned_to_name = instance.assigned_to.username if instance.assigned_to else "Not assigned"
-        context = {
-            'request_id': instance.id,
-            'equipment_name': instance.equipment.name,
-            'issue': instance.issue,
-            'comments': instance.comments or "None",
-            'status': instance.status,
-            'assigned_to': assigned_to_name,
-            'user': instance.user.username,
-            'year': timezone.now().year,
-        }
-
-        # Notify client
-        NotificationService.send_notification(
-            user=instance.user,
-            title=f"Maintenance Request Updated: {instance.equipment.name}",
-            message=f"Your request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}",
-            email_template='emails/maintenance_request_updated.html',
-            email_context={**context, 'recipient': instance.user.username}
-        )
-
-        # Notify admins
-        admin_email_backend = EmailBackend(
-            host='smtp.gmail.com',
-            port=587,
-            username=settings.ADMIN_EMAIL_USER,
-            password=settings.ADMIN_EMAIL_PASSWORD,
-            use_tls=True,
-        )
-        for admin in User.objects.filter(role__in=['admin', 'superadmin']):
-            NotificationService.send_notification(
-                user=admin,
-                title=f"Maintenance Request Updated: {instance.equipment.name}",
-                message=f"Request #{instance.id} is now {instance.status}. Assigned To: {assigned_to_name}",
-                email_template='emails/maintenance_request_updated.html',
-                email_context={**context, 'recipient': admin.username},
-                email_backend=admin_email_backend
-            )
-
-        # Notify assignee if changed
-        if assigned_changed and instance.assigned_to:
-            employee_email_backend = EmailBackend(
-                host='smtp.gmail.com',
-                port=587,
-                username=settings.EMPLOYEE_EMAIL_USER,
-                password=settings.EMPLOYEE_EMAIL_PASSWORD,
-                use_tls=True,
-            )
-            NotificationService.send_notification(
-                user=instance.assigned_to,
-                title=f"New Assignment: {instance.equipment.name}",
-                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.",
-                email_template='emails/maintenance_request_submitted.html',
-                email_context={**context, 'recipient': instance.assigned_to.username},
-                email_backend=employee_email_backend
-            )
-
-    @staticmethod
-    def notify_maintenance_request_responded(maintenance_request, response_text, request):
-        """Handle notifications for admin response to maintenance request"""
-        assigned_to_name = maintenance_request.assigned_to.username if maintenance_request.assigned_to else "Not assigned"
-        context = {
-            'request_id': maintenance_request.id,
-            'equipment_name': maintenance_request.equipment.name,
-            'response': response_text,
-            'comments': maintenance_request.comments or "None",
-            'assigned_to': assigned_to_name,
-            'user': maintenance_request.user.username,
-            'year': timezone.now().year,
-            'status': maintenance_request.status,
-        }
-
-        # Notify client
-        NotificationService.send_notification(
-            user=maintenance_request.user,
-            title=f"Response to Maintenance Request: {maintenance_request.equipment.name}",
-            message=f"Admin responded to your request #{maintenance_request.id}: {response_text}\nAssigned To: {assigned_to_name}",
-            email_template='emails/maintenance_request_responded.html',
-            email_context={**context, 'recipient': maintenance_request.user.username}
-        )
-
-        # Notify assignee if assigned
-        if maintenance_request.assigned_to:
-            employee_email_backend = EmailBackend(
-                host='smtp.gmail.com',
-                port=587,
-                username=settings.EMPLOYEE_EMAIL_USER,
-                password=settings.EMPLOYEE_EMAIL_PASSWORD,
-                use_tls=True,
-            )
-            NotificationService.send_notification(
-                user=maintenance_request.assigned_to,
-                title=f"Update on Assignment: {maintenance_request.equipment.name}",
-                message=f"Admin responded to request #{maintenance_request.id}: {response_text}",
-                email_template='emails/maintenance_request_responded.html',
-                email_context={**context, 'recipient': maintenance_request.assigned_to.username},
-                email_backend=employee_email_backend
-            )
-
-    @staticmethod
-    def notify_maintenance_attachment_uploaded(maintenance_request, attachment, request):
-        """Handle notifications for attachment uploads"""
-        context = {
-            'request_id': maintenance_request.id,
-            'equipment_name': maintenance_request.equipment.name,
-            'file_name': attachment.file_name,
-            'user': maintenance_request.user.username,
-            'uploaded_by': request.user.username,
-            'year': timezone.now().year,
-        }
-
-        # Notify client
-        NotificationService.send_notification(
-            user=maintenance_request.user,
-            title=f"New Attachment: {maintenance_request.equipment.name}",
-            message=f"An attachment was added to your request #{maintenance_request.id}.",
-            email_template='emails/maintenance_attachment_uploaded.html',
-            email_context={**context, 'recipient': maintenance_request.user.username}
-        )
-
-        # Notify admins
-        admin_email_backend = EmailBackend(
-            host='smtp.gmail.com',
-            port=587,
-            username=settings.ADMIN_EMAIL_USER,
-            password=settings.ADMIN_EMAIL_PASSWORD,
-            use_tls=True,
-        )
-        for admin in User.objects.filter(role__in=['admin', 'superadmin']):
-            NotificationService.send_notification(
-                user=admin,
-                title=f"New Attachment: {maintenance_request.equipment.name}",
-                message=f"An attachment was added to request #{maintenance_request.id} by {request.user.username}.",
-                email_template='emails/maintenance_attachment_uploaded.html',
-                email_context={**context, 'recipient': admin.username},
-                email_backend=admin_email_backend
-            )
 import logging
 import sys
 import os
@@ -449,7 +188,7 @@ class NotificationService:
             NotificationService.send_notification(
                 user=instance.assigned_to,
                 title=f"New Assignment: {instance.equipment.name}",
-                message=f"You have been assigned to resolve request #{instance.id}: {issue[:100]}.",
+                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.",
                 email_template='emails/maintenance_request_submitted.html',
                 email_context={**context, 'recipient': instance.assigned_to.username},
                 email_backend=employee_email_backend
@@ -537,7 +276,7 @@ class NotificationService:
             )
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = User.EMAIL_FIELD   # force SimpleJWT to use email
+    username_field = User.EMAIL_FIELD  # force SimpleJWT to use email
 
     @classmethod
     def get_token(cls, user):
@@ -560,12 +299,10 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [RoleBasedPermission]
-    permission_classes = [RoleBasedPermission]
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
-    permission_classes = [RoleBasedPermission]
     permission_classes = [RoleBasedPermission]
 
 class EquipmentViewSet(viewsets.ModelViewSet):
@@ -576,56 +313,11 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         instance = serializer.save()
         instance.generate_qr_code()
-    permission_classes = [RoleBasedPermission]
-
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        instance.generate_qr_code()
+        logger.info(f"Equipment created: {instance.id} - {instance.name}")
 
 class SensorLogViewSet(viewsets.ModelViewSet):
     queryset = SensorLog.objects.all().order_by('-recorded_at')
-    queryset = SensorLog.objects.all().order_by('-recorded_at')
     serializer_class = SensorLogSerializer
-    permission_classes = [RoleBasedPermission]
-
-class HeartbeatLogViewSet(viewsets.ModelViewSet):
-    queryset = HeartbeatLog.objects.all().order_by('-recorded_at')
-    serializer_class = HeartbeatLogSerializer
-    permission_classes = [RoleBasedPermission]
-
-class AlertViewSet(viewsets.ModelViewSet):
-    queryset = Alert.objects.all()
-    serializer_class = AlertSerializer
-    permission_classes = [RoleBasedPermission]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if hasattr(user, 'role') and user.role == 'client':
-            queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
-        resolved = self.request.query_params.get('resolved')
-        if resolved is not None:
-            resolved_bool = resolved.lower() == 'true'
-            queryset = queryset.filter(resolved=resolved_bool)
-        severity = self.request.query_params.get('severity')
-        if severity:
-            queryset = queryset.filter(severity=severity)
-        alert_type = self.request.query_params.get('type')
-        if alert_type:
-            queryset = queryset.filter(type=alert_type)
-        return queryset
-
-class MaintenanceAttachmentViewSet(viewsets.ModelViewSet):
-    queryset = MaintenanceAttachment.objects.all()
-    serializer_class = MaintenanceAttachmentSerializer
-    permission_classes = [RoleBasedPermission]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if hasattr(user, 'role') and user.role == 'client':
-            return queryset.filter(maintenance_request__user=user)
-        return queryset
     permission_classes = [RoleBasedPermission]
 
 class HeartbeatLogViewSet(viewsets.ModelViewSet):
@@ -670,160 +362,6 @@ class MaintenanceAttachmentViewSet(viewsets.ModelViewSet):
 class MaintenanceRequestViewSet(viewsets.ModelViewSet):
     queryset = MaintenanceRequest.objects.all()
     serializer_class = MaintenanceRequestSerializer
-    permission_classes = [RoleBasedPermission]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if hasattr(user, 'role'):
-            if user.role == 'client':
-                return queryset.filter(user=user)
-            elif user.role == 'employee':
-                return queryset.filter(assigned_to=user)
-        return queryset
-
-    def perform_create(self, serializer):
-        instance = serializer.save(user=self.request.user)
-        NotificationService.notify_maintenance_request_created(instance, self.request)
-
-    def perform_update(self, serializer):
-        old_assigned_to = self.get_object().assigned_to
-        instance = serializer.save()
-        assigned_changed = 'assigned_to' in serializer.validated_data and instance.assigned_to != old_assigned_to
-        NotificationService.notify_maintenance_request_updated(instance, self.request, assigned_changed)
-
-    @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
-    def respond(self, request, pk=None):
-        """
-        POST /maintenancerequest/{id}/respond/
-        Admin responds to a maintenance request by adding to comments and optionally updating assigned_to.
-        """
-        try:
-            maintenance_request = self.get_object()
-            response_text = request.data.get('response')
-            assigned_to_id = request.data.get('assigned_to')
-
-            if not response_text:
-                return Response(
-                    {'error': 'Response field is required'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Handle assigned_to update if provided
-            old_assigned_to = maintenance_request.assigned_to
-            if assigned_to_id:
-                try:
-                    new_assigned_to = User.objects.get(id=assigned_to_id)
-                    maintenance_request.assigned_to = new_assigned_to
-                except User.DoesNotExist:
-                    return Response(
-                        {'error': f'User with id {assigned_to_id} not found'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-
-            # Append response to comments with timestamp and admin username
-            current_time = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
-            new_comment = f"\n[{current_time}] {request.user.username} (Admin): {response_text}"
-            maintenance_request.comments = (maintenance_request.comments or '') + new_comment
-            maintenance_request.save()
-
-            # Send notifications
-            NotificationService.notify_maintenance_request_responded(maintenance_request, response_text, request)
-
-            # Notify assignee if changed
-            if assigned_to_id and maintenance_request.assigned_to != old_assigned_to:
-                NotificationService.notify_maintenance_request_updated(maintenance_request, request, assigned_changed=True)
-
-            return Response(
-                MaintenanceRequestSerializer(maintenance_request).data,
-                status=status.HTTP_200_OK
-            )
-
-        except Exception as e:
-            return Response(
-                {'error': f'Server error: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
-    def upload_attachment(self, request, pk=None):
-        """
-        POST /maintenancerequest/{id}/upload_attachment/
-        Upload an attachment for a maintenance request.
-        """
-        try:
-            maintenance_request = self.get_object()
-            file_obj = request.FILES.get('file')
-            file_name = request.data.get('file_name', file_obj.name if file_obj else None)
-
-            if not file_obj or not file_name:
-                return Response(
-                    {'error': 'Both file and file_name are required'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            attachment = MaintenanceAttachment.objects.create(
-                maintenance_request=maintenance_request,
-                file=file_obj,
-                file_name=file_name,
-                file_type=file_obj.content_type,
-                uploaded_by=request.user
-            )
-
-            # Send notifications
-            NotificationService.notify_maintenance_attachment_uploaded(maintenance_request, attachment, request)
-
-            return Response(
-                MaintenanceAttachmentSerializer(attachment).data,
-                status=status.HTTP_201_CREATED
-            )
-
-        except Exception as e:
-            return Response(
-                {'error': f'Server error: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-class NotificationViewSet(viewsets.ModelViewSet):
-    queryset = Notification.objects.all()
-    serializer_class = NotificationSerializer
-    permission_classes = [RoleBasedPermission]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if hasattr(user, 'role') and user.role in ['client', 'employee']:
-            return queryset.filter(user=user)
-        return queryset
-
-    @action(detail=False, methods=['post'], permission_classes=[RoleBasedPermission])
-    def mark_all_read(self, request):
-        """
-        POST /notification/mark_all_read/
-        Mark all unread notifications for the requesting user as read.
-        """
-        try:
-            unread_notifications = self.get_queryset().filter(read=False)
-            count = unread_notifications.count()
-            
-            if count == 0:
-                return Response(
-                    {'success': True, 'message': 'No unread notifications to mark as read', 'count': 0},
-                    status=status.HTTP_200_OK
-                )
-
-            unread_notifications.update(read=True)
-
-            return Response(
-                {'success': True, 'message': f'Marked {count} notifications as read', 'count': count},
-                status=status.HTTP_200_OK
-            )
-
-        except Exception as e:
-            return Response(
-                {'error': f'Server error: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
     permission_classes = [RoleBasedPermission]
 
     def get_queryset(self):
@@ -1008,25 +546,15 @@ class LLMQueryViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'role') and user.role == 'client':
             return queryset.filter(user=user)
         return queryset
-    permission_classes = [RoleBasedPermission]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if hasattr(user, 'role') and user.role == 'client':
-            return queryset.filter(user=user)
-        return queryset
 
 class LLMSummaryViewSet(viewsets.ModelViewSet):
     queryset = LLMSummary.objects.all()
     serializer_class = LLMSummarySerializer
     permission_classes = [RoleBasedPermission]
-    permission_classes = [RoleBasedPermission]
 
 class AuthTokenViewSet(viewsets.ModelViewSet):
     queryset = AuthToken.objects.all()
     serializer_class = AuthTokenSerializer
-    permission_classes = [RoleBasedPermission]
     permission_classes = [RoleBasedPermission]
 
 @api_view(['GET'])
@@ -1083,6 +611,7 @@ def dashboard_summary(request):
     """
     GET /dashboard/summary - Aggregated dashboard data
     """
+    logger.info("Dashboard summary requested")
     try:
         total_rooms = Room.objects.count()
         total_equipment = Equipment.objects.count()
@@ -1109,6 +638,7 @@ def dashboard_summary(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
+        logger.error(f"Error in dashboard_summary: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1120,6 +650,7 @@ def room_realtime(request, pk):
     """
     GET /rooms/{id}/realtime - Real-time data for a specific room
     """
+    logger.info(f"Room realtime data requested for {pk}")
     try:
         room = get_object_or_404(Room, pk=pk)
         equipments = Equipment.objects.filter(room=room, type='esp32')
@@ -1155,6 +686,7 @@ def room_realtime(request, pk):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
+        logger.error(f"Error in room_realtime: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1165,7 +697,9 @@ def room_realtime(request, pk):
 def check_anomalies(request):
     """
     POST /check-anomalies - Check recent sensor logs for anomalies and create alerts/maintenance
+    Body: {"equipment_id": "uuid", "check_window_hours": 1} or empty for all
     """
+    logger.info("Anomaly check requested")
     try:
         equipment_id = request.data.get('equipment_id')
         window_hours = int(request.data.get('check_window_hours', 1))
@@ -1265,6 +799,7 @@ def check_anomalies(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
+        logger.error(f"Error in check_anomalies: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1272,10 +807,22 @@ def check_anomalies(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@permission_classes([AllowAny])
 def esp32_sensor_data(request):
     """
     Endpoint for ESP32 to send sensor data
+    Expected JSON format:
+    {
+        "device_id": "ESP32_001",
+        "temperature": 23.5,
+        "humidity": 45.2,
+        "light_level": 1250,
+        "motion_detected": false,
+        "energy_usage": 12.3,
+        "voltage": 230.0,
+        "current": 0.50,
+        "power": 12.3,
+        "energy": 0.025
+    }
     """
     logger.info(f"ESP32 sensor data received: {request.method} {request.path}")
     logger.info(f"Request data: {request.data}")
@@ -1308,11 +855,6 @@ def esp32_sensor_data(request):
             humidity=float(data['humidity']),
             light_level=float(data['light_level']),
             motion_detected=bool(data['motion_detected']),
-            energy_usage=float(data.get('energy_usage', 0.0)),
-            voltage=float(data.get('voltage', 0.0)),
-            current=float(data.get('current', 0.0)),
-            power=float(data.get('power', 0.0)),
-            energy=float(data.get('energy', 0.0)),
             energy_usage=float(data.get('energy_usage', 0.0)),
             voltage=float(data.get('voltage', 0.0)),
             current=float(data.get('current', 0.0)),
@@ -1397,82 +939,10 @@ def esp32_sensor_data(request):
 
         logger.info(f"Sensor data saved successfully: {sensor_log.id}, Alerts: {created_alert_ids}")
         
-        created_alert_ids = []
-        if sensor_log.temperature > 40:
-            alert, created = Alert.objects.get_or_create(
-                equipment=equipment,
-                type='temperature_threshold',
-                resolved=False,
-                defaults={
-                    'message': f'Temperature alert: {sensor_log.temperature}°C exceeds 40°C',
-                    'severity': 'high'
-                }
-            )
-            if created:
-                created_alert_ids.append(str(alert.id))
-
-        if sensor_log.motion_detected:
-            prev_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').exclude(id=sensor_log.id).first()
-            if prev_log and not prev_log.motion_detected:
-                alert, created = Alert.objects.get_or_create(
-                    equipment=equipment,
-                    type='motion',
-                    resolved=False,
-                    defaults={
-                        'message': 'Motion detected',
-                        'severity': 'medium'
-                    }
-                )
-                if created:
-                    created_alert_ids.append(str(alert.id))
-
-        if sensor_log.power > 0:
-            recent_logs = SensorLog.objects.filter(
-                equipment=equipment,
-                recorded_at__gte=timezone.now() - timezone.timedelta(hours=1)
-            )
-            avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
-            if avg_power and sensor_log.power > (avg_power * 2):
-                alert, created = Alert.objects.get_or_create(
-                    equipment=equipment,
-                    type='energy_anomaly',
-                    resolved=False,
-                    defaults={
-                        'message': f'Energy usage anomaly: {sensor_log.power}W vs avg {avg_power:.2f}W',
-                        'severity': 'low'
-                    }
-                )
-                if created:
-                    created_alert_ids.append(str(alert.id))
-
-        if created_alert_ids:
-            recent_request = MaintenanceRequest.objects.filter(
-                equipment=equipment,
-                status__in=['pending', 'in_progress'],
-                created_at__gte=timezone.now() - timezone.timedelta(hours=1)
-            ).exists()
-            if not recent_request:
-                assignee = User.objects.filter(role='employee').first()
-                if not assignee:
-                    assignee = User.objects.create_user(
-                        username='system', email='system@example.com', 
-                        password='systempass', role='employee'
-                    )
-                maintenance_request = MaintenanceRequest.objects.create(
-                    user=assignee,
-                    equipment=equipment,
-                    issue=f'Auto-generated from alert: Temperature/Motion/Energy anomaly',
-                    status='pending',
-                    assigned_to=assignee,
-                    scheduled_date=timezone.now().date() + timezone.timedelta(days=1),
-                )
-                NotificationService.notify_maintenance_request_created(maintenance_request, request)
-
         return Response({
             'success': True,
             'message': 'Sensor data received successfully',
             'log_id': str(sensor_log.id),
-            'alert_ids': created_alert_ids,
             'alert_ids': created_alert_ids,
             'timestamp': sensor_log.recorded_at.isoformat()
         }, status=status.HTTP_201_CREATED)
@@ -1530,10 +1000,6 @@ def latest_sensor_data(request):
                     'current': latest_log.current,
                     'power': latest_log.power,
                     'energy': latest_log.energy,
-                    'voltage': latest_log.voltage,
-                    'current': latest_log.current,
-                    'power': latest_log.power,
-                    'energy': latest_log.energy,
                     'recorded_at': latest_log.recorded_at.isoformat(),
                     'status': equipment.status
                 })
@@ -1557,18 +1023,34 @@ def latest_sensor_data(request):
 def esp32_heartbeat(request):
     """
     Endpoint for ESP32 to send heartbeat and update status
+    Expected JSON format:
+    {
+        "device_id": "ESP32_001",
+        "timestamp": 123456,
+        "dht22_working": true,
+        "pzem_working": true,
+        "success_rate": 95.0,
+        "wifi_signal": -50,
+        "uptime": 123,
+        "sensor_type": "DHT22_3PIN_MODULE_GPIO5_PZEM_SERIAL2",
+        "current_temp": 22.0,
+        "current_humidity": 50.0,
+        "current_power": 115.0
+    }
     """
+    logger.info(f"ESP32 heartbeat received: {request.method} {request.path}")
+    logger.info(f"Heartbeat data: {request.data}")
+    
     try:
         data = request.data
         if not data.get('device_id'):
+            logger.error("Missing device_id in heartbeat")
             return Response(
                 {'error': 'device_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            equipment = Equipment.objects.get(device_id=data['device_id'])
-            equipment.status = 'online'
             equipment = Equipment.objects.get(device_id=data['device_id'])
             equipment.status = 'online'
             equipment.save()
@@ -1586,98 +1068,20 @@ def esp32_heartbeat(request):
                 current_humidity=float(data.get('current_humidity', 0.0)),
                 current_power=float(data.get('current_power', 0.0)),
             )
-                        
-            HeartbeatLog.objects.create(
-                equipment=equipment,
-                timestamp=int(data.get('timestamp', 0)),
-                dht22_working=bool(data.get('dht22_working', False)),
-                pzem_working=bool(data.get('pzem_working', True)),
-                success_rate=float(data.get('success_rate', 0.0)),
-                wifi_signal=int(data.get('wifi_signal', 0)),
-                uptime=int(data.get('uptime', 0)),
-                sensor_type=data.get('sensor_type', ''),
-                current_temp=float(data.get('current_temp', 0.0)),
-                current_humidity=float(data.get('current_humidity', 0.0)),
-                current_power=float(data.get('current_power', 0.0)),
-            )
             
             logger.info(f"Heartbeat saved for {data['device_id']}")
             return Response({
                 'success': True,
-                'message': f'Heartbeat received from {data["data["device_id"]"]}',
+                'message': f'Heartbeat received from {data["device_id"]}',
                 'timestamp': timezone.now().isoformat()
             })
 
         except Equipment.DoesNotExist:
             logger.error(f"Equipment with device_id {data['device_id']} not found")
             return Response(
-                {'error': f'Equipment with device_id {data["data["device_id"]"]} not found'},
+                {'error': f'Equipment with device_id {data["device_id"]} not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
-
-    except ValueError as e:
-        return Response(
-            {'error': f'Invalid data format: {str(e)}'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    except Exception as e:
-        return Response(
-            {'error': f'Server error: {str(e)}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def llm_query(request):
-    """
-    Endpoint to query the LLM about sensor data and building management
-    """
-    try:
-        query_text = request.data.get('query')
-        user_id = request.data.get('user_id')
-        
-        if not query_text:
-            return Response(
-                {'error': 'query is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            from main import ask
-        except ImportError as e:
-            return Response(
-                {'error': 'LLM service not available'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-
-        result = ask(query_text)
-        
-        if "error" in result:
-            return Response(
-                {'error': result['error']},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        if user_id:
-            try:
-                user = User.objects.get(id=user_id)
-                llm_query_record = LLMQuery.objects.create(
-                    user=user,
-                    query=query_text,
-                    response=result.get('answer', '')
-                )
-            except User.DoesNotExist:
-                pass
-            except Exception:
-                pass
-
-        return Response({
-            'success': True,
-            'query': query_text,
-            'answer': result.get('answer', ''),
-            'sources': result.get('sources', []),
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_200_OK)
 
     except ValueError as e:
         logger.error(f"Invalid data format: {str(e)}")
@@ -1766,47 +1170,6 @@ def llm_query(request):
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def llm_health_check(request):
-    """
-    Health check endpoint for LLM service
-    """
-    try:
-        from main import ask
-        result = ask("How many records are there?")
-        
-        if "error" in result:
-            return Response({
-                'status': 'unhealthy',
-                'message': 'LLM service has errors',
-                'error': result['error'],
-                'timestamp': timezone.now().isoformat()
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        
-        return Response({
-            'status': 'healthy',
-            'message': 'LLM service is running',
-            'database_connected': True,
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_200_OK)
-        
-    except ImportError as e:
-        return Response({
-            'status': 'unhealthy',
-            'message': 'LLM service not available',
-            'error': str(e),
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-    
-    except Exception as e:
-        return Response({
-            'status': 'unhealthy',
-            'message': 'LLM service error',
-            'error': str(e),
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
