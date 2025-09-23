@@ -142,7 +142,7 @@ class SensorLog(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE)
     temperature = models.FloatField()
     humidity = models.FloatField()
-    light_level = models.FloatField()
+    light_detected = models.BooleanField()  # Changed from light_level
     motion_detected = models.BooleanField()
     energy_usage = models.FloatField()
     voltage = models.FloatField(default=0.0)
@@ -163,6 +163,7 @@ class HeartbeatLog(models.Model):
     timestamp = models.BigIntegerField()
     dht22_working = models.BooleanField()
     pzem_working = models.BooleanField(default=True)
+    photoresistor_working = models.BooleanField(default=True)  # NEW
     success_rate = models.FloatField()
     wifi_signal = models.IntegerField()
     uptime = models.BigIntegerField()

@@ -69,7 +69,7 @@ class SensorLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SensorLog
         fields = [
-            'id', 'equipment', 'equipment_name', 'temperature', 'humidity', 'light_level',
+            'id', 'equipment', 'equipment_name', 'temperature', 'humidity', 'light_detected',
             'motion_detected', 'energy_usage', 'voltage', 'current', 'power', 'energy', 'recorded_at'
         ]
 
@@ -80,8 +80,8 @@ class HeartbeatLogSerializer(serializers.ModelSerializer):
         model = HeartbeatLog
         fields = [
             'id', 'equipment', 'equipment_name', 'timestamp', 'dht22_working', 'pzem_working',
-            'success_rate', 'wifi_signal', 'uptime', 'sensor_type', 'current_temp',
-            'current_humidity', 'current_power', 'recorded_at'
+            'photoresistor_working', 'success_rate', 'wifi_signal', 'uptime', 'sensor_type',
+            'current_temp', 'current_humidity', 'current_power', 'recorded_at'
         ]
 
 class AlertSerializer(serializers.ModelSerializer):
