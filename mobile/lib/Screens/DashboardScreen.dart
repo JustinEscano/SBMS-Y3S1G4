@@ -33,10 +33,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> latestSensorData = [];
   List<dynamic> maintenanceRequests = [];
 
-  // New data structures for the additional sections
+  // Data structures for system sections
   Map<String, dynamic> hvacData = {};
   Map<String, dynamic> lightingData = {};
   Map<String, dynamic> securityData = {};
+  Map<String, dynamic> energyData = {};
   List<dynamic> maintenanceData = [];
 
   bool isLoading = true;
@@ -61,8 +62,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (isAutoRefresh && mounted) {
-        loadLatestSensorData();
-        _loadSystemStatus(); // Refresh system status data
+        loadData(); // Updated to use loadData
+        _loadSystemStatus();
       }
     });
   }
@@ -95,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         http.get(Uri.parse(ApiConfig.rooms), headers: headers),
         http.get(Uri.parse(ApiConfig.equipment), headers: headers),
         http.get(Uri.parse(ApiConfig.sensorLog), headers: headers),
-        http.get(Uri.parse(ApiConfig.latestSensorData)),
+        http.get(Uri.parse(ApiConfig.latestSensorData), headers: headers),
         http.get(Uri.parse(ApiConfig.maintenanceRequest), headers: headers),
       ]).timeout(const Duration(seconds: 15));
 
@@ -136,9 +137,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
 
-      // Load additional system data
       await _loadSystemStatus();
-
     } catch (e) {
       setState(() {
         _errorMessage = 'Error loading data: $e';
@@ -152,25 +151,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadSystemStatus() async {
     try {
-      // Simulate HVAC data based on sensor readings
       _generateHVACData();
-
-      // Simulate Lighting data based on equipment
       _generateLightingData();
-
-      // Simulate Security data
       _generateSecurityData();
-
-      // Generate real Maintenance data from API
+      _generateEnergyData();
       _generateMaintenanceData();
-
     } catch (e) {
       print('Error loading system status: $e');
     }
   }
 
   void _generateHVACData() {
-    // Generate HVAC data based on sensor readings
     double avgTemp = 0;
     double avgHumidity = 0;
     int activeZones = 0;
@@ -208,17 +199,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _generateLightingData() {
-    // Generate lighting data based on equipment and sensors
     int lightingDevices = equipment.where((e) =>
     e['type']?.toLowerCase().contains('light') == true ||
-        e['name']?.toLowerCase().contains('light') == true
-    ).length;
+        e['name']?.toLowerCase().contains('light') == true).length;
 
     int activeLights = equipment.where((e) =>
     (e['type']?.toLowerCase().contains('light') == true ||
         e['name']?.toLowerCase().contains('light') == true) &&
-        e['status'] == 'online'
-    ).length;
+        e['status'] == 'online').length;
 
     double avgLightLevel = 0;
     if (latestSensorData.isNotEmpty) {
@@ -249,22 +237,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _generateSecurityData() {
-    // Generate security data based on motion sensors and equipment
     int securityDevices = equipment.where((e) =>
     e['type']?.toLowerCase().contains('security') == true ||
         e['type']?.toLowerCase().contains('camera') == true ||
-        e['name']?.toLowerCase().contains('security') == true
-    ).length;
+        e['name']?.toLowerCase().contains('security') == true).length;
 
-    int motionDetections = latestSensorData.where((s) =>
-    s['motion_detected'] == true
-    ).length;
+    int motionDetections = latestSensorData.where((s) => s['motion_detected'] == true).length;
 
     int activeDevices = equipment.where((e) =>
     (e['type']?.toLowerCase().contains('security') == true ||
         e['type']?.toLowerCase().contains('camera') == true) &&
-        e['status'] == 'online'
-    ).length;
+        e['status'] == 'online').length;
 
     setState(() {
       securityData = {
@@ -278,30 +261,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _generateMaintenanceData() {
-    // Use real maintenance requests from API
+  void _generateEnergyData() {
+    double avgPower = 0;
+    double totalEnergy = 0;
+    double avgVoltage = 0;
+    double avgCurrent = 0;
+    int activeDevices = 0;
+
+    if (latestSensorData.isNotEmpty) {
+      double totalPower = 0;
+      double totalEnergySum = 0;
+      double totalVoltage = 0;
+      double totalCurrent = 0;
+      int validReadings = 0;
+
+      for (var sensor in latestSensorData) {
+        if (sensor['power'] != null &&
+            sensor['energy'] != null &&
+            sensor['voltage'] != null &&
+            sensor['current'] != null) {
+          totalPower += sensor['power'];
+          totalEnergySum += sensor['energy'];
+          totalVoltage += sensor['voltage'];
+          totalCurrent += sensor['current'];
+          validReadings++;
+          if (sensor['status'] == 'online') activeDevices++;
+        }
+      }
+
+      if (validReadings > 0) {
+        avgPower = totalPower / validReadings;
+        totalEnergy = totalEnergySum;
+        avgVoltage = totalVoltage / validReadings;
+        avgCurrent = totalCurrent / validReadings;
+      }
+    }
+
     setState(() {
-      maintenanceData = maintenanceRequests;
+      energyData = {
+        'avgPower': avgPower,
+        'totalEnergy': totalEnergy,
+        'avgVoltage': avgVoltage,
+        'avgCurrent': avgCurrent,
+        'activeDevices': activeDevices,
+        'totalDevices': latestSensorData.length,
+        'status': activeDevices > 0 ? 'operational' : 'offline',
+      };
     });
   }
 
-  Future<void> loadLatestSensorData() async {
-    try {
-      final response = await http.get(
-        Uri.parse(ApiConfig.latestSensorData), // Use ApiConfig.latestSensorData
-      ).timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final latestData = json.decode(response.body);
-        if (latestData['success'] == true && mounted) {
-          setState(() {
-            latestSensorData = latestData['data'] ?? [];
-          });
-        }
-      }
-    } catch (e) {
-      print('Error refreshing sensor data: $e');
-    }
+  void _generateMaintenanceData() {
+    setState(() {
+      maintenanceData = maintenanceRequests;
+    });
   }
 
   void _handleMenuSelection(String value) {
@@ -362,13 +374,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _navigateToMaintenanceManagement() {
+  Future<void> _navigateToMaintenanceManagement() async {
+    String userRole = 'Client';
+    try {
+      final headers = {'Authorization': 'Bearer ${widget.accessToken}'};
+      final response = await http.get(Uri.parse(ApiConfig.userInfo), headers: headers).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final userData = json.decode(response.body);
+        userRole = userData['role']?.toString() ?? 'Client';
+        if (!['Client', 'Employee', 'Admin', 'Superadmin'].contains(userRole)) {
+          userRole = 'Client';
+        }
+      } else {
+        print('Failed to fetch user role: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user role: $e');
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MaintenanceManagementScreen(
           accessToken: widget.accessToken,
           refreshToken: widget.refreshToken,
+          userRole: userRole,
         ),
       ),
     ).then((_) {
@@ -462,6 +492,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildDetailRow('System Status', securityData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
           ],
         );
+      case 'Energy':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDetailRow('Average Power', '${energyData['avgPower']?.toStringAsFixed(1) ?? 'N/A'} W'),
+            _buildDetailRow('Total Energy', '${energyData['totalEnergy']?.toStringAsFixed(3) ?? 'N/A'} kWh'),
+            _buildDetailRow('Average Voltage', '${energyData['avgVoltage']?.toStringAsFixed(1) ?? 'N/A'} V'),
+            _buildDetailRow('Average Current', '${energyData['avgCurrent']?.toStringAsFixed(2) ?? 'N/A'} A'),
+            _buildDetailRow('Active Devices', '${energyData['activeDevices']}/${energyData['totalDevices']}'),
+            _buildDetailRow('System Status', energyData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
+          ],
+        );
       case 'Maintenance':
         final pendingCount = maintenanceRequests.where((r) => r['status'] == 'pending').length;
         final inProgressCount = maintenanceRequests.where((r) => r['status'] == 'in_progress').length;
@@ -495,7 +538,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text('Status: ${_getStatusLabel(request['status'])} • Priority: ${_getPriorityLabel(request['priority'])}'),
+                      Text(
+                          'Status: ${_getStatusLabel(request['status'])} • Priority: ${_getPriorityLabel(request['priority'])}'),
                     ],
                   ),
                 ),
@@ -690,7 +734,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Error Message
               if (_errorMessage.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.only(bottom: 16),
@@ -712,8 +755,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-
-              // Welcome Section
               Card(
                 elevation: 2,
                 child: Padding(
@@ -740,10 +781,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Auto-refresh indicator
               if (isAutoRefresh)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -764,17 +802,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-
-              // Building Systems Overview
               const Text(
                 'Building Systems',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-
-              // HVAC and Lighting Row
               Row(
                 children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showSystemDetails('Energy'),
+                      child: _buildSystemCard(
+                        'Energy',
+                        '${energyData['avgPower']?.toStringAsFixed(1) ?? '0'} W',
+                        'Avg Power',
+                        Icons.electrical_services,
+                        Colors.teal,
+                        energyData['status'] ?? 'offline',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _showSystemDetails('HVAC'),
@@ -788,7 +836,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _showSystemDetails('Lighting'),
@@ -802,14 +854,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Security and Maintenance Row
-              Row(
-                children: [
+                  const SizedBox(width: 16),
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _showSystemDetails('Security'),
@@ -823,7 +868,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _showSystemDetails('Maintenance'),
@@ -833,22 +882,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         'Total Requests',
                         Icons.build,
                         Colors.indigo,
-                        maintenanceRequests.any((task) => task['priority'] == 'high' || task['priority'] == 'critical') ? 'attention' : 'normal',
+                        maintenanceRequests.any((task) => task['priority'] == 'high' || task['priority'] == 'critical')
+                            ? 'attention'
+                            : 'normal',
                       ),
                     ),
                   ),
+                  const SizedBox(width: 16),
+                  const Expanded(child: SizedBox()),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // Enhanced Overview Cards
               const Text(
                 'Infrastructure Overview',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-
               Row(
                 children: [
                   Expanded(
@@ -876,9 +925,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
               Row(
                 children: [
                   Expanded(
@@ -900,17 +947,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // Quick Actions Section
               const Text(
                 'Quick Actions',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-
-              // Quick Action Cards Row
               Row(
                 children: [
                   Expanded(
@@ -1025,10 +1067,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // Live Sensor Data Section
               if (latestSensorData.isNotEmpty) ...[
                 Row(
                   children: [
@@ -1123,6 +1162,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Expanded(
                               child: _buildSensorValue(
+                                'Power',
+                                '${sensorData['power']?.toStringAsFixed(1) ?? 'N/A'} W',
+                                Icons.power,
+                                Colors.teal,
+                              ),
+                            ),
+                            Expanded(
+                              child: _buildSensorValue(
+                                'Energy',
+                                '${sensorData['energy']?.toStringAsFixed(3) ?? 'N/A'} kWh',
+                                Icons.energy_savings_leaf,
+                                Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildSensorValue(
+                                'Voltage',
+                                '${sensorData['voltage']?.toStringAsFixed(1) ?? 'N/A'} V',
+                                Icons.electrical_services,
+                                Colors.blue,
+                              ),
+                            ),
+                            Expanded(
+                              child: _buildSensorValue(
+                                'Current',
+                                '${sensorData['current']?.toStringAsFixed(2) ?? 'N/A'} A',
+                                Icons.bolt,
+                                Colors.amber,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildSensorValue(
                                 'Temperature',
                                 '${sensorData['temperature']?.toStringAsFixed(1) ?? 'N/A'}°C',
                                 Icons.thermostat,
@@ -1171,8 +1252,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 )).toList(),
                 const SizedBox(height: 24),
               ],
-
-              // Rooms Section (condensed)
               if (rooms.isNotEmpty) ...[
                 Row(
                   children: [
@@ -1202,7 +1281,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     title: Text(room['name'] ?? 'Unknown Room'),
-                    subtitle: Text('Floor ${room['floor']} • Capacity: ${room['capacity']} • ${room['type'] ?? 'Unknown'}'),
+                    subtitle: Text(
+                        'Floor ${room['floor']} • Capacity: ${room['capacity']} • ${room['type'] ?? 'Unknown'}'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () => _navigateToRoomManagement(),
                   ),
@@ -1219,8 +1299,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 const SizedBox(height: 24),
               ],
-
-              // Equipment Section (condensed)
               if (equipment.isNotEmpty) ...[
                 Row(
                   children: [
@@ -1278,8 +1356,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 const SizedBox(height: 24),
               ],
-
-              // Empty State
               if (rooms.isEmpty && equipment.isEmpty && sensorLogs.isEmpty && latestSensorData.isEmpty)
                 Card(
                   child: Padding(

@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
-import '../Config/api.dart'; // Updated import to point to ../Config/api.dart
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../Config/api.dart';
+import 'package:jwt_decode/jwt_decode.dart'; // Add this dependency for token parsing
 
 class MaintenanceManagementScreen extends StatefulWidget {
   final String accessToken;
   final String refreshToken;
+  final String userRole;
 
   const MaintenanceManagementScreen({
     super.key,
     required this.accessToken,
     required this.refreshToken,
+    required this.userRole,
   });
 
   @override
@@ -25,8 +30,9 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   bool isLoading = true;
   String _errorMessage = '';
   String _filterStatus = 'all';
+  int _currentPage = 1;
+  final int _itemsPerPage = 10;
 
-  // Standardized status values only
   static const List<Map<String, String>> MAINTENANCE_STATUS_OPTIONS = [
     {'value': 'pending', 'label': 'Pending', 'description': 'Request submitted, awaiting assignment'},
     {'value': 'in_progress', 'label': 'In Progress', 'description': 'Work is currently being performed'},
@@ -36,6 +42,14 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   @override
   void initState() {
     super.initState();
+    developer.log('User Role in MaintenanceManagementScreen: ${widget.userRole}', name: 'MaintenanceManagementScreen');
+    try {
+      Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
+      developer.log('Token Payload: $payload', name: 'MaintenanceManagementScreen');
+      developer.log('Token Role: ${payload['role']}', name: 'MaintenanceManagementScreen');
+    } catch (e) {
+      developer.log('Error decoding token: $e', name: 'MaintenanceManagementScreen');
+    }
     _loadData();
   }
 
@@ -44,6 +58,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     setState(() {
       isLoading = true;
       _errorMessage = '';
+      _currentPage = 1;
     });
 
     try {
@@ -53,63 +68,45 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         'Accept': 'application/json',
       };
 
-      developer.log('Request headers: $headers', name: 'MaintenanceScreen.LoadData');
-      developer.log('Request URLs:', name: 'MaintenanceScreen.LoadData');
-      developer.log('  - Maintenance Requests: ${ApiConfig.maintenanceRequest}', name: 'MaintenanceScreen.LoadData');
-      developer.log('  - Equipment: ${ApiConfig.equipment}', name: 'MaintenanceScreen.LoadData');
-      developer.log('  - Users: ${ApiConfig.users}', name: 'MaintenanceScreen.LoadData');
-
       final responses = await Future.wait([
         http.get(Uri.parse(ApiConfig.maintenanceRequest), headers: headers),
         http.get(Uri.parse(ApiConfig.equipment), headers: headers),
         http.get(Uri.parse(ApiConfig.users), headers: headers),
       ]).timeout(const Duration(seconds: 15));
 
-      // Process Maintenance Requests Response
       if (responses[0].statusCode == 200) {
         final maintenanceData = json.decode(responses[0].body);
-        developer.log('Maintenance data received: $maintenanceData', name: 'MaintenanceScreen.LoadData');
-
-        // Debug: Log all status values from backend
-        if (maintenanceData is List) {
-          for (var request in maintenanceData) {
-            developer.log('Request status from backend: ${request['status']}', name: 'MaintenanceScreen.LoadData');
-          }
-        }
-
         setState(() {
           maintenanceRequests = maintenanceData is List ? maintenanceData : [];
         });
       } else {
-        developer.log('Maintenance request failed with status: ${responses[0].statusCode}', name: 'MaintenanceScreen.LoadData');
         setState(() {
-          _errorMessage = 'Failed to load maintenance requests. Status: ${responses[0].statusCode}';
+          _errorMessage = 'Failed to load maintenance requests: ${responses[0].statusCode}';
         });
       }
 
-      // Process Equipment Response
       if (responses[1].statusCode == 200) {
         final equipmentData = json.decode(responses[1].body);
         setState(() {
           equipment = equipmentData is List ? equipmentData : [];
         });
+      } else {
+        setState(() {
+          _errorMessage += '\nFailed to load equipment: ${responses[1].statusCode}';
+        });
       }
 
-      // Process Users Response
       if (responses[2].statusCode == 200) {
         final usersData = json.decode(responses[2].body);
         setState(() {
           users = usersData is List ? usersData : [];
         });
+      } else {
+        setState(() {
+          _errorMessage += '\nFailed to load users: ${responses[2].statusCode}';
+        });
       }
-
-      developer.log('=== MAINTENANCE DATA LOAD COMPLETED ===', name: 'MaintenanceScreen.LoadData');
-      developer.log('Maintenance requests count: ${maintenanceRequests.length}', name: 'MaintenanceScreen.LoadData');
-      developer.log('Equipment count: ${equipment.length}', name: 'MaintenanceScreen.LoadData');
-      developer.log('Users count: ${users.length}', name: 'MaintenanceScreen.LoadData');
-
     } catch (e, stackTrace) {
-      developer.log('=== MAINTENANCE DATA LOAD FAILED ===', name: 'MaintenanceScreen.LoadData');
       developer.log('Error: $e', name: 'MaintenanceScreen.LoadData');
       developer.log('Stack trace: $stackTrace', name: 'MaintenanceScreen.LoadData');
       setState(() {
@@ -122,16 +119,486 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     }
   }
 
-  Future<void> _deleteMaintenanceRequest(String requestId, String issue) async {
-    developer.log('=== DELETE MAINTENANCE REQUEST ===', name: 'MaintenanceScreen.Delete');
-    developer.log('Request ID: $requestId', name: 'MaintenanceScreen.Delete');
+  List<dynamic> get filteredRequests {
+    return maintenanceRequests.where((request) => _filterStatus == 'all' || request['status'] == _filterStatus).toList();
+  }
 
+  List<dynamic> get paginatedRequests {
+    final filtered = filteredRequests;
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage;
+    return filtered.sublist(startIndex, endIndex.clamp(0, filtered.length));
+  }
+
+  int get totalPages {
+    return (filteredRequests.length / _itemsPerPage).ceil();
+  }
+
+  String _getEquipmentName(String? equipmentId) {
+    final eq = equipment.firstWhere((e) => e['id'].toString() == equipmentId?.toString(), orElse: () => null);
+    return eq?['name'] ?? 'Unknown Equipment';
+  }
+
+  String _getUserName(String? userId) {
+    final user = users.firstWhere((u) => u['id'].toString() == userId?.toString(), orElse: () => null);
+    return user?['username'] ?? 'Unknown User';
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'in_progress':
+        return Colors.blue;
+      case 'resolved':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusLabel(String? status) {
+    final option = MAINTENANCE_STATUS_OPTIONS.firstWhere((option) => option['value'] == status, orElse: () => {'value': status ?? '', 'label': status ?? 'Unknown'});
+    return option['label']!;
+  }
+
+  void _showAddEditMaintenanceDialog({Map<String, dynamic>? request}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MaintenanceDetailsScreen(
+          accessToken: widget.accessToken,
+          refreshToken: widget.refreshToken,
+          userRole: widget.userRole,
+          users: users,
+          equipment: equipment,
+          statusOptions: MAINTENANCE_STATUS_OPTIONS,
+          request: request,
+          onSave: _loadData,
+        ),
+      ),
+    );
+  }
+
+  void _showFilterDialog() {
+    String tempFilterStatus = _filterStatus;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5, maxWidth: 400),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildDialogHeader(
+                      context,
+                      title: 'Filter Maintenance Requests',
+                      icon: Icons.filter_list,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: DropdownButtonFormField<String>(
+                        value: tempFilterStatus,
+                        decoration: InputDecoration(
+                          labelText: 'Filter by Status',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.filter_alt),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<String>(value: 'all', child: Text('All Statuses')),
+                          ...MAINTENANCE_STATUS_OPTIONS.map((option) => DropdownMenuItem<String>(
+                            value: option['value'],
+                            child: Text(option['label']!),
+                          )),
+                        ],
+                        onChanged: (value) => setDialogState(() => tempFilterStatus = value ?? 'all'),
+                      ),
+                    ),
+                    _buildDialogFooter(
+                      context,
+                      onAction: () {
+                        setState(() {
+                          _filterStatus = tempFilterStatus;
+                          _currentPage = 1;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                      actionText: 'Apply',
+                      extraAction: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _filterStatus = 'all';
+                            _currentPage = 1;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Clear'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogHeader(BuildContext context, {String title = '', IconData icon = Icons.edit}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDialogFooter(BuildContext context, {required VoidCallback onAction, String actionText = 'Create', Widget? extraAction}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          if (extraAction != null) ...[
+            const SizedBox(width: 8),
+            extraAction,
+          ],
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: onAction,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(actionText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = filteredRequests;
+    final paginated = paginatedRequests;
+    final pendingCount = maintenanceRequests.where((r) => r['status'] == 'pending').length;
+    final inProgressCount = maintenanceRequests.where((r) => r['status'] == 'in_progress').length;
+    final resolvedCount = maintenanceRequests.where((r) => r['status'] == 'resolved').length;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Maintenance Requests'),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        elevation: 0,
+        actions: [
+          IconButton(icon: const Icon(Icons.filter_list), onPressed: _showFilterDialog, tooltip: 'Filter'),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData, tooltip: 'Refresh'),
+        ],
+      ),
+      body: Column(
+        children: [
+          _buildSummaryCards(context, pendingCount, inProgressCount, resolvedCount),
+          if (_errorMessage.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.red[100], borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(_errorMessage, style: const TextStyle(color: Colors.red))),
+                  ],
+                ),
+              ),
+            ),
+          if (_filterStatus != 'all')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Chip(
+                label: Text('Status: ${_getStatusLabel(_filterStatus)}', style: const TextStyle(fontWeight: FontWeight.w500)),
+                backgroundColor: _getStatusColor(_filterStatus).withOpacity(0.1),
+                deleteIcon: const Icon(Icons.close, size: 16),
+                onDeleted: () => setState(() {
+                  _filterStatus = 'all';
+                  _currentPage = 1;
+                }),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filtered.isEmpty
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.build_outlined, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    maintenanceRequests.isEmpty ? 'No Maintenance Requests' : 'No Requests Match Filters',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    maintenanceRequests.isEmpty ? 'Create your first maintenance request' : 'Try adjusting your filters',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: users.isEmpty || equipment.isEmpty ? null : () => _showAddEditMaintenanceDialog(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Request'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+            )
+                : Column(
+              children: [
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: paginated.length,
+                      itemBuilder: (context, index) {
+                        final request = paginated[index];
+                        final statusColor = _getStatusColor(request['status'] ?? '');
+
+                        return Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: statusColor.withOpacity(0.2),
+                              child: Icon(Icons.build, color: statusColor),
+                            ),
+                            title: Text(
+                              _getEquipmentName(request['equipment']?.toString()),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 8),
+                                Text(
+                                  request['issue'] ?? 'No description',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        _getStatusLabel(request['status']),
+                                        style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'By: ${_getUserName(request['user']?.toString())}',
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (request['scheduled_date'] != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      'Scheduled: ${DateTime.parse(request['scheduled_date']).day}/${DateTime.parse(request['scheduled_date']).month}/${DateTime.parse(request['scheduled_date']).year}',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MaintenanceDetailsScreen(
+                                  accessToken: widget.accessToken,
+                                  refreshToken: widget.refreshToken,
+                                  userRole: widget.userRole,
+                                  users: users,
+                                  equipment: equipment,
+                                  statusOptions: MAINTENANCE_STATUS_OPTIONS,
+                                  request: request,
+                                  onSave: _loadData,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                if (totalPages > 1)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed: _currentPage > 1
+                              ? () => setState(() => _currentPage--)
+                              : null,
+                        ),
+                        Text(
+                          'Page $_currentPage of $totalPages',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right),
+                          onPressed: _currentPage < totalPages
+                              ? () => setState(() => _currentPage++)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: users.isEmpty || equipment.isEmpty ? null : () => _showAddEditMaintenanceDialog(),
+        tooltip: 'Create Maintenance Request',
+        child: const Icon(Icons.add),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
+  Widget _buildSummaryCards(BuildContext context, int pendingCount, int inProgressCount, int resolvedCount) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          _buildSummaryCard(context, 'Pending', pendingCount, Icons.pending, Colors.orange[700]!),
+          const SizedBox(width: 12),
+          _buildSummaryCard(context, 'In Progress', inProgressCount, Icons.work, Colors.blue[700]!),
+          const SizedBox(width: 12),
+          _buildSummaryCard(context, 'Resolved', resolvedCount, Icons.check_circle, Colors.green[700]!),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(BuildContext context, String title, int count, IconData icon, Color color) {
+    return Expanded(
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text('$count', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+              Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MaintenanceDetailsScreen extends StatefulWidget {
+  final String accessToken;
+  final String refreshToken;
+  final String userRole;
+  final List<dynamic> users;
+  final List<dynamic> equipment;
+  final List<Map<String, String>> statusOptions;
+  final Map<String, dynamic>? request;
+  final VoidCallback onSave;
+
+  const MaintenanceDetailsScreen({
+    super.key,
+    required this.accessToken,
+    required this.refreshToken,
+    required this.userRole,
+    required this.users,
+    required this.equipment,
+    required this.statusOptions,
+    this.request,
+    required this.onSave,
+  });
+
+  @override
+  State<MaintenanceDetailsScreen> createState() => _MaintenanceDetailsScreenState();
+}
+
+class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
+  final TextEditingController _responseController = TextEditingController();
+  String? _selectedAssignedToId;
+  int _currentCommentPage = 1;
+  final int _commentsPerPage = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    developer.log('User Role in MaintenanceDetailsScreen: ${widget.userRole}', name: 'MaintenanceDetailsScreen');
+  }
+
+  Future<void> _deleteMaintenanceRequest(String requestId, String issue) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Maintenance Request'),
-          content: Text('Are you sure you want to delete this maintenance request?\n\n"${issue.length > 100 ? '${issue.substring(0, 100)}...' : issue}"'),
+          content: Text('Are you sure you want to delete this request?\n\n"${issue.length > 100 ? '${issue.substring(0, 100)}...' : issue}"'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -149,76 +616,260 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
 
     if (confirmed == true) {
       try {
-        final url = '${ApiConfig.maintenanceRequest}$requestId/';
+        final url = ApiConfig.maintenanceRequestDetail(requestId);
         final headers = {
           'Authorization': 'Bearer ${widget.accessToken}',
           'Content-Type': 'application/json',
         };
 
-        developer.log('DELETE request URL: $url', name: 'MaintenanceScreen.Delete');
-
-        final response = await http.delete(
-          Uri.parse(url),
-          headers: headers,
-        ).timeout(const Duration(seconds: 10));
-
-        developer.log('DELETE response status: ${response.statusCode}', name: 'MaintenanceScreen.Delete');
+        final response = await http.delete(Uri.parse(url), headers: headers).timeout(const Duration(seconds: 10));
 
         if (response.statusCode == 204) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Maintenance request deleted successfully'),
-              backgroundColor: Colors.green,
-            ),
+            const SnackBar(content: Text('Request deleted successfully'), backgroundColor: Colors.green),
           );
-          _loadData();
+          widget.onSave();
+          Navigator.of(context).pop();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to delete request. Status: ${response.statusCode}'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Failed to delete: ${response.statusCode}'), backgroundColor: Colors.red),
           );
         }
       } catch (e) {
-        developer.log('Delete maintenance request error: $e', name: 'MaintenanceScreen.Delete');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting request: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error deleting request: $e'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  void _showAddEditMaintenanceDialog({Map<String, dynamic>? request}) {
-    developer.log('=== SHOW ADD/EDIT MAINTENANCE DIALOG ===', name: 'MaintenanceScreen.Dialog');
-    final isEditing = request != null;
+  Future<void> _uploadAttachment(String requestId) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+      );
 
-    final issueController = TextEditingController(text: request?['issue'] ?? '');
-    String selectedUserId = request?['user']?.toString() ?? (users.isNotEmpty ? users.first['id'].toString() : '');
-    String selectedEquipmentId = request?['equipment']?.toString() ?? '';
+      if (result != null && result.files.single.path != null) {
+        final file = result.files.single;
+        final headers = {'Authorization': 'Bearer ${widget.accessToken}'};
+        final request = http.MultipartRequest('POST', Uri.parse(ApiConfig.maintenanceRequestUploadAttachment(requestId)));
+        request.headers.addAll(headers);
+        request.files.add(await http.MultipartFile.fromPath('file', file.path!));
+        request.fields['file_name'] = file.name;
 
-    // Fix status value validation
-    String requestStatus = request?['status'] ?? 'pending';
-    developer.log('Original request status: $requestStatus', name: 'MaintenanceScreen.Dialog');
+        final response = await request.send().timeout(const Duration(seconds: 10));
+        if (response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Attachment uploaded successfully'), backgroundColor: Colors.green),
+          );
+          widget.onSave();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload: ${response.statusCode}'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading attachment: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
 
-    // Ensure the status value matches one of our valid options
-    String selectedStatus = 'pending'; // default
-    final validStatuses = MAINTENANCE_STATUS_OPTIONS.map((option) => option['value']).toList();
-    if (validStatuses.contains(requestStatus)) {
-      selectedStatus = requestStatus;
+  Future<void> _respondToMaintenanceRequest(String requestId, String responseText, String? assignedToId) async {
+    try {
+      final headers = {
+        'Authorization': 'Bearer ${widget.accessToken}',
+        'Content-Type': 'application/json',
+      };
+      final body = <String, dynamic>{'response': responseText};
+      if (assignedToId != null && assignedToId.isNotEmpty) {
+        body['assigned_to'] = assignedToId;
+      }
+
+      final response = await http.post(
+        Uri.parse(ApiConfig.maintenanceRequestRespond(requestId)),
+        headers: headers,
+        body: json.encode(body),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Comment added successfully'), backgroundColor: Colors.green),
+        );
+        _responseController.clear();
+        setState(() {
+          _selectedAssignedToId = null;
+          _currentCommentPage = 1;
+        });
+        widget.onSave();
+      } else {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add comment: ${errorData['error'] ?? 'Status ${response.statusCode}'}'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding comment: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _openAttachment(String url, String fileName) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      developer.log('Invalid status received: $requestStatus, using default: pending', name: 'MaintenanceScreen.Dialog');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cannot open $fileName'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _saveMaintenanceRequest({
+    String? requestId,
+    required String userId,
+    required String equipmentId,
+    required String issue,
+    required String status,
+    required DateTime scheduledDate,
+    DateTime? resolvedAt,
+    required bool isEditing,
+  }) async {
+    if (issue.isEmpty || equipmentId.isEmpty || userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in required fields (User, Equipment, Issue)'), backgroundColor: Colors.red),
+      );
+      return;
     }
 
-    DateTime selectedDate = request?['scheduled_date'] != null
-        ? DateTime.parse(request!['scheduled_date'])
+    if (status == 'resolved' && resolvedAt == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Resolved requests require a resolved date'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    try {
+      final requestBody = <String, dynamic>{
+        'user': userId,
+        'equipment': equipmentId,
+        'issue': issue,
+        'status': status,
+        'scheduled_date': '${scheduledDate.year}-${scheduledDate.month.toString().padLeft(2, '0')}-${scheduledDate.day.toString().padLeft(2, '0')}',
+      };
+
+      if (resolvedAt != null) {
+        requestBody['resolved_at'] = resolvedAt.toIso8601String();
+      }
+
+      final url = isEditing ? ApiConfig.maintenanceRequestDetail(requestId!) : ApiConfig.maintenanceRequest;
+      final headers = {
+        'Authorization': 'Bearer ${widget.accessToken}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = isEditing
+          ? await http.put(Uri.parse(url), headers: headers, body: json.encode(requestBody))
+          : await http.post(Uri.parse(url), headers: headers, body: json.encode(requestBody));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isEditing ? 'Request updated successfully' : 'Request created successfully'), backgroundColor: Colors.green),
+        );
+        widget.onSave();
+        Navigator.of(context).pop();
+      } else {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to ${isEditing ? 'update' : 'create'} request: ${errorData['error'] ?? response.statusCode}'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error ${isEditing ? 'updating' : 'creating'} request: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  List<Map<String, String>> _parseComments(String? comments) {
+    if (comments == null || comments.trim().isEmpty) return [];
+    final commentList = comments.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    return commentList.map((comment) {
+      final match = RegExp(r'\[(.*?)\]\s*(.*?)\s*\((.*?)\):\s*(.*)').firstMatch(comment);
+      return {
+        'timestamp': match?.group(1) ?? '',
+        'user': match?.group(2) ?? '',
+        'role': match?.group(3) ?? '',
+        'text': match?.group(4) ?? comment,
+      };
+    }).toList();
+  }
+
+  String _getEquipmentName(String? equipmentId) {
+    final eq = widget.equipment.firstWhere((e) => e['id'].toString() == equipmentId?.toString(), orElse: () => null);
+    return eq?['name'] ?? 'Unknown Equipment';
+  }
+
+  String _getUserName(String? userId) {
+    final user = widget.users.firstWhere((u) => u['id'].toString() == userId?.toString(), orElse: () => null);
+    return user?['username'] ?? 'Unknown User';
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'in_progress':
+        return Colors.blue;
+      case 'resolved':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusLabel(String? status) {
+    final option = widget.statusOptions.firstWhere(
+          (option) => option['value'] == status,
+      orElse: () => {'value': status ?? '', 'label': status ?? 'Unknown'},
+    );
+    return option['label']!;
+  }
+
+  List<Map<String, String>> get paginatedComments {
+    final comments = _parseComments(widget.request?['comments']);
+    final startIndex = (_currentCommentPage - 1) * _commentsPerPage;
+    final endIndex = startIndex + _commentsPerPage;
+    return comments.sublist(startIndex, endIndex.clamp(0, comments.length));
+  }
+
+  int get totalCommentPages {
+    final comments = _parseComments(widget.request?['comments']);
+    return (comments.length / _commentsPerPage).ceil();
+  }
+
+  void _showAddEditMaintenanceDialog() {
+    final isEditing = widget.request != null;
+    final issueController = TextEditingController(text: widget.request?['issue'] ?? '');
+    String selectedUserId = widget.request?['user']?.toString() ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '');
+    String selectedEquipmentId = widget.request?['equipment']?.toString() ?? (widget.equipment.isNotEmpty ? widget.equipment.first['id'].toString() : '');
+    String selectedStatus = widget.request?['status'] ?? 'pending';
+    DateTime selectedDate = widget.request?['scheduled_date'] != null
+        ? DateTime.parse(widget.request!['scheduled_date'])
         : DateTime.now().add(const Duration(days: 1));
-    DateTime? resolvedDate = request?['resolved_at'] != null
-        ? DateTime.parse(request!['resolved_at'])
+    DateTime? resolvedDate = widget.request?['resolved_at'] != null
+        ? DateTime.parse(widget.request!['resolved_at'])
         : null;
+
+    if (widget.users.isEmpty || widget.equipment.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot create/edit request: Users or equipment data not loaded'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
     showDialog(
       context: context,
@@ -226,290 +877,136 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return Dialog(
-              insetPadding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Container(
-                width: double.maxFinite,
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.85,
-                  maxWidth: 500, // Maximum width for better UX on tablets
-                ),
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85, maxWidth: 500),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Dialog Header
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4),
-                          topRight: Radius.circular(4),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isEditing ? Icons.edit : Icons.add,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              isEditing ? 'Edit Maintenance Request' : 'New Maintenance Request',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close),
-                            tooltip: 'Close',
-                          ),
-                        ],
-                      ),
+                    _buildDialogHeader(
+                      context,
+                      title: isEditing ? 'Edit Maintenance Request' : 'New Maintenance Request',
+                      icon: isEditing ? Icons.edit : Icons.add,
                     ),
-                    // Dialog Content
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // User Selection
                             DropdownButtonFormField<String>(
                               value: selectedUserId.isEmpty ? null : selectedUserId,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'User *',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.person),
-                                isDense: true,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                prefixIcon: const Icon(Icons.person),
+                                filled: true,
+                                fillColor: Colors.grey[50],
                               ),
-                              hint: const Text('Select user'),
                               isExpanded: true,
-                              items: users.map((user) => DropdownMenuItem<String>(
+                              items: widget.users.map((user) => DropdownMenuItem<String>(
                                 value: user['id'].toString(),
-                                child: Text(
-                                  '${user['username']} (${user['email']})',
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                                child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
                               )).toList(),
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  selectedUserId = value ?? '';
-                                });
-                              },
-                              selectedItemBuilder: (BuildContext context) {
-                                return users.map<Widget>((user) {
-                                  return Container(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(
-                                      '${user['username']} (${user['email']})',
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  );
-                                }).toList();
-                              },
+                              onChanged: (value) => setDialogState(() => selectedUserId = value ?? ''),
                             ),
                             const SizedBox(height: 16),
-
-                            // Equipment Selection
                             DropdownButtonFormField<String>(
                               value: selectedEquipmentId.isEmpty ? null : selectedEquipmentId,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Equipment *',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.devices),
-                                isDense: true,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                prefixIcon: const Icon(Icons.devices),
+                                filled: true,
+                                fillColor: Colors.grey[50],
                               ),
-                              hint: const Text('Select equipment'),
                               isExpanded: true,
-                              items: equipment.map((eq) => DropdownMenuItem<String>(
+                              items: widget.equipment.map((eq) => DropdownMenuItem<String>(
                                 value: eq['id'].toString(),
-                                child: Text(
-                                  '${eq['name']} (${eq['type']})',
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
+                                child: Text('${eq['name']} (${eq['type']})', overflow: TextOverflow.ellipsis),
                               )).toList(),
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  selectedEquipmentId = value ?? '';
-                                });
-                              },
-                              selectedItemBuilder: (BuildContext context) {
-                                return equipment.map<Widget>((eq) {
-                                  return Container(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(
-                                      '${eq['name']} (${eq['type']})',
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  );
-                                }).toList();
-                              },
+                              onChanged: (value) => setDialogState(() => selectedEquipmentId = value ?? ''),
                             ),
                             const SizedBox(height: 16),
-
-                            // Issue Description
                             TextField(
                               controller: issueController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Issue Description *',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.description),
                                 hintText: 'Describe the maintenance issue...',
-                                isDense: true,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                prefixIcon: const Icon(Icons.description),
+                                filled: true,
+                                fillColor: Colors.grey[50],
                               ),
                               maxLines: 3,
                               textInputAction: TextInputAction.newline,
                             ),
                             const SizedBox(height: 16),
-
-                            // Status Selection - Fixed overflow
                             DropdownButtonFormField<String>(
                               value: selectedStatus,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Status',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.assignment),
-                                isDense: true,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                prefixIcon: const Icon(Icons.assignment),
+                                filled: true,
+                                fillColor: Colors.grey[50],
                               ),
                               isExpanded: true,
-                              items: MAINTENANCE_STATUS_OPTIONS.map((option) {
-                                return DropdownMenuItem<String>(
-                                  value: option['value']!,
-                                  child: Container(
-                                    width: double.infinity,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 12,
-                                          height: 12,
-                                          decoration: BoxDecoration(
-                                            color: _getStatusColor(option['value']!),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                option['label']!,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 14,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                              Text(
-                                                option['description']!,
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.grey[600],
-                                                  height: 1.2,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                              items: widget.statusOptions.map((option) => DropdownMenuItem<String>(
+                                value: option['value'],
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(color: _getStatusColor(option['value']!), shape: BoxShape.circle),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
+                                    const SizedBox(width: 8),
+                                    Text(option['label']!),
+                                  ],
+                                ),
+                              )).toList(),
                               onChanged: (value) {
                                 setDialogState(() {
                                   selectedStatus = value ?? 'pending';
-                                  // Clear resolved date if status is not resolved
-                                  if (selectedStatus != 'resolved') {
-                                    resolvedDate = null;
-                                  }
+                                  if (selectedStatus != 'resolved') resolvedDate = null;
                                 });
-                              },
-                              selectedItemBuilder: (BuildContext context) {
-                                return MAINTENANCE_STATUS_OPTIONS.map<Widget>((option) {
-                                  return Container(
-                                    alignment: Alignment.centerLeft,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 12,
-                                          height: 12,
-                                          decoration: BoxDecoration(
-                                            color: _getStatusColor(option['value']!),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            option['label']!,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList();
                               },
                             ),
                             const SizedBox(height: 16),
-
-                            // Scheduled Date
                             InkWell(
                               onTap: () async {
-                                final DateTime? picked = await showDatePicker(
+                                final picked = await showDatePicker(
                                   context: context,
                                   initialDate: selectedDate,
                                   firstDate: DateTime.now().subtract(const Duration(days: 365)),
                                   lastDate: DateTime.now().add(const Duration(days: 365)),
                                 );
-                                if (picked != null) {
-                                  setDialogState(() {
-                                    selectedDate = picked;
-                                  });
-                                }
+                                if (picked != null) setDialogState(() => selectedDate = picked);
                               },
                               child: InputDecorator(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Scheduled Date *',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.calendar_today),
-                                  isDense: true,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  prefixIcon: const Icon(Icons.calendar_today),
+                                  filled: true,
+                                  fillColor: Colors.grey[50],
                                 ),
-                                child: Text(
-                                  '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                                ),
+                                child: Text(selectedDate != null ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}' : 'Select date'),
                               ),
                             ),
-                            const SizedBox(height: 16),
-
-                            // Resolved At Date (only show if status is resolved or if there's already a resolved date)
                             if (selectedStatus == 'resolved' || resolvedDate != null) ...[
+                              const SizedBox(height: 16),
                               InkWell(
                                 onTap: () async {
-                                  final DateTime? picked = await showDatePicker(
+                                  final picked = await showDatePicker(
                                     context: context,
                                     initialDate: resolvedDate ?? DateTime.now(),
                                     firstDate: DateTime.now().subtract(const Duration(days: 365)),
                                     lastDate: DateTime.now().add(const Duration(days: 1)),
                                   );
                                   if (picked != null) {
-                                    final TimeOfDay? timePicked = await showTimePicker(
+                                    final timePicked = await showTimePicker(
                                       context: context,
                                       initialTime: TimeOfDay.fromDateTime(resolvedDate ?? DateTime.now()),
                                     );
@@ -529,106 +1026,44 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                                 child: InputDecorator(
                                   decoration: InputDecoration(
                                     labelText: 'Resolved At ${selectedStatus == 'resolved' ? '*' : ''}',
-                                    border: const OutlineInputBorder(),
-                                    prefixIcon: const Icon(Icons.check_circle),
-                                    isDense: true,
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                    prefixIcon: const Icon(Icons.calendar_today),
+                                    filled: true,
+                                    fillColor: Colors.grey[50],
                                     suffixIcon: resolvedDate != null
                                         ? IconButton(
                                       icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        setDialogState(() {
-                                          resolvedDate = null;
-                                        });
-                                      },
+                                      onPressed: () => setDialogState(() => resolvedDate = null),
                                     )
                                         : null,
                                   ),
-                                  child: Text(
-                                    resolvedDate != null
-                                        ? '${resolvedDate!.day}/${resolvedDate!.month}/${resolvedDate!.year} ${resolvedDate!.hour.toString().padLeft(2, '0')}:${resolvedDate!.minute.toString().padLeft(2, '0')}'
-                                        : 'Select resolved date and time',
-                                    style: TextStyle(
-                                      color: resolvedDate != null ? Colors.black : Colors.grey[600],
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  child: Text(resolvedDate != null
+                                      ? '${resolvedDate!.day}/${resolvedDate!.month}/${resolvedDate!.year} ${resolvedDate!.hour.toString().padLeft(2, '0')}:${resolvedDate!.minute.toString().padLeft(2, '0')}'
+                                      : 'Select date and time'),
                                 ),
                               ),
-                              const SizedBox(height: 16),
                             ],
-
-                            // Required fields note
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 14,
-                                  color: Colors.grey[600],
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '* Required fields',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
+                            const SizedBox(height: 8),
+                            Text('* Required fields', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                           ],
                         ),
                       ),
                     ),
-
-                    // Dialog Actions
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(4),
-                          bottomRight: Radius.circular(4),
-                        ),
-                        border: Border(
-                          top: BorderSide(
-                            color: Colors.grey[300]!,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Cancel'),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            onPressed: () {
-                              _saveMaintenanceRequest(
-                                requestId: request?['id'],
-                                userId: selectedUserId,
-                                equipmentId: selectedEquipmentId,
-                                issue: issueController.text,
-                                status: selectedStatus,
-                                scheduledDate: selectedDate,
-                                resolvedAt: resolvedDate,
-                                isEditing: isEditing,
-                              );
-                              Navigator.of(context).pop();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: Text(isEditing ? 'Update' : 'Create'),
-                          ),
-                        ],
-                      ),
+                    _buildDialogFooter(
+                      context,
+                      onAction: () {
+                        _saveMaintenanceRequest(
+                          requestId: widget.request?['id'],
+                          userId: selectedUserId,
+                          equipmentId: selectedEquipmentId,
+                          issue: issueController.text,
+                          status: selectedStatus,
+                          scheduledDate: selectedDate,
+                          resolvedAt: resolvedDate,
+                          isEditing: isEditing,
+                        );
+                      },
+                      actionText: isEditing ? 'Update' : 'Create',
                     ),
                   ],
                 ),
@@ -640,660 +1075,413 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     );
   }
 
-  Future<void> _saveMaintenanceRequest({
-    String? requestId,
-    required String userId,
-    required String equipmentId,
-    required String issue,
-    required String status,
-    required DateTime scheduledDate,
-    DateTime? resolvedAt,
-    required bool isEditing,
-  }) async {
-    developer.log('=== SAVE MAINTENANCE REQUEST ===', name: 'MaintenanceScreen.Save');
-    developer.log('Is editing: $isEditing', name: 'MaintenanceScreen.Save');
-    developer.log('User ID: $userId', name: 'MaintenanceScreen.Save');
-    developer.log('Equipment ID: $equipmentId', name: 'MaintenanceScreen.Save');
-    developer.log('Issue: $issue', name: 'MaintenanceScreen.Save');
-    developer.log('Status: $status', name: 'MaintenanceScreen.Save');
-    developer.log('Resolved At: $resolvedAt', name: 'MaintenanceScreen.Save');
-
-    if (issue.isEmpty || equipmentId.isEmpty || userId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in required fields (User, Equipment, and Issue)'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Validate that resolved date is provided if status is resolved
-    if (status == 'resolved' && resolvedAt == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please provide resolved date and time when status is resolved'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      // Build request body based on backend model structure
-      final requestBody = <String, dynamic>{
-        'user': userId,
-        'equipment': equipmentId,
-        'issue': issue,
-        'status': status,
-        'scheduled_date': '${scheduledDate.year}-${scheduledDate.month.toString().padLeft(2, '0')}-${scheduledDate.day.toString().padLeft(2, '0')}',
-      };
-
-      // Add resolved_at if provided
-      if (resolvedAt != null) {
-        requestBody['resolved_at'] = resolvedAt.toIso8601String();
-      }
-
-      developer.log('Request body: $requestBody', name: 'MaintenanceScreen.Save');
-
-      final url = isEditing
-          ? '${ApiConfig.maintenanceRequest}$requestId/'
-          : ApiConfig.maintenanceRequest;
-
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-      };
-
-      developer.log('Request URL: $url', name: 'MaintenanceScreen.Save');
-      developer.log('Request method: ${isEditing ? 'PUT' : 'POST'}', name: 'MaintenanceScreen.Save');
-
-      final response = isEditing
-          ? await http.put(
-        Uri.parse(url),
-        headers: headers,
-        body: json.encode(requestBody),
-      ).timeout(const Duration(seconds: 10))
-          : await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: json.encode(requestBody),
-      ).timeout(const Duration(seconds: 10));
-
-      developer.log('Save response status: ${response.statusCode}', name: 'MaintenanceScreen.Save');
-      developer.log('Save response body: ${response.body}', name: 'MaintenanceScreen.Save');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEditing ? 'Request updated successfully' : 'Request created successfully'),
-            backgroundColor: Colors.green,
+  Widget _buildDialogHeader(BuildContext context, {required String title, required IconData icon}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
           ),
-        );
-        _loadData();
-      } else {
-        try {
-          final errorData = json.decode(response.body);
-          String errorMessage = 'Failed to ${isEditing ? 'update' : 'create'} request.';
-          if (errorData is Map) {
-            // Handle field-specific errors
-            if (errorData.containsKey('user')) {
-              errorMessage += ' User: ${errorData['user']}';
-            }
-            if (errorData.containsKey('equipment')) {
-              errorMessage += ' Equipment: ${errorData['equipment']}';
-            }
-            if (errorData.containsKey('issue')) {
-              errorMessage += ' Issue: ${errorData['issue']}';
-            }
-            if (errorData.containsKey('status')) {
-              errorMessage += ' Status: ${errorData['status']}';
-            }
-            if (errorData.containsKey('scheduled_date')) {
-              errorMessage += ' Date: ${errorData['scheduled_date']}';
-            }
-            if (errorData.containsKey('resolved_at')) {
-              errorMessage += ' Resolved At: ${errorData['resolved_at']}';
-            }
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red,
+          IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDialogFooter(BuildContext context, {required VoidCallback onAction, String actionText = 'Create', Widget? extraAction}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          if (extraAction != null) ...[
+            const SizedBox(width: 8),
+            extraAction,
+          ],
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: onAction,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-          );
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to ${isEditing ? 'update' : 'create'} request. Status: ${response.statusCode}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e, stackTrace) {
-      developer.log('Save maintenance request error: $e', name: 'MaintenanceScreen.Save');
-      developer.log('Stack trace: $stackTrace', name: 'MaintenanceScreen.Save');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error ${isEditing ? 'updating' : 'creating'} request: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  List<dynamic> get filteredRequests {
-    return maintenanceRequests.where((request) {
-      bool statusMatch = _filterStatus == 'all' || request['status'] == _filterStatus;
-      return statusMatch;
-    }).toList();
-  }
-
-  String _getEquipmentName(String? equipmentId) {
-    if (equipmentId == null) return 'Unknown Equipment';
-    final eq = equipment.firstWhere(
-          (e) => e['id'].toString() == equipmentId.toString(),
-      orElse: () => null,
+            child: Text(actionText),
+          ),
+        ],
+      ),
     );
-    return eq != null ? eq['name'] : 'Unknown Equipment';
-  }
-
-  String _getUserName(String? userId) {
-    if (userId == null) return 'Unknown User';
-    final user = users.firstWhere(
-          (u) => u['id'].toString() == userId.toString(),
-      orElse: () => null,
-    );
-    return user != null ? user['username'] : 'Unknown User';
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'in_progress':
-        return Colors.blue;
-      case 'resolved':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStatusLabel(String? status) {
-    final option = MAINTENANCE_STATUS_OPTIONS.firstWhere(
-          (option) => option['value'] == status,
-      orElse: () => {'value': status ?? '', 'label': status ?? 'Unknown'},
-    );
-    return option['label']!;
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = filteredRequests;
-    final pendingCount = maintenanceRequests.where((r) => r['status'] == 'pending').length;
-    final inProgressCount = maintenanceRequests.where((r) => r['status'] == 'in_progress').length;
-    final resolvedCount = maintenanceRequests.where((r) => r['status'] == 'resolved').length;
+    if (widget.request == null) {
+      developer.log('Request is null in MaintenanceDetailsScreen', name: 'MaintenanceDetailsScreen');
+      return const Scaffold(
+        body: Center(child: Text('No request selected')),
+      );
+    }
+
+    final request = widget.request!;
+    final statusColor = _getStatusColor(request['status'] ?? '');
+    final attachments = request['attachments'] as List<dynamic>? ?? [];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Maintenance Management'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(_getEquipmentName(request['equipment']?.toString())),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
-            tooltip: 'Filter',
+            icon: const Icon(Icons.edit),
+            onPressed: () => _showAddEditMaintenanceDialog(),
+            tooltip: 'Edit Request',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-            tooltip: 'Refresh',
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () => _deleteMaintenanceRequest(request['id'], request['issue'] ?? ''),
+            tooltip: 'Delete Request',
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Summary Cards - Made more responsive
-          Container(
-            margin: const EdgeInsets.all(16),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return IntrinsicHeight(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.pending, color: Colors.orange[700], size: 24),
-                                const SizedBox(height: 4),
-                                FittedBox(
-                                  child: Text(
-                                    '$pendingCount',
-                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                const FittedBox(
-                                  child: Text('Pending', style: TextStyle(fontSize: 12)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.work, color: Colors.blue[700], size: 24),
-                                const SizedBox(height: 4),
-                                FittedBox(
-                                  child: Text(
-                                    '$inProgressCount',
-                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                const FittedBox(
-                                  child: Text('In Progress', style: TextStyle(fontSize: 12)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.check_circle, color: Colors.green[700], size: 24),
-                                const SizedBox(height: 4),
-                                FittedBox(
-                                  child: Text(
-                                    '$resolvedCount',
-                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                const FittedBox(
-                                  child: Text('Resolved', style: TextStyle(fontSize: 12)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Request Details', style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 16),
+                    _buildDetailRow('Issue', request['issue'] ?? 'No description', Icons.description),
+                    const SizedBox(height: 12),
+                    _buildDetailRow('Status', _getStatusLabel(request['status']), Icons.assignment, statusColor),
+                    const SizedBox(height: 12),
+                    _buildDetailRow('Requested By', _getUserName(request['user']?.toString()), Icons.person),
+                    const SizedBox(height: 12),
+                    _buildDetailRow(
+                      'Scheduled Date',
+                      request['scheduled_date'] != null
+                          ? '${DateTime.parse(request['scheduled_date']).day}/${DateTime.parse(request['scheduled_date']).month}/${DateTime.parse(request['scheduled_date']).year}'
+                          : 'Not scheduled',
+                      Icons.calendar_today,
+                    ),
+                    if (request['resolved_at'] != null) ...[
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                        'Resolved At',
+                        '${DateTime.parse(request['resolved_at']).day}/${DateTime.parse(request['resolved_at']).month}/${DateTime.parse(request['resolved_at']).year} ${DateTime.parse(request['resolved_at']).hour.toString().padLeft(2, '0')}:${DateTime.parse(request['resolved_at']).minute.toString().padLeft(2, '0')}',
+                        Icons.check_circle,
+                        Colors.green,
                       ),
                     ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Filter Chips - Made scrollable
-          if (_filterStatus != 'all')
-            Container(
-              height: 50,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Chip(
-                      label: Text('Status: ${_getStatusLabel(_filterStatus)}'),
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                      onDeleted: () => setState(() => _filterStatus = 'all'),
-                    ),
                   ],
                 ),
               ),
             ),
-
-          // Error Message
-          if (_errorMessage.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // Maintenance Requests List
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filtered.isEmpty
-                ? Center(
+            const SizedBox(height: 16),
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.build_outlined, size: 64, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    Text(
-                      maintenanceRequests.isEmpty ? 'No Maintenance Requests' : 'No Requests Match Filters',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      maintenanceRequests.isEmpty ? 'Create your first maintenance request' : 'Try adjusting your filters',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddEditMaintenanceDialog(),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Create Request'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-                : RefreshIndicator(
-              onRefresh: _loadData,
-              child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: filtered.length,
-                itemBuilder: (context, index) {
-                  final request = filtered[index];
-                  final statusColor = _getStatusColor(request['status'] ?? '');
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: statusColor.withOpacity(0.2),
-                        child: Icon(
-                          Icons.build,
-                          color: statusColor,
-                        ),
-                      ),
-                      title: Text(
-                        _getEquipmentName(request['equipment']?.toString()),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            request['issue'] ?? 'No description',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  _getStatusLabel(request['status']),
-                                  style: TextStyle(
-                                    color: statusColor,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'By: ${_getUserName(request['user']?.toString())}',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[600],
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          if (request['scheduled_date'] != null)
-                            Text(
-                              'Scheduled: ${DateTime.parse(request['scheduled_date']).day}/${DateTime.parse(request['scheduled_date']).month}/${DateTime.parse(request['scheduled_date']).year}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          if (request['resolved_at'] != null)
-                            Text(
-                              'Resolved: ${DateTime.parse(request['resolved_at']).day}/${DateTime.parse(request['resolved_at']).month}/${DateTime.parse(request['resolved_at']).year} ${DateTime.parse(request['resolved_at']).hour.toString().padLeft(2, '0')}:${DateTime.parse(request['resolved_at']).minute.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.green[600],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _showAddEditMaintenanceDialog(request: request);
-                          } else if (value == 'delete') {
-                            _deleteMaintenanceRequest(request['id'], request['issue'] ?? '');
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => [
-                          const PopupMenuItem<String>(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit, size: 20),
-                                SizedBox(width: 8),
-                                Text('Edit'),
-                              ],
-                            ),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, size: 20, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('Delete', style: TextStyle(color: Colors.red)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      isThreeLine: true,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditMaintenanceDialog(),
-        tooltip: 'Create Maintenance Request',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String tempFilterStatus = _filterStatus;
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Dialog(
-              insetPadding: const EdgeInsets.all(16),
-              child: Container(
-                width: double.maxFinite,
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
-                  maxWidth: 400,
-                ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Dialog Header
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4),
-                          topRight: Radius.circular(4),
-                        ),
+                    Text('Comments', style: Theme.of(context).textTheme.titleLarge),
+                    const SizedBox(height: 16),
+                    if (paginatedComments.isEmpty)
+                      Text(
+                        'No comments yet',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.filter_list),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'Filter Maintenance Requests',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    if (paginatedComments.isNotEmpty)
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: paginatedComments.length,
+                        itemBuilder: (context, index) {
+                          final comment = paginatedComments[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Theme.of(context).dividerColor),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close),
-                            tooltip: 'Close',
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Dialog Content
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            DropdownButtonFormField<String>(
-                              value: tempFilterStatus,
-                              decoration: const InputDecoration(
-                                labelText: 'Filter by Status',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                              isExpanded: true,
-                              items: [
-                                const DropdownMenuItem<String>(
-                                  value: 'all',
-                                  child: Text('All Statuses'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${comment['user'] ?? 'Unknown'} (${comment['role'] ?? 'Unknown'})',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
+                                    ),
+                                    Text(
+                                      comment['timestamp'] ?? 'No timestamp',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                  ],
                                 ),
-                                ...MAINTENANCE_STATUS_OPTIONS.map((option) => DropdownMenuItem<String>(
-                                  value: option['value'],
-                                  child: Text(
-                                    option['label']!,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                )).toList(),
+                                const SizedBox(height: 8),
+                                Text(
+                                  comment['text'] ?? 'No comment text',
+                                  style: TextStyle(color: Colors.grey[800], fontSize: 14),
+                                ),
                               ],
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  tempFilterStatus = value ?? 'all';
-                                });
-                              },
+                            ),
+                          );
+                        },
+                      ),
+                    if (totalCommentPages > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left),
+                              onPressed: _currentCommentPage > 1
+                                  ? () => setState(() => _currentCommentPage--)
+                                  : null,
+                            ),
+                            Text(
+                              'Page $_currentCommentPage of $totalCommentPages',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed: _currentCommentPage < totalCommentPages
+                                  ? () => setState(() => _currentCommentPage++)
+                                  : null,
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    // Dialog Actions
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(4),
-                          bottomRight: Radius.circular(4),
-                        ),
-                        border: Border(
-                          top: BorderSide(
-                            color: Colors.grey[300]!,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Cancel'),
-                          ),
-                          const SizedBox(width: 8),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _filterStatus = 'all';
-                              });
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('Clear'),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _filterStatus = tempFilterStatus;
-                              });
-                              Navigator.of(context).pop();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                            ),
-                            child: const Text('Apply'),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
-            );
-          },
-        );
-      },
+            ),
+            const SizedBox(height: 32), // Increased spacing
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(
+                color: Theme.of(context).colorScheme.primary,
+                thickness: 3, // Thicker divider
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Post a New Comment',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (widget.userRole == 'admin' || widget.userRole == 'superadmin') ...[
+              Card(
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2), // Bolder border
+                ),
+                surfaceTintColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Add Comment', style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _responseController,
+                        decoration: InputDecoration(
+                          labelText: 'Comment',
+                          hintText: 'Enter your comment...',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.comment),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        maxLines: 3,
+                        textInputAction: TextInputAction.newline,
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Tooltip(
+                          message: 'Post your comment',
+                          child: ElevatedButton.icon(
+                            onPressed: _responseController.text.isEmpty
+                                ? null
+                                : () => _respondToMaintenanceRequest(request['id'], _responseController.text, _selectedAssignedToId),
+                            icon: const Icon(Icons.send, size: 20),
+                            label: const Text('Add Comment'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedAssignedToId,
+                        decoration: InputDecoration(
+                          labelText: 'Assign To (Optional)',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.person_add),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<String>(
+                            value: null,
+                            child: Text('None', overflow: TextOverflow.ellipsis),
+                          ),
+                          ...widget.users
+                              .where((user) => user['role'] == 'employee' || user['role'] == 'admin')
+                              .map((user) => DropdownMenuItem<String>(
+                            value: user['id'].toString(),
+                            child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
+                          )),
+                        ],
+                        onChanged: (value) => setState(() => _selectedAssignedToId = value),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow[100],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.yellow[700]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock, color: Colors.yellow[700]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Commenting is restricted to Admin or Superadmin roles. Your role: ${widget.userRole}',
+                          style: TextStyle(color: Colors.yellow[900], fontSize: 14, fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            if (attachments.isNotEmpty)
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Attachments', style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 16),
+                      ...attachments.map((attachment) => ListTile(
+                        leading: Icon(
+                          attachment['file_type'].startsWith('image') ? Icons.image : Icons.picture_as_pdf,
+                          color: Colors.blue,
+                        ),
+                        title: Text(attachment['file_name'], style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
+                        subtitle: Text(
+                          'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        ),
+                        onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
+                      )),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton.icon(
+                onPressed: () => _uploadAttachment(request['id']),
+                icon: const Icon(Icons.attach_file),
+                label: const Text('Add Attachment'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32), // Extra padding at bottom
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, IconData icon, [Color? color]) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color ?? Theme.of(context).colorScheme.primary, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: color ?? Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
