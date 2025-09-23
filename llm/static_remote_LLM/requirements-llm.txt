@@ -1,18 +1,21 @@
+# Flask LLM service dependencies
+Flask==3.0.3
+flask-cors==5.0.0
+
 # LLM and AI dependencies
-langchain
-langchain-community
-langchain-core
-langchain-ollama
-pymongo
-chromadb
-ollama
+langchain>=0.3.5  # Updated to resolve NumPy conflict
+langchain-community>=0.3.3
+langchain-core>=0.3.13
+langchain-ollama>=0.2.0
+pymongo==4.10.1
+chromadb>=0.5.15  # Try latest version for Python 3.13 support
+ollama==0.3.3
 
-
-# Data processing - using versions with pre-compiled wheels
-pandas>=2.1.0
-numpy>=1.25.0
-fuzzywuzzy>=0.18.0
-python-Levenshtein>=0.12.0
+# Data processing dependencies
+pandas==2.2.3
+numpy>=2.1.0
+fuzzywuzzy==0.18.0
+# python-Levenshtein==0.26.0  # Commented out to avoid compiler issues
 
 # Utilities
 python-dotenv==1.0.1

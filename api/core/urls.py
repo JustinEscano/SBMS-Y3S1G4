@@ -1,6 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import *
+from .views import (
+    UserViewSet, RoomViewSet, EquipmentViewSet, SensorLogViewSet, AlertViewSet,
+    MaintenanceRequestViewSet, NotificationViewSet, LLMQueryViewSet, LLMSummaryViewSet,
+    AuthTokenViewSet, MaintenanceAttachmentViewSet, RegisterView,
+    dashboard_summary, room_realtime, check_anomalies, esp32_sensor_data,
+    esp32_health_check, latest_sensor_data, esp32_heartbeat, equipment_field_options
+)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -31,6 +37,7 @@ urlpatterns = [
     path('esp32/health/', esp32_health_check, name='esp32_health_check'),
     path('esp32/latest/', latest_sensor_data, name='latest_sensor_data'),
     path('esp32/heartbeat/', esp32_heartbeat, name='esp32_heartbeat'),
+    
     # New endpoint for field options
     path('equipment/field-options/', equipment_field_options, name='equipment_field_options'),
 ]
