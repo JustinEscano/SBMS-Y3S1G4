@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
-import '../Config/api.dart'; // Updated import to point to ../Config/api.dart
+import '../Config/api.dart';
 
 class EquipmentManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -27,7 +27,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   String _filterRoom = 'all';
   String _filterType = 'all';
 
-  // Standardized field values - use these across web and mobile
   static const List<Map<String, String>> EQUIPMENT_STATUS_OPTIONS = [
     {'value': 'online', 'label': 'Online', 'description': 'Equipment is working and connected'},
     {'value': 'offline', 'label': 'Offline', 'description': 'Equipment is not working or disconnected'},
@@ -58,17 +57,33 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     developer.log('Refresh Token Length: ${widget.refreshToken.length}', name: 'EquipmentScreen');
   }
 
+  // TEMPORARY BYPASS: Comment out the if (!hasNetwork) block below to skip the check and test API calls directly.
   Future<bool> _checkNetworkConnectivity() async {
+    developer.log('=== CHECKING NETWORK CONNECTIVITY ===', name: 'EquipmentScreen.Network');
     try {
-      developer.log('Checking network connectivity...', name: 'EquipmentScreen.Network');
-      final result = await InternetAddress.lookup('google.com');
+      // Direct backend ping first (reliable, no external DNS)
+      final backendResponse = await http.get(Uri.parse(ApiConfig.baseUrl)).timeout(const Duration(seconds: 5));
+      if (backendResponse.statusCode >= 200 && backendResponse.statusCode < 300) {
+        developer.log('Backend reachable: ${ApiConfig.baseUrl} (Status: ${backendResponse.statusCode})', name: 'EquipmentScreen.Network');
+        return true;
+      }
+      developer.log('Backend ping failed (Status: ${backendResponse.statusCode}), falling back to google.com', name: 'EquipmentScreen.Network');
+    } catch (e) {
+      developer.log('Backend ping failed: $e, falling back to google.com', name: 'EquipmentScreen.Network');
+    }
+
+    // Fallback to google.com
+    try {
+      final result = await InternetAddress.lookup('google.com').timeout(const Duration(seconds: 5));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        developer.log('Network connectivity: OK', name: 'EquipmentScreen.Network');
+        developer.log('Google.com DNS lookup: OK', name: 'EquipmentScreen.Network');
         return true;
       }
     } catch (e) {
-      developer.log('Network connectivity check failed: $e', name: 'EquipmentScreen.Network');
+      developer.log('Google.com DNS lookup failed: $e', name: 'EquipmentScreen.Network');
     }
+
+    developer.log('All connectivity checks failed', name: 'EquipmentScreen.Network');
     return false;
   }
 
@@ -81,16 +96,21 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     });
 
     try {
-      // Check network connectivity first
+      developer.log('About to check connectivity...', name: 'EquipmentScreen.LoadData');
+
       final hasNetwork = await _checkNetworkConnectivity();
+      developer.log('Connectivity check result: $hasNetwork', name: 'EquipmentScreen.LoadData');
       if (!hasNetwork) {
-        developer.log('No network connectivity detected', name: 'EquipmentScreen.LoadData');
+        developer.log('Connectivity check failed - skipping API calls', name: 'EquipmentScreen.LoadData');
         setState(() {
-          _errorMessage = 'No internet connection. Please check your network settings.';
+          _errorMessage = 'No internet connection detected. Backend ping failed. Check emulator network or backend server.';
           isLoading = false;
         });
-        return;
+        // TEMPORARY BYPASS: Uncomment the line below to skip the check and test API calls
+        // return;  // Comment this out to force API calls even if check fails
       }
+
+      developer.log('Connectivity OK - proceeding with API calls', name: 'EquipmentScreen.LoadData');
 
       final headers = {
         'Authorization': 'Bearer ${widget.accessToken}',
@@ -100,7 +120,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
       developer.log('Request headers: $headers', name: 'EquipmentScreen.LoadData');
 
-      // Log individual API calls
       developer.log('Making API calls to:', name: 'EquipmentScreen.LoadData');
       developer.log('  - Equipment: ${ApiConfig.equipment}', name: 'EquipmentScreen.LoadData');
       developer.log('  - Rooms: ${ApiConfig.rooms}', name: 'EquipmentScreen.LoadData');
@@ -121,10 +140,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       stopwatch.stop();
       developer.log('API calls completed in ${stopwatch.elapsedMilliseconds}ms', name: 'EquipmentScreen.LoadData');
 
-      // Process Equipment Response
       await _processEquipmentResponse(responses[0]);
-
-      // Process Rooms Response
       await _processRoomsResponse(responses[1]);
 
       developer.log('=== DATA LOAD COMPLETED SUCCESSFULLY ===', name: 'EquipmentScreen.LoadData');
@@ -166,10 +182,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       if (response.statusCode >= 400) {
         developer.log('ERROR RESPONSE BODY: ${response.body}', name: 'EquipmentScreen.HTTP');
       } else {
-        // Log first 500 characters of successful response
-        final bodyPreview = response.body.length > 500
-            ? '${response.body.substring(0, 500)}...'
-            : response.body;
+        final bodyPreview = response.body.length > 500 ? '${response.body.substring(0, 500)}...' : response.body;
         developer.log('Response Body Preview: $bodyPreview', name: 'EquipmentScreen.HTTP');
       }
 
@@ -185,39 +198,31 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
   Future<void> _processEquipmentResponse(http.Response response) async {
     developer.log('--- PROCESSING EQUIPMENT RESPONSE ---', name: 'EquipmentScreen.Process');
+    developer.log('Raw Response: ${response.body}', name: 'EquipmentScreen.Process');
 
     if (response.statusCode == 200) {
       try {
-        final responseBody = response.body;
-        developer.log('Parsing equipment JSON...', name: 'EquipmentScreen.Process');
-
-        final equipmentData = json.decode(responseBody);
-        developer.log('JSON parsed successfully', name: 'EquipmentScreen.Process');
-        developer.log('Data type: ${equipmentData.runtimeType}', name: 'EquipmentScreen.Process');
+        final equipmentData = json.decode(response.body);
+        developer.log('JSON parsed, type: ${equipmentData.runtimeType}', name: 'EquipmentScreen.Process');
 
         if (equipmentData is List) {
           developer.log('Equipment data is a List with ${equipmentData.length} items', name: 'EquipmentScreen.Process');
-
-          // Log each equipment item structure
           for (int i = 0; i < equipmentData.length && i < 3; i++) {
             developer.log('Equipment[$i]: ${equipmentData[i]}', name: 'EquipmentScreen.Process');
           }
-
           setState(() {
             equipment = equipmentData;
           });
         } else if (equipmentData is Map) {
           developer.log('Equipment data is a Map: $equipmentData', name: 'EquipmentScreen.Process');
-
-          // Check if it's a paginated response
-          if (equipmentData.containsKey('results')) {
-            final results = equipmentData['results'];
-            developer.log('Found paginated results: ${results.length} items', name: 'EquipmentScreen.Process');
+          final results = equipmentData['results'] ?? equipmentData['data'] ?? equipmentData['equipment'];
+          if (results is List) {
+            developer.log('Found results with ${results.length} items', name: 'EquipmentScreen.Process');
             setState(() {
-              equipment = results is List ? results : [];
+              equipment = results;
             });
           } else {
-            developer.log('Map does not contain results key, treating as empty', name: 'EquipmentScreen.Process');
+            developer.log('No valid results in Map', name: 'EquipmentScreen.Process');
             setState(() {
               equipment = [];
             });
@@ -231,8 +236,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       } catch (e, stackTrace) {
         developer.log('JSON parsing failed for equipment: $e', name: 'EquipmentScreen.Process');
         developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.Process');
-        developer.log('Raw response body: ${response.body}', name: 'EquipmentScreen.Process');
-
         setState(() {
           _errorMessage = 'Failed to parse equipment data: $e';
         });
@@ -240,7 +243,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     } else {
       developer.log('Equipment request failed with status: ${response.statusCode}', name: 'EquipmentScreen.Process');
       developer.log('Error response: ${response.body}', name: 'EquipmentScreen.Process');
-
       setState(() {
         _errorMessage = 'Failed to load equipment. Status: ${response.statusCode}\nResponse: ${response.body}';
       });
@@ -254,18 +256,13 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       try {
         final roomsData = json.decode(response.body);
         developer.log('Rooms JSON parsed successfully', name: 'EquipmentScreen.Process');
-        developer.log('Rooms data type: ${roomsData.runtimeType}', name: 'EquipmentScreen.Process');
-
         if (roomsData is List) {
-          developer.log('Rooms data is a List with ${roomsData.length} items', name: 'EquipmentScreen.Process');
           setState(() {
             rooms = roomsData;
           });
         } else if (roomsData is Map && roomsData.containsKey('results')) {
-          final results = roomsData['results'];
-          developer.log('Found paginated rooms results: ${results.length} items', name: 'EquipmentScreen.Process');
           setState(() {
-            rooms = results is List ? results : [];
+            rooms = roomsData['results'] is List ? roomsData['results'] : [];
           });
         } else {
           developer.log('Unexpected rooms data format', name: 'EquipmentScreen.Process');
@@ -275,7 +272,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
         }
       } catch (e) {
         developer.log('JSON parsing failed for rooms: $e', name: 'EquipmentScreen.Process');
-        // Don't set error message for rooms failure, just log it
       }
     } else {
       developer.log('Rooms request failed with status: ${response.statusCode}', name: 'EquipmentScreen.Process');
