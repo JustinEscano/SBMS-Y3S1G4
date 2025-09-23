@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Room, Equipment, SensorLog, MaintenanceRequest, LLMQuery, LLMSummary, AuthToken, Alert, Notification, MaintenanceAttachment, ROLE_CHOICES, EQUIPMENT_TYPE_CHOICES, EQUIPMENT_STATUS_CHOICES, ROOM_TYPE_CHOICES
+from .models import User, Room, Equipment, SensorLog, HeartbeatLog, MaintenanceRequest, LLMQuery, LLMSummary, AuthToken, Alert, Notification, MaintenanceAttachment, ROLE_CHOICES, EQUIPMENT_TYPE_CHOICES, EQUIPMENT_STATUS_CHOICES, ROOM_TYPE_CHOICES
 from django.contrib.auth.hashers import make_password
 
 class UserSerializer(serializers.ModelSerializer):
@@ -68,7 +68,21 @@ class SensorLogSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = SensorLog
-        fields = '__all__'
+        fields = [
+            'id', 'equipment', 'equipment_name', 'temperature', 'humidity', 'light_level',
+            'motion_detected', 'energy_usage', 'voltage', 'current', 'power', 'energy', 'recorded_at'
+        ]
+
+class HeartbeatLogSerializer(serializers.ModelSerializer):
+    equipment_name = serializers.CharField(source='equipment.name', read_only=True)
+    
+    class Meta:
+        model = HeartbeatLog
+        fields = [
+            'id', 'equipment', 'equipment_name', 'timestamp', 'dht22_working', 'pzem_working',
+            'success_rate', 'wifi_signal', 'uptime', 'sensor_type', 'current_temp',
+            'current_humidity', 'current_power', 'recorded_at'
+        ]
 
 class AlertSerializer(serializers.ModelSerializer):
     equipment_name = serializers.CharField(source='equipment.name', read_only=True)
