@@ -53,7 +53,6 @@ class NotificationService:
                 message=message,
                 read=False
             )
-            logger.info(f"In-app notification created for {user.username}: {title}")
 
             # Send email if template provided
             if email_template and email_context:
@@ -69,10 +68,9 @@ class NotificationService:
                     fail_silently=False,
                     connection=email_backend,
                 )
-                logger.info(f"Email sent to {user.email}: {subject}")
                 
-        except Exception as e:
-            logger.error(f"Failed to send notification to {user.email}: {str(e)}")
+        except Exception:
+            pass
 
     @staticmethod
     def notify_maintenance_request_created(instance, request):
@@ -188,7 +186,7 @@ class NotificationService:
             NotificationService.send_notification(
                 user=instance.assigned_to,
                 title=f"New Assignment: {instance.equipment.name}",
-                message=f"You have been assigned to resolve request #{instance.id}: {issue[:100]}.",
+                message=f"You have been assigned to resolve request #{instance.id}: {instance.issue[:100]}.",
                 email_template='emails/maintenance_request_submitted.html',
                 email_context={**context, 'recipient': instance.assigned_to.username},
                 email_backend=employee_email_backend
@@ -375,15 +373,12 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
-        logger.info(f"Maintenance request created: {instance.id} by {self.request.user.username}")
         NotificationService.notify_maintenance_request_created(instance, self.request)
 
     def perform_update(self, serializer):
-        logger.info(f"Updating maintenance request {self.get_object().id} by user {self.request.user.username}")
         old_assigned_to = self.get_object().assigned_to
         instance = serializer.save()
         assigned_changed = 'assigned_to' in serializer.validated_data and instance.assigned_to != old_assigned_to
-        logger.info(f"Updated maintenance request {instance.id} with status {instance.status}")
         NotificationService.notify_maintenance_request_updated(instance, self.request, assigned_changed)
 
     @action(detail=True, methods=['post'], permission_classes=[RoleBasedPermission])
@@ -391,16 +386,13 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
         """
         POST /maintenancerequest/{id}/respond/
         Admin responds to a maintenance request by adding to comments and optionally updating assigned_to.
-        Expected JSON: {'response': 'string', 'assigned_to': 'uuid' (optional)}
         """
-        logger.info(f"Response requested for maintenance request {pk}")
         try:
             maintenance_request = self.get_object()
             response_text = request.data.get('response')
             assigned_to_id = request.data.get('assigned_to')
 
             if not response_text:
-                logger.error("Missing response field")
                 return Response(
                     {'error': 'Response field is required'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -413,7 +405,6 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                     new_assigned_to = User.objects.get(id=assigned_to_id)
                     maintenance_request.assigned_to = new_assigned_to
                 except User.DoesNotExist:
-                    logger.error(f"User with id {assigned_to_id} not found")
                     return Response(
                         {'error': f'User with id {assigned_to_id} not found'},
                         status=status.HTTP_400_BAD_REQUEST
@@ -432,14 +423,12 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             if assigned_to_id and maintenance_request.assigned_to != old_assigned_to:
                 NotificationService.notify_maintenance_request_updated(maintenance_request, request, assigned_changed=True)
 
-            logger.info(f"Response added to maintenance request {pk} by {request.user.username}")
             return Response(
                 MaintenanceRequestSerializer(maintenance_request).data,
                 status=status.HTTP_200_OK
             )
 
         except Exception as e:
-            logger.error(f"Error adding response: {str(e)}")
             return Response(
                 {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -450,16 +439,13 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
         """
         POST /maintenancerequest/{id}/upload_attachment/
         Upload an attachment for a maintenance request.
-        Expected form-data: {'file': <file>, 'file_name': <string>}
         """
-        logger.info(f"Attachment upload requested for maintenance request {pk}")
         try:
             maintenance_request = self.get_object()
             file_obj = request.FILES.get('file')
             file_name = request.data.get('file_name', file_obj.name if file_obj else None)
 
             if not file_obj or not file_name:
-                logger.error("Missing file or file_name")
                 return Response(
                     {'error': 'Both file and file_name are required'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -476,14 +462,12 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             # Send notifications
             NotificationService.notify_maintenance_attachment_uploaded(maintenance_request, attachment, request)
 
-            logger.info(f"Attachment uploaded: {attachment.id} for {maintenance_request.id}")
             return Response(
                 MaintenanceAttachmentSerializer(attachment).data,
                 status=status.HTTP_201_CREATED
             )
 
         except Exception as e:
-            logger.error(f"Error uploading attachment: {str(e)}")
             return Response(
                 {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -507,20 +491,17 @@ class NotificationViewSet(viewsets.ModelViewSet):
         POST /notification/mark_all_read/
         Mark all unread notifications for the requesting user as read.
         """
-        logger.info(f"Mark all read requested by user {request.user.username}")
         try:
             unread_notifications = self.get_queryset().filter(read=False)
             count = unread_notifications.count()
             
             if count == 0:
-                logger.info("No unread notifications found")
                 return Response(
                     {'success': True, 'message': 'No unread notifications to mark as read', 'count': 0},
                     status=status.HTTP_200_OK
                 )
 
             unread_notifications.update(read=True)
-            logger.info(f"Marked {count} notifications as read for user {request.user.username}")
 
             return Response(
                 {'success': True, 'message': f'Marked {count} notifications as read', 'count': count},
@@ -528,7 +509,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
-            logger.error(f"Error marking all notifications as read: {str(e)}")
             return Response(
                 {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -562,7 +542,6 @@ def equipment_field_options(request):
     """
     Endpoint to get standardized field options for frontend dropdowns
     """
-    logger.info("Equipment field options requested")
     return Response({
         'equipment_status_options': [
             {'value': 'online', 'label': 'Online', 'description': 'Equipment is working and connected'},
@@ -610,7 +589,6 @@ def dashboard_summary(request):
     """
     GET /dashboard/summary - Aggregated dashboard data
     """
-    logger.info("Dashboard summary requested")
     try:
         total_rooms = Room.objects.count()
         total_equipment = Equipment.objects.count()
@@ -637,7 +615,6 @@ def dashboard_summary(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        logger.error(f"Error in dashboard_summary: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -649,7 +626,6 @@ def room_realtime(request, pk):
     """
     GET /rooms/{id}/realtime - Real-time data for a specific room
     """
-    logger.info(f"Room realtime data requested for {pk}")
     try:
         room = get_object_or_404(Room, pk=pk)
         equipments = Equipment.objects.filter(room=room, type='esp32')
@@ -685,7 +661,6 @@ def room_realtime(request, pk):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        logger.error(f"Error in room_realtime: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -696,9 +671,7 @@ def room_realtime(request, pk):
 def check_anomalies(request):
     """
     POST /check-anomalies - Check recent sensor logs for anomalies and create alerts/maintenance
-    Body: {"equipment_id": "uuid", "check_window_hours": 1} or empty for all
     """
-    logger.info("Anomaly check requested")
     try:
         equipment_id = request.data.get('equipment_id')
         window_hours = int(request.data.get('check_window_hours', 1))
@@ -798,7 +771,6 @@ def check_anomalies(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        logger.error(f"Error in check_anomalies: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -809,30 +781,13 @@ def check_anomalies(request):
 def esp32_sensor_data(request):
     """
     Endpoint for ESP32 to send sensor data
-    Expected JSON format:
-    {
-        "device_id": "ESP32_001",
-        "temperature": 23.5,
-        "humidity": 45.2,
-        "light_level": 1250,
-        "motion_detected": false,
-        "energy_usage": 12.3,
-        "voltage": 230.0,
-        "current": 0.50,
-        "power": 12.3,
-        "energy": 0.025
-    }
     """
-    logger.info(f"ESP32 sensor data received: {request.method} {request.path}")
-    logger.info(f"Request data: {request.data}")
-    
     try:
         data = request.data
         
         required_fields = ['device_id', 'temperature', 'humidity', 'light_level', 'motion_detected']
         for field in required_fields:
             if field not in data:
-                logger.error(f"Missing required field: {field}")
                 return Response(
                     {'error': f'Missing required field: {field}'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -840,9 +795,7 @@ def esp32_sensor_data(request):
 
         try:
             equipment = Equipment.objects.get(device_id=data['device_id'])
-            logger.info(f"Found equipment: {equipment.name}")
         except Equipment.DoesNotExist:
-            logger.error(f"Equipment with device_id {data['device_id']} not found")
             return Response(
                 {'error': f'Equipment with device_id {data["device_id"]} not found'},
                 status=status.HTTP_404_NOT_FOUND
@@ -936,8 +889,6 @@ def esp32_sensor_data(request):
                 )
                 NotificationService.notify_maintenance_request_created(maintenance_request, request)
 
-        logger.info(f"Sensor data saved successfully: {sensor_log.id}, Alerts: {created_alert_ids}")
-        
         return Response({
             'success': True,
             'message': 'Sensor data received successfully',
@@ -947,13 +898,11 @@ def esp32_sensor_data(request):
         }, status=status.HTTP_201_CREATED)
 
     except ValueError as e:
-        logger.error(f"Invalid data format: {str(e)}")
         return Response(
             {'error': f'Invalid data format: {str(e)}'},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
-        logger.error(f"Server error: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -965,7 +914,6 @@ def esp32_health_check(request):
     """
     Simple health check endpoint for ESP32
     """
-    logger.info("ESP32 health check requested")
     return Response({
         'status': 'healthy',
         'message': 'ESP32 API is running',
@@ -978,7 +926,6 @@ def latest_sensor_data(request):
     """
     Get the latest sensor readings for dashboard
     """
-    logger.info("Latest sensor data requested")
     try:
         latest_logs = []
         equipment_list = Equipment.objects.filter(type__in=['esp32'])
@@ -1003,7 +950,6 @@ def latest_sensor_data(request):
                     'status': equipment.status
                 })
 
-        logger.info(f"Returning {len(latest_logs)} sensor readings")
         return Response({
             'success': True,
             'data': latest_logs,
@@ -1011,7 +957,6 @@ def latest_sensor_data(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        logger.error(f"Server error in latest_sensor_data: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1022,28 +967,10 @@ def latest_sensor_data(request):
 def esp32_heartbeat(request):
     """
     Endpoint for ESP32 to send heartbeat and update status
-    Expected JSON format:
-    {
-        "device_id": "ESP32_001",
-        "timestamp": 123456,
-        "dht22_working": true,
-        "pzem_working": true,
-        "success_rate": 95.0,
-        "wifi_signal": -50,
-        "uptime": 123,
-        "sensor_type": "DHT22_3PIN_MODULE_GPIO5_PZEM_SERIAL2",
-        "current_temp": 22.0,
-        "current_humidity": 50.0,
-        "current_power": 115.0
-    }
     """
-    logger.info(f"ESP32 heartbeat received: {request.method} {request.path}")
-    logger.info(f"Heartbeat data: {request.data}")
-    
     try:
         data = request.data
         if not data.get('device_id'):
-            logger.error("Missing device_id in heartbeat")
             return Response(
                 {'error': 'device_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -1068,7 +995,6 @@ def esp32_heartbeat(request):
                 current_power=float(data.get('current_power', 0.0)),
             )
             
-            logger.info(f"Heartbeat saved for {data['device_id']}")
             return Response({
                 'success': True,
                 'message': f'Heartbeat received from {data["device_id"]}',
@@ -1076,20 +1002,17 @@ def esp32_heartbeat(request):
             })
 
         except Equipment.DoesNotExist:
-            logger.error(f"Equipment with device_id {data['device_id']} not found")
             return Response(
                 {'error': f'Equipment with device_id {data["device_id"]} not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
     except ValueError as e:
-        logger.error(f"Invalid data format: {str(e)}")
         return Response(
             {'error': f'Invalid data format: {str(e)}'},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
-        logger.error(f"Server error in heartbeat: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1100,21 +1023,12 @@ def esp32_heartbeat(request):
 def llm_query(request):
     """
     Endpoint to query the LLM about sensor data and building management
-    Expected JSON format:
-    {
-        "query": "What is the average temperature?",
-        "user_id": "optional_user_id"
-    }
     """
-    logger.info(f"LLM query received: {request.method} {request.path}")
-    logger.info(f"Query data: {request.data}")
-    
     try:
         query_text = request.data.get('query')
         user_id = request.data.get('user_id')
         
         if not query_text:
-            logger.error("Missing query in request")
             return Response(
                 {'error': 'query is required'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -1122,19 +1036,15 @@ def llm_query(request):
 
         try:
             from main import ask
-            logger.info("LLM module imported successfully")
         except ImportError as e:
-            logger.error(f"Failed to import LLM module: {e}")
             return Response(
                 {'error': 'LLM service not available'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        logger.info(f"Processing query: {query_text}")
         result = ask(query_text)
         
         if "error" in result:
-            logger.error(f"LLM query failed: {result['error']}")
             return Response(
                 {'error': result['error']},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1148,13 +1058,11 @@ def llm_query(request):
                     query=query_text,
                     response=result.get('answer', '')
                 )
-                logger.info(f"Query saved to database: {llm_query_record.id}")
             except User.DoesNotExist:
-                logger.warning(f"User {user_id} not found, query not saved")
-            except Exception as e:
-                logger.error(f"Failed to save query: {e}")
+                pass
+            except Exception:
+                pass
 
-        logger.info(f"LLM query processed successfully")
         return Response({
             'success': True,
             'query': query_text,
@@ -1164,7 +1072,6 @@ def llm_query(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        logger.error(f"Server error in LLM query: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -1176,8 +1083,6 @@ def llm_health_check(request):
     """
     Health check endpoint for LLM service
     """
-    logger.info("LLM health check requested")
-    
     try:
         from main import ask
         result = ask("How many records are there?")
@@ -1198,7 +1103,6 @@ def llm_health_check(request):
         }, status=status.HTTP_200_OK)
         
     except ImportError as e:
-        logger.error(f"LLM module import failed: {e}")
         return Response({
             'status': 'unhealthy',
             'message': 'LLM service not available',
@@ -1207,7 +1111,6 @@ def llm_health_check(request):
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
     
     except Exception as e:
-        logger.error(f"LLM health check failed: {e}")
         return Response({
             'status': 'unhealthy',
             'message': 'LLM service error',
