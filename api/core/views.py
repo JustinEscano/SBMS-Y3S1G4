@@ -470,10 +470,11 @@ def esp32_heartbeat(request):
         "timestamp": 123456,
         "dht22_working": true,
         "pzem_working": true,
+        "photoresistor_working": true,
         "success_rate": 95.0,
         "wifi_signal": -50,
         "uptime": 123,
-        "sensor_type": "DHT22_3PIN_MODULE_GPIO5_PZEM_SERIAL2",
+        "sensor_type": "DHT22_3PIN_MODULE_GPIO5_PZEM_SERIAL2_PHOTO_GPIO19",
         "current_temp": 22.0,
         "current_humidity": 50.0,
         "current_power": 115.0
@@ -499,6 +500,7 @@ def esp32_heartbeat(request):
                 timestamp=int(data.get('timestamp', 0)),
                 dht22_working=bool(data.get('dht22_working', False)),
                 pzem_working=bool(data.get('pzem_working', True)),
+                photoresistor_working=bool(data.get('photoresistor_working', True)),
                 success_rate=float(data.get('success_rate', 0.0)),
                 wifi_signal=int(data.get('wifi_signal', 0)),
                 uptime=int(data.get('uptime', 0)),
@@ -532,224 +534,6 @@ def esp32_heartbeat(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def equipment_field_options(request):
-    logger.info("Equipment field options requested")
-    return Response({
-        'equipment_status_options': [
-            {'value': 'online', 'label': 'Online', 'description': 'Equipment is working and connected'},
-            {'value': 'offline', 'label': 'Offline', 'description': 'Equipment is not working or disconnected'},
-            {'value': 'maintenance', 'label': 'Maintenance', 'description': 'Equipment is under maintenance'},
-            {'value': 'error', 'label': 'Error', 'description': 'Equipment has errors or issues'},
-        ],
-        'equipment_type_options': [
-            {'value': 'esp32', 'label': 'ESP32', 'description': 'ESP32 microcontroller'},
-            {'value': 'sensor', 'label': 'Sensor', 'description': 'General sensors'},
-            {'value': 'actuator', 'label': 'Actuator', 'description': 'Motors, relays, etc.'},
-            {'value': 'controller', 'label': 'Controller', 'description': 'Control devices'},
-            {'value': 'monitor', 'label': 'Monitor', 'description': 'Monitoring devices'},
-        ],
-        'room_type_options': [
-            {'value': 'office', 'label': 'Office', 'description': 'Office spaces'},
-            {'value': 'lab', 'label': 'Laboratory', 'description': 'Laboratory'},
-            {'value': 'meeting', 'label': 'Meeting Room', 'description': 'Meeting rooms'},
-            {'value': 'storage', 'label': 'Storage', 'description': 'Storage areas'},
-            {'value': 'corridor', 'label': 'Corridor', 'description': 'Hallways/corridors'},
-            {'value': 'utility', 'label': 'Utility', 'description': 'Utility rooms'},
-        ],
-        'role_options': [
-            {'value': 'client', 'label': 'Client'},
-            {'value': 'admin', 'label': 'Admin'},
-            {'value': 'employee', 'label': 'Employee'},
-            {'value': 'superadmin', 'label': 'Superadmin'},
-        ],
-        'alert_type_options': [
-            {'value': 'temperature_threshold', 'label': 'Temperature Threshold'},
-            {'value': 'motion', 'label': 'Motion Detected'},
-            {'value': 'humidity_threshold', 'label': 'Humidity Threshold'},
-            {'value': 'energy_anomaly', 'label': 'Energy Anomaly'},
-        ],
-        'alert_severity_options': [
-            {'value': 'low', 'label': 'Low'},
-            {'value': 'medium', 'label': 'Medium'},
-            {'value': 'high', 'label': 'High'},
-        ],
-    })
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, RoleBasedPermission])
-def dashboard_summary(request):
-    logger.info("Dashboard summary requested")
-    try:
-        total_rooms = Room.objects.count()
-        total_equipment = Equipment.objects.count()
-        online_equipment = Equipment.objects.filter(status='online').count()
-        avg_temp = SensorLog.objects.aggregate(avg_temp=Avg('temperature'))['avg_temp'] or 0
-        total_alerts = Alert.objects.count()
-        unresolved_alerts = Alert.objects.filter(resolved=False).count()
-        recent_logs = SensorLog.objects.order_by('-recorded_at')[:5]
-        summary_data = {
-            'total_rooms': total_rooms,
-            'total_equipment': total_equipment,
-            'online_equipment': online_equipment,
-            'avg_temperature': round(avg_temp, 2),
-            'total_alerts': total_alerts,
-            'unresolved_alerts': unresolved_alerts,
-            'recent_logs': SensorLogSerializer(recent_logs, many=True).data,
-        }
-        return Response({
-            'success': True,
-            'data': summary_data,
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.error(f"Error in dashboard_summary: {str(e)}")
-        return Response(
-            {'error': f'Server error: {str(e)}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, RoleBasedPermission])
-def room_realtime(request, pk):
-    logger.info(f"Room realtime data requested for {pk}")
-    try:
-        room = get_object_or_404(Room, pk=pk)
-        equipments = Equipment.objects.filter(room=room, type='esp32')
-        realtime_data = []
-        for equipment in equipments:
-            latest_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').first()
-            if latest_log:
-                realtime_data.append({
-                    'equipment_id': str(equipment.id),
-                    'equipment_name': equipment.name,
-                    'device_id': equipment.device_id,
-                    'temperature': latest_log.temperature,
-                    'humidity': latest_log.humidity,
-                    'light_level': latest_log.light_level,
-                    'motion_detected': latest_log.motion_detected,
-                    'energy_usage': latest_log.energy_usage,
-                    'voltage': latest_log.voltage,
-                    'current': latest_log.current,
-                    'power': latest_log.power,
-                    'energy': latest_log.energy,
-                    'recorded_at': latest_log.recorded_at.isoformat(),
-                    'status': equipment.status,
-                    'alerts': AlertSerializer(Alert.objects.filter(equipment=equipment, resolved=False), many=True).data,
-                })
-        return Response({
-            'success': True,
-            'room_name': room.name,
-            'data': realtime_data,
-            'count': len(realtime_data),
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.error(f"Error in room_realtime: {str(e)}")
-        return Response(
-            {'error': f'Server error: {str(e)}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-@api_view(['POST'])
-@permission_classes([RoleBasedPermission])
-def check_anomalies(request):
-    logger.info("Anomaly check requested")
-    try:
-        equipment_id = request.data.get('equipment_id')
-        window_hours = int(request.data.get('check_window_hours', 1))
-        cutoff = timezone.now() - timezone.timedelta(hours=window_hours)
-        if equipment_id:
-            equipments = [get_object_or_404(Equipment, pk=equipment_id)]
-        else:
-            equipments = Equipment.objects.filter(type='esp32')
-        created_alerts = []
-        created_requests = []
-        for equipment in equipments:
-            recent_logs = SensorLog.objects.filter(equipment=equipment, recorded_at__gte=cutoff)
-            if not recent_logs.exists():
-                continue
-            latest_log = recent_logs.latest('recorded_at')
-            if latest_log.temperature > 40:
-                alert, created = Alert.objects.get_or_create(
-                    equipment=equipment,
-                    type='temperature_threshold',
-                    resolved=False,
-                    defaults={
-                        'message': f'Temperature exceeded 40°C: {latest_log.temperature}°C',
-                        'severity': 'high'
-                    }
-                )
-                if created:
-                    created_alerts.append(str(alert.id))
-                    recent_request = MaintenanceRequest.objects.filter(
-                        equipment=equipment,
-                        created_at__gte=cutoff,
-                        status__in=['pending', 'in_progress']
-                    ).exists()
-                    if not recent_request:
-                        assignee = User.objects.filter(role='employee').first()
-                        MaintenanceRequest.objects.create(
-                            user_id=request.user.id,
-                            equipment=equipment,
-                            issue=f'Auto-generated: High temperature alert ({latest_log.temperature}°C)',
-                            status='pending',
-                            assigned_to=assignee,
-                            scheduled_date=timezone.now().date(),
-                        )
-                        created_requests.append(f"Auto for {equipment.name}")
-            if latest_log.humidity > 80:
-                Alert.objects.get_or_create(
-                    equipment=equipment,
-                    type='humidity_threshold',
-                    resolved=False,
-                    defaults={
-                        'message': f'Humidity exceeded 80%: {latest_log.humidity}%',
-                        'severity': 'medium'
-                    }
-                )
-            if latest_log.motion_detected:
-                prev_log = SensorLog.objects.filter(equipment=equipment, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
-                if prev_log and not prev_log.motion_detected:
-                    alert, created = Alert.objects.get_or_create(
-                        equipment=equipment,
-                        type='motion',
-                        resolved=False,
-                        defaults={
-                            'message': 'Motion detected in area',
-                            'severity': 'medium'
-                        }
-                    )
-                    if created:
-                        created_alerts.append(str(alert.id))
-            avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
-            if avg_power and latest_log.power > (avg_power * 2):
-                alert, created = Alert.objects.get_or_create(
-                    equipment=equipment,
-                    type='energy_anomaly',
-                    resolved=False,
-                    defaults={
-                        'message': f'Energy usage anomaly: {latest_log.power}W vs avg {avg_power:.2f}W',
-                        'severity': 'low'
-                    }
-                )
-                if created:
-                    created_alerts.append(str(alert.id))
-        return Response({
-            'success': True,
-            'created_alerts': created_alerts,
-            'created_requests': created_requests,
-            'message': f'Checked {len(equipments)} equipments',
-            'timestamp': timezone.now().isoformat()
-        }, status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.error(f"Error in check_anomalies: {str(e)}")
-        return Response(
-            {'error': f'Server error: {str(e)}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def esp32_sensor_data(request):
@@ -757,7 +541,7 @@ def esp32_sensor_data(request):
     logger.info(f"Request data: {request.data}")
     try:
         data = request.data
-        required_fields = ['device_id', 'temperature', 'humidity', 'light_level', 'motion_detected']
+        required_fields = ['device_id', 'temperature', 'humidity', 'light_detected', 'motion_detected']
         for field in required_fields:
             if field not in data:
                 logger.error(f"Missing required field: {field}")
@@ -778,7 +562,7 @@ def esp32_sensor_data(request):
             equipment=equipment,
             temperature=float(data['temperature']),
             humidity=float(data['humidity']),
-            light_level=float(data['light_level']),
+            light_detected=bool(data['light_detected']),
             motion_detected=bool(data['motion_detected']),
             energy_usage=float(data.get('energy_usage', 0.0)),
             voltage=float(data.get('voltage', 0.0)),
@@ -889,11 +673,231 @@ def esp32_health_check(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def equipment_field_options(request):
+    logger.info("Equipment field options requested")
+    return Response({
+        'equipment_status_options': [
+            {'value': 'online', 'label': 'Online', 'description': 'Equipment is working and connected'},
+            {'value': 'offline', 'label': 'Offline', 'description': 'Equipment is not working or disconnected'},
+            {'value': 'maintenance', 'label': 'Maintenance', 'description': 'Equipment is under maintenance'},
+            {'value': 'error', 'label': 'Error', 'description': 'Equipment has errors or issues'},
+        ],
+        'equipment_type_options': [
+            {'value': 'esp32', 'label': 'ESP32', 'description': 'ESP32 microcontroller'},
+            {'value': 'sensor', 'label': 'Sensor', 'description': 'General sensors'},
+            {'value': 'actuator', 'label': 'Actuator', 'description': 'Motors, relays, etc.'},
+            {'value': 'controller', 'label': 'Controller', 'description': 'Control devices'},
+            {'value': 'monitor', 'label': 'Monitor', 'description': 'Monitoring devices'},
+        ],
+        'room_type_options': [
+            {'value': 'office', 'label': 'Office', 'description': 'Office spaces'},
+            {'value': 'lab', 'label': 'Laboratory', 'description': 'Laboratory'},
+            {'value': 'meeting', 'label': 'Meeting Room', 'description': 'Meeting rooms'},
+            {'value': 'storage', 'label': 'Storage', 'description': 'Storage areas'},
+            {'value': 'corridor', 'label': 'Corridor', 'description': 'Hallways/corridors'},
+            {'value': 'utility', 'label': 'Utility', 'description': 'Utility rooms'},
+        ],
+        'role_options': [
+            {'value': 'client', 'label': 'Client'},
+            {'value': 'admin', 'label': 'Admin'},
+            {'value': 'employee', 'label': 'Employee'},
+            {'value': 'superadmin', 'label': 'Superadmin'},
+        ],
+        'alert_type_options': [
+            {'value': 'temperature_threshold', 'label': 'Temperature Threshold'},
+            {'value': 'motion', 'label': 'Motion Detected'},
+            {'value': 'humidity_threshold', 'label': 'Humidity Threshold'},
+            {'value': 'energy_anomaly', 'label': 'Energy Anomaly'},
+        ],
+        'alert_severity_options': [
+            {'value': 'low', 'label': 'Low'},
+            {'value': 'medium', 'label': 'Medium'},
+            {'value': 'high', 'label': 'High'},
+        ],
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RoleBasedPermission])
+def dashboard_summary(request):
+    logger.info("Dashboard summary requested")
+    try:
+        total_rooms = Room.objects.count()
+        total_equipment = Equipment.objects.count()
+        online_equipment = Equipment.objects.filter(status='online').count()
+        avg_temp = SensorLog.objects.aggregate(avg_temp=Avg('temperature'))['avg_temp'] or 0
+        total_alerts = Alert.objects.count()
+        unresolved_alerts = Alert.objects.filter(resolved=False).count()
+        recent_logs = SensorLog.objects.order_by('-recorded_at')[:5]
+        summary_data = {
+            'total_rooms': total_rooms,
+            'total_equipment': total_equipment,
+            'online_equipment': online_equipment,
+            'avg_temperature': round(avg_temp, 2),
+            'total_alerts': total_alerts,
+            'unresolved_alerts': unresolved_alerts,
+            'recent_logs': SensorLogSerializer(recent_logs, many=True).data,
+        }
+        return Response({
+            'success': True,
+            'data': summary_data,
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error in dashboard_summary: {str(e)}")
+        return Response(
+            {'error': f'Server error: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, RoleBasedPermission])
+def room_realtime(request, pk):
+    logger.info(f"Room realtime data requested for {pk}")
+    try:
+        room = get_object_or_404(Room, pk=pk)
+        equipments = Equipment.objects.filter(room=room, type='esp32')
+        realtime_data = []
+        for equipment in equipments:
+            latest_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').first()
+            if latest_log:
+                realtime_data.append({
+                    'equipment_id': str(equipment.id),
+                    'equipment_name': equipment.name,
+                    'device_id': equipment.device_id,
+                    'temperature': latest_log.temperature,
+                    'humidity': latest_log.humidity,
+                    'light_detected': latest_log.light_detected,
+                    'motion_detected': latest_log.motion_detected,
+                    'energy_usage': latest_log.energy_usage,
+                    'voltage': latest_log.voltage,
+                    'current': latest_log.current,
+                    'power': latest_log.power,
+                    'energy': latest_log.energy,
+                    'recorded_at': latest_log.recorded_at.isoformat(),
+                    'status': equipment.status,
+                    'alerts': AlertSerializer(Alert.objects.filter(equipment=equipment, resolved=False), many=True).data,
+                })
+        return Response({
+            'success': True,
+            'room_name': room.name,
+            'data': realtime_data,
+            'count': len(realtime_data),
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error in room_realtime: {str(e)}")
+        return Response(
+            {'error': f'Server error: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([RoleBasedPermission])
+def check_anomalies(request):
+    logger.info("Anomaly check requested")
+    try:
+        equipment_id = request.data.get('equipment_id')
+        window_hours = int(request.data.get('check_window_hours', 1))
+        cutoff = timezone.now() - timezone.timedelta(hours=window_hours)
+        if equipment_id:
+            equipments = [get_object_or_404(Equipment, pk=equipment_id)]
+        else:
+            equipments = Equipment.objects.filter(type='esp32')
+        created_alerts = []
+        created_requests = []
+        for equipment in equipments:
+            recent_logs = SensorLog.objects.filter(equipment=equipment, recorded_at__gte=cutoff)
+            if not recent_logs.exists():
+                continue
+            latest_log = recent_logs.latest('recorded_at')
+            if latest_log.temperature > 40:
+                alert, created = Alert.objects.get_or_create(
+                    equipment=equipment,
+                    type='temperature_threshold',
+                    resolved=False,
+                    defaults={
+                        'message': f'Temperature exceeded 40°C: {latest_log.temperature}°C',
+                        'severity': 'high'
+                    }
+                )
+                if created:
+                    created_alerts.append(str(alert.id))
+                    recent_request = MaintenanceRequest.objects.filter(
+                        equipment=equipment,
+                        created_at__gte=cutoff,
+                        status__in=['pending', 'in_progress']
+                    ).exists()
+                    if not recent_request:
+                        assignee = User.objects.filter(role='employee').first()
+                        MaintenanceRequest.objects.create(
+                            user_id=request.user.id,
+                            equipment=equipment,
+                            issue=f'Auto-generated: High temperature alert ({latest_log.temperature}°C)',
+                            status='pending',
+                            assigned_to=assignee,
+                            scheduled_date=timezone.now().date(),
+                        )
+                        created_requests.append(f"Auto for {equipment.name}")
+            if latest_log.humidity > 80:
+                alert, created = Alert.objects.get_or_create(
+                    equipment=equipment,
+                    type='humidity_threshold',
+                    resolved=False,
+                    defaults={
+                        'message': f'Humidity exceeded 80%: {latest_log.humidity}%',
+                        'severity': 'medium'
+                    }
+                )
+                if created:
+                    created_alerts.append(str(alert.id))
+            if latest_log.motion_detected:
+                prev_log = SensorLog.objects.filter(equipment=equipment, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
+                if prev_log and not prev_log.motion_detected:
+                    alert, created = Alert.objects.get_or_create(
+                        equipment=equipment,
+                        type='motion',
+                        resolved=False,
+                        defaults={
+                            'message': 'Motion detected in area',
+                            'severity': 'medium'
+                        }
+                    )
+                    if created:
+                        created_alerts.append(str(alert.id))
+            avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
+            if avg_power and latest_log.power > (avg_power * 2):
+                alert, created = Alert.objects.get_or_create(
+                    equipment=equipment,
+                    type='energy_anomaly',
+                    resolved=False,
+                    defaults={
+                        'message': f'Energy usage anomaly: {latest_log.power}W vs avg {avg_power:.2f}W',
+                        'severity': 'low'
+                    }
+                )
+                if created:
+                    created_alerts.append(str(alert.id))
+        return Response({
+            'success': True,
+            'created_alerts': created_alerts,
+            'created_requests': created_requests,
+            'message': f'Checked {len(equipments)} equipments',
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error in check_anomalies: {str(e)}")
+        return Response(
+            {'error': f'Server error: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def latest_sensor_data(request):
     logger.info("Latest sensor data requested")
     try:
         latest_logs = []
-        equipment_list = Equipment.objects.filter(type__in=['esp32'])
+        equipment_list = Equipment.objects.filter(type='esp32')
         for equipment in equipment_list:
             latest_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').first()
             if latest_log:
@@ -903,7 +907,7 @@ def latest_sensor_data(request):
                     'device_id': equipment.device_id,
                     'temperature': latest_log.temperature,
                     'humidity': latest_log.humidity,
-                    'light_level': latest_log.light_level,
+                    'light_detected': latest_log.light_detected,
                     'motion_detected': latest_log.motion_detected,
                     'energy_usage': latest_log.energy_usage,
                     'voltage': latest_log.voltage,
