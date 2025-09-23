@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import PageLayout from "./PageLayout";
-import LLMService from "../../service/LLMService"; // Import the value (class instance)
-import type { ChatMessage } from "../../service/LLMService"; // Import the type (interface)
+import LLMService from "../services/llmService"; // Import the value (class instance)
+import type { ChatMessage } from "../types/llmTypes"; // Import the type (interface)
 import "./LLMChatPage.css";
 
 const LLMChatPage: React.FC = () => {
