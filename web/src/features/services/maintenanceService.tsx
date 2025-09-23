@@ -1,4 +1,4 @@
-import axiosInstance from "../../service/AppService";
+import axiosInstance from "../../service/AppService.tsx";
 import type { MaintenanceRequest } from "../types/dashboardTypes";
 
 const MAINTENANCE_API = "/api/maintenancerequest/";
