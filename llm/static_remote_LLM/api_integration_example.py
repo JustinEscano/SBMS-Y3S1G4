@@ -5,6 +5,7 @@ Shows how to integrate all the advanced capabilities into your web application
 """
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Add this import
 from datetime import datetime
 import logging
 import os
@@ -22,6 +23,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# Enable CORS for all routes, allowing all origins for development
+CORS(app, resources={r"/*": {"origins": "*"}})  # For development
+
+# For production, use specific origins (uncomment and adjust):
+# CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://192.168.1.38:3000"]}})
 
 # Global analyzer instance
 analyzer = None
@@ -498,7 +505,7 @@ if __name__ == '__main__':
         print("• admin: All endpoints")
         print("• facility_manager: maintenance, reports, anomalies")
         print("• energy_analyst: energy, reports")
-        print("��� technician: maintenance, anomalies")
+        print("• technician: maintenance, anomalies")
         print("• viewer: reports only")
         print("\n🌐 Starting server on http://localhost:5000")
         

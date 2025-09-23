@@ -5266,3 +5266,414 @@
 2025-09-10 03:54:55,677 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
 2025-09-10 03:55:00,999 - INFO - Query: 'Detect anomalies in Room 1' - Response generated using LLM
 2025-09-10 03:55:00,999 - ERROR - MongoDB not initialized; cannot log prompt
+2025-09-21 17:17:07,716 - INFO - Using prompt type: chat_assistant
+2025-09-21 17:17:07,716 - INFO - Using document template: standard
+2025-09-21 17:17:07,837 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 17:17:07,837 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 17:17:08,165 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 17:17:08,165 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 17:17:08,165 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 17:17:08,173 - INFO - Loaded 3 existing document hashes
+2025-09-21 17:17:08,173 - INFO - Room-specific handlers initialized successfully
+2025-09-21 17:17:08,173 - INFO - Loading data from PostgreSQL
+2025-09-21 17:17:08,552 - INFO - Retrieved 9 sensor records from database
+2025-09-21 17:17:08,556 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:17:08,556 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:17:08,557 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:17:08,557 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:17:08,557 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:17:08,557 - INFO - Logged 0 records to MongoDB
+2025-09-21 17:17:08,558 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:17:08,558 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:17:08,558 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:17:08,559 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 17:17:08,559 - INFO - Loading existing vector store
+2025-09-21 17:17:09,718 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 17:17:10,185 - INFO - No new documents to add to vector store
+2025-09-21 17:17:10,703 - INFO - QA chain initialized successfully
+2025-09-21 17:17:10,820 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.38:5000
+2025-09-21 17:17:10,820 - INFO - [33mPress CTRL+C to quit[0m
+2025-09-21 17:17:10,822 - INFO -  * Restarting with stat
+2025-09-21 17:17:13,192 - INFO - Using prompt type: chat_assistant
+2025-09-21 17:17:13,192 - INFO - Using document template: standard
+2025-09-21 17:17:13,330 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 17:17:13,330 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 17:17:13,609 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 17:17:13,609 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 17:17:13,609 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 17:17:13,619 - INFO - Loaded 3 existing document hashes
+2025-09-21 17:17:13,620 - INFO - Room-specific handlers initialized successfully
+2025-09-21 17:17:13,620 - INFO - Loading data from PostgreSQL
+2025-09-21 17:17:13,753 - INFO - Retrieved 9 sensor records from database
+2025-09-21 17:17:13,755 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:17:13,755 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:17:13,756 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:17:13,756 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:17:13,756 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:17:13,756 - INFO - Logged 0 records to MongoDB
+2025-09-21 17:17:13,757 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:17:13,757 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:17:13,757 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:17:13,757 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 17:17:13,758 - INFO - Loading existing vector store
+2025-09-21 17:17:14,604 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 17:17:14,763 - INFO - No new documents to add to vector store
+2025-09-21 17:17:15,283 - INFO - QA chain initialized successfully
+2025-09-21 17:17:15,298 - WARNING -  * Debugger is active!
+2025-09-21 17:17:15,303 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 17:18:17,714 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\core\\urls.py', reloading
+2025-09-21 17:18:18,899 - INFO -  * Restarting with stat
+2025-09-21 17:18:21,768 - INFO - Using prompt type: chat_assistant
+2025-09-21 17:18:21,768 - INFO - Using document template: standard
+2025-09-21 17:18:21,799 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 17:18:21,799 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 17:18:22,103 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 17:18:22,103 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 17:18:22,103 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 17:18:22,113 - INFO - Loaded 3 existing document hashes
+2025-09-21 17:18:22,114 - INFO - Room-specific handlers initialized successfully
+2025-09-21 17:18:22,114 - INFO - Loading data from PostgreSQL
+2025-09-21 17:18:22,286 - INFO - Retrieved 9 sensor records from database
+2025-09-21 17:18:22,289 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:18:22,290 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:18:22,290 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:18:22,291 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:18:22,291 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:18:22,291 - INFO - Logged 0 records to MongoDB
+2025-09-21 17:18:22,291 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:18:22,292 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:18:22,292 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:18:22,292 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 17:18:22,292 - INFO - Loading existing vector store
+2025-09-21 17:18:23,222 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 17:18:23,385 - INFO - No new documents to add to vector store
+2025-09-21 17:18:23,909 - INFO - QA chain initialized successfully
+2025-09-21 17:18:23,927 - WARNING -  * Debugger is active!
+2025-09-21 17:18:23,930 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 17:21:45,526 - INFO - 127.0.0.1 - - [21/Sep/2025 17:21:45] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:21:45,527 - INFO - 127.0.0.1 - - [21/Sep/2025 17:21:45] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:21:47,781 - INFO - 127.0.0.1 - - [21/Sep/2025 17:21:47] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:21:54,357 - INFO - 127.0.0.1 - - [21/Sep/2025 17:21:54] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:21:54,395 - INFO - 127.0.0.1 - - [21/Sep/2025 17:21:54] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-09-21 17:23:28,835 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\dbmsAPI\\settings.py', reloading
+2025-09-21 17:23:29,930 - INFO -  * Restarting with stat
+2025-09-21 17:23:32,680 - INFO - Using prompt type: chat_assistant
+2025-09-21 17:23:32,680 - INFO - Using document template: standard
+2025-09-21 17:23:32,711 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 17:23:32,711 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 17:23:33,022 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 17:23:33,022 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 17:23:33,022 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 17:23:33,024 - INFO - Loaded 3 existing document hashes
+2025-09-21 17:23:33,024 - INFO - Room-specific handlers initialized successfully
+2025-09-21 17:23:33,024 - INFO - Loading data from PostgreSQL
+2025-09-21 17:23:33,214 - INFO - Retrieved 9 sensor records from database
+2025-09-21 17:23:33,216 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:23:33,217 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:23:33,217 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:23:33,217 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:23:33,218 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:23:33,218 - INFO - Logged 0 records to MongoDB
+2025-09-21 17:23:33,218 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:23:33,218 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:23:33,219 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:23:33,219 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 17:23:33,219 - INFO - Loading existing vector store
+2025-09-21 17:23:34,149 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 17:23:34,315 - INFO - No new documents to add to vector store
+2025-09-21 17:23:34,953 - INFO - QA chain initialized successfully
+2025-09-21 17:23:34,973 - WARNING -  * Debugger is active!
+2025-09-21 17:23:34,977 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 17:23:42,955 - INFO - 127.0.0.1 - - [21/Sep/2025 17:23:42] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:23:42,958 - INFO - 127.0.0.1 - - [21/Sep/2025 17:23:42] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:23:43,975 - INFO - 127.0.0.1 - - [21/Sep/2025 17:23:43] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:23:44,756 - INFO - 127.0.0.1 - - [21/Sep/2025 17:23:44] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:23:47,991 - INFO - 127.0.0.1 - - [21/Sep/2025 17:23:47] "OPTIONS /llmquery HTTP/1.1" 200 -
+2025-09-21 17:26:17,042 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\dbmsAPI\\settings.py', reloading
+2025-09-21 17:26:18,111 - INFO -  * Restarting with stat
+2025-09-21 17:26:21,229 - INFO - Using prompt type: chat_assistant
+2025-09-21 17:26:21,229 - INFO - Using document template: standard
+2025-09-21 17:26:21,385 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 17:26:21,385 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 17:26:21,719 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 17:26:21,719 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 17:26:21,719 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 17:26:21,729 - INFO - Loaded 3 existing document hashes
+2025-09-21 17:26:21,729 - INFO - Room-specific handlers initialized successfully
+2025-09-21 17:26:21,729 - INFO - Loading data from PostgreSQL
+2025-09-21 17:26:21,935 - INFO - Retrieved 9 sensor records from database
+2025-09-21 17:26:21,938 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:26:21,938 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:26:21,939 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:26:21,939 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:26:21,939 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:26:21,940 - INFO - Logged 0 records to MongoDB
+2025-09-21 17:26:21,940 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:26:21,940 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:26:21,940 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:26:21,940 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 17:26:21,941 - INFO - Loading existing vector store
+2025-09-21 17:26:22,984 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 17:26:23,160 - INFO - No new documents to add to vector store
+2025-09-21 17:26:23,879 - INFO - QA chain initialized successfully
+2025-09-21 17:26:23,897 - WARNING -  * Debugger is active!
+2025-09-21 17:26:23,902 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 17:27:01,200 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\dbmsAPI\\settings.py', reloading
+2025-09-21 17:27:02,306 - INFO -  * Restarting with stat
+2025-09-21 17:27:04,949 - INFO - Using prompt type: chat_assistant
+2025-09-21 17:27:04,949 - INFO - Using document template: standard
+2025-09-21 17:27:04,991 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 17:27:04,992 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 17:27:05,255 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 17:27:05,256 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 17:27:05,256 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 17:27:05,257 - INFO - Loaded 3 existing document hashes
+2025-09-21 17:27:05,257 - INFO - Room-specific handlers initialized successfully
+2025-09-21 17:27:05,258 - INFO - Loading data from PostgreSQL
+2025-09-21 17:27:05,380 - INFO - Retrieved 9 sensor records from database
+2025-09-21 17:27:05,382 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:27:05,383 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:27:05,383 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:27:05,383 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:27:05,383 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:27:05,384 - INFO - Logged 0 records to MongoDB
+2025-09-21 17:27:05,384 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:27:05,384 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:27:05,384 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:27:05,385 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 17:27:05,385 - INFO - Loading existing vector store
+2025-09-21 17:27:06,217 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 17:27:06,367 - INFO - No new documents to add to vector store
+2025-09-21 17:27:06,883 - INFO - QA chain initialized successfully
+2025-09-21 17:27:06,899 - WARNING -  * Debugger is active!
+2025-09-21 17:27:06,903 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 17:27:14,226 - INFO - 127.0.0.1 - - [21/Sep/2025 17:27:14] "[33mGET / HTTP/1.1[0m" 404 -
+2025-09-21 17:27:14,300 - INFO - 127.0.0.1 - - [21/Sep/2025 17:27:14] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-09-21 17:27:36,427 - INFO - 127.0.0.1 - - [21/Sep/2025 17:27:36] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:27:36,430 - INFO - 127.0.0.1 - - [21/Sep/2025 17:27:36] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:59:31,342 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\dbmsAPI\\settings.py', reloading
+2025-09-21 17:59:32,357 - INFO -  * Restarting with stat
+2025-09-21 17:59:35,067 - INFO - Using prompt type: chat_assistant
+2025-09-21 17:59:35,067 - INFO - Using document template: standard
+2025-09-21 17:59:35,100 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 17:59:35,101 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 17:59:35,478 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 17:59:35,478 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 17:59:35,478 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 17:59:35,480 - INFO - Loaded 3 existing document hashes
+2025-09-21 17:59:35,480 - INFO - Room-specific handlers initialized successfully
+2025-09-21 17:59:35,480 - INFO - Loading data from PostgreSQL
+2025-09-21 17:59:35,655 - INFO - Retrieved 9 sensor records from database
+2025-09-21 17:59:35,658 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:59:35,658 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 17:59:35,658 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:59:35,659 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:59:35,659 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:59:35,659 - INFO - Logged 0 records to MongoDB
+2025-09-21 17:59:35,659 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 17:59:35,660 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 17:59:35,660 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 17:59:35,660 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 17:59:35,660 - INFO - Loading existing vector store
+2025-09-21 17:59:36,603 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 17:59:36,771 - INFO - No new documents to add to vector store
+2025-09-21 17:59:37,350 - INFO - QA chain initialized successfully
+2025-09-21 17:59:37,372 - WARNING -  * Debugger is active!
+2025-09-21 17:59:37,375 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 17:59:54,172 - INFO - 127.0.0.1 - - [21/Sep/2025 17:59:54] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:59:54,173 - INFO - 127.0.0.1 - - [21/Sep/2025 17:59:54] "GET /health HTTP/1.1" 200 -
+2025-09-21 17:59:57,945 - INFO - 127.0.0.1 - - [21/Sep/2025 17:59:57] "OPTIONS /rooms/utilization HTTP/1.1" 200 -
+2025-09-21 18:00:16,654 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\dbmsAPI\\settings.py', reloading
+2025-09-21 18:00:17,713 - INFO -  * Restarting with stat
+2025-09-21 18:00:20,579 - INFO - Using prompt type: chat_assistant
+2025-09-21 18:00:20,579 - INFO - Using document template: standard
+2025-09-21 18:00:20,625 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 18:00:20,626 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 18:00:20,897 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 18:00:20,897 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 18:00:20,897 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 18:00:20,908 - INFO - Loaded 3 existing document hashes
+2025-09-21 18:00:20,908 - INFO - Room-specific handlers initialized successfully
+2025-09-21 18:00:20,909 - INFO - Loading data from PostgreSQL
+2025-09-21 18:00:21,047 - INFO - Retrieved 9 sensor records from database
+2025-09-21 18:00:21,049 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:00:21,049 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:00:21,050 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:00:21,051 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:00:21,051 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:00:21,051 - INFO - Logged 0 records to MongoDB
+2025-09-21 18:00:21,052 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:00:21,052 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:00:21,052 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:00:21,052 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 18:00:21,053 - INFO - Loading existing vector store
+2025-09-21 18:00:21,948 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 18:00:22,130 - INFO - No new documents to add to vector store
+2025-09-21 18:00:22,698 - INFO - QA chain initialized successfully
+2025-09-21 18:00:22,713 - WARNING -  * Debugger is active!
+2025-09-21 18:00:22,717 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 18:00:29,778 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\core\\urls.py', reloading
+2025-09-21 18:00:30,686 - INFO -  * Restarting with stat
+2025-09-21 18:00:33,794 - INFO - Using prompt type: chat_assistant
+2025-09-21 18:00:33,794 - INFO - Using document template: standard
+2025-09-21 18:00:33,828 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 18:00:33,828 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 18:00:34,101 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 18:00:34,101 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 18:00:34,102 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 18:00:34,112 - INFO - Loaded 3 existing document hashes
+2025-09-21 18:00:34,112 - INFO - Room-specific handlers initialized successfully
+2025-09-21 18:00:34,113 - INFO - Loading data from PostgreSQL
+2025-09-21 18:00:34,266 - INFO - Retrieved 9 sensor records from database
+2025-09-21 18:00:34,268 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:00:34,268 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:00:34,269 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:00:34,269 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:00:34,269 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:00:34,269 - INFO - Logged 0 records to MongoDB
+2025-09-21 18:00:34,270 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:00:34,270 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:00:34,270 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:00:34,270 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 18:00:34,271 - INFO - Loading existing vector store
+2025-09-21 18:00:35,297 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 18:00:35,488 - INFO - No new documents to add to vector store
+2025-09-21 18:00:36,027 - INFO - QA chain initialized successfully
+2025-09-21 18:00:36,043 - WARNING -  * Debugger is active!
+2025-09-21 18:00:36,046 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 18:00:53,180 - INFO -  * Detected change in 'C:\\LLM\\LLMV2\\SBMS-Y3S1G4\\api\\core\\views.py', reloading
+2025-09-21 18:00:53,948 - INFO -  * Restarting with stat
+2025-09-21 18:00:56,944 - INFO - Using prompt type: chat_assistant
+2025-09-21 18:00:56,945 - INFO - Using document template: standard
+2025-09-21 18:00:56,998 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 18:00:56,998 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 18:00:57,297 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 18:00:57,297 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 18:00:57,297 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 18:00:57,298 - INFO - Loaded 3 existing document hashes
+2025-09-21 18:00:57,299 - INFO - Room-specific handlers initialized successfully
+2025-09-21 18:00:57,299 - INFO - Loading data from PostgreSQL
+2025-09-21 18:00:57,459 - INFO - Retrieved 9 sensor records from database
+2025-09-21 18:00:57,461 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:00:57,461 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:00:57,461 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:00:57,462 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:00:57,463 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:00:57,463 - INFO - Logged 0 records to MongoDB
+2025-09-21 18:00:57,464 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:00:57,464 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:00:57,464 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:00:57,464 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 18:00:57,465 - INFO - Loading existing vector store
+2025-09-21 18:00:58,404 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 18:00:58,595 - INFO - No new documents to add to vector store
+2025-09-21 18:00:59,180 - INFO - QA chain initialized successfully
+2025-09-21 18:00:59,199 - WARNING -  * Debugger is active!
+2025-09-21 18:00:59,204 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 18:01:04,126 - INFO - 127.0.0.1 - - [21/Sep/2025 18:01:04] "[33mGET / HTTP/1.1[0m" 404 -
+2025-09-21 18:01:09,048 - INFO - 127.0.0.1 - - [21/Sep/2025 18:01:09] "[33mGET /llm HTTP/1.1[0m" 404 -
+2025-09-21 18:01:15,780 - INFO - 127.0.0.1 - - [21/Sep/2025 18:01:15] "GET /health HTTP/1.1" 200 -
+2025-09-21 18:01:15,814 - INFO - 127.0.0.1 - - [21/Sep/2025 18:01:15] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-09-21 18:01:21,946 - INFO - 127.0.0.1 - - [21/Sep/2025 18:01:21] "GET /health HTTP/1.1" 200 -
+2025-09-21 18:01:21,957 - INFO - 127.0.0.1 - - [21/Sep/2025 18:01:21] "GET /health HTTP/1.1" 200 -
+2025-09-21 18:05:39,134 - INFO - Using prompt type: chat_assistant
+2025-09-21 18:05:39,134 - INFO - Using document template: standard
+2025-09-21 18:05:39,165 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 18:05:39,166 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 18:05:39,451 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 18:05:39,451 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 18:05:39,451 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 18:05:39,453 - INFO - Loaded 3 existing document hashes
+2025-09-21 18:05:39,453 - INFO - Room-specific handlers initialized successfully
+2025-09-21 18:05:39,453 - INFO - Loading data from PostgreSQL
+2025-09-21 18:05:39,583 - INFO - Retrieved 9 sensor records from database
+2025-09-21 18:05:39,585 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:05:39,585 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:05:39,586 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:05:39,586 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:05:39,586 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:05:39,586 - INFO - Logged 0 records to MongoDB
+2025-09-21 18:05:39,587 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:05:39,587 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:05:39,587 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:05:39,587 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 18:05:39,588 - INFO - Loading existing vector store
+2025-09-21 18:05:40,423 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 18:05:40,573 - INFO - No new documents to add to vector store
+2025-09-21 18:05:41,085 - INFO - QA chain initialized successfully
+2025-09-21 18:05:41,105 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.38:5000
+2025-09-21 18:05:41,105 - INFO - [33mPress CTRL+C to quit[0m
+2025-09-21 18:05:41,107 - INFO -  * Restarting with stat
+2025-09-21 18:05:43,429 - INFO - Using prompt type: chat_assistant
+2025-09-21 18:05:43,429 - INFO - Using document template: standard
+2025-09-21 18:05:43,461 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 18:05:43,461 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 18:05:43,730 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 18:05:43,730 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 18:05:43,730 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 18:05:43,732 - INFO - Loaded 3 existing document hashes
+2025-09-21 18:05:43,732 - INFO - Room-specific handlers initialized successfully
+2025-09-21 18:05:43,732 - INFO - Loading data from PostgreSQL
+2025-09-21 18:05:43,861 - INFO - Retrieved 9 sensor records from database
+2025-09-21 18:05:43,863 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:05:43,863 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:05:43,863 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:05:43,864 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:05:43,864 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:05:43,864 - INFO - Logged 0 records to MongoDB
+2025-09-21 18:05:43,864 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:05:43,865 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:05:43,865 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:05:43,865 - INFO - Created 0 new documents, skipped 3 duplicates
+2025-09-21 18:05:43,865 - INFO - Loading existing vector store
+2025-09-21 18:05:44,701 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-09-21 18:05:44,857 - INFO - No new documents to add to vector store
+2025-09-21 18:05:45,361 - INFO - QA chain initialized successfully
+2025-09-21 18:05:45,378 - WARNING -  * Debugger is active!
+2025-09-21 18:05:45,381 - INFO -  * Debugger PIN: 847-134-590
+2025-09-21 18:05:53,677 - INFO - 127.0.0.1 - - [21/Sep/2025 18:05:53] "GET /health HTTP/1.1" 200 -
+2025-09-21 18:05:53,678 - INFO - 127.0.0.1 - - [21/Sep/2025 18:05:53] "GET /health HTTP/1.1" 200 -
+2025-09-21 18:05:56,077 - INFO - 127.0.0.1 - - [21/Sep/2025 18:05:56] "OPTIONS /insights/energy HTTP/1.1" 200 -
+2025-09-21 18:05:56,080 - INFO - Using prompt type: energy_insights
+2025-09-21 18:05:56,080 - INFO - Using document template: energy_report
+2025-09-21 18:05:56,110 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 18:05:56,110 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 18:05:56,353 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 18:05:56,353 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 18:05:56,353 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 18:05:56,355 - INFO - Loaded 3 existing document hashes
+2025-09-21 18:05:56,355 - INFO - Room-specific handlers initialized successfully
+2025-09-21 18:05:56,355 - INFO - Loading data from PostgreSQL
+2025-09-21 18:05:56,364 - INFO - Retrieved 9 sensor records from database
+2025-09-21 18:05:56,367 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:05:56,367 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:05:56,368 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:05:56,368 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:05:56,369 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:05:56,369 - INFO - Logged 0 records to MongoDB
+2025-09-21 18:05:56,381 - INFO - 127.0.0.1 - - [21/Sep/2025 18:05:56] "POST /insights/energy HTTP/1.1" 200 -
+2025-09-21 18:06:32,270 - INFO - 127.0.0.1 - - [21/Sep/2025 18:06:32] "OPTIONS /reports/weekly HTTP/1.1" 200 -
+2025-09-21 18:06:32,279 - INFO - Using prompt type: weekly_summary
+2025-09-21 18:06:32,279 - INFO - Using document template: summary_report
+2025-09-21 18:06:32,309 - INFO - Successfully connected to PostgreSQL database
+2025-09-21 18:06:32,310 - INFO - PostgreSQL database adapter initialized successfully
+2025-09-21 18:06:32,528 - INFO - MongoDB Atlas connection initialized successfully
+2025-09-21 18:06:32,528 - INFO - Main data: database: LLM_logs, collection: logs
+2025-09-21 18:06:32,528 - INFO - Prompt logs: database: prompt_logs, collection: queries
+2025-09-21 18:06:32,529 - INFO - Loaded 3 existing document hashes
+2025-09-21 18:06:32,529 - INFO - Room-specific handlers initialized successfully
+2025-09-21 18:06:32,529 - INFO - Loading data from PostgreSQL
+2025-09-21 18:06:32,538 - INFO - Retrieved 9 sensor records from database
+2025-09-21 18:06:32,540 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:06:32,540 - INFO - Loaded 3 unique occupied room records from PostgreSQL
+2025-09-21 18:06:32,541 - INFO - Skipping duplicate document with hash 5180e901b11e4a791365024f58a54a83
+2025-09-21 18:06:32,541 - INFO - Skipping duplicate document with hash 7fe362fb599b46fceaf380e7c8a0e6fc
+2025-09-21 18:06:32,542 - INFO - Skipping duplicate document with hash 829e6497324bd5b5b5a3b974e8da119a
+2025-09-21 18:06:32,542 - INFO - Logged 0 records to MongoDB
+2025-09-21 18:06:32,548 - INFO - 127.0.0.1 - - [21/Sep/2025 18:06:32] "POST /reports/weekly HTTP/1.1" 200 -
