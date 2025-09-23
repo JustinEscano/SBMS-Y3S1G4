@@ -1032,7 +1032,7 @@ def esp32_heartbeat(request):
             )
 
         try:
-            equipment = Equipment.objects.get(device_id=device_id)
+            equipment = Equipment.objects.get(device_id=data['device_id'])
             equipment.status = 'online' # Use standardized value
             equipment.save()
             
