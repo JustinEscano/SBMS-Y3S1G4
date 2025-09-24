@@ -52,12 +52,26 @@ ALERT_TYPE_CHOICES = [
     ('motion', 'Motion Detected'),
     ('humidity_threshold', 'Humidity Threshold'),
     ('energy_anomaly', 'Energy Anomaly'),
+    ('predictive_failure', 'Predictive Failure'),
 ]
 
 ALERT_SEVERITY_CHOICES = [
     ('low', 'Low'),
     ('medium', 'Medium'),
     ('high', 'High'),
+]
+
+COMPONENT_TYPE_CHOICES = [
+    ('pzem', 'PZEM'),
+    ('dht22', 'DHT22'),
+    ('photoresistor', 'Photoresistor'),
+    ('motion', 'Motion Sensor'),
+]
+
+PERIOD_TYPE_CHOICES = [
+    ('daily', 'Daily'),
+    ('weekly', 'Weekly'),
+    ('monthly', 'Monthly'),
 ]
 
 class UserManager(BaseUserManager):
@@ -96,6 +110,8 @@ class Room(models.Model):
     floor = models.IntegerField()
     capacity = models.IntegerField()
     type = models.CharField(max_length=100, choices=ROOM_TYPE_CHOICES)
+    typical_energy_usage = models.FloatField(null=True, blank=True, help_text="Typical energy usage in kWh")
+    occupancy_pattern = models.CharField(max_length=255, null=True, blank=True, help_text="e.g., '9AM-5PM weekdays'")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -137,25 +153,51 @@ class Equipment(models.Model):
     def __str__(self):
         return self.name
 
+class Component(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='components')
+    component_type = models.CharField(max_length=50, choices=COMPONENT_TYPE_CHOICES)
+    identifier = models.CharField(max_length=100, help_text="Unique identifier, e.g., PZEM_SERIAL2")
+    status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('equipment', 'identifier')
+        indexes = [
+            models.Index(fields=['equipment', 'component_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.equipment.name} - {self.component_type} ({self.identifier})"
+
 class SensorLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE)
-    temperature = models.FloatField()
-    humidity = models.FloatField()
-    light_detected = models.BooleanField()  # Changed from light_level
-    motion_detected = models.BooleanField()
-    energy_usage = models.FloatField()
-    voltage = models.FloatField(default=0.0)
-    current = models.FloatField(default=0.0)
-    power = models.FloatField(default=0.0)
-    energy = models.FloatField(default=0.0)
+    component = models.ForeignKey(Component, on_delete=models.CASCADE, null=True, blank=True)
+    temperature = models.FloatField(null=True, blank=True)
+    humidity = models.FloatField(null=True, blank=True)
+    light_detected = models.BooleanField(null=True, blank=True)
+    motion_detected = models.BooleanField(null=True, blank=True)
+    energy_usage = models.FloatField(null=True, blank=True)
+    voltage = models.FloatField(null=True, blank=True)
+    current = models.FloatField(null=True, blank=True)
+    power = models.FloatField(null=True, blank=True)
+    energy = models.FloatField(null=True, blank=True)
     recorded_at = models.DateTimeField()
+    pzem_recorded_at = models.DateTimeField(null=True, blank=True)
+    dht22_recorded_at = models.DateTimeField(null=True, blank=True)
+    photoresistor_recorded_at = models.DateTimeField(null=True, blank=True)
+    motion_recorded_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-recorded_at']
+        indexes = [
+            models.Index(fields=['equipment', 'component', 'recorded_at']),
+            models.Index(fields=['component', 'pzem_recorded_at']),
+        ]
 
     def __str__(self):
-        return f"{self.equipment.name} - {self.recorded_at}"
+        return f"{self.equipment.name} - {self.component.component_type if self.component else 'Unknown'} - {self.recorded_at}"
 
 class HeartbeatLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -163,7 +205,7 @@ class HeartbeatLog(models.Model):
     timestamp = models.BigIntegerField()
     dht22_working = models.BooleanField()
     pzem_working = models.BooleanField(default=True)
-    photoresistor_working = models.BooleanField(default=True)  # NEW
+    photoresistor_working = models.BooleanField(default=True)
     success_rate = models.FloatField()
     wifi_signal = models.IntegerField()
     uptime = models.BigIntegerField()
@@ -171,13 +213,75 @@ class HeartbeatLog(models.Model):
     current_temp = models.FloatField()
     current_humidity = models.FloatField()
     current_power = models.FloatField(default=0.0)
+    pzem_error_count = models.IntegerField(default=0)
+    voltage_stability = models.FloatField(null=True, blank=True, help_text="Standard deviation of voltage")
+    failed_readings = models.IntegerField(default=0)
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-recorded_at']
+        indexes = [
+            models.Index(fields=['equipment', 'recorded_at']),
+        ]
 
     def __str__(self):
         return f"{self.equipment.name} - Heartbeat {self.recorded_at}"
+
+class EnergySummary(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    component = models.ForeignKey(Component, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    period_start = models.DateTimeField()
+    period_end = models.DateTimeField()
+    period_type = models.CharField(max_length=50, choices=PERIOD_TYPE_CHOICES)
+    total_energy = models.FloatField()
+    avg_power = models.FloatField()
+    peak_power = models.FloatField()
+    reading_count = models.IntegerField()
+    anomaly_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['component', 'period_start', 'period_type']),
+            models.Index(fields=['room', 'period_start']),
+        ]
+
+    def __str__(self):
+        return f"{self.component} - {self.period_type} {self.period_start}"
+
+class PredictiveAlert(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    component = models.ForeignKey(Component, on_delete=models.CASCADE)
+    prediction = models.TextField(help_text="LLM-generated prediction, e.g., 'PZEM failure likely'")
+    confidence = models.FloatField(help_text="Prediction confidence score (0-1)")
+    triggered_at = models.DateTimeField(auto_now_add=True)
+    resolved = models.BooleanField(default=False)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-triggered_at']
+        indexes = [
+            models.Index(fields=['component', 'triggered_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.component} - Predictive Alert {self.triggered_at}"
+
+class BillingRate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
+    rate_per_kwh = models.FloatField()
+    time_period = models.CharField(max_length=255, null=True, blank=True, help_text="e.g., 'peak:9AM-5PM'")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['room', 'time_period']),
+        ]
+
+    def __str__(self):
+        return f"Rate for {self.room.name if self.room else 'Global'} - {self.rate_per_kwh}"
 
 class Alert(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

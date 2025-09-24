@@ -7,7 +7,7 @@ from rest_framework import status
 from django.utils import timezone
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, StdDev, Sum, Max
 from django.core.mail import send_mail
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
@@ -19,6 +19,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .permissions import RoleBasedPermission
 import logging
+import datetime
+from django.db.models import Q
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -232,6 +234,34 @@ class NotificationService:
                 email_backend=admin_email_backend
             )
 
+    @staticmethod
+    def notify_predictive_alert_created(predictive_alert, request):
+        context = {
+            'alert_id': predictive_alert.id,
+            'component_name': predictive_alert.component.component_type,
+            'equipment_name': predictive_alert.component.equipment.name,
+            'prediction': predictive_alert.prediction,
+            'confidence': predictive_alert.confidence,
+            'user': request.user.username,
+            'year': timezone.now().year,
+        }
+        admin_email_backend = EmailBackend(
+            host='smtp.gmail.com',
+            port=587,
+            username=settings.ADMIN_EMAIL_USER,
+            password=settings.ADMIN_EMAIL_PASSWORD,
+            use_tls=True,
+        )
+        for admin in User.objects.filter(role__in=['admin', 'superadmin']):
+            NotificationService.send_notification(
+                user=admin,
+                title=f"Predictive Alert: {predictive_alert.component.component_type} Failure Likely",
+                message=f"LLM predicts failure for {predictive_alert.component.component_type} on {predictive_alert.component.equipment.name} (Confidence: {predictive_alert.confidence}).",
+                email_template='emails/predictive_alert_created.html',
+                email_context={**context, 'recipient': admin.username},
+                email_backend=admin_email_backend
+            )
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = User.EMAIL_FIELD
     @classmethod
@@ -270,18 +300,87 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         instance.generate_qr_code()
         logger.info(f"Equipment created: {instance.id} - {instance.name}")
 
+class ComponentViewSet(viewsets.ModelViewSet):
+    queryset = Component.objects.select_related('equipment').all()
+    serializer_class = ComponentSerializer
+    permission_classes = [RoleBasedPermission]
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(equipment__maintenancerequest__user=user).distinct()
+        return queryset
+
 class SensorLogViewSet(viewsets.ModelViewSet):
-    queryset = SensorLog.objects.all().order_by('-recorded_at')
+    queryset = SensorLog.objects.select_related('equipment', 'component').order_by('-recorded_at')
     serializer_class = SensorLogSerializer
     permission_classes = [RoleBasedPermission]
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(equipment__maintenancerequest__user=user).distinct()
+        return queryset
 
 class HeartbeatLogViewSet(viewsets.ModelViewSet):
-    queryset = HeartbeatLog.objects.all().order_by('-recorded_at')
+    queryset = HeartbeatLog.objects.select_related('equipment').order_by('-recorded_at')
     serializer_class = HeartbeatLogSerializer
     permission_classes = [RoleBasedPermission]
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(equipment__maintenancerequest__user=user).distinct()
+        return queryset
+
+class EnergySummaryViewSet(viewsets.ModelViewSet):
+    queryset = EnergySummary.objects.select_related('component', 'room').order_by('-period_start')
+    serializer_class = EnergySummarySerializer
+    permission_classes = [RoleBasedPermission]
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        period_type = self.request.query_params.get('period_type')
+        room_id = self.request.query_params.get('room_id')
+        if hasattr(user, 'role') and user.role == 'client':
+            queryset = queryset.filter(room__maintenancerequest__user=user).distinct()
+        if period_type:
+            queryset = queryset.filter(period_type=period_type)
+        if room_id:
+            queryset = queryset.filter(room_id=room_id)
+        return queryset
+
+class PredictiveAlertViewSet(viewsets.ModelViewSet):
+    queryset = PredictiveAlert.objects.select_related('component', 'component__equipment').order_by('-triggered_at')
+    serializer_class = PredictiveAlertSerializer
+    permission_classes = [RoleBasedPermission]
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(component__equipment__maintenancerequest__user=user).distinct()
+        resolved = self.request.query_params.get('resolved')
+        if resolved is not None:
+            resolved_bool = resolved.lower() == 'true'
+            queryset = queryset.filter(resolved=resolved_bool)
+        return queryset
+
+class BillingRateViewSet(viewsets.ModelViewSet):
+    queryset = BillingRate.objects.select_related('room').order_by('-created_at')
+    serializer_class = BillingRateSerializer
+    permission_classes = [RoleBasedPermission]
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if hasattr(user, 'role') and user.role == 'client':
+            return queryset.filter(room__maintenancerequest__user=user).distinct()
+        room_id = self.request.query_params.get('room_id')
+        if room_id:
+            return queryset.filter(room_id=room_id)
+        return queryset
 
 class AlertViewSet(viewsets.ModelViewSet):
-    queryset = Alert.objects.all()
+    queryset = Alert.objects.select_related('equipment').all()
     serializer_class = AlertSerializer
     permission_classes = [RoleBasedPermission]
     def get_queryset(self):
@@ -290,10 +389,6 @@ class AlertViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'role') and user.role == 'client':
             queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
         resolved = self.request.query_params.get('resolved')
-        if resolved is not None:
-            resolved_bool = resolved.lower() == 'true'
-            queryset = queryset.filter(resolved=resolved_bool)
-        severity = self.request.query_params.get('severity')
         if severity:
             queryset = queryset.filter(severity=severity)
         alert_type = self.request.query_params.get('type')
@@ -302,7 +397,7 @@ class AlertViewSet(viewsets.ModelViewSet):
         return queryset
 
 class MaintenanceAttachmentViewSet(viewsets.ModelViewSet):
-    queryset = MaintenanceAttachment.objects.all()
+    queryset = MaintenanceAttachment.objects.select_related('maintenance_request', 'uploaded_by').all()
     serializer_class = MaintenanceAttachmentSerializer
     permission_classes = [RoleBasedPermission]
     def get_queryset(self):
@@ -313,7 +408,7 @@ class MaintenanceAttachmentViewSet(viewsets.ModelViewSet):
         return queryset
 
 class MaintenanceRequestViewSet(viewsets.ModelViewSet):
-    queryset = MaintenanceRequest.objects.all()
+    queryset = MaintenanceRequest.objects.select_related('user', 'equipment', 'assigned_to').prefetch_related('attachments').all()
     serializer_class = MaintenanceRequestSerializer
     permission_classes = [RoleBasedPermission]
     def get_queryset(self):
@@ -412,7 +507,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
             )
 
 class NotificationViewSet(viewsets.ModelViewSet):
-    queryset = Notification.objects.all()
+    queryset = Notification.objects.select_related('user').all()
     serializer_class = NotificationSerializer
     permission_classes = [RoleBasedPermission]
     def get_queryset(self):
@@ -447,15 +542,17 @@ class NotificationViewSet(viewsets.ModelViewSet):
             )
 
 class LLMQueryViewSet(viewsets.ModelViewSet):
-    queryset = LLMQuery.objects.all()
+    queryset = LLMQuery.objects.select_related('user').all()
     serializer_class = LLMQuerySerializer
+    permission_classes = [RoleBasedPermission]
 
 class LLMSummaryViewSet(viewsets.ModelViewSet):
     queryset = LLMSummary.objects.all()
     serializer_class = LLMSummarySerializer
+    permission_classes = [RoleBasedPermission]
 
 class AuthTokenViewSet(viewsets.ModelViewSet):
-    queryset = AuthToken.objects.all()
+    queryset = AuthToken.objects.select_related('user').all()
     serializer_class = AuthTokenSerializer
     permission_classes = [RoleBasedPermission]
 
@@ -477,7 +574,10 @@ def esp32_heartbeat(request):
         "sensor_type": "DHT22_3PIN_MODULE_GPIO5_PZEM_SERIAL2_PHOTO_GPIO19",
         "current_temp": 22.0,
         "current_humidity": 50.0,
-        "current_power": 115.0
+        "current_power": 115.0,
+        "pzem_error_count": 0,
+        "voltage_stability": 0.5,
+        "failed_readings": 0
     }
     """
     logger.info(f"ESP32 heartbeat received: {request.method} {request.path}")
@@ -495,7 +595,36 @@ def esp32_heartbeat(request):
             equipment = Equipment.objects.get(device_id=data['device_id'])
             equipment.status = 'online'
             equipment.save()
-            HeartbeatLog.objects.create(
+            
+            # Update or create Component records based on sensor_type
+            sensor_types = data.get('sensor_type', '').split('_')
+            for sensor in sensor_types:
+                if 'PZEM' in sensor:
+                    component, _ = Component.objects.get_or_create(
+                        equipment=equipment,
+                        identifier=sensor,
+                        defaults={'component_type': 'pzem', 'status': 'online' if data.get('pzem_working', True) else 'error'}
+                    )
+                    component.status = 'online' if data.get('pzem_working', True) else 'error'
+                    component.save()
+                elif 'DHT22' in sensor:
+                    component, _ = Component.objects.get_or_create(
+                        equipment=equipment,
+                        identifier=sensor,
+                        defaults={'component_type': 'dht22', 'status': 'online' if data.get('dht22_working', True) else 'error'}
+                    )
+                    component.status = 'online' if data.get('dht22_working', True) else 'error'
+                    component.save()
+                elif 'PHOTO' in sensor:
+                    component, _ = Component.objects.get_or_create(
+                        equipment=equipment,
+                        identifier=sensor,
+                        defaults={'component_type': 'photoresistor', 'status': 'online' if data.get('photoresistor_working', True) else 'error'}
+                    )
+                    component.status = 'online' if data.get('photoresistor_working', True) else 'error'
+                    component.save()
+            
+            heartbeat = HeartbeatLog.objects.create(
                 equipment=equipment,
                 timestamp=int(data.get('timestamp', 0)),
                 dht22_working=bool(data.get('dht22_working', False)),
@@ -508,8 +637,11 @@ def esp32_heartbeat(request):
                 current_temp=float(data.get('current_temp', 0.0)),
                 current_humidity=float(data.get('current_humidity', 0.0)),
                 current_power=float(data.get('current_power', 0.0)),
+                pzem_error_count=int(data.get('pzem_error_count', 0)),
+                voltage_stability=float(data.get('voltage_stability', 0.0)),
+                failed_readings=int(data.get('failed_readings', 0)),
             )
-            logger.info(f"Heartbeat saved for {data['device_id']}")
+            logger.info(f"Heartbeat saved for {data['device_id']}: {heartbeat.id}")
             return Response({
                 'success': True,
                 'message': f'Heartbeat received from {data["device_id"]}',
@@ -537,18 +669,53 @@ def esp32_heartbeat(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def esp32_sensor_data(request):
+    """
+    Endpoint for ESP32 to send sensor data with component-specific payloads
+    Expected JSON format:
+    {
+        "device_id": "ESP32_001",
+        "components": [
+            {
+                "component_type": "pzem",
+                "identifier": "PZEM_SERIAL2",
+                "recorded_at": "2025-09-24T23:59:00Z",
+                "voltage": 220.0,
+                "current": 5.0,
+                "power": 1100.0,
+                "energy": 0.5
+            },
+            {
+                "component_type": "dht22",
+                "identifier": "DHT22_3PIN_MODULE_GPIO5",
+                "recorded_at": "2025-09-24T23:59:00Z",
+                "temperature": 22.0,
+                "humidity": 50.0
+            },
+            {
+                "component_type": "photoresistor",
+                "identifier": "PHOTO_GPIO19",
+                "recorded_at": "2025-09-24T23:59:00Z",
+                "light_detected": true
+            },
+            {
+                "component_type": "motion",
+                "identifier": "MOTION_GPIO18",
+                "recorded_at": "2025-09-24T23:59:00Z",
+                "motion_detected": false
+            }
+        ]
+    }
+    """
     logger.info(f"ESP32 sensor data received: {request.method} {request.path}")
     logger.info(f"Request data: {request.data}")
     try:
         data = request.data
-        required_fields = ['device_id', 'temperature', 'humidity', 'light_detected', 'motion_detected']
-        for field in required_fields:
-            if field not in data:
-                logger.error(f"Missing required field: {field}")
-                return Response(
-                    {'error': f'Missing required field: {field}'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        if not data.get('device_id'):
+            logger.error("Missing device_id")
+            return Response(
+                {'error': 'device_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             equipment = Equipment.objects.get(device_id=data['device_id'])
             logger.info(f"Found equipment: {equipment.name}")
@@ -558,66 +725,198 @@ def esp32_sensor_data(request):
                 {'error': f'Equipment with device_id {data["device_id"]} not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        sensor_log = SensorLog.objects.create(
-            equipment=equipment,
-            temperature=float(data['temperature']),
-            humidity=float(data['humidity']),
-            light_detected=bool(data['light_detected']),
-            motion_detected=bool(data['motion_detected']),
-            energy_usage=float(data.get('energy_usage', 0.0)),
-            voltage=float(data.get('voltage', 0.0)),
-            current=float(data.get('current', 0.0)),
-            power=float(data.get('power', 0.0)),
-            energy=float(data.get('energy', 0.0)),
-            recorded_at=timezone.now()
-        )
-        equipment.status = 'online'
-        equipment.save()
+        
+        created_logs = []
         created_alert_ids = []
-        if sensor_log.temperature > 40:
-            alert, created = Alert.objects.get_or_create(
+        resolved_alert_ids = []
+        for component_data in data.get('components', []):
+            component_type = component_data.get('component_type')
+            identifier = component_data.get('identifier')
+            if not component_type or not identifier:
+                logger.error("Missing component_type or identifier")
+                continue
+            
+            component, _ = Component.objects.get_or_create(
                 equipment=equipment,
-                type='temperature_threshold',
-                resolved=False,
-                defaults={
-                    'message': f'Temperature alert: {sensor_log.temperature}°C exceeds 40°C',
-                    'severity': 'high'
-                }
+                identifier=identifier,
+                defaults={'component_type': component_type, 'status': 'online'}
             )
-            if created:
-                created_alert_ids.append(str(alert.id))
-        if sensor_log.motion_detected:
-            prev_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').exclude(id=sensor_log.id).first()
-            if prev_log and not prev_log.motion_detected:
+            
+            sensor_log_data = {
+                'equipment': equipment,
+                'component': component,
+                'recorded_at': component_data.get('recorded_at', timezone.now()),
+            }
+            
+            if component_type == 'pzem':
+                sensor_log_data.update({
+                    'voltage': float(component_data.get('voltage', 0.0)),
+                    'current': float(component_data.get('current', 0.0)),
+                    'power': float(component_data.get('power', 0.0)),
+                    'energy': float(component_data.get('energy', 0.0)),
+                    'pzem_recorded_at': component_data.get('recorded_at', timezone.now())
+                })
+            elif component_type == 'dht22':
+                sensor_log_data.update({
+                    'temperature': float(component_data.get('temperature', 0.0)),
+                    'humidity': float(component_data.get('humidity', 0.0)),
+                    'dht22_recorded_at': component_data.get('recorded_at', timezone.now())
+                })
+            elif component_type == 'photoresistor':
+                sensor_log_data.update({
+                    'light_detected': bool(component_data.get('light_detected', False)),
+                    'photoresistor_recorded_at': component_data.get('recorded_at', timezone.now())
+                })
+            elif component_type == 'motion':
+                sensor_log_data.update({
+                    'motion_detected': bool(component_data.get('motion_detected', False)),
+                    'motion_recorded_at': component_data.get('recorded_at', timezone.now())
+                })
+            
+            sensor_log = SensorLog.objects.create(**sensor_log_data)
+            created_logs.append(str(sensor_log.id))
+            
+            # Check for anomalies
+            if component_type == 'pzem' and sensor_log.power > 0:
+                recent_logs = SensorLog.objects.filter(
+                    component=component,
+                    pzem_recorded_at__gte=timezone.now() - timezone.timedelta(hours=1)
+                )
+                avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
+                if avg_power and sensor_log.power > (avg_power * 2):
+                    alert, created = Alert.objects.get_or_create(
+                        equipment=equipment,
+                        type='energy_anomaly',
+                        resolved=False,
+                        defaults={
+                            'message': f'Energy usage anomaly: {sensor_log.power}W vs avg {avg_power:.2f}W',
+                            'severity': 'low'
+                        }
+                    )
+                    if created:
+                        created_alert_ids.append(str(alert.id))
+                elif avg_power and sensor_log.power <= (avg_power * 2):
+                    # Resolve energy_anomaly alerts if power normalizes
+                    alerts = Alert.objects.filter(
+                        equipment=equipment,
+                        type='energy_anomaly',
+                        resolved=False
+                    )
+                    for alert in alerts:
+                        alert.resolved = True
+                        alert.resolved_at = timezone.now()
+                        alert.save()
+                        resolved_alert_ids.append(str(alert.id))
+            elif component_type == 'dht22' and sensor_log.temperature > 40:
                 alert, created = Alert.objects.get_or_create(
                     equipment=equipment,
-                    type='motion',
+                    type='temperature_threshold',
                     resolved=False,
                     defaults={
-                        'message': 'Motion detected',
+                        'message': f'Temperature alert: {sensor_log.temperature}°C exceeds 40°C',
+                        'severity': 'high'
+                    }
+                )
+                if created:
+                    created_alert_ids.append(str(alert.id))
+            elif component_type == 'dht22' and sensor_log.temperature <= 40:
+                # Resolve temperature_threshold alerts if temperature normalizes
+                alerts = Alert.objects.filter(
+                    equipment=equipment,
+                    type='temperature_threshold',
+                    resolved=False
+                )
+                for alert in alerts:
+                    alert.resolved = True
+                    alert.resolved_at = timezone.now()
+                    alert.save()
+                    resolved_alert_ids.append(str(alert.id))
+            elif component_type == 'dht22' and sensor_log.humidity > 80:
+                alert, created = Alert.objects.get_or_create(
+                    equipment=equipment,
+                    type='humidity_threshold',
+                    resolved=False,
+                    defaults={
+                        'message': f'Humidity exceeded 80%: {sensor_log.humidity}%',
                         'severity': 'medium'
                     }
                 )
                 if created:
                     created_alert_ids.append(str(alert.id))
-        if sensor_log.power > 0:
+            elif component_type == 'dht22' and sensor_log.humidity <= 80:
+                # Resolve humidity_threshold alerts if humidity normalizes
+                alerts = Alert.objects.filter(
+                    equipment=equipment,
+                    type='humidity_threshold',
+                    resolved=False
+                )
+                for alert in alerts:
+                    alert.resolved = True
+                    alert.resolved_at = timezone.now()
+                    alert.save()
+                    resolved_alert_ids.append(str(alert.id))
+            elif component_type == 'motion' and sensor_log.motion_detected:
+                prev_log = SensorLog.objects.filter(component=component).order_by('-recorded_at').exclude(id=sensor_log.id).first()
+                if prev_log and not prev_log.motion_detected:
+                    alert, created = Alert.objects.get_or_create(
+                        equipment=equipment,
+                        type='motion',
+                        resolved=False,
+                        defaults={
+                            'message': 'Motion detected',
+                            'severity': 'medium'
+                        }
+                    )
+                    if created:
+                        created_alert_ids.append(str(alert.id))
+            elif component_type == 'motion' and not sensor_log.motion_detected:
+                # Resolve motion alerts if no motion detected
+                alerts = Alert.objects.filter(
+                    equipment=equipment,
+                    type='motion',
+                    resolved=False
+                )
+                for alert in alerts:
+                    alert.resolved = True
+                    alert.resolved_at = timezone.now()
+                    alert.save()
+                    resolved_alert_ids.append(str(alert.id))
+        
+        equipment.status = 'online'
+        equipment.save()
+        
+        # Update EnergySummary for PZEM components
+        pzem_components = Component.objects.filter(equipment=equipment, component_type='pzem')
+        for component in pzem_components:
+            today = timezone.now().date()
             recent_logs = SensorLog.objects.filter(
-                equipment=equipment,
-                recorded_at__gte=timezone.now() - timezone.timedelta(hours=1)
+                component=component,
+                pzem_recorded_at__date=today
             )
-            avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
-            if avg_power and sensor_log.power > (avg_power * 2):
-                alert, created = Alert.objects.get_or_create(
+            if recent_logs.exists():
+                total_energy = recent_logs.aggregate(total=Sum('energy'))['total'] or 0
+                avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
+                peak_power = recent_logs.aggregate(max=Max('power'))['max'] or 0
+                anomaly_count = Alert.objects.filter(
                     equipment=equipment,
                     type='energy_anomaly',
-                    resolved=False,
+                    triggered_at__date=today
+                ).count()
+                EnergySummary.objects.update_or_create(
+                    component=component,
+                    room=equipment.room,
+                    period_start=timezone.datetime.combine(today, datetime.time.min, tzinfo=timezone.get_current_timezone()),
+                    period_end=timezone.datetime.combine(today, datetime.time.max, tzinfo=timezone.get_current_timezone()),
+                    period_type='daily',
                     defaults={
-                        'message': f'Energy usage anomaly: {sensor_log.power}W vs avg {avg_power:.2f}W',
-                        'severity': 'low'
+                        'total_energy': total_energy,
+                        'avg_power': avg_power,
+                        'peak_power': peak_power,
+                        'reading_count': recent_logs.count(),
+                        'anomaly_count': anomaly_count
                     }
                 )
-                if created:
-                    created_alert_ids.append(str(alert.id))
+        
         if created_alert_ids:
             recent_request = MaintenanceRequest.objects.filter(
                 equipment=equipment,
@@ -640,13 +939,15 @@ def esp32_sensor_data(request):
                     scheduled_date=timezone.now().date() + timezone.timedelta(days=1),
                 )
                 NotificationService.notify_maintenance_request_created(maintenance_request, request)
-        logger.info(f"Sensor data saved successfully: {sensor_log.id}, Alerts: {created_alert_ids}")
+        
+        logger.info(f"Sensor data saved: {created_logs}, Alerts created: {created_alert_ids}, Alerts resolved: {resolved_alert_ids}")
         return Response({
             'success': True,
             'message': 'Sensor data received successfully',
-            'log_id': str(sensor_log.id),
+            'log_ids': created_logs,
             'alert_ids': created_alert_ids,
-            'timestamp': sensor_log.recorded_at.isoformat()
+            'resolved_alert_ids': resolved_alert_ids,
+            'timestamp': timezone.now().isoformat()
         }, status=status.HTTP_201_CREATED)
     except ValueError as e:
         logger.error(f"Invalid data format: {str(e)}")
@@ -689,6 +990,12 @@ def equipment_field_options(request):
             {'value': 'controller', 'label': 'Controller', 'description': 'Control devices'},
             {'value': 'monitor', 'label': 'Monitor', 'description': 'Monitoring devices'},
         ],
+        'component_type_options': [
+            {'value': 'pzem', 'label': 'PZEM', 'description': 'Power monitoring module'},
+            {'value': 'dht22', 'label': 'DHT22', 'description': 'Temperature and humidity sensor'},
+            {'value': 'photoresistor', 'label': 'Photoresistor', 'description': 'Light detection sensor'},
+            {'value': 'motion', 'label': 'Motion Sensor', 'description': 'Motion detection sensor'},
+        ],
         'room_type_options': [
             {'value': 'office', 'label': 'Office', 'description': 'Office spaces'},
             {'value': 'lab', 'label': 'Laboratory', 'description': 'Laboratory'},
@@ -708,11 +1015,17 @@ def equipment_field_options(request):
             {'value': 'motion', 'label': 'Motion Detected'},
             {'value': 'humidity_threshold', 'label': 'Humidity Threshold'},
             {'value': 'energy_anomaly', 'label': 'Energy Anomaly'},
+            {'value': 'predictive_failure', 'label': 'Predictive Failure'},
         ],
         'alert_severity_options': [
             {'value': 'low', 'label': 'Low'},
             {'value': 'medium', 'label': 'Medium'},
             {'value': 'high', 'label': 'High'},
+        ],
+        'period_type_options': [
+            {'value': 'daily', 'label': 'Daily'},
+            {'value': 'weekly', 'label': 'Weekly'},
+            {'value': 'monthly', 'label': 'Monthly'},
         ],
     })
 
@@ -724,17 +1037,38 @@ def dashboard_summary(request):
         total_rooms = Room.objects.count()
         total_equipment = Equipment.objects.count()
         online_equipment = Equipment.objects.filter(status='online').count()
-        avg_temp = SensorLog.objects.aggregate(avg_temp=Avg('temperature'))['avg_temp'] or 0
+        total_components = Component.objects.count()
+        avg_temp = SensorLog.objects.filter(dht22_recorded_at__isnull=False).aggregate(avg_temp=Avg('temperature'))['avg_temp'] or 0
         total_alerts = Alert.objects.count()
         unresolved_alerts = Alert.objects.filter(resolved=False).count()
-        recent_logs = SensorLog.objects.order_by('-recorded_at')[:5]
+        predictive_alerts = PredictiveAlert.objects.filter(resolved=False).count()
+        recent_logs = SensorLog.objects.select_related('equipment', 'component').order_by('-recorded_at')[:5]
+        
+        # Calculate billing cost for today
+        today = timezone.now().date()
+        energy_summaries = EnergySummary.objects.filter(
+            period_start__date=today,
+            period_type='daily'
+        ).select_related('room')
+        total_cost = 0
+        for summary in energy_summaries:
+            rate = BillingRate.objects.filter(
+                Q(room=summary.room) | Q(room__isnull=True),
+                created_at__lte=timezone.now()
+            ).order_by('-created_at').first()
+            if rate:
+                total_cost += summary.total_energy * rate.rate_per_kwh
+        
         summary_data = {
             'total_rooms': total_rooms,
             'total_equipment': total_equipment,
             'online_equipment': online_equipment,
+            'total_components': total_components,
             'avg_temperature': round(avg_temp, 2),
             'total_alerts': total_alerts,
             'unresolved_alerts': unresolved_alerts,
+            'predictive_alerts': predictive_alerts,
+            'daily_energy_cost': round(total_cost, 2),
             'recent_logs': SensorLogSerializer(recent_logs, many=True).data,
         }
         return Response({
@@ -755,28 +1089,48 @@ def room_realtime(request, pk):
     logger.info(f"Room realtime data requested for {pk}")
     try:
         room = get_object_or_404(Room, pk=pk)
-        equipments = Equipment.objects.filter(room=room, type='esp32')
+        equipments = Equipment.objects.filter(room=room, type='esp32').prefetch_related('components')
         realtime_data = []
         for equipment in equipments:
-            latest_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').first()
-            if latest_log:
-                realtime_data.append({
-                    'equipment_id': str(equipment.id),
-                    'equipment_name': equipment.name,
-                    'device_id': equipment.device_id,
-                    'temperature': latest_log.temperature,
-                    'humidity': latest_log.humidity,
-                    'light_detected': latest_log.light_detected,
-                    'motion_detected': latest_log.motion_detected,
-                    'energy_usage': latest_log.energy_usage,
-                    'voltage': latest_log.voltage,
-                    'current': latest_log.current,
-                    'power': latest_log.power,
-                    'energy': latest_log.energy,
-                    'recorded_at': latest_log.recorded_at.isoformat(),
-                    'status': equipment.status,
-                    'alerts': AlertSerializer(Alert.objects.filter(equipment=equipment, resolved=False), many=True).data,
-                })
+            for component in equipment.components.all():
+                latest_log = SensorLog.objects.filter(component=component).order_by('-recorded_at').first()
+                if latest_log:
+                    data = {
+                        'equipment_id': str(equipment.id),
+                        'equipment_name': equipment.name,
+                        'component_id': str(component.id),
+                        'component_type': component.component_type,
+                        'device_id': equipment.device_id,
+                        'status': component.status,
+                        'recorded_at': latest_log.recorded_at.isoformat(),
+                    }
+                    if component.component_type == 'pzem':
+                        data.update({
+                            'voltage': latest_log.voltage,
+                            'current': latest_log.current,
+                            'power': latest_log.power,
+                            'energy': latest_log.energy,
+                            'pzem_recorded_at': latest_log.pzem_recorded_at.isoformat() if latest_log.pzem_recorded_at else None,
+                        })
+                    elif component.component_type == 'dht22':
+                        data.update({
+                            'temperature': latest_log.temperature,
+                            'humidity': latest_log.humidity,
+                            'dht22_recorded_at': latest_log.dht22_recorded_at.isoformat() if latest_log.dht22_recorded_at else None,
+                        })
+                    elif component.component_type == 'photoresistor':
+                        data.update({
+                            'light_detected': latest_log.light_detected,
+                            'photoresistor_recorded_at': latest_log.photoresistor_recorded_at.isoformat() if latest_log.photoresistor_recorded_at else None,
+                        })
+                    elif component.component_type == 'motion':
+                        data.update({
+                            'motion_detected': latest_log.motion_detected,
+                            'motion_recorded_at': latest_log.motion_recorded_at.isoformat() if latest_log.motion_recorded_at else None,
+                        })
+                    data['alerts'] = AlertSerializer(Alert.objects.filter(equipment=equipment, resolved=False), many=True).data
+                    data['predictive_alerts'] = PredictiveAlertSerializer(PredictiveAlert.objects.filter(component=component, resolved=False), many=True).data
+                    realtime_data.append(data)
         return Response({
             'success': True,
             'room_name': room.name,
@@ -796,23 +1150,45 @@ def room_realtime(request, pk):
 def check_anomalies(request):
     logger.info("Anomaly check requested")
     try:
-        equipment_id = request.data.get('equipment_id')
+        component_id = request.data.get('component_id')
         window_hours = int(request.data.get('check_window_hours', 1))
         cutoff = timezone.now() - timezone.timedelta(hours=window_hours)
-        if equipment_id:
-            equipments = [get_object_or_404(Equipment, pk=equipment_id)]
+        if component_id:
+            components = [get_object_or_404(Component, pk=component_id)]
         else:
-            equipments = Equipment.objects.filter(type='esp32')
+            components = Component.objects.filter(equipment__type='esp32').select_related('equipment')
+        
         created_alerts = []
         created_requests = []
-        for equipment in equipments:
-            recent_logs = SensorLog.objects.filter(equipment=equipment, recorded_at__gte=cutoff)
+        for component in components:
+            recent_logs = SensorLog.objects.filter(component=component, recorded_at__gte=cutoff)
             if not recent_logs.exists():
                 continue
             latest_log = recent_logs.latest('recorded_at')
-            if latest_log.temperature > 40:
+            
+            # Component-specific anomaly checks
+            if component.component_type == 'pzem':
+                energy_summary = EnergySummary.objects.filter(
+                    component=component,
+                    period_type='daily',
+                    period_start__gte=cutoff
+                ).first()
+                avg_power = energy_summary.avg_power if energy_summary else recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
+                if avg_power and latest_log.power > (avg_power * 2):
+                    alert, created = Alert.objects.get_or_create(
+                        equipment=component.equipment,
+                        type='energy_anomaly',
+                        resolved=False,
+                        defaults={
+                            'message': f'Energy usage anomaly: {latest_log.power}W vs avg {avg_power:.2f}W',
+                            'severity': 'low'
+                        }
+                    )
+                    if created:
+                        created_alerts.append(str(alert.id))
+            elif component.component_type == 'dht22' and latest_log.temperature > 40:
                 alert, created = Alert.objects.get_or_create(
-                    equipment=equipment,
+                    equipment=component.equipment,
                     type='temperature_threshold',
                     resolved=False,
                     defaults={
@@ -822,25 +1198,9 @@ def check_anomalies(request):
                 )
                 if created:
                     created_alerts.append(str(alert.id))
-                    recent_request = MaintenanceRequest.objects.filter(
-                        equipment=equipment,
-                        created_at__gte=cutoff,
-                        status__in=['pending', 'in_progress']
-                    ).exists()
-                    if not recent_request:
-                        assignee = User.objects.filter(role='employee').first()
-                        MaintenanceRequest.objects.create(
-                            user_id=request.user.id,
-                            equipment=equipment,
-                            issue=f'Auto-generated: High temperature alert ({latest_log.temperature}°C)',
-                            status='pending',
-                            assigned_to=assignee,
-                            scheduled_date=timezone.now().date(),
-                        )
-                        created_requests.append(f"Auto for {equipment.name}")
-            if latest_log.humidity > 80:
+            elif component.component_type == 'dht22' and latest_log.humidity > 80:
                 alert, created = Alert.objects.get_or_create(
-                    equipment=equipment,
+                    equipment=component.equipment,
                     type='humidity_threshold',
                     resolved=False,
                     defaults={
@@ -850,11 +1210,11 @@ def check_anomalies(request):
                 )
                 if created:
                     created_alerts.append(str(alert.id))
-            if latest_log.motion_detected:
-                prev_log = SensorLog.objects.filter(equipment=equipment, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
+            elif component.component_type == 'motion' and latest_log.motion_detected:
+                prev_log = SensorLog.objects.filter(component=component, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
                 if prev_log and not prev_log.motion_detected:
                     alert, created = Alert.objects.get_or_create(
-                        equipment=equipment,
+                        equipment=component.equipment,
                         type='motion',
                         resolved=False,
                         defaults={
@@ -864,28 +1224,170 @@ def check_anomalies(request):
                     )
                     if created:
                         created_alerts.append(str(alert.id))
-            avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
-            if avg_power and latest_log.power > (avg_power * 2):
-                alert, created = Alert.objects.get_or_create(
-                    equipment=equipment,
-                    type='energy_anomaly',
-                    resolved=False,
-                    defaults={
-                        'message': f'Energy usage anomaly: {latest_log.power}W vs avg {avg_power:.2f}W',
-                        'severity': 'low'
-                    }
-                )
-                if created:
-                    created_alerts.append(str(alert.id))
+            
+            # Auto-create maintenance request if no recent request exists
+            if created_alerts:
+                recent_request = MaintenanceRequest.objects.filter(
+                    equipment=component.equipment,
+                    created_at__gte=cutoff,
+                    status__in=['pending', 'in_progress']
+                ).exists()
+                if not recent_request:
+                    assignee = User.objects.filter(role='employee').first()
+                    maintenance_request = MaintenanceRequest.objects.create(
+                        user_id=request.user.id,
+                        equipment=component.equipment,
+                        issue=f'Auto-generated: {component.component_type} anomaly detected',
+                        status='pending',
+                        assigned_to=assignee,
+                        scheduled_date=timezone.now().date(),
+                    )
+                    created_requests.append(f"Auto for {component.equipment.name} - {component.component_type}")
+                    NotificationService.notify_maintenance_request_created(maintenance_request, request)
+        
         return Response({
             'success': True,
             'created_alerts': created_alerts,
             'created_requests': created_requests,
-            'message': f'Checked {len(equipments)} equipments',
+            'message': f'Checked {len(components)} components',
             'timestamp': timezone.now().isoformat()
         }, status=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"Error in check_anomalies: {str(e)}")
+        return Response(
+            {'error': f'Server error: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([RoleBasedPermission])
+def predict_maintenance(request):
+    """
+    Endpoint for LLM-based predictive maintenance analysis
+    Expected JSON format:
+    {
+        "component_id": "uuid",
+        "window_days": 7
+    }
+    """
+    logger.info(f"Predictive maintenance requested: {request.method} {request.path}")
+    logger.info(f"Request data: {request.data}")
+    try:
+        component_id = request.data.get('component_id')
+        window_days = int(request.data.get('window_days', 7))
+        cutoff = timezone.now() - timezone.timedelta(days=window_days)
+        
+        if component_id:
+            components = [get_object_or_404(Component, pk=component_id)]
+        else:
+            components = Component.objects.filter(equipment__type='esp32').select_related('equipment', 'equipment__room')
+        
+        created_alerts = []
+        created_requests = []
+        for component in components:
+            try:
+                from main import ask
+                logger.info(f"LLM module imported for component {component.id}")
+            except ImportError as e:
+                logger.error(f"Failed to import LLM module: {e}")
+                return Response(
+                    {'error': 'LLM service not available'},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE
+                )
+            
+            # Gather data for LLM
+            recent_logs = SensorLog.objects.filter(component=component, recorded_at__gte=cutoff)
+            recent_heartbeats = HeartbeatLog.objects.filter(equipment=component.equipment, recorded_at__gte=cutoff)
+            energy_summary = EnergySummary.objects.filter(component=component, period_start__gte=cutoff).first()
+            room = component.equipment.room
+            
+            context = {
+                'component_type': component.component_type,
+                'equipment_name': component.equipment.name,
+                'room_name': room.name if room else 'Unknown',
+                'typical_energy_usage': room.typical_energy_usage if room else None,
+                'occupancy_pattern': room.occupancy_pattern if room else None,
+                'recent_power_avg': recent_logs.aggregate(avg=Avg('power'))['avg'] or 0,
+                'recent_voltage_stability': recent_heartbeats.aggregate(avg=Avg('voltage_stability'))['avg'] or 0,
+                'recent_pzem_error_count': recent_heartbeats.aggregate(sum=Sum('pzem_error_count'))['sum'] or 0,
+                'recent_failed_readings': recent_heartbeats.aggregate(sum=Sum('failed_readings'))['sum'] or 0,
+                'energy_anomalies': Alert.objects.filter(equipment=component.equipment, type='energy_anomaly', triggered_at__gte=cutoff).count(),
+            }
+            
+            query = f"""
+            Analyze the following data for predictive maintenance:
+            - Component: {context['component_type']} on {context['equipment_name']}
+            - Room: {context['room_name']}
+            - Typical Energy Usage: {context['typical_energy_usage'] or 'Unknown'} kWh
+            - Occupancy Pattern: {context['occupancy_pattern'] or 'Unknown'}
+            - Average Power (last {window_days} days): {context['recent_power_avg']:.2f}W
+            - Voltage Stability: {context['recent_voltage_stability']:.2f}
+            - PZEM Error Count: {context['recent_pzem_error_count']}
+            - Failed Readings: {context['recent_failed_readings']}
+            - Energy Anomalies: {context['energy_anomalies']}
+            Predict the likelihood of component failure and provide a confidence score (0-1).
+            """
+            
+            result = ask(query)
+            if "error" in result:
+                logger.error(f"LLM query failed: {result['error']}")
+                continue
+            
+            prediction = result.get('answer', '')
+            confidence = 0.5  # Default confidence if not provided
+            try:
+                confidence = float(result.get('confidence', 0.5))
+                if not 0 <= confidence <= 1:
+                    confidence = 0.5
+            except (ValueError, TypeType):
+                logger.warning("Invalid confidence score from LLM, using default 0.5")
+            
+            predictive_alert, created = PredictiveAlert.objects.get_or_create(
+                component=component,
+                resolved=False,
+                defaults={
+                    'prediction': prediction,
+                    'confidence': confidence
+                }
+            )
+            if created:
+                created_alerts.append(str(predictive_alert.id))
+                NotificationService.notify_predictive_alert_created(predictive_alert, request)
+                
+                # Auto-create maintenance request for high-confidence predictions
+                if confidence >= 0.8:
+                    recent_request = MaintenanceRequest.objects.filter(
+                        equipment=component.equipment,
+                        created_at__gte=timezone.now() - timezone.timedelta(hours=1),
+                        status__in=['pending', 'in_progress']
+                    ).exists()
+                    if not recent_request:
+                        assignee = User.objects.filter(role='employee').first()
+                        if not assignee:
+                            assignee = User.objects.create_user(
+                                username='system', email='system@example.com', 
+                                password='systempass', role='employee'
+                            )
+                        maintenance_request = MaintenanceRequest.objects.create(
+                            user=assignee,
+                            equipment=component.equipment,
+                            issue=f'LLM Prediction: {component.component_type} failure likely (Confidence: {confidence})',
+                            status='pending',
+                            assigned_to=assignee,
+                            scheduled_date=timezone.now().date() + timezone.timedelta(days=1),
+                        )
+                        created_requests.append(f"Auto for {component.equipment.name} - {component.component_type}")
+                        NotificationService.notify_maintenance_request_created(maintenance_request, request)
+        
+        return Response({
+            'success': True,
+            'created_alerts': created_alerts,
+            'created_requests': created_requests,
+            'message': f'Predicted maintenance for {len(components)} components',
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error in predict_maintenance: {str(e)}")
         return Response(
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -897,31 +1399,51 @@ def latest_sensor_data(request):
     logger.info("Latest sensor data requested")
     try:
         latest_logs = []
-        equipment_list = Equipment.objects.filter(type='esp32')
-        for equipment in equipment_list:
-            latest_log = SensorLog.objects.filter(equipment=equipment).order_by('-recorded_at').first()
+        components = Component.objects.filter(equipment__type='esp32').select_related('equipment')
+        for component in components:
+            latest_log = SensorLog.objects.filter(component=component).order_by('-recorded_at').first()
             if latest_log:
-                latest_logs.append({
-                    'equipment_id': str(equipment.id),
-                    'equipment_name': equipment.name,
-                    'device_id': equipment.device_id,
-                    'temperature': latest_log.temperature,
-                    'humidity': latest_log.humidity,
-                    'light_detected': latest_log.light_detected,
-                    'motion_detected': latest_log.motion_detected,
-                    'energy_usage': latest_log.energy_usage,
-                    'voltage': latest_log.voltage,
-                    'current': latest_log.current,
-                    'power': latest_log.power,
-                    'energy': latest_log.energy,
+                data = {
+                    'equipment_id': str(component.equipment.id),
+                    'equipment_name': component.equipment.name,
+                    'component_id': str(component.id),
+                    'component_type': component.component_type,
+                    'device_id': component.equipment.device_id,
+                    'status': component.status,
                     'recorded_at': latest_log.recorded_at.isoformat(),
-                    'status': equipment.status
-                })
+                }
+                if component.component_type == 'pzem':
+                    data.update({
+                        'voltage': latest_log.voltage,
+                        'current': latest_log.current,
+                        'power': latest_log.power,
+                        'energy': latest_log.energy,
+                        'pzem_recorded_at': latest_log.pzem_recorded_at.isoformat() if latest_log.pzem_recorded_at else None,
+                    })
+                elif component.component_type == 'dht22':
+                    data.update({
+                        'temperature': latest_log.temperature,
+                        'humidity': latest_log.humidity,
+                        'dht22_recorded_at': latest_log.dht22_recorded_at.isoformat() if latest_log.dht22_recorded_at else None,
+                    })
+                elif component.component_type == 'photoresistor':
+                    data.update({
+                        'light_detected': latest_log.light_detected,
+                        'photoresistor_recorded_at': latest_log.photoresistor_recorded_at.isoformat() if latest_log.photoresistor_recorded_at else None,
+                    })
+                elif component.component_type == 'motion':
+                    data.update({
+                        'motion_detected': latest_log.motion_detected,
+                        'motion_recorded_at': latest_log.motion_recorded_at.isoformat() if latest_log.motion_recorded_at else None,
+                    })
+                latest_logs.append(data)
+        
         logger.info(f"Returning {len(latest_logs)} sensor readings")
         return Response({
             'success': True,
             'data': latest_logs,
-            'count': len(latest_logs)
+            'count': len(latest_logs),
+            'timestamp': timezone.now().isoformat()
         }, status=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"Server error in latest_sensor_data: {str(e)}")

@@ -1,0 +1,43 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+    <h2 style="color: #333333; font-size: 20px; margin-bottom: 20px;">Predictive Maintenance Alert</h2>
+    <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+        Dear {{ recipient }},
+    </p>
+    <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+        An LLM-based predictive maintenance analysis has detected a potential issue for <strong>{{ equipment_name }}</strong>.
+    </p>
+    <table role="presentation" width="100%" style="margin: 20px 0; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 10px; background-color: #f8f9fa; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">Alert ID:</td>
+            <td style="padding: 10px; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">#{{ alert_id }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; background-color: #f8f9fa; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">Equipment:</td>
+            <td style="padding: 10px; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">{{ equipment_name }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; background-color: #f8f9fa; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">Component:</td>
+            <td style="padding: 10px; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">{{ component_name|title }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; background-color: #f8f9fa; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">Prediction:</td>
+            <td style="padding: 10px; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">{{ prediction }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; background-color: #f8f9fa; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">Confidence:</td>
+            <td style="padding: 10px; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">{{ confidence }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; background-color: #f8f9fa; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">Triggered By:</td>
+            <td style="padding: 10px; font-size: 16px; color: #333333; border: 1px solid #dee2e6;">{{ user }}</td>
+        </tr>
+    </table>
+    <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+        Please review the alert and check the SBMS dashboard for further details or to schedule maintenance.
+    </p>
+    <p style="text-align: center; margin: 20px 0;">
+        <a href="#" style="background-color: #007bff; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">View Alert</a>
+    </p>
+{% endblock %}
