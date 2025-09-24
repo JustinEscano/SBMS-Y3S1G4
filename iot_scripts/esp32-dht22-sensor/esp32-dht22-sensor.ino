@@ -3,15 +3,16 @@
 #include <ArduinoJson.h>
 #include <DHT.h>
 #include <PZEM004Tv30.h>
+#include <time.h>
 
 // WiFi credentials - UPDATE THESE TO YOUR NETWORK
 const char* ssid = "SKYWORTH-FA13";
 const char* password = "281892655";
 
-// Django API endpoints - UPDATE YOUR_COMPUTER_IP
-const char* serverURL = "http://192.168.0.35:8000/api/esp32/sensor-data/";
-const char* healthURL = "http://192.168.0.35:8000/api/esp32/health/";
-const char* heartbeatURL = "http://192.168.0.35:8000/api/esp32/heartbeat/";
+// Django API endpoints - UPDATED TO NEW IP
+const char* serverURL = "http://192.168.0.41:8000/api/esp32/sensor-data/";
+const char* healthURL = "http://192.168.0.41:8000/api/esp32/health/";
+const char* heartbeatURL = "http://192.168.0.41:8000/api/esp32/heartbeat/";
 
 // Device configuration - MUST MATCH Django equipment device_id
 const char* deviceID = "ESP32_001";
@@ -35,7 +36,7 @@ unsigned long lastHealthCheck = 0;
 unsigned long lastHeartbeat = 0;
 unsigned long lastSensorRead = 0;
 unsigned long lastPIRPrint = 0;
-const unsigned long SEND_INTERVAL = 15000;      // Send data every 15 seconds
+const unsigned long SEND_INTERVAL = 10000;      // Send data every 10 seconds
 const unsigned long HEALTH_INTERVAL = 60000;    // Health check every 60 seconds
 const unsigned long HEARTBEAT_INTERVAL = 30000; // Heartbeat every 30 seconds
 const unsigned long SENSOR_READ_INTERVAL = 3000; // Read sensor every 3 seconds
@@ -44,9 +45,8 @@ const unsigned long PIR_PRINT_INTERVAL = 1000;  // Print PIR status every 1 seco
 // Sensor data variables
 float temperature = 0.0;
 float humidity = 0.0;
-bool lightDetected = false; // NEW: Boolean for light detection
+bool lightDetected = false;
 bool motionDetected = false;
-float energyUsage = 0.0;
 float voltage = 0.0;
 float current = 0.0;
 float power = 0.0;
@@ -58,7 +58,7 @@ bool serverConnected = false;
 bool dht22Working = false;
 bool pzemWorking = false;
 bool pirWorking = false;
-bool photoresistorWorking = false; // NEW: Track photosensitive module status
+bool photoresistorWorking = false;
 int sensorReadAttempts = 0;
 int successfulReads = 0;
 
@@ -69,12 +69,13 @@ float lastValidPower = 0.0;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("=== ESP32 Smart Building DHT22, PZEM & Photosensitive Module ===");
+  Serial.println("=== ESP32 Smart Building DHT22, PZEM, PIR & Photosensitive Module ===");
   Serial.println("Device ID: " + String(deviceID));
-  Serial.println("Version: 2.5.0 - Added Photosensitive Module"); // Updated version
+  Serial.println("Version: 2.6.2 - NTP after WiFi, PIR 3s stabilization");
   Serial.println("Wire Colors (DHT22): Red=Power, Brown=Ground, Orange=Data");
   Serial.println("Wire Colors (PZEM): TX/RX to GPIO 16/17");
   Serial.println("Wire Colors (Photoresistor): VCC=3.3V, DO=GPIO 19, GND=Ground");
+  Serial.println("Wire Colors (PIR): VCC=5V, DO=GPIO 18, GND=Ground");
   Serial.println("===================================================");
   
   // Initialize built-in LED
@@ -87,21 +88,11 @@ void setup() {
   
   // Initialize DHT22 3-pin module
   Serial.println("🌡️ Initializing DHT22 3-pin module on GPIO 5...");
-  Serial.println("📋 DHT22 Wiring Configuration:");
-  Serial.println("   Red wire (DHT22 +)     → Red rail (+) → ESP32 3.3V");
-  Serial.println("   Orange wire (DHT22 OUT) → ESP32 D5 (GPIO 5)");
-  Serial.println("   Brown wire (DHT22 -)    → Blue rail (-) → ESP32 GND");
-  
   dht.begin();
   delay(5000); // Give DHT22 extra time to stabilize
   
   // Initialize PZEM-004T
   Serial.println("⚡ Initializing PZEM-004T on Serial2 (GPIO 16 RX, 17 TX)...");
-  Serial.println("📋 PZEM Wiring Configuration:");
-  Serial.println("   PZEM TX → ESP32 GPIO 16 (RX)");
-  Serial.println("   PZEM RX → ESP32 GPIO 17 (TX)");
-  Serial.println("   PZEM 5V → ESP32 5V");
-  Serial.println("   PZEM GND → ESP32 GND");
   Serial2.begin(9600);
   pzem.setAddress(0x42);
   pzem.resetEnergy();
@@ -111,25 +102,37 @@ void setup() {
   // Initialize PIR sensor
   Serial.println("🚶 Initializing PIR sensor on GPIO 18...");
   pinMode(PIR_PIN, INPUT);
-  Serial.println("📋 PIR Wiring Configuration:");
-  Serial.println("   VCC → ESP32 5V (VIN)");
-  Serial.println("   GND → ESP32 GND");
-  Serial.println("   DO (OUT) → ESP32 D18 (GPIO 18)");
   
   // Initialize Photosensitive module
   Serial.println("💡 Initializing Photosensitive module on GPIO 19...");
   pinMode(PHOTO_PIN, INPUT);
-  Serial.println("📋 Photosensitive Module Wiring Configuration:");
-  Serial.println("   VCC → ESP32 3.3V (or 5V VIN if required)");
-  Serial.println("   DO → ESP32 D19 (GPIO 19)");
-  Serial.println("   GND → ESP32 GND");
-  Serial.println("💡 Tip: Adjust sensitivity pot to set light detection threshold.");
+  
+  // Connect to WiFi FIRST
+  connectToWiFi();
+  
+  // Initialize NTP client AFTER WiFi
+  if (wifiConnected) {
+    Serial.println("⏰ Initializing NTP client...");
+    configTime(0, 0, "time.google.com", "pool.ntp.org", "time.nist.gov");
+    time_t now = time(nullptr);
+    int ntpAttempts = 0;
+    while (now < 1000000000 && ntpAttempts < 20) { // Timeout after 10 seconds
+        delay(500);
+        now = time(nullptr);
+        Serial.print(".");
+        ntpAttempts++;
+    }
+    if (now >= 1000000000) {
+        Serial.println("\n✅ NTP synchronized");
+    } else {
+        Serial.println("\n❌ NTP sync failed, using fallback timestamp");
+    }
+  } else {
+    Serial.println("❌ Skipping NTP initialization - no WiFi connection");
+  }
   
   // Startup sequence
   startupSequence();
-  
-  // Connect to WiFi
-  connectToWiFi();
   
   // Test server connection
   testServerConnection();
@@ -138,7 +141,7 @@ void setup() {
   testDHT22Module();
   testPZEMModule();
   testPIRSensor();
-  testPhotoresistor(); // NEW: Test photosensitive module
+  testPhotoresistor();
   
   // Send initial heartbeat
   if (wifiConnected && serverConnected) {
@@ -147,10 +150,7 @@ void setup() {
   
   Serial.println("=== ESP32 Ready for Operation ===");
   Serial.println("📊 Reading sensors every " + String(SENSOR_READ_INTERVAL/1000) + " seconds");
-  Serial.println("📤 Sending data to Flutter app every " + String(SEND_INTERVAL/1000) + " seconds");
-  Serial.println("🚶 PIR Debug: Motion status will print every 1 second in Serial Monitor");
-  Serial.println("💡 Photoresistor Debug: Light status will print every 1 second");
-  Serial.println("📱 Your Flutter app will show live data!");
+  Serial.println("📤 Sending data to server every " + String(SEND_INTERVAL/1000) + " seconds");
   Serial.println("===============================================");
 }
 
@@ -171,7 +171,7 @@ void loop() {
     readDHT22Module();
     readPZEMModule();
     readPIRSensor();
-    readPhotoresistor(); // NEW: Read photosensitive module
+    readPhotoresistor();
     lastSensorRead = currentTime;
   }
   
@@ -225,20 +225,18 @@ void connectToWiFi() {
   WiFi.begin(ssid, password);
   
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    delay(500);
-    Serial.print(".");
-    attempts++;
-    digitalWrite(LED_PIN, attempts % 2);
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) { // 10 seconds timeout
+      delay(500);
+      Serial.print(".");
+      attempts++;
+      digitalWrite(LED_PIN, attempts % 2);
   }
   
   if (WiFi.status() == WL_CONNECTED) {
     wifiConnected = true;
     Serial.println("\n✅ WiFi connected successfully!");
-    Serial.print("📡 IP address: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("📶 Signal strength: ");
-    Serial.println(WiFi.RSSI());
+    Serial.println("📡 IP address: " + String(WiFi.localIP()));
+    Serial.println("📶 Signal strength: " + String(WiFi.RSSI()) + " dBm");
     for (int i = 0; i < 10; i++) {
       digitalWrite(LED_PIN, HIGH);
       delay(50);
@@ -272,8 +270,7 @@ void testServerConnection() {
   } else {
     serverConnected = false;
     Serial.println("❌ Server connection failed: " + String(httpResponseCode));
-    Serial.println("💡 Make sure Django server is running:");
-    Serial.println("   python manage.py runserver 0.0.0.0:8000");
+    Serial.println("💡 Make sure Django server is running: python manage.py runserver 0.0.0.0:8000");
   }
   
   http.end();
@@ -312,16 +309,7 @@ void testDHT22Module() {
   
   dht22Working = false;
   Serial.println("❌ DHT22 3-pin module test failed after 5 attempts!");
-  Serial.println("🔧 Check your wiring:");
-  Serial.println("   Red wire (DHT22 +)     → Red rail (+) → ESP32 3.3V");
-  Serial.println("   Orange wire (DHT22 OUT) → ESP32 D5 (GPIO 5)");
-  Serial.println("   Brown wire (DHT22 -)    → Blue rail (-) → ESP32 GND");
-  Serial.println("💡 Try these solutions:");
-  Serial.println("   1. Check if DHT22 module is working (try different module)");
-  Serial.println("   2. Check breadboard connections are secure");
-  Serial.println("   3. Try shorter jumper wires");
-  Serial.println("   4. Try a different DHT22 module");
-  Serial.println("⚠️ Will use default values until sensor is fixed");
+  Serial.println("🔧 Check your wiring...");
 }
 
 void testPZEMModule() {
@@ -349,7 +337,7 @@ void testPZEMModule() {
         lastValidPower = testPower;
         return;
       } else {
-        Serial.println("⚠️ Readings out of range: Voltage=" + String(testVoltage, 1) + "V, Current=" + String(testCurrent, 2) + "A, Power=" + String(testPower, 1) + "W");
+        Serial.println("⚠️ Readings out of range...");
       }
     } else {
       Serial.println("❌ Attempt " + String(attempt) + " failed - NaN or invalid readings");
@@ -359,23 +347,13 @@ void testPZEMModule() {
   
   pzemWorking = false;
   Serial.println("❌ PZEM-004T test failed after 5 attempts!");
-  Serial.println("🔧 Check your wiring:");
-  Serial.println("   PZEM TX → ESP32 GPIO 16 (RX)");
-  Serial.println("   PZEM RX → ESP32 GPIO 17 (TX)");
-  Serial.println("   PZEM 5V → ESP32 5V");
-  Serial.println("   PZEM GND → ESP32 GND");
-  Serial.println("💡 Try these solutions:");
-  Serial.println("   1. Verify AC mains at L/N (use multimeter, expect ~220V)");
-  Serial.println("   2. Ensure CT is clamped on live wire, swap CT+/- if 0A");
-  Serial.println("   3. Check load (bulb) is on and drawing power");
-  Serial.println("   4. Add a 5V-to-3.3V level shifter for TX/RX if readings persist");
-  Serial.println("⚠️ Will use default values until sensor is fixed");
+  Serial.println("🔧 Check your wiring...");
 }
 
 void testPIRSensor() {
   Serial.println("🚶 Testing PIR sensor on GPIO 18...");
-  Serial.println("⏳ Waiting 60 seconds for PIR sensor to stabilize...");
-  for (int i = 0; i < 60; i++) {
+  Serial.println("⏳ Waiting 3 seconds for PIR sensor to stabilize...");
+  for (int i = 0; i < 3; i++) { // Reduced to 3 seconds
     digitalWrite(LED_PIN, HIGH);
     delay(500);
     digitalWrite(LED_PIN, LOW);
@@ -386,15 +364,10 @@ void testPIRSensor() {
   if (pirState == HIGH || pirState == LOW) {
     pirWorking = true;
     Serial.println("✅ PIR sensor initialized! Initial state: " + String(pirState == HIGH ? "Motion Detected" : "No Motion"));
-    Serial.println("💡 Wave hand in front of sensor and check Serial Monitor for updates.");
   } else {
     pirWorking = false;
     Serial.println("❌ PIR sensor test failed!");
-    Serial.println("🔧 Check wiring:");
-    Serial.println("   VCC → ESP32 5V (VIN)");
-    Serial.println("   GND → ESP32 GND");
-    Serial.println("   DO (OUT) → ESP32 D18 (GPIO 18)");
-    Serial.println("💡 Ensure powered at 5V, wait longer for warmup, or adjust sensitivity pot.");
+    Serial.println("🔧 Check wiring...");
   }
 }
 
@@ -407,15 +380,10 @@ void testPhotoresistor() {
   if (photoState == HIGH || photoState == LOW) {
     photoresistorWorking = true;
     Serial.println("✅ Photosensitive module initialized! Initial state: " + String(photoState == HIGH ? "Light Detected" : "No Light"));
-    Serial.println("💡 Shine a light or cover the sensor to test detection in Serial Monitor.");
   } else {
     photoresistorWorking = false;
     Serial.println("❌ Photosensitive module test failed!");
-    Serial.println("🔧 Check wiring:");
-    Serial.println("   VCC → ESP32 3.3V (or 5V VIN)");
-    Serial.println("   DO → ESP32 D19 (GPIO 19)");
-    Serial.println("   GND → ESP32 GND");
-    Serial.println("💡 Adjust sensitivity pot or check voltage compatibility.");
+    Serial.println("🔧 Check wiring...");
   }
 }
 
@@ -442,7 +410,7 @@ void readDHT22Module() {
         Serial.println("📊 DHT22 readings (every 5th): " + String(temperature, 1) + "°C, " + String(humidity, 1) + "%");
       }
     } else {
-      Serial.println("⚠️ DHT22 readings out of range: " + String(newTemp, 1) + "°C, " + String(newHumidity, 1) + "%");
+      Serial.println("⚠️ DHT22 readings out of range...");
       temperature = lastValidTemp;
       humidity = lastValidHumidity;
     }
@@ -452,7 +420,6 @@ void readDHT22Module() {
     humidity = lastValidHumidity;
     if (sensorReadAttempts % 10 == 0) {
       Serial.println("❌ DHT22 read failed (attempt " + String(sensorReadAttempts) + "), using last valid values");
-      Serial.println("💡 Current success rate: " + String((float)successfulReads/sensorReadAttempts*100, 1) + "%");
     }
   }
 }
@@ -489,21 +456,16 @@ void readPZEMModule() {
       current = newCurrent;
       power = newPower;
       energy = newEnergy;
-      energyUsage = newPower;
-      lastValidPower = newPower;
       pzemWorking = true;
       Serial.println("✅ PZEM readings updated: Voltage=" + String(voltage, 1) + "V, Current=" + String(current, 2) + "A, Power=" + String(power, 1) + "W");
     } else {
-      Serial.println("⚠️ PZEM readings out of range: Voltage=" + String(newVoltage, 1) + "V, Current=" + String(newCurrent, 2) + "A, Power=" + String(newPower, 1) + "W");
-      energyUsage = lastValidPower;
+      Serial.println("⚠️ PZEM readings out of range...");
       pzemWorking = false;
     }
   } else {
     pzemWorking = false;
-    energyUsage = lastValidPower;
     if (sensorReadAttempts % 10 == 0) {
       Serial.println("❌ PZEM read failed (attempt " + String(sensorReadAttempts) + "), using last valid power");
-      Serial.println("💡 Possible causes: Check L/N voltage, CT clamp, or add a 5V-to-3.3V level shifter");
     }
   }
 }
@@ -531,7 +493,7 @@ void readPhotoresistor() {
   
   bool currentState = digitalRead(PHOTO_PIN);
   if (currentState != lastState && millis() - lastChangeTime > DEBOUNCE_TIME) {
-    lightDetected = currentState; // HIGH = light detected
+    lightDetected = currentState;
     lastState = currentState;
     lastChangeTime = millis();
     if (lightDetected) {
@@ -543,8 +505,19 @@ void readPhotoresistor() {
   }
 }
 
+String getISOTimestamp() {
+  time_t now = time(nullptr);
+  if (now < 1000000000) {
+    Serial.println("⚠️ NTP not synced, using fallback timestamp");
+    return "2025-09-25T00:00:00Z"; // Fallback for testing
+  }
+  char timeStr[25];
+  strftime(timeStr, sizeof(timeStr), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
+  return String(timeStr);
+}
+
 void prepareSensorData() {
-  Serial.println("=== Preparing Sensor Data for Flutter App ===");
+  Serial.println("=== Preparing Sensor Data for Django Server ===");
   Serial.println("🌡️ Temperature: " + String(temperature, 1) + "°C " + (dht22Working ? "(REAL DHT22)" : "(LAST VALID)"));
   Serial.println("💧 Humidity: " + String(humidity, 1) + "% " + (dht22Working ? "(REAL DHT22)" : "(LAST VALID)"));
   Serial.println("💡 Light: " + String(lightDetected ? "Detected" : "None") + " " + (photoresistorWorking ? "(REAL PHOTORESISTOR)" : "(INIT FAILED)"));
@@ -569,22 +542,50 @@ void sendSensorData() {
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(15000);
   
-  StaticJsonDocument<500> doc;
+  DynamicJsonDocument doc(1024);
   doc["device_id"] = deviceID;
-  doc["temperature"] = round(temperature * 10) / 10.0;
-  doc["humidity"] = round(humidity * 10) / 10.0;
-  doc["light_detected"] = lightDetected; // NEW: Send boolean
-  doc["motion_detected"] = motionDetected;
-  doc["energy_usage"] = round(energyUsage * 10) / 10.0;
-  doc["voltage"] = round(voltage * 10) / 10.0;
-  doc["current"] = round(current * 100) / 100.0;
-  doc["power"] = round(power * 10) / 10.0;
-  doc["energy"] = round(energy * 1000) / 1000.0;
+  JsonArray components = doc.createNestedArray("components");
+  
+  if (pzemWorking) {
+    JsonObject pzemData = components.createNestedObject();
+    pzemData["component_type"] = "pzem";
+    pzemData["identifier"] = "PZEM_SERIAL2";
+    pzemData["recorded_at"] = getISOTimestamp();
+    pzemData["voltage"] = round(voltage * 10) / 10.0;
+    pzemData["current"] = round(current * 100) / 100.0;
+    pzemData["power"] = round(power * 10) / 10.0;
+    pzemData["energy"] = round(energy * 1000) / 1000.0;
+  }
+  
+  if (dht22Working) {
+    JsonObject dhtData = components.createNestedObject();
+    dhtData["component_type"] = "dht22";
+    dhtData["identifier"] = "DHT22_3PIN_MODULE_GPIO5";
+    dhtData["recorded_at"] = getISOTimestamp();
+    dhtData["temperature"] = round(temperature * 10) / 10.0;
+    dhtData["humidity"] = round(humidity * 10) / 10.0;
+  }
+  
+  if (photoresistorWorking) {
+    JsonObject photoData = components.createNestedObject();
+    photoData["component_type"] = "photoresistor";
+    photoData["identifier"] = "PHOTO_GPIO19";
+    photoData["recorded_at"] = getISOTimestamp();
+    photoData["light_detected"] = lightDetected;
+  }
+  
+  if (pirWorking) {
+    JsonObject motionData = components.createNestedObject();
+    motionData["component_type"] = "motion";
+    motionData["identifier"] = "MOTION_GPIO18";
+    motionData["recorded_at"] = getISOTimestamp();
+    motionData["motion_detected"] = motionDetected;
+  }
   
   String jsonString;
   serializeJson(doc, jsonString);
   
-  Serial.println("📤 Sending Sensor Data to Your Flutter App");
+  Serial.println("📤 Sending Sensor Data to Django Server");
   Serial.println("🌐 URL: " + String(serverURL));
   Serial.println("📋 JSON: " + jsonString);
   
@@ -597,9 +598,7 @@ void sendSensorData() {
     
     if (httpResponseCode == 201) {
       serverConnected = true;
-      Serial.println("✅ SUCCESS - Sensor data sent to your Flutter app!");
-      Serial.println("📱 Check your Flutter app dashboard for live environmental and energy data!");
-      Serial.println("🎯 Your app will show: Temperature, Humidity, Light Detection, Motion, Voltage, Current, Power, Energy");
+      Serial.println("✅ SUCCESS - Sensor data sent to server!");
       for (int i = 0; i < 3; i++) {
         digitalWrite(LED_PIN, HIGH);
         delay(100);
@@ -633,11 +632,12 @@ void sendHeartbeat() {
   doc["timestamp"] = millis();
   doc["dht22_working"] = dht22Working;
   doc["pzem_working"] = pzemWorking;
-  doc["photoresistor_working"] = photoresistorWorking; // NEW
+  doc["photoresistor_working"] = photoresistorWorking;
+  doc["pir_working"] = pirWorking;
   doc["success_rate"] = (float)successfulReads/sensorReadAttempts*100;
   doc["wifi_signal"] = WiFi.RSSI();
   doc["uptime"] = millis() / 1000;
-  doc["sensor_type"] = "DHT22_3PIN_MODULE_GPIO5_PZEM_SERIAL2_PHOTO_GPIO19";
+  doc["sensor_type"] = "PZEM_SERIAL2,DHT22_3PIN_MODULE_GPIO5,PHOTO_GPIO19,MOTION_GPIO18";
   doc["current_temp"] = temperature;
   doc["current_humidity"] = humidity;
   doc["current_power"] = power;
