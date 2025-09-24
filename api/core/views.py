@@ -383,15 +383,20 @@ class AlertViewSet(viewsets.ModelViewSet):
     queryset = Alert.objects.select_related('equipment').all()
     serializer_class = AlertSerializer
     permission_classes = [RoleBasedPermission]
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
         if hasattr(user, 'role') and user.role == 'client':
             queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
         resolved = self.request.query_params.get('resolved')
-        if severity:
-            queryset = queryset.filter(severity=severity)
+        severity = self.request.query_params.get('severity')  # Fetch severity from query params
         alert_type = self.request.query_params.get('type')
+        if resolved is not None:
+            resolved_bool = resolved.lower() == 'true'
+            queryset = queryset.filter(resolved=resolved_bool)
+        if severity:  # Only filter by severity if it’s provided
+            queryset = queryset.filter(severity=severity)
         if alert_type:
             queryset = queryset.filter(type=alert_type)
         return queryset
