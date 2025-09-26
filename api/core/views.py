@@ -21,6 +21,7 @@ from .permissions import RoleBasedPermission
 import logging
 import datetime
 from django.db.models import Q
+
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -368,6 +369,7 @@ class BillingRateViewSet(viewsets.ModelViewSet):
     queryset = BillingRate.objects.select_related('room').order_by('-created_at')
     serializer_class = BillingRateSerializer
     permission_classes = [RoleBasedPermission]
+    
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
@@ -377,6 +379,115 @@ class BillingRateViewSet(viewsets.ModelViewSet):
         if room_id:
             return queryset.filter(room_id=room_id)
         return queryset
+    
+    @action(detail=False, methods=['get'], permission_classes=[RoleBasedPermission])
+    def calculate_energy_cost(self, request):
+        """
+        Calculate energy cost for a room or equipment over a specified period.
+        Expected query params:
+        - room_id (optional): UUID of the room
+        - equipment_id (optional): UUID of the equipment
+        - period_start: ISO date (e.g., '2025-09-27')
+        - period_end: ISO date (e.g., '2025-09-27')
+        - period_type: 'daily', 'weekly', or 'monthly'
+        """
+        logger.info("Energy cost calculation requested")
+        try:
+            room_id = request.query_params.get('room_id')
+            equipment_id = request.query_params.get('equipment_id')
+            period_start = request.query_params.get('period_start')
+            period_end = request.query_params.get('period_end')
+            period_type = request.query_params.get('period_type')
+
+            if not period_start or not period_end or not period_type:
+                logger.error("Missing required query parameters")
+                return Response(
+                    {'error': 'period_start, period_end, and period_type are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                period_start = timezone.datetime.fromisoformat(period_start)
+                period_end = timezone.datetime.fromisoformat(period_end)
+            except ValueError:
+                logger.error("Invalid date format")
+                return Response(
+                    {'error': 'Invalid date format. Use ISO format (e.g., 2025-09-27)'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if period_type not in [choice[0] for choice in PERIOD_TYPE_CHOICES]:
+                logger.error(f"Invalid period_type: {period_type}")
+                return Response(
+                    {'error': f"Invalid period_type. Must be one of: {', '.join([choice[0] for choice in PERIOD_TYPE_CHOICES])}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Filter EnergySummary based on room_id or equipment_id
+            energy_summaries = EnergySummary.objects.filter(
+                period_start__gte=period_start,
+                period_end__lte=period_end,
+                period_type=period_type
+            )
+            if room_id:
+                energy_summaries = energy_summaries.filter(room_id=room_id)
+            if equipment_id:
+                energy_summaries = energy_summaries.filter(component__equipment_id=equipment_id)
+
+            if not energy_summaries.exists():
+                logger.info("No energy summaries found for the given criteria")
+                return Response(
+                    {'success': True, 'data': {'total_cost': 0, 'details': []}, 'timestamp': timezone.now().isoformat()},
+                    status=status.HTTP_200_OK
+                )
+
+            total_cost = 0
+            details = []
+            for summary in energy_summaries:
+                # Find the most recent applicable billing rate
+                rate = BillingRate.objects.filter(
+                    Q(room=summary.room) | Q(room__isnull=True),
+                    created_at__lte=summary.period_start
+                ).order_by('-created_at').first()
+
+                if not rate:
+                    logger.warning(f"No billing rate found for room {summary.room.name}")
+                    continue
+
+                # Calculate cost using time-based rate
+                cost = summary.total_energy * rate.get_rate_for_time(summary.period_start)
+                total_cost += cost
+                details.append({
+                    'room_id': str(summary.room.id),
+                    'room_name': summary.room.name,
+                    'component_id': str(summary.component.id),
+                    'component_type': summary.component.component_type,
+                    'total_energy': summary.total_energy,
+                    'rate_per_kwh': rate.rate_per_kwh,
+                    'effective_rate': rate.get_rate_for_time(summary.period_start),
+                    'currency': rate.currency,
+                    'cost': round(cost, 2),
+                    'period_start': summary.period_start.isoformat(),
+                    'period_end': summary.period_end.isoformat(),
+                })
+
+            logger.info(f"Calculated total cost: {total_cost} PHP for {len(details)} summaries")
+            return Response({
+                'success': True,
+                'data': {
+                    'total_cost': round(total_cost, 2),
+                    'currency': 'PHP',
+                    'details': details
+                },
+                'timestamp': timezone.now().isoformat()
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in calculate_energy_cost: {str(e)}")
+            return Response(
+                {'error': f'Server error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class AlertViewSet(viewsets.ModelViewSet):
     queryset = Alert.objects.select_related('equipment').all()
@@ -389,12 +500,12 @@ class AlertViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'role') and user.role == 'client':
             queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
         resolved = self.request.query_params.get('resolved')
-        severity = self.request.query_params.get('severity')  # Fetch severity from query params
+        severity = self.request.query_params.get('severity')
         alert_type = self.request.query_params.get('type')
         if resolved is not None:
             resolved_bool = resolved.lower() == 'true'
             queryset = queryset.filter(resolved=resolved_bool)
-        if severity:  # Only filter by severity if it’s provided
+        if severity:
             queryset = queryset.filter(severity=severity)
         if alert_type:
             queryset = queryset.filter(type=alert_type)
@@ -1039,6 +1150,9 @@ def equipment_field_options(request):
             {'value': 'weekly', 'label': 'Weekly'},
             {'value': 'monthly', 'label': 'Monthly'},
         ],
+        'currency_options': [
+            {'value': 'PHP', 'label': 'Philippine Peso', 'description': 'Philippine Peso (PHP)'},
+        ],
     })
 
 @api_view(['GET'])
@@ -1066,10 +1180,10 @@ def dashboard_summary(request):
         for summary in energy_summaries:
             rate = BillingRate.objects.filter(
                 Q(room=summary.room) | Q(room__isnull=True),
-                created_at__lte=timezone.now()
+                created_at__lte=summary.period_start
             ).order_by('-created_at').first()
             if rate:
-                total_cost += summary.total_energy * rate.rate_per_kwh
+                total_cost += summary.total_energy * rate.get_rate_for_time(summary.period_start)
         
         summary_data = {
             'total_rooms': total_rooms,
@@ -1351,7 +1465,7 @@ def predict_maintenance(request):
                 confidence = float(result.get('confidence', 0.5))
                 if not 0 <= confidence <= 1:
                     confidence = 0.5
-            except (ValueError, TypeType):
+            except (ValueError, TypeError):
                 logger.warning("Invalid confidence score from LLM, using default 0.5")
             
             predictive_alert, created = PredictiveAlert.objects.get_or_create(

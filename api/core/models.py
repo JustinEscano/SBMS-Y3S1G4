@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
 from django.db.models import Avg
+import re
+from datetime import datetime
+from django.utils import timezone
 
 # Constants for standardized field values
 ROLE_CHOICES = [
@@ -72,6 +75,10 @@ PERIOD_TYPE_CHOICES = [
     ('daily', 'Daily'),
     ('weekly', 'Weekly'),
     ('monthly', 'Monthly'),
+]
+
+CURRENCY_CHOICES = [
+    ('PHP', 'Philippine Peso'),
 ]
 
 class UserManager(BaseUserManager):
@@ -273,7 +280,8 @@ class BillingRate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
     rate_per_kwh = models.FloatField()
-    time_period = models.CharField(max_length=255, null=True, blank=True, help_text="e.g., 'peak:9AM-5PM'")
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='PHP')
+    time_period = models.CharField(max_length=255, null=True, blank=True, help_text="e.g., 'peak:09:00-17:00' or 'off-peak:17:00-09:00'")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -282,7 +290,25 @@ class BillingRate(models.Model):
         ]
 
     def __str__(self):
-        return f"Rate for {self.room.name if self.room else 'Global'} - {self.rate_per_kwh}"
+        return f"Rate for {self.room.name if self.room else 'Global'} - {self.rate_per_kwh} {self.currency}/kWh"
+
+    def get_rate_for_time(self, timestamp):
+        """Return the applicable rate based on the time_period and timestamp."""
+        if not self.time_period:
+            return self.rate_per_kwh
+        pattern = r"(peak|off-peak):(\d{2}:\d{2})-(\d{2}:\d{2})"
+        match = re.match(pattern, self.time_period)
+        if match:
+            period_type, start_time, end_time = match.groups()
+            start_hour, start_minute = map(int, start_time.split(':'))
+            end_hour, end_minute = map(int, end_time.split(':'))
+            current_hour, current_minute = timestamp.hour, timestamp.minute
+            current_time = current_hour * 60 + current_minute
+            start_minutes = start_hour * 60 + start_minute
+            end_minutes = end_hour * 60 + end_minute
+            if start_minutes <= current_time <= end_minutes:
+                return self.rate_per_kwh if period_type == 'peak' else self.rate_per_kwh * 0.8  # 20% discount for off-peak
+        return self.rate_per_kwh
 
 class Alert(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
