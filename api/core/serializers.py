@@ -5,9 +5,10 @@ from .models import (
     PredictiveAlert, BillingRate, ROLE_CHOICES, EQUIPMENT_TYPE_CHOICES,
     EQUIPMENT_STATUS_CHOICES, ROOM_TYPE_CHOICES, COMPONENT_TYPE_CHOICES,
     MAINTENANCE_STATUS_CHOICES, ALERT_TYPE_CHOICES, ALERT_SEVERITY_CHOICES,
-    PERIOD_TYPE_CHOICES
+    PERIOD_TYPE_CHOICES, CURRENCY_CHOICES
 )
 from django.contrib.auth.hashers import make_password
+import re
 
 class UserSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='get_role_display', read_only=True)
@@ -227,15 +228,31 @@ class PredictiveAlertSerializer(serializers.ModelSerializer):
 
 class BillingRateSerializer(serializers.ModelSerializer):
     room_name = serializers.CharField(source='room.name', read_only=True)
+    currency_display = serializers.CharField(source='get_currency_display', read_only=True)
     
     class Meta:
         model = BillingRate
-        fields = ['id', 'room', 'room_name', 'rate_per_kwh', 'time_period', 'created_at']
+        fields = ['id', 'room', 'room_name', 'rate_per_kwh', 'currency', 'currency_display', 'time_period', 'created_at']
+        read_only_fields = ['id', 'created_at', 'currency_display']
 
     def validate_rate_per_kwh(self, value):
         """Validate rate_per_kwh is positive"""
         if value <= 0:
             raise serializers.ValidationError("Rate per kWh must be positive")
+        return value
+
+    def validate_currency(self, value):
+        """Validate currency is 'PHP'"""
+        if value != 'PHP':
+            raise serializers.ValidationError("Only PHP currency is supported")
+        return value
+
+    def validate_time_period(self, value):
+        """Validate time_period format (e.g., 'peak:09:00-17:00')"""
+        if value:
+            pattern = r"(peak|off-peak):(\d{2}:\d{2})-(\d{2}:\d{2})"
+            if not re.match(pattern, value):
+                raise serializers.ValidationError("Time period must be in format 'peak/off-peak:HH:MM-HH:MM'")
         return value
 
 class AlertSerializer(serializers.ModelSerializer):
