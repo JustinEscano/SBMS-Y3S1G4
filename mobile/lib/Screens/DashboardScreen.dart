@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:async';
 import '../Screens/LoginScreen.dart';
 import '../Screens/ChatScreen.dart';
+import '../Screens/EnergyAnalyticsScreen.dart';
 import '../Widgets/bottom_navbar.dart';
 import '../Config/api.dart';
 
@@ -62,8 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (isAutoRefresh && mounted) {
-        loadData(); // Updated to use loadData
-        _loadSystemStatus();
+        loadData();
       }
     });
   }
@@ -76,6 +76,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _startAutoRefresh();
     } else {
       _refreshTimer?.cancel();
+    }
+  }
+
+  Future<bool> _refreshToken() async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.refreshToken),
+        body: jsonEncode({'refresh': widget.refreshToken}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          // Update tokens in widget (assumes mutable access, adjust if using Provider)
+          (widget as dynamic).accessToken = data['access'];
+          (widget as dynamic).refreshToken = data['refresh'] ?? widget.refreshToken;
+        });
+        return true;
+      }
+      return false;
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to refresh session: $e';
+      });
+      return false;
     }
   }
 
@@ -100,47 +125,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         http.get(Uri.parse(ApiConfig.maintenanceRequest), headers: headers),
       ]).timeout(const Duration(seconds: 15));
 
-      if (responses[0].statusCode == 200) {
-        final roomsData = json.decode(responses[0].body);
-        setState(() {
-          rooms = roomsData is List ? roomsData : [];
-        });
-      }
-
-      if (responses[1].statusCode == 200) {
-        final equipmentData = json.decode(responses[1].body);
-        setState(() {
-          equipment = equipmentData is List ? equipmentData : [];
-        });
-      }
-
-      if (responses[2].statusCode == 200) {
-        final sensorData = json.decode(responses[2].body);
-        setState(() {
-          sensorLogs = sensorData is List ? sensorData : [];
-        });
-      }
-
-      if (responses[3].statusCode == 200) {
-        final latestData = json.decode(responses[3].body);
-        if (latestData['success'] == true) {
-          setState(() {
-            latestSensorData = latestData['data'] ?? [];
-          });
+      for (var i = 0; i < responses.length; i++) {
+        if (responses[i].statusCode == 401) {
+          if (await _refreshToken()) {
+            return loadData(); // Retry with new token
+          } else {
+            throw Exception('Session expired. Please log in again.');
+          }
+        } else if (responses[i].statusCode != 200) {
+          throw Exception('Failed to load data (endpoint ${i + 1}): ${responses[i].statusCode}');
         }
       }
 
-      if (responses[4].statusCode == 200) {
-        final maintenanceData = json.decode(responses[4].body);
-        setState(() {
-          maintenanceRequests = maintenanceData is List ? maintenanceData : [];
-        });
-      }
+      setState(() {
+        rooms = json.decode(responses[0].body) is List ? json.decode(responses[0].body) : [];
+        equipment = json.decode(responses[1].body) is List ? json.decode(responses[1].body) : [];
+        sensorLogs = json.decode(responses[2].body) is List ? json.decode(responses[2].body) : [];
+        final latestData = json.decode(responses[3].body);
+        latestSensorData = latestData['success'] == true ? (latestData['data'] ?? []) : [];
+        maintenanceRequests = json.decode(responses[4].body) is List ? json.decode(responses[4].body) : [];
+      });
 
       await _loadSystemStatus();
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error loading data: $e';
+        _errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
       });
     } finally {
       setState(() {
@@ -158,6 +167,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _generateMaintenanceData();
     } catch (e) {
       print('Error loading system status: $e');
+      setState(() {
+        _errorMessage = 'Error processing system status: $e';
+      });
     }
   }
 
@@ -173,8 +185,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       for (var sensor in latestSensorData) {
         if (sensor['temperature'] != null && sensor['humidity'] != null) {
-          totalTemp += sensor['temperature'];
-          totalHumidity += sensor['humidity'];
+          totalTemp += (sensor['temperature'] as num).toDouble();
+          totalHumidity += (sensor['humidity'] as num).toDouble();
           validReadings++;
           if (sensor['status'] == 'online') activeZones++;
         }
@@ -188,8 +200,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     setState(() {
       hvacData = {
-        'avgTemperature': avgTemp,
-        'avgHumidity': avgHumidity,
+        'avgTemperature': avgTemp.isNaN ? 0 : avgTemp,
+        'avgHumidity': avgHumidity.isNaN ? 0 : avgHumidity,
         'activeZones': activeZones,
         'totalZones': latestSensorData.length,
         'status': activeZones > 0 ? 'operational' : 'offline',
@@ -203,35 +215,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     e['type']?.toLowerCase().contains('light') == true ||
         e['name']?.toLowerCase().contains('light') == true).length;
 
-    int activeLights = equipment.where((e) =>
-    (e['type']?.toLowerCase().contains('light') == true ||
-        e['name']?.toLowerCase().contains('light') == true) &&
-        e['status'] == 'online').length;
-
-    double avgLightLevel = 0;
+    int detectedLights = 0;
     if (latestSensorData.isNotEmpty) {
-      double totalLight = 0;
-      int validReadings = 0;
-
-      for (var sensor in latestSensorData) {
-        if (sensor['light_level'] != null) {
-          totalLight += sensor['light_level'];
-          validReadings++;
-        }
-      }
-
-      if (validReadings > 0) {
-        avgLightLevel = totalLight / validReadings;
-      }
+      detectedLights = latestSensorData.where((s) => s['light_detection'] == true).length;
     }
 
     setState(() {
       lightingData = {
         'totalDevices': lightingDevices > 0 ? lightingDevices : rooms.length,
-        'activeDevices': activeLights > 0 ? activeLights : (rooms.length * 0.7).round(),
-        'avgLightLevel': avgLightLevel > 0 ? avgLightLevel : 450,
-        'energySaving': activeLights > 0 ? 15 : 25,
-        'status': activeLights > 0 ? 'optimal' : 'normal',
+        'detectedLights': detectedLights,
+        'energySaving': detectedLights > 0 ? 15 : 25,
+        'status': detectedLights > 0 ? 'optimal' : 'normal',
       };
     });
   }
@@ -280,10 +274,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             sensor['energy'] != null &&
             sensor['voltage'] != null &&
             sensor['current'] != null) {
-          totalPower += sensor['power'];
-          totalEnergySum += sensor['energy'];
-          totalVoltage += sensor['voltage'];
-          totalCurrent += sensor['current'];
+          totalPower += (sensor['power'] as num).toDouble();
+          totalEnergySum += (sensor['energy'] as num).toDouble();
+          totalVoltage += (sensor['voltage'] as num).toDouble();
+          totalCurrent += (sensor['current'] as num).toDouble();
           validReadings++;
           if (sensor['status'] == 'online') activeDevices++;
         }
@@ -299,10 +293,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     setState(() {
       energyData = {
-        'avgPower': avgPower,
-        'totalEnergy': totalEnergy,
-        'avgVoltage': avgVoltage,
-        'avgCurrent': avgCurrent,
+        'avgPower': avgPower.isNaN ? 0 : avgPower,
+        'totalEnergy': totalEnergy.isNaN ? 0 : totalEnergy,
+        'avgVoltage': avgVoltage.isNaN ? 0 : avgVoltage,
+        'avgCurrent': avgCurrent.isNaN ? 0 : avgCurrent,
         'activeDevices': activeDevices,
         'totalDevices': latestSensorData.length,
         'status': activeDevices > 0 ? 'operational' : 'offline',
@@ -319,6 +313,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _handleMenuSelection(String value) {
     switch (value) {
       case 'analytics':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EnergyAnalyticsScreen(
+              accessToken: widget.accessToken,
+              refreshToken: widget.refreshToken,
+            ),
+          ),
+        );
+        break;
       case 'notifications':
       case 'about':
         ScaffoldMessenger.of(context).showSnackBar(
@@ -385,11 +389,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (!['Client', 'Employee', 'Admin', 'Superadmin'].contains(userRole)) {
           userRole = 'Client';
         }
-      } else {
-        print('Failed to fetch user role: ${response.statusCode}');
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _navigateToMaintenanceManagement(); // Retry with new token
+        }
       }
     } catch (e) {
       print('Error fetching user role: $e');
+      setState(() {
+        _errorMessage = 'Error fetching user role: $e';
+      });
     }
 
     Navigator.push(
@@ -473,8 +482,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildDetailRow('Total Devices', '${lightingData['totalDevices']}'),
-            _buildDetailRow('Active Devices', '${lightingData['activeDevices']}'),
-            _buildDetailRow('Average Light Level', '${lightingData['avgLightLevel']?.toStringAsFixed(0)} lux'),
+            _buildDetailRow('Lights Detected', '${lightingData['detectedLights']}/${lightingData['totalDevices']}'),
             _buildDetailRow('Energy Saving', '${lightingData['energySaving']}%'),
             _buildDetailRow('System Status', lightingData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
           ],
@@ -846,8 +854,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () => _showSystemDetails('Lighting'),
                       child: _buildSystemCard(
                         'Lighting',
-                        '${lightingData['activeDevices'] ?? 0}/${lightingData['totalDevices'] ?? 0}',
-                        'Active Lights',
+                        '${lightingData['detectedLights'] ?? 0}/${lightingData['totalDevices'] ?? 0}',
+                        'Lights Detected',
                         Icons.lightbulb,
                         Colors.amber,
                         lightingData['status'] ?? 'normal',
@@ -1225,16 +1233,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Expanded(
                               child: _buildSensorValue(
-                                'Light',
-                                '${sensorData['light_level']?.toStringAsFixed(0) ?? 'N/A'} lux',
+                                'Light Detection',
+                                sensorData['light_detection'] == true ? 'Detected' : 'Not Detected',
                                 Icons.light_mode,
-                                Colors.amber,
+                                sensorData['light_detection'] == true ? Colors.amber : Colors.grey,
                               ),
                             ),
                             Expanded(
                               child: _buildSensorValue(
                                 'Motion',
-                                sensorData['motion_detected'] == true ? 'Detected' : 'None',
+                                sensorData['motion_detected'] == true ? 'Detected' : 'Not Detected',
                                 Icons.motion_photos_on,
                                 sensorData['motion_detected'] == true ? Colors.orange : Colors.grey,
                               ),
@@ -1545,6 +1553,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Colors.orange;
       case 'error':
         return Colors.redAccent;
+      case 'detected':
+        return Colors.amber;
+      case 'not_detected':
+        return Colors.grey;
       default:
         return Colors.grey;
     }
