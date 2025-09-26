@@ -15,17 +15,47 @@ class ApiConfig {
   static String get verifyToken => '$baseUrl/verify-token/';
   static String get userInfo => '$baseUrl/users/me/';
 
-  // Equipment and Dashboard Endpoints
+  // Dashboard and Summary Endpoints
+  static String get dashboardSummary => '$baseUrl/dashboard/summary/';
+  static String get checkAnomalies => '$baseUrl/check-anomalies/';
+  static String get predictMaintenance => '$baseUrl/predict-maintenance/';
+
+  // Room and Equipment Endpoints
   static String get rooms => '$baseUrl/rooms/';
+  static String roomRealtime(String pk) => '$baseUrl/rooms/$pk/realtime/';
   static String get equipment => '$baseUrl/equipment/';
+  static String get components => '$baseUrl/components/';
+
+  // Sensor and Log Endpoints
   static String get sensorLog => '$baseUrl/sensorlog/';
   static String get latestSensorData => '$baseUrl/esp32/latest/';
+  static String get heartbeatLog => '$baseUrl/heartbeatlog/';
+
+  // Energy and Billing Endpoints
+  static String energySummary({String? periodType, String? roomId}) {
+    String url = '$baseUrl/energysummary/';
+    List<String> params = [];
+    if (periodType != null) params.add('period_type=$periodType');
+    if (roomId != null) params.add('room_id=$roomId');
+    return params.isNotEmpty ? '$url?${params.join('&')}' : url;
+  }
+  static String get billingRate => '$baseUrl/billingrate/';
+
+  // Alert Endpoints
+  static String get alert => '$baseUrl/alert/';
+  static String get predictiveAlert => '$baseUrl/predictivealert/';
 
   // Maintenance Endpoints
   static String get maintenanceRequest => '$baseUrl/maintenancerequest/';
   static String maintenanceRequestDetail(String id) => '$maintenanceRequest$id/';
   static String maintenanceRequestRespond(String id) => '$maintenanceRequest$id/respond/';
   static String maintenanceRequestUploadAttachment(String id) => '$maintenanceRequest$id/upload_attachment/';
+
+  // Notification Endpoints
+  static String get notification => '$baseUrl/notification/';
+  static String get notificationMarkAllRead => '$baseUrl/notification/mark_all_read/';
+
+  // User Management
   static String get users => '$baseUrl/users/';
 
   // Chat and LLM Endpoints
