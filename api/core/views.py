@@ -7,7 +7,7 @@ from rest_framework import status
 from django.utils import timezone
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg, Count, StdDev, Sum, Max
+from django.db.models import Avg, Count, StdDev, Sum, Max, Min
 from django.core.mail import send_mail
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
@@ -21,7 +21,6 @@ from .permissions import RoleBasedPermission
 import logging
 import datetime
 from django.db.models import Q
-
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -383,15 +382,20 @@ class AlertViewSet(viewsets.ModelViewSet):
     queryset = Alert.objects.select_related('equipment').all()
     serializer_class = AlertSerializer
     permission_classes = [RoleBasedPermission]
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
         if hasattr(user, 'role') and user.role == 'client':
             queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
         resolved = self.request.query_params.get('resolved')
-        if severity:
-            queryset = queryset.filter(severity=severity)
+        severity = self.request.query_params.get('severity')  # Fetch severity from query params
         alert_type = self.request.query_params.get('type')
+        if resolved is not None:
+            resolved_bool = resolved.lower() == 'true'
+            queryset = queryset.filter(resolved=resolved_bool)
+        if severity:  # Only filter by severity if it’s provided
+            queryset = queryset.filter(severity=severity)
         if alert_type:
             queryset = queryset.filter(type=alert_type)
         return queryset
@@ -682,7 +686,8 @@ def esp32_sensor_data(request):
                 "voltage": 220.0,
                 "current": 5.0,
                 "power": 1100.0,
-                "energy": 0.5
+                "energy": 0.5,
+                "reset_flag": false
             },
             {
                 "component_type": "dht22",
@@ -754,6 +759,7 @@ def esp32_sensor_data(request):
                     'current': float(component_data.get('current', 0.0)),
                     'power': float(component_data.get('power', 0.0)),
                     'energy': float(component_data.get('energy', 0.0)),
+                    'reset_flag': bool(component_data.get('reset_flag', False)),
                     'pzem_recorded_at': component_data.get('recorded_at', timezone.now())
                 })
             elif component_type == 'dht22':
@@ -891,10 +897,16 @@ def esp32_sensor_data(request):
             today = timezone.now().date()
             recent_logs = SensorLog.objects.filter(
                 component=component,
-                pzem_recorded_at__date=today
+                pzem_recorded_at__date=today,
+                energy__isnull=False
             )
-            if recent_logs.exists():
-                total_energy = recent_logs.aggregate(total=Sum('energy'))['total'] or 0
+            log_count = recent_logs.count()
+            logger.info(f"PZEM logs for {today}: {log_count}")
+            if log_count >= 2:
+                energy_stats = recent_logs.aggregate(max_energy=Max('energy'), min_energy=Min('energy'))
+                total_energy = (energy_stats['max_energy'] - energy_stats['min_energy']) if energy_stats['max_energy'] is not None else 0
+                if recent_logs.filter(reset_flag=True).exists():
+                    total_energy += energy_stats['max_energy'] or 0
                 avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
                 peak_power = recent_logs.aggregate(max=Max('power'))['max'] or 0
                 anomaly_count = Alert.objects.filter(
@@ -912,7 +924,7 @@ def esp32_sensor_data(request):
                         'total_energy': total_energy,
                         'avg_power': avg_power,
                         'peak_power': peak_power,
-                        'reading_count': recent_logs.count(),
+                        'reading_count': log_count,
                         'anomaly_count': anomaly_count
                     }
                 )
