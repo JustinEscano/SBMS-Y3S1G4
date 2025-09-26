@@ -188,6 +188,7 @@ class SensorLog(models.Model):
     dht22_recorded_at = models.DateTimeField(null=True, blank=True)
     photoresistor_recorded_at = models.DateTimeField(null=True, blank=True)
     motion_recorded_at = models.DateTimeField(null=True, blank=True)
+    reset_flag = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-recorded_at']

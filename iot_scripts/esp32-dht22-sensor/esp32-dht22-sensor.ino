@@ -95,7 +95,6 @@ void setup() {
   Serial.println("⚡ Initializing PZEM-004T on Serial2 (GPIO 16 RX, 17 TX)...");
   Serial2.begin(9600);
   pzem.setAddress(0x42);
-  pzem.resetEnergy();
   delay(2000);
   Serial.println("🔧 PZEM initialization complete");
   
