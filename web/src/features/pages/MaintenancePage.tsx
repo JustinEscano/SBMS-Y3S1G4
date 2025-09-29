@@ -1,173 +1,303 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import type { MaintenanceRequest, Equipment, User } from "../types/dashboardTypes";
-import MaintenanceModal from "../components/maintenanceModal";
-import { maintenanceService } from "../services/maintenanceService";
-import { equipmentService } from "../services/equipmentService";
-import { userService } from "../services/userService";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import PageLayout from "../pages/PageLayout";
 import Pagination from "../components/Pagination";
+import MaintenanceModal from "../components/maintenanceModal";
+import type { MaintenanceModalMode } from "../components/maintenanceModal";
+import MaintenanceViewModal from "../components/maintenanceViewModal";
+import { useMaintenanceRequests } from "../hooks/useMaintenance";
+import { useEquipment } from "../hooks/useEquipment";
+import { userService } from "../services/userService";
+import { maintenanceService } from "../services/maintenanceService";
+import type { MaintenanceRequest, User } from "../types/dashboardTypes";
 import "../pages/PageStyle.css";
 
-type MaintenanceModalMode = "add" | "edit" | "delete";
+type MaintenanceFormData = Partial<MaintenanceRequest> & {
+  id?: string;
+  newAttachments?: File[];
+  comments?: string;
+};
+
 const ITEMS_PER_PAGE = 5;
 
+const STATUS_MAP: Record<string, "pending" | "in_progress" | "resolved"> = {
+  pending: "pending",
+  in_progress: "in_progress",
+  resolved: "resolved",
+};
+
+type ModalType = MaintenanceModalMode | "view" | null;
+
 const MaintenancePage: React.FC = () => {
-  const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const { requests, loading, error, updateRequest, deleteRequest, refetch } = useMaintenanceRequests();
+  const { equipment } = useEquipment();
+
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [modalMode, setModalMode] = useState<MaintenanceModalMode | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | undefined>();
+  const [modalType, setModalType] = useState<ModalType>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [, setErrorMsg] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [searchParams] = useSearchParams();
-  const roomFilter = searchParams.get("room");
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "-";
 
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+  };
+
+  // Fetch users
   useEffect(() => {
-    const fetchData = async () => {
-      const [reqs, eqs, usrs] = await Promise.all([
-        maintenanceService.getAll(),
-        equipmentService.getAll(),
-        userService.getAll(),
-      ]);
-      setRequests(reqs);
-      setEquipments(eqs);
-      setUsers(usrs);
+    const fetchUsers = async () => {
+      try {
+        const data = await userService.getAll();
+        setUsers(data);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      }
     };
-    fetchData();
+    fetchUsers();
   }, []);
 
-  useEffect(() => setCurrentPage(1), [search, statusFilter, roomFilter]);
+  // Modal handlers
+  const openModal = useCallback((type: ModalType, request?: MaintenanceRequest) => {
+    setModalType(type);
+    setSelectedRequest(request ?? null);
+    setErrorMsg(null);
+  }, []);
 
-  useEffect(() => {
-  const query = searchParams.get("search");
-  if (query) setSearch(query);
-  }, [searchParams]);
+  const closeModal = useCallback(() => {
+    setModalType(null);
+    setSelectedRequest(null);
+    setErrorMsg(null);
+  }, []);
 
+  // Filtering + pagination
   const filteredRequests = useMemo(() => {
+    const term = search.toLowerCase();
     return requests.filter((r) => {
-      const matchesSearch = r.issue.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      const matchesRoom = !roomFilter || r.equipment === roomFilter;
-      return matchesSearch && matchesStatus && matchesRoom;
+      const matchesSearch = (r.issue ?? "").toLowerCase().includes(term);
+      const matchesStatus =
+        statusFilter === "all" ||
+        (r.status ?? "").toLowerCase() === statusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
     });
-  }, [requests, search, statusFilter, roomFilter]);
+  }, [requests, search, statusFilter]);
 
-  const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE);
-  const paginatedRequests = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredRequests.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredRequests, currentPage]);
+  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / ITEMS_PER_PAGE));
+  const paginatedRequests = filteredRequests.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
-  const handleSubmit = async (data: Partial<MaintenanceRequest>) => {
-    const dataToSend = { ...data };
-    if (dataToSend.status) {
-      if (dataToSend.status === "Pending") dataToSend.status = "pending" as any;
-      if (dataToSend.status === "In Progress") dataToSend.status = "in_progress" as any;
-      if (dataToSend.status === "Resolved") dataToSend.status = "resolved" as any;
-    }
+  const getUser = useCallback(
+    (id?: string) => (id ? users.find((u) => u.id === id)?.username || id : "-"),
+    [users]
+  );
+  const getEquipment = useCallback(
+    (id?: string) => (id ? equipment.find((e) => e.id === id)?.name || id : "-"),
+    [equipment]
+  );
 
-    if (modalMode === "add") {
-      const newReq = await maintenanceService.create(dataToSend);
-      setRequests((prev) => [...prev, newReq]);
-    } else if (modalMode === "edit" && data.id) {
-      const updated = await maintenanceService.update(data.id, dataToSend);
-      setRequests((prev) => prev.map((r) => (r.id === data.id ? { ...r, ...updated } : r)));
-    } else if (modalMode === "delete" && data.id) {
-      await maintenanceService.remove(data.id);
-      setRequests((prev) => prev.filter((r) => r.id !== data.id));
-    }
-    setModalMode(null);
-    setSelectedRequest(undefined);
+  const handleAdd = async (data: MaintenanceFormData): Promise<void> => {
+  setSubmitting(true);
+
+  // Optimistic: close modal right away
+  closeModal();
+
+  // Optimistic: add placeholder request
+  const tempId = `temp-${Date.now()}`;
+  const optimisticRequest: MaintenanceRequest = {
+    id: tempId,
+    user: data.user!,
+    equipment: data.equipment!,
+    issue: data.issue || "",
+    status: data.status ? STATUS_MAP[data.status.toLowerCase()] : "pending",
+    scheduled_date: data.scheduled_date || new Date().toISOString().split("T")[0],
+    resolved_at: data.resolved_at,
+    assigned_to: data.assigned_to,
+    comments: data.comments || "",
+    attachments: []
   };
+
+  updateRequest(tempId, optimisticRequest); // put into state immediately
+
+  try {
+    const created = await maintenanceService.create(optimisticRequest);
+
+    if (data.newAttachments?.length) {
+      for (const file of data.newAttachments) {
+        await maintenanceService.uploadAttachment(created.id!, file);
+      }
+    }
+
+    // Replace temp with real one
+    updateRequest(tempId, created);
+  } catch (err) {
+    console.error("Failed to create request:", err);
+    // Rollback: refetch from server
+    await refetch();
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+// EDIT
+const handleEdit = async (data: MaintenanceFormData): Promise<void> => {
+  if (!selectedRequest) return;
+
+  setSubmitting(true);
+  closeModal();
+
+  const payload: Partial<MaintenanceRequest> = {
+    issue: data.issue,
+    status: data.status ? STATUS_MAP[data.status.toLowerCase()] : selectedRequest.status,
+    scheduled_date: data.scheduled_date || selectedRequest.scheduled_date,
+    resolved_at: data.resolved_at,
+    assigned_to: data.assigned_to,
+    comments: data.comments,
+  };
+
+  // Optimistic update
+  updateRequest(selectedRequest.id, { ...selectedRequest, ...payload });
+
+  try {
+    await maintenanceService.update(selectedRequest.id, payload);
+
+    if (data.newAttachments?.length) {
+      for (const file of data.newAttachments) {
+        await maintenanceService.uploadAttachment(selectedRequest.id, file);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to update request:", err);
+    await refetch(); // rollback
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+// DELETE
+const handleDelete = async (): Promise<void> => {
+  if (!selectedRequest) return;
+
+  setSubmitting(true);
+  closeModal();
+
+  // Optimistic: remove from UI immediately
+  updateRequest(selectedRequest.id, null as any); // or filter out manually
+
+  try {
+    await deleteRequest(selectedRequest.id);
+  } catch (err) {
+    console.error("Failed to delete request:", err);
+    await refetch(); // rollback
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   return (
     <PageLayout initialSection={{ parent: "Dashboard", child: "Maintenance" }}>
       <h1>Dashboard &gt; Maintenance Requests</h1>
 
       <div className="content-container">
+        {/* Controls */}
         <div className="table-controls">
           <input
             type="text"
             placeholder="Search requests..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
           />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             style={{ marginLeft: "10px" }}
           >
             <option value="all">All</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
           </select>
         </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Equipment</th>
-              <th>Issue</th>
-              <th>Status</th>
-              <th>Scheduled</th>
-              <th>Resolved</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedRequests.map((req) => (
-              <tr key={req.id}>
-                <td>{users.find((u) => u.id === req.user)?.username || req.user}</td>
-                <td>{equipments.find((eq) => eq.id === req.equipment)?.name || req.equipment}</td>
-                <td>{req.issue}</td>
-                <td><span className={`status-color status-color-${req.status.toLowerCase()}`}>{req.status.toUpperCase()}</span></td>
-                <td>{req.scheduled_date}</td>
-                <td>{req.resolved_at || "-"}</td>
-                <td>
-                  <button
-                    className="edt-btn"
-                    onClick={() => {
-                      setModalMode("edit");
-                      setSelectedRequest(req);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="dlt-btn"
-                    onClick={() => {
-                      setModalMode("delete");
-                      setSelectedRequest(req);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {paginatedRequests.length === 0 && (
+        {/* Table */}
+        {loading ? (
+          <p>Loading maintenance requests...</p>
+        ) : error ? (
+          <p style={{ color: "red" }}>{error}</p>
+        ) : (
+          <table>
+            <thead>
               <tr>
-                <td colSpan={7}>No maintenance requests found</td>
+                <th>User</th>
+                <th>Equipment</th>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Scheduled</th>
+                <th>Resolved</th>
+                <th>Assigned To</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedRequests.length ? (
+                paginatedRequests.map((req) => (
+                  <tr key={req.id}>
+                    <td>{getUser(req.user)}</td>
+                    <td>{getEquipment(req.equipment)}</td>
+                    <td>{req.issue}</td>
+                    <td>
+                      <span
+                        className={`status-color status-color-${(req.status ?? "").toLowerCase()}`}
+                      >
+                        {(req.status ?? "").toUpperCase()}
+                      </span>
+                    </td>
+                    <td>{req.scheduled_date || "-"}</td>
+                    <td>{formatDate(req.resolved_at) || "-"}</td>
+                    <td>{getUser(req.assigned_to)}</td>
+                    <td>
+                      <button className="view-btn" onClick={() => openModal("view", req)}>
+                        View
+                      </button>
+                      <button className="edt-btn" onClick={() => openModal("edit", req)}>
+                        Edit
+                      </button>
+                      <button className="dlt-btn" onClick={() => openModal("delete", req)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8}>No maintenance requests found</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
 
-        <button
-          className="add-btn-main"
-          onClick={() => {
-            setModalMode("add");
-            setSelectedRequest(undefined);
-          }}
-        >
+        <button className="add-btn-main" onClick={() => openModal("add")}>
           + Add Maintenance Request
         </button>
-
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -175,20 +305,50 @@ const MaintenancePage: React.FC = () => {
           showRange
         />
 
-        {modalMode && (
-          <MaintenanceModal
-            mode={modalMode}
+        {/* Modals */}
+        {modalType === "view" && selectedRequest ? (
+          <MaintenanceViewModal
             request={selectedRequest}
-            equipments={equipments}
             users={users}
-            onClose={() => {
-              setModalMode(null);
-              setSelectedRequest(undefined);
-            }}
-            onSubmit={handleSubmit}
+            onClose={closeModal}
+            onRefresh={refetch}
+            updateRequest={updateRequest} 
           />
-        )}
+        ) : modalType ? (
+          <MaintenanceModal
+            mode={modalType as MaintenanceModalMode}
+            request={selectedRequest ?? undefined}
+            equipments={equipment}
+            users={users}
+            onClose={closeModal}
+            onSubmit={
+              modalType === "add" ? handleAdd : modalType === "edit" ? handleEdit : handleDelete
+            }
+          />
+        ) : null}
       </div>
+
+      {submitting && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 999999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontSize: "1.2rem",
+          }}
+        >
+          <div className="spinner" />
+          <p>Processing…</p>
+        </div>
+      )}
     </PageLayout>
   );
 };

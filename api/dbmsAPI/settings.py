@@ -141,16 +141,16 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # Client Gmail configuration
-EMAIL_HOST_USER = 'acephilipdenulan12@gmail.com'
-EMAIL_HOST_PASSWORD = 'sdhr xwht waog pydf'
-DEFAULT_FROM_EMAIL = 'SBMS Notifications <acephilipdenulan12@gmail.com>'
+EMAIL_HOST_USER = 'blueblade906@gmail.com'
+EMAIL_HOST_PASSWORD = 'kbne dmvk vbzu xrwi'
+DEFAULT_FROM_EMAIL = 'SBMS Notifications <blueblade906#gmail.com>'
 
 # Admin Gmail configuration
-ADMIN_EMAIL_USER = 'acephilipgclass18@gmail.com'
-ADMIN_EMAIL_PASSWORD = 'wctv uzrt kopv mtze'
-ADMIN_FROM_EMAIL = 'SBMS Admin <acephilipgclass18@gmail.com>'
+ADMIN_EMAIL_USER = 'ninezerosix609@gmail.com'
+ADMIN_EMAIL_PASSWORD = 'hndt dquq piow bqwp'
+ADMIN_FROM_EMAIL = 'SBMS Admin <ninezerosix609@gmail.com>'
 
 # Employee Gmail configuration
-EMPLOYEE_EMAIL_USER = 'acedenulan20@gmail.com'
-EMPLOYEE_EMAIL_PASSWORD = 'syyk evbk siux omwo'
-EMPLOYEE_FROM_EMAIL = 'SBMS Employee <acedenulan20@gmail.com>'
+EMPLOYEE_EMAIL_USER = 'escanojustin678@gmail.com'
+EMPLOYEE_EMAIL_PASSWORD = 'jsvz rakz gind qpev'
+EMPLOYEE_FROM_EMAIL = 'SBMS Employee <escanojustin678@gmail.com>'
