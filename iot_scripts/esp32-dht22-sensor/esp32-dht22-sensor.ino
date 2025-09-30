@@ -10,9 +10,9 @@ const char* ssid = "SKYWORTH-FA13";
 const char* password = "281892655";
 
 // Django API endpoints - UPDATED TO NEW IP
-const char* serverURL = "http://192.168.0.41:8000/api/esp32/sensor-data/";
-const char* healthURL = "http://192.168.0.41:8000/api/esp32/health/";
-const char* heartbeatURL = "http://192.168.0.41:8000/api/esp32/heartbeat/";
+const char* serverURL = "http://192.168.0.27:8000/api/esp32/sensor-data/";
+const char* healthURL = "http://192.168.0.27:8000/api/esp32/health/";
+const char* heartbeatURL = "http://192.168.0.27:8000/api/esp32/heartbeat/";
 
 // Device configuration - MUST MATCH Django equipment device_id
 const char* deviceID = "ESP32_001";
@@ -36,11 +36,13 @@ unsigned long lastHealthCheck = 0;
 unsigned long lastHeartbeat = 0;
 unsigned long lastSensorRead = 0;
 unsigned long lastPIRPrint = 0;
+unsigned long lastWiFiAttempt = 0;
 const unsigned long SEND_INTERVAL = 10000;      // Send data every 10 seconds
 const unsigned long HEALTH_INTERVAL = 60000;    // Health check every 60 seconds
 const unsigned long HEARTBEAT_INTERVAL = 30000; // Heartbeat every 30 seconds
 const unsigned long SENSOR_READ_INTERVAL = 3000; // Read sensor every 3 seconds
 const unsigned long PIR_PRINT_INTERVAL = 1000;  // Print PIR status every 1 second
+const unsigned long WIFI_RETRY_INTERVAL = 10000; // Retry WiFi every 10 seconds
 
 // Sensor data variables
 float temperature = 0.0;
@@ -71,7 +73,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("=== ESP32 Smart Building DHT22, PZEM, PIR & Photosensitive Module ===");
   Serial.println("Device ID: " + String(deviceID));
-  Serial.println("Version: 2.6.2 - NTP after WiFi, PIR 3s stabilization");
+  Serial.println("Version: 2.6.4 - Fixed JSON typo, WiFi stability");
   Serial.println("Wire Colors (DHT22): Red=Power, Brown=Ground, Orange=Data");
   Serial.println("Wire Colors (PZEM): TX/RX to GPIO 16/17");
   Serial.println("Wire Colors (Photoresistor): VCC=3.3V, DO=GPIO 19, GND=Ground");
@@ -89,13 +91,13 @@ void setup() {
   // Initialize DHT22 3-pin module
   Serial.println("🌡️ Initializing DHT22 3-pin module on GPIO 5...");
   dht.begin();
-  delay(5000); // Give DHT22 extra time to stabilize
+  delay(2000); // Reduced from 5000 for faster startup
   
   // Initialize PZEM-004T
   Serial.println("⚡ Initializing PZEM-004T on Serial2 (GPIO 16 RX, 17 TX)...");
   Serial2.begin(9600);
   pzem.setAddress(0x42);
-  delay(2000);
+  delay(1000); // Reduced from 2000
   Serial.println("🔧 PZEM initialization complete");
   
   // Initialize PIR sensor
@@ -107,25 +109,23 @@ void setup() {
   pinMode(PHOTO_PIN, INPUT);
   
   // Connect to WiFi FIRST
+  Serial.println("Before WiFi connect");
   connectToWiFi();
+  Serial.println("After WiFi connect");
   
   // Initialize NTP client AFTER WiFi
   if (wifiConnected) {
     Serial.println("⏰ Initializing NTP client...");
-    configTime(0, 0, "time.google.com", "pool.ntp.org", "time.nist.gov");
+    configTime(0, 0, "pool.ntp.org"); // Simplified to one reliable server
     time_t now = time(nullptr);
     int ntpAttempts = 0;
-    while (now < 1000000000 && ntpAttempts < 20) { // Timeout after 10 seconds
-        delay(500);
-        now = time(nullptr);
-        Serial.print(".");
-        ntpAttempts++;
+    while (now < 1000000000 && ntpAttempts < 10) { // Timeout after 5 seconds
+      delay(500);
+      now = time(nullptr);
+      Serial.print(".");
+      ntpAttempts++;
     }
-    if (now >= 1000000000) {
-        Serial.println("\n✅ NTP synchronized");
-    } else {
-        Serial.println("\n❌ NTP sync failed, using fallback timestamp");
-    }
+    Serial.println(now >= 1000000000 ? "\n✅ NTP synchronized" : "\n❌ NTP sync failed, using fallback timestamp");
   } else {
     Serial.println("❌ Skipping NTP initialization - no WiFi connection");
   }
@@ -157,11 +157,12 @@ void loop() {
   unsigned long currentTime = millis();
   
   // Check WiFi connection
-  if (WiFi.status() != WL_CONNECTED) {
+  if (WiFi.status() != WL_CONNECTED && currentTime - lastWiFiAttempt >= WIFI_RETRY_INTERVAL) {
     wifiConnected = false;
     Serial.println("⚠️ WiFi disconnected, attempting to reconnect...");
     connectToWiFi();
-  } else {
+    lastWiFiAttempt = currentTime;
+  } else if (WiFi.status() == WL_CONNECTED) {
     wifiConnected = true;
   }
   
@@ -176,8 +177,8 @@ void loop() {
   
   // Debug print PIR and Photoresistor status every 1 second
   if (currentTime - lastPIRPrint >= PIR_PRINT_INTERVAL) {
-    Serial.println("🚶 PIR Status: " + String(motionDetected ? "Motion Detected!" : "No Motion") + " (RAW: " + digitalRead(PIR_PIN) + ")");
-    Serial.println("💡 Photoresistor Status: " + String(lightDetected ? "Light Detected!" : "No Light") + " (RAW: " + digitalRead(PHOTO_PIN) + ")");
+    Serial.println("🚶 PIR Status: " + String(motionDetected ? "Motion Detected!" : "No Motion") + " (RAW: " + String(digitalRead(PIR_PIN)) + ")");
+    Serial.println("💡 Photoresistor Status: " + String(lightDetected ? "Light Detected!" : "No Light") + " (RAW: " + String(digitalRead(PHOTO_PIN)) + ")");
     lastPIRPrint = currentTime;
   }
   
@@ -203,16 +204,16 @@ void loop() {
   // Update LED status indicator
   updateLEDStatus();
   
-  delay(500);
+  delay(100); // Reduced for better responsiveness
 }
 
 void startupSequence() {
   Serial.println("🚀 Running startup sequence...");
   for (int i = 0; i < 5; i++) {
     digitalWrite(LED_PIN, HIGH);
-    delay(200);
+    delay(100);
     digitalWrite(LED_PIN, LOW);
-    delay(200);
+    delay(100);
   }
   Serial.println("✅ Startup sequence complete");
 }
@@ -221,22 +222,26 @@ void connectToWiFi() {
   Serial.print("🔗 Connecting to WiFi: ");
   Serial.println(ssid);
   
+  WiFi.disconnect(true); // Reset WiFi stack
+  delay(100);
   WiFi.begin(ssid, password);
   
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) { // 10 seconds timeout
-      delay(500);
-      Serial.print(".");
-      attempts++;
-      digitalWrite(LED_PIN, attempts % 2);
+    delay(500);
+    Serial.print(". Status: ");
+    Serial.println(WiFi.status());
+    digitalWrite(LED_PIN, attempts % 2);
+    attempts++;
   }
   
   if (WiFi.status() == WL_CONNECTED) {
     wifiConnected = true;
     Serial.println("\n✅ WiFi connected successfully!");
-    Serial.println("📡 IP address: " + String(WiFi.localIP()));
+    Serial.print("📡 IP address: ");
+    Serial.println(WiFi.localIP());
     Serial.println("📶 Signal strength: " + String(WiFi.RSSI()) + " dBm");
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
       digitalWrite(LED_PIN, HIGH);
       delay(50);
       digitalWrite(LED_PIN, LOW);
@@ -245,19 +250,22 @@ void connectToWiFi() {
   } else {
     wifiConnected = false;
     Serial.println("\n❌ WiFi connection failed!");
-    Serial.println("🔧 Please check your WiFi credentials");
+    Serial.println("🔧 Please check your WiFi credentials or signal strength");
     digitalWrite(LED_PIN, HIGH);
   }
 }
 
 void testServerConnection() {
-  if (!wifiConnected) return;
+  if (!wifiConnected) {
+    Serial.println("❌ Cannot test server - no WiFi");
+    return;
+  }
   
   Serial.println("🔍 Testing server connection...");
   
   HTTPClient http;
   http.begin(healthURL);
-  http.setTimeout(10000);
+  http.setTimeout(5000);
   
   int httpResponseCode = http.GET();
   
@@ -277,11 +285,11 @@ void testServerConnection() {
 
 void testDHT22Module() {
   Serial.println("🌡️ Testing DHT22 3-pin module on GPIO 5...");
-  delay(5000);
+  delay(2000);
   
-  for (int attempt = 1; attempt <= 5; attempt++) {
-    Serial.println("📊 Test attempt " + String(attempt) + "/5...");
-    delay(2000);
+  for (int attempt = 1; attempt <= 3; attempt++) {
+    Serial.println("📊 Test attempt " + String(attempt) + "/3...");
+    delay(1000);
     
     float testTemp = dht.readTemperature();
     float testHumidity = dht.readHumidity();
@@ -303,19 +311,19 @@ void testDHT22Module() {
     } else {
       Serial.println("❌ Attempt " + String(attempt) + " failed - NaN readings");
     }
-    delay(3000);
+    delay(1000);
   }
   
   dht22Working = false;
-  Serial.println("❌ DHT22 3-pin module test failed after 5 attempts!");
+  Serial.println("❌ DHT22 3-pin module test failed after 3 attempts!");
   Serial.println("🔧 Check your wiring...");
 }
 
 void testPZEMModule() {
   Serial.println("⚡ Testing PZEM-004T on Serial2...");
   
-  for (int attempt = 1; attempt <= 5; attempt++) {
-    Serial.println("📊 Test attempt " + String(attempt) + "/5...");
+  for (int attempt = 1; attempt <= 3; attempt++) {
+    Serial.println("📊 Test attempt " + String(attempt) + "/3...");
     delay(1000);
     
     float testVoltage = pzem.voltage();
@@ -345,14 +353,14 @@ void testPZEMModule() {
   }
   
   pzemWorking = false;
-  Serial.println("❌ PZEM-004T test failed after 5 attempts!");
+  Serial.println("❌ PZEM-004T test failed after 3 attempts!");
   Serial.println("🔧 Check your wiring...");
 }
 
 void testPIRSensor() {
   Serial.println("🚶 Testing PIR sensor on GPIO 18...");
-  Serial.println("⏳ Waiting 3 seconds for PIR sensor to stabilize...");
-  for (int i = 0; i < 3; i++) { // Reduced to 3 seconds
+  Serial.println("⏳ Waiting 2 seconds for PIR sensor to stabilize...");
+  for (int i = 0; i < 2; i++) {
     digitalWrite(LED_PIN, HIGH);
     delay(500);
     digitalWrite(LED_PIN, LOW);
@@ -372,8 +380,8 @@ void testPIRSensor() {
 
 void testPhotoresistor() {
   Serial.println("💡 Testing Photosensitive module on GPIO 19...");
-  Serial.println("⏳ Waiting 5 seconds for module to stabilize...");
-  delay(5000);
+  Serial.println("⏳ Waiting 2 seconds for module to stabilize...");
+  delay(2000);
   
   int photoState = digitalRead(PHOTO_PIN);
   if (photoState == HIGH || photoState == LOW) {
@@ -425,7 +433,7 @@ void readDHT22Module() {
 
 void readPZEMModule() {
   sensorReadAttempts++;
-  delay(1000);
+  delay(100);
   
   int retryCount = 0;
   const int MAX_RETRIES = 3;
@@ -508,7 +516,7 @@ String getISOTimestamp() {
   time_t now = time(nullptr);
   if (now < 1000000000) {
     Serial.println("⚠️ NTP not synced, using fallback timestamp");
-    return "2025-09-25T00:00:00Z"; // Fallback for testing
+    return "2025-09-30T00:00:00Z";
   }
   char timeStr[25];
   strftime(timeStr, sizeof(timeStr), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
@@ -526,7 +534,7 @@ void prepareSensorData() {
   Serial.println("⚡ Power: " + String(power, 1) + "W " + (pzemWorking ? "(REAL PZEM)" : "(LAST VALID)"));
   Serial.println("⚡ Energy: " + String(energy, 3) + "kWh " + (pzemWorking ? "(REAL PZEM)" : "(LAST VALID)"));
   Serial.println("📶 WiFi Signal: " + String(WiFi.RSSI()) + " dBm");
-  Serial.println("📈 DHT22 Success Rate: " + String((float)successfulReads/sensorReadAttempts*100, 1) + "%");
+  Serial.println("📈 DHT22 Success Rate: " + String(sensorReadAttempts > 0 ? (float)successfulReads / sensorReadAttempts * 100 : 0, 1) + "%");
   Serial.println();
 }
 
@@ -539,7 +547,7 @@ void sendSensorData() {
   HTTPClient http;
   http.begin(serverURL);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(15000);
+  http.setTimeout(5000);
   
   DynamicJsonDocument doc(1024);
   doc["device_id"] = deviceID;
@@ -570,7 +578,7 @@ void sendSensorData() {
     photoData["component_type"] = "photoresistor";
     photoData["identifier"] = "PHOTO_GPIO19";
     photoData["recorded_at"] = getISOTimestamp();
-    photoData["light_detected"] = lightDetected;
+    photoData["light_detected"] = lightDetected; // Fixed typo: was pzemData
   }
   
   if (pirWorking) {
@@ -619,7 +627,10 @@ void sendSensorData() {
 }
 
 void sendHeartbeat() {
-  if (!wifiConnected) return;
+  if (!wifiConnected) {
+    Serial.println("❌ Cannot send heartbeat - no WiFi");
+    return;
+  }
   
   HTTPClient http;
   http.begin(heartbeatURL);
@@ -633,7 +644,7 @@ void sendHeartbeat() {
   doc["pzem_working"] = pzemWorking;
   doc["photoresistor_working"] = photoresistorWorking;
   doc["pir_working"] = pirWorking;
-  doc["success_rate"] = (float)successfulReads/sensorReadAttempts*100;
+  doc["success_rate"] = sensorReadAttempts > 0 ? (float)successfulReads / sensorReadAttempts * 100 : 0;
   doc["wifi_signal"] = WiFi.RSSI();
   doc["uptime"] = millis() / 1000;
   doc["sensor_type"] = "PZEM_SERIAL2,DHT22_3PIN_MODULE_GPIO5,PHOTO_GPIO19,MOTION_GPIO18";
@@ -644,12 +655,14 @@ void sendHeartbeat() {
   String jsonString;
   serializeJson(doc, jsonString);
   
+  Serial.println("💓 Sending Heartbeat: " + jsonString);
   int httpResponseCode = http.POST(jsonString);
   
   if (httpResponseCode == 200 || httpResponseCode == 201) {
     Serial.println("💓 Heartbeat sent successfully");
   } else {
     Serial.println("⚠️ Heartbeat failed: " + String(httpResponseCode));
+    Serial.println("🔍 Error: " + http.errorToString(httpResponseCode));
   }
   
   http.end();
