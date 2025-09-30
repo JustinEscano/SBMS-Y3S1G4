@@ -25,14 +25,18 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   List<dynamic> equipment = [];
   String? selectedRoomId;
   String? selectedComponentId;
-  String selectedScope = 'room'; // Options: room, all_rooms, building
+  String selectedScope = 'room';
   bool isLoading = true;
   bool isRefreshingToken = false;
   String errorMessage = '';
-  String timeFrame = 'daily'; // Default to daily
+  String timeFrame = 'daily';
   Map<String, dynamic> summaryData = {};
+  Map<String, dynamic> billingData = {};
   Map<String, List<dynamic>> _cachedSensorLogs = {};
+  Map<String, Map<String, dynamic>> _cachedBillingData = {};
   DateTime? _lastCacheTime;
+  String totalCost = 'N/A'; // Added for UI
+  String effectiveRate = 'N/A'; // Added for UI
 
   final Map<String, Duration> _periodDurations = {
     'daily': Duration(hours: 24),
@@ -188,23 +192,30 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
+  DateTime _getEndTime(DateTime startTime) {
+    switch (timeFrame) {
+      case 'daily':
+        return startTime.add(Duration(hours: 23, minutes: 59, seconds: 59));
+      case 'weekly':
+        return startTime.add(Duration(days: 7));
+      case 'monthly':
+        return startTime.add(Duration(days: 30));
+      default:
+        return startTime.add(Duration(hours: 23, minutes: 59, seconds: 59));
+    }
+  }
+
   Future<void> loadEnergyData() async {
     setState(() {
       isLoading = true;
       errorMessage = '';
+      _cachedSensorLogs.clear();
+      _cachedBillingData.clear();
+      totalCost = 'N/A';
+      effectiveRate = 'N/A';
     });
 
     final cacheKey = '$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame';
-    if (_cachedSensorLogs.containsKey(cacheKey) &&
-        _lastCacheTime != null &&
-        DateTime.now().difference(_lastCacheTime!).inMinutes < 5) {
-      setState(() {
-        sensorLogs = _cachedSensorLogs[cacheKey]!;
-        isLoading = false;
-      });
-      await _loadSummaryData();
-      return;
-    }
 
     try {
       final headers = {
@@ -213,31 +224,46 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         'Accept': 'application/json',
       };
 
-      final startTimeCalc = _getStartTime(DateTime.now());
-      String startTimeParam = '&start_time=${startTimeCalc.toIso8601String()}';
+      // Use dynamic start and end times based on timeFrame
+      DateTime now = DateTime.now();
+      DateTime startTimeCalc = _getStartTime(now);
+      DateTime endTimeCalc = _getEndTime(startTimeCalc);
 
-      String sensorLogUrl = '${ApiConfig.sensorLog}?timeframe=$timeFrame$startTimeParam';
-      int limit = 10000; // Increased limit to handle denser data
-      sensorLogUrl += '&limit=$limit';
-      if (selectedScope == 'room' && selectedRoomId != null) {
-        sensorLogUrl += '&room_id=$selectedRoomId';
-        if (selectedComponentId != null) {
-          sensorLogUrl += '&component_id=$selectedComponentId';
-        }
-      } else if (selectedScope == 'all_rooms') {
-        sensorLogUrl += '&scope=all_rooms';
-      }
+      // Build billing URL dynamically
+      String billingUrl = ApiConfig.calculateEnergyCost;
+      List<String> params = [
+        'period_type=$timeFrame',
+        if (selectedRoomId != null) 'room_id=$selectedRoomId',
+        if (selectedComponentId != null) 'component=$selectedComponentId',
+        'period_start=${startTimeCalc.toIso8601String()}Z',
+        'period_end=${endTimeCalc.toIso8601String()}Z',
+      ];
+      billingUrl += '?' + params.join('&');
 
-      String summaryUrl = ApiConfig.energySummary(periodType: timeFrame, roomId: selectedScope == 'room' ? selectedRoomId : null) + startTimeParam;
+      // Fetch billing data
+      print('Billing Request URL: $billingUrl');
+      var billingResponse = await http.get(Uri.parse(billingUrl), headers: headers).timeout(const Duration(seconds: 15));
+      print('Billing Response Status: ${billingResponse.statusCode}');
+      print('Billing Response Body: ${billingResponse.body}');
 
+      // Build sensor log URL
+      String sensorLogUrl = ApiConfig.sensorLog;
+      List<String> sensorParams = [
+        'timeframe=$timeFrame',
+        'period_start=${startTimeCalc.toIso8601String()}Z',
+        'limit=10000',
+        if (selectedRoomId != null) 'room_id=$selectedRoomId',
+        if (selectedComponentId != null) 'component_id=$selectedComponentId',
+      ];
+      sensorLogUrl += '?' + sensorParams.join('&');
+
+      // Parallel requests
       final responses = await Future.wait([
         http.get(Uri.parse(sensorLogUrl), headers: headers),
-        http.get(
-          Uri.parse(summaryUrl),
-          headers: headers,
-        ),
+        Future.value(billingResponse),
       ]).timeout(const Duration(seconds: 15));
 
+      // Handle Sensor Log Response
       if (responses[0].statusCode == 401) {
         if (await _refreshToken()) {
           return loadEnergyData();
@@ -249,36 +275,64 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       }
 
       final sensorData = json.decode(responses[0].body);
+      print('Sensor Log Response: $sensorData');
       setState(() {
         sensorLogs = sensorData is List ? sensorData : [];
         _cachedSensorLogs[cacheKey] = sensorLogs;
-        _lastCacheTime = DateTime.now();
       });
 
+      // Handle Billing Response
       if (responses[1].statusCode == 401) {
         if (await _refreshToken()) {
-          return _loadSummaryData();
+          return loadEnergyData();
         } else {
           throw Exception('Session expired. Please log in again.');
         }
       } else if (responses[1].statusCode != 200) {
-        throw Exception('Failed to load summary data: ${responses[1].statusCode} - ${responses[1].reasonPhrase}');
+        throw Exception('Failed to load billing data: ${responses[1].statusCode} - ${responses[1].reasonPhrase}');
       }
 
-      final summary = json.decode(responses[1].body);
-      if (summary is List && summary.isNotEmpty) {
-        setState(() {
-          summaryData = Map<String, dynamic>.from(summary[0]);
-        });
+      final billing = json.decode(responses[1].body);
+      print('Raw Billing Data: $billing');
+      Map<String, dynamic> parsedBillingData = {
+        'total_cost': 0.0,
+        'effective_rate': 0.0,
+        'currency': 'PHP',
+        'details': [],
+      };
+      if (billing is Map<String, dynamic> && billing.containsKey('data')) {
+        final data = billing['data'] as Map<String, dynamic>;
+        parsedBillingData = {
+          'total_cost': (data['total_cost'] as num?)?.toDouble() ?? 0.0,
+          'effective_rate': (data['effective_rate'] as num?)?.toDouble() ?? 0.0,
+          'currency': data['currency'] ?? 'PHP',
+          'details': data['details'] ?? [],
+        };
       } else {
+        print('Invalid billing data structure: $billing');
         setState(() {
-          summaryData = {};
-          errorMessage = 'Invalid summary data format';
+          errorMessage = 'Invalid billing data structure received';
         });
       }
+      print('Parsed Billing Data: $parsedBillingData');
+
+      setState(() {
+        billingData = parsedBillingData;
+        _cachedBillingData[cacheKey] = billingData;
+        _lastCacheTime = DateTime.now();
+        totalCost = parsedBillingData['total_cost'].toStringAsFixed(2);
+        effectiveRate = parsedBillingData['effective_rate'].toStringAsFixed(2);
+        if (parsedBillingData['total_cost'] == 0.0 && parsedBillingData['details'].isEmpty) {
+          errorMessage = 'No billing data available for the selected period';
+        }
+      });
+
+      await _loadSummaryData(startTimeCalc);
     } catch (e) {
       setState(() {
         errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
+        totalCost = 'N/A';
+        effectiveRate = 'N/A';
       });
     } finally {
       setState(() {
@@ -287,23 +341,22 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-  Future<void> _loadSummaryData() async {
+  Future<void> _loadSummaryData(DateTime startTimeCalc) async {
     try {
       final headers = {
         'Authorization': 'Bearer ${widget.accessToken}',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
-      final startTimeCalc = _getStartTime(DateTime.now());
-      String startTimeParam = '&start_time=${startTimeCalc.toIso8601String()}';
-      String summaryUrl = ApiConfig.energySummary(periodType: timeFrame, roomId: selectedScope == 'room' ? selectedRoomId : null) + startTimeParam;
+      String summaryUrl = ApiConfig.energySummary(periodType: timeFrame, roomId: selectedScope == 'room' ? selectedRoomId : null);
+      summaryUrl += '&start_time=${startTimeCalc.toIso8601String()}Z';
       final response = await http.get(
         Uri.parse(summaryUrl),
         headers: headers,
       ).timeout(const Duration(seconds: 15));
       if (response.statusCode == 401) {
         if (await _refreshToken()) {
-          return _loadSummaryData();
+          return _loadSummaryData(startTimeCalc);
         } else {
           throw Exception('Session expired. Please log in again.');
         }
@@ -311,6 +364,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         throw Exception('Failed to load summary data: ${response.statusCode} - ${response.reasonPhrase}');
       }
       final summary = json.decode(response.body);
+      print('Summary Response: $summary');
       if (summary is List && summary.isNotEmpty) {
         setState(() {
           summaryData = Map<String, dynamic>.from(summary[0]);
@@ -318,7 +372,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       } else {
         setState(() {
           summaryData = {};
-          errorMessage = 'Invalid summary data format';
+          errorMessage = 'No summary data available for the selected period (${startTimeCalc.toIso8601String().substring(0, 10)})';
         });
       }
     } catch (e) {
@@ -351,7 +405,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
 
     filteredLogs.sort((a, b) => DateTime.parse(a['recorded_at']).compareTo(DateTime.parse(b['recorded_at'])));
 
-    // Pre-generate bins up to current time
     final totalBins = ((endMs - startMs) / binSizeMs).ceil();
     final Map<int, List<double>> bins = {};
     for (int i = 0; i < totalBins; i++) {
@@ -359,7 +412,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       bins[binKey] = [];
     }
 
-    // Aggregate data into bins
     for (var log in filteredLogs) {
       try {
         final recordedAt = DateTime.parse(log['recorded_at']);
@@ -380,11 +432,10 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     bins.forEach((binKey, values) {
       final avgPower = values.isNotEmpty ? values.reduce((a, b) => a + b) / values.length : 0.0;
       final binMidMs = binKey + (binSizeMs / 2);
-      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble(); // Hours since start
+      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble();
       spots.add(FlSpot(xValue, avgPower));
     });
 
-    // Sort by time (ascending x-value)
     spots.sort((a, b) => a.x.compareTo(b.x));
     return spots;
   }
@@ -412,7 +463,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
 
     filteredLogs.sort((a, b) => DateTime.parse(a['recorded_at']).compareTo(DateTime.parse(b['recorded_at'])));
 
-    // Pre-generate bins up to current time
     final totalBins = ((endMs - startMs) / binSizeMs).ceil();
     final Map<int, List<double>> bins = {};
     for (int i = 0; i < totalBins; i++) {
@@ -420,7 +470,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       bins[binKey] = [];
     }
 
-    // Aggregate data into bins
     for (var log in filteredLogs) {
       try {
         final recordedAt = DateTime.parse(log['recorded_at']);
@@ -439,13 +488,12 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
 
     final List<FlSpot> spots = [];
     bins.forEach((binKey, values) {
-      final lastEnergy = values.isNotEmpty ? values.reduce((a, b) => a > b ? a : b) : 0.0; // Take max value for cumulative energy
+      final lastEnergy = values.isNotEmpty ? values.reduce((a, b) => a > b ? a : b) : 0.0;
       final binMidMs = binKey + (binSizeMs / 2);
-      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble(); // Hours since start
+      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble();
       spots.add(FlSpot(xValue, lastEnergy));
     });
 
-    // Sort by time (ascending x-value)
     spots.sort((a, b) => a.x.compareTo(b.x));
     return spots;
   }
@@ -605,7 +653,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Analyze energy consumption trends over $timeFrame intervals',
+                        'Analyze energy consumption and cost trends over $timeFrame intervals',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ],
@@ -912,7 +960,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_getScopeTitle()} Energy Statistics',
+                        '${_getScopeTitle()} Energy and Cost Statistics',
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
@@ -921,6 +969,23 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                       _buildStatRow('Peak Power', '${summaryData['peak_power']?.toStringAsFixed(1) ?? 'N/A'} W'),
                       _buildStatRow('Reading Count', '${summaryData['reading_count'] ?? 'N/A'}'),
                       _buildStatRow('Anomaly Count', '${summaryData['anomaly_count'] ?? 'N/A'}'),
+                      const Divider(),
+                      _buildStatRow('Total Cost', '$totalCost ${billingData['currency'] ?? 'PHP'}'),
+                      _buildStatRow('Effective Rate', '$effectiveRate ${billingData['currency'] ?? 'PHP'}/kWh'),
+                      if (billingData['details']?.isNotEmpty == true) ...[
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Cost Breakdown by Component',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        ...billingData['details'].map<Widget>((detail) {
+                          return _buildStatRow(
+                            detail['component_type'] ?? 'Unknown Component',
+                            '${detail['cost']?.toStringAsFixed(2) ?? '0.00'} ${detail['currency'] ?? 'PHP'} (${detail['total_energy']?.toStringAsFixed(3) ?? '0.000'} kWh)',
+                          );
+                        }).toList(),
+                      ],
                     ],
                   ),
                 ),
@@ -960,7 +1025,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(value),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w400)),
         ],
       ),
     );
