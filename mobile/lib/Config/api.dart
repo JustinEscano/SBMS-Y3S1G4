@@ -40,6 +40,7 @@ class ApiConfig {
     return params.isNotEmpty ? '$url?${params.join('&')}' : url;
   }
   static String get billingRate => '$baseUrl/billingrate/';
+  static String get calculateEnergyCost => '$baseUrl/billingrate/calculate_energy_cost/';
 
   // Alert Endpoints
   static String get alert => '$baseUrl/alert/';
