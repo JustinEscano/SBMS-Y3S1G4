@@ -35,8 +35,8 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   Map<String, List<dynamic>> _cachedSensorLogs = {};
   Map<String, Map<String, dynamic>> _cachedBillingData = {};
   DateTime? _lastCacheTime;
-  String totalCost = 'N/A'; // Added for UI
-  String effectiveRate = 'N/A'; // Added for UI
+  String totalCost = 'N/A';
+  String effectiveRate = 'N/A';
 
   final Map<String, Duration> _periodDurations = {
     'daily': Duration(hours: 24),
@@ -211,8 +211,8 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       errorMessage = '';
       _cachedSensorLogs.clear();
       _cachedBillingData.clear();
-      totalCost = 'N/A';
-      effectiveRate = 'N/A';
+      totalCost = '0.00';
+      effectiveRate = '0.00';
     });
 
     final cacheKey = '$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame';
@@ -224,12 +224,10 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         'Accept': 'application/json',
       };
 
-      // Use dynamic start and end times based on timeFrame
       DateTime now = DateTime.now();
       DateTime startTimeCalc = _getStartTime(now);
       DateTime endTimeCalc = _getEndTime(startTimeCalc);
 
-      // Build billing URL dynamically
       String billingUrl = ApiConfig.calculateEnergyCost;
       List<String> params = [
         'period_type=$timeFrame',
@@ -240,13 +238,11 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       ];
       billingUrl += '?' + params.join('&');
 
-      // Fetch billing data
       print('Billing Request URL: $billingUrl');
       var billingResponse = await http.get(Uri.parse(billingUrl), headers: headers).timeout(const Duration(seconds: 15));
       print('Billing Response Status: ${billingResponse.statusCode}');
       print('Billing Response Body: ${billingResponse.body}');
 
-      // Build sensor log URL
       String sensorLogUrl = ApiConfig.sensorLog;
       List<String> sensorParams = [
         'timeframe=$timeFrame',
@@ -257,13 +253,11 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       ];
       sensorLogUrl += '?' + sensorParams.join('&');
 
-      // Parallel requests
       final responses = await Future.wait([
         http.get(Uri.parse(sensorLogUrl), headers: headers),
         Future.value(billingResponse),
       ]).timeout(const Duration(seconds: 15));
 
-      // Handle Sensor Log Response
       if (responses[0].statusCode == 401) {
         if (await _refreshToken()) {
           return loadEnergyData();
@@ -281,7 +275,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         _cachedSensorLogs[cacheKey] = sensorLogs;
       });
 
-      // Handle Billing Response
       if (responses[1].statusCode == 401) {
         if (await _refreshToken()) {
           return loadEnergyData();
@@ -308,11 +301,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
           'currency': data['currency'] ?? 'PHP',
           'details': data['details'] ?? [],
         };
-      } else {
-        print('Invalid billing data structure: $billing');
-        setState(() {
-          errorMessage = 'Invalid billing data structure received';
-        });
       }
       print('Parsed Billing Data: $parsedBillingData');
 
@@ -322,17 +310,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         _lastCacheTime = DateTime.now();
         totalCost = parsedBillingData['total_cost'].toStringAsFixed(2);
         effectiveRate = parsedBillingData['effective_rate'].toStringAsFixed(2);
-        if (parsedBillingData['total_cost'] == 0.0 && parsedBillingData['details'].isEmpty) {
-          errorMessage = 'No billing data available for the selected period';
-        }
       });
 
       await _loadSummaryData(startTimeCalc);
     } catch (e) {
       setState(() {
         errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
-        totalCost = 'N/A';
-        effectiveRate = 'N/A';
+        totalCost = '0.00';
+        effectiveRate = '0.00';
       });
     } finally {
       setState(() {
@@ -371,8 +356,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         });
       } else {
         setState(() {
-          summaryData = {};
-          errorMessage = 'No summary data available for the selected period (${startTimeCalc.toIso8601String().substring(0, 10)})';
+          summaryData = {
+            'total_energy': 0.0,
+            'avg_power': 0.0,
+            'peak_power': 0.0,
+            'reading_count': 0,
+            'anomaly_count': 0,
+          };
+          errorMessage = '';
         });
       }
     } catch (e) {
@@ -400,10 +391,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         return false;
       }
     }).toList();
-
-    if (filteredLogs.isEmpty) return [];
-
-    filteredLogs.sort((a, b) => DateTime.parse(a['recorded_at']).compareTo(DateTime.parse(b['recorded_at'])));
 
     final totalBins = ((endMs - startMs) / binSizeMs).ceil();
     final Map<int, List<double>> bins = {};
@@ -458,10 +445,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         return false;
       }
     }).toList();
-
-    if (filteredLogs.isEmpty) return [];
-
-    filteredLogs.sort((a, b) => DateTime.parse(a['recorded_at']).compareTo(DateTime.parse(b['recorded_at'])));
 
     final totalBins = ((endMs - startMs) / binSizeMs).ceil();
     final Map<int, List<double>> bins = {};
@@ -780,9 +763,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 200,
-                        child: powerSpots.isEmpty
-                            ? const Center(child: Text('No power data available'))
-                            : LineChart(
+                        child: LineChart(
                           LineChartData(
                             gridData: FlGridData(show: true),
                             titlesData: FlTitlesData(
@@ -873,9 +854,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 200,
-                        child: energySpots.isEmpty
-                            ? const Center(child: Text('No energy data available'))
-                            : LineChart(
+                        child: LineChart(
                           LineChartData(
                             gridData: FlGridData(show: true),
                             titlesData: FlTitlesData(
@@ -964,11 +943,11 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
-                      _buildStatRow('Total Energy', '${summaryData['total_energy']?.toStringAsFixed(3) ?? 'N/A'} kWh'),
-                      _buildStatRow('Average Power', '${summaryData['avg_power']?.toStringAsFixed(1) ?? 'N/A'} W'),
-                      _buildStatRow('Peak Power', '${summaryData['peak_power']?.toStringAsFixed(1) ?? 'N/A'} W'),
-                      _buildStatRow('Reading Count', '${summaryData['reading_count'] ?? 'N/A'}'),
-                      _buildStatRow('Anomaly Count', '${summaryData['anomaly_count'] ?? 'N/A'}'),
+                      _buildStatRow('Total Energy', '${summaryData['total_energy']?.toStringAsFixed(3) ?? '0.000'} kWh'),
+                      _buildStatRow('Average Power', '${summaryData['avg_power']?.toStringAsFixed(1) ?? '0.0'} W'),
+                      _buildStatRow('Peak Power', '${summaryData['peak_power']?.toStringAsFixed(1) ?? '0.0'} W'),
+                      _buildStatRow('Reading Count', '${summaryData['reading_count'] ?? '0'}'),
+                      _buildStatRow('Anomaly Count', '${summaryData['anomaly_count'] ?? '0'}'),
                       const Divider(),
                       _buildStatRow('Total Cost', '$totalCost ${billingData['currency'] ?? 'PHP'}'),
                       _buildStatRow('Effective Rate', '$effectiveRate ${billingData['currency'] ?? 'PHP'}/kWh'),
