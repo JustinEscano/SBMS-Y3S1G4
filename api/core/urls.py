@@ -48,4 +48,6 @@ urlpatterns = [
     
     # Field options endpoint
     path('equipment/field-options/', equipment_field_options, name='equipment_field_options'),
+
+    path('api/billingrate/calculate_energy_cost/', BillingRateViewSet.as_view({'get': 'calculate_energy_cost'}), name='calculate_energy_cost'),
 ]

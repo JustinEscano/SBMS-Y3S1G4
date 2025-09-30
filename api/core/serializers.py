@@ -8,7 +8,8 @@ from .models import (
     PERIOD_TYPE_CHOICES, CURRENCY_CHOICES
 )
 from django.contrib.auth.hashers import make_password
-import re
+from django.utils import timezone
+from datetime import time
 
 class UserSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='get_role_display', read_only=True)
@@ -23,7 +24,6 @@ class UserSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def validate_role(self, value):
-        """Validate role against allowed choices"""
         valid_roles = [choice[0] for choice in ROLE_CHOICES]
         if value not in valid_roles:
             raise serializers.ValidationError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
@@ -37,20 +37,17 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'floor', 'capacity', 'type', 'type_display', 'typical_energy_usage', 'occupancy_pattern', 'created_at']
         
     def validate_type(self, value):
-        """Validate room type against allowed choices"""
         valid_types = [choice[0] for choice in ROOM_TYPE_CHOICES]
         if value not in valid_types:
             raise serializers.ValidationError(f"Invalid room type. Must be one of: {', '.join(valid_types)}")
         return value
 
     def validate_typical_energy_usage(self, value):
-        """Validate typical_energy_usage is non-negative"""
         if value is not None and value < 0:
             raise serializers.ValidationError("Typical energy usage must be non-negative")
         return value
 
     def validate_occupancy_pattern(self, value):
-        """Validate occupancy_pattern format (e.g., '9AM-5PM weekdays')"""
         if value and len(value) > 255:
             raise serializers.ValidationError("Occupancy pattern must not exceed 255 characters")
         return value
@@ -66,18 +63,15 @@ class EquipmentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'room', 'room_name', 'type', 'type_display', 'status', 'status_display', 'device_id', 'qr_code', 'qr_code_data', 'created_at']
         
     def get_qr_code_data(self, obj):
-        """Generate and return QR code data if not exists"""
         return obj.generate_qr_code()
         
     def validate_type(self, value):
-        """Validate equipment type against allowed choices"""
         valid_types = [choice[0] for choice in EQUIPMENT_TYPE_CHOICES]
         if value not in valid_types:
             raise serializers.ValidationError(f"Invalid equipment type. Must be one of: {', '.join(valid_types)}")
         return value
         
     def validate_status(self, value):
-        """Validate equipment status against allowed choices"""
         valid_statuses = [choice[0] for choice in EQUIPMENT_STATUS_CHOICES]
         if value not in valid_statuses:
             raise serializers.ValidationError(f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
@@ -93,14 +87,12 @@ class ComponentSerializer(serializers.ModelSerializer):
         fields = ['id', 'equipment', 'equipment_name', 'component_type', 'component_type_display', 'identifier', 'status', 'status_display', 'created_at']
     
     def validate_component_type(self, value):
-        """Validate component type against allowed choices"""
         valid_types = [choice[0] for choice in COMPONENT_TYPE_CHOICES]
         if value not in valid_types:
             raise serializers.ValidationError(f"Invalid component type. Must be one of: {', '.join(valid_types)}")
         return value
     
     def validate_identifier(self, value):
-        """Validate identifier is unique for equipment"""
         equipment_id = self.initial_data.get('equipment')
         if equipment_id and Component.objects.filter(equipment_id=equipment_id, identifier=value).exists():
             raise serializers.ValidationError(f"Component with identifier '{value}' already exists for this equipment")
@@ -119,7 +111,6 @@ class SensorLogSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        """Ensure component-specific fields are set correctly"""
         component = data.get('component')
         if component:
             component_type = component.component_type
@@ -146,19 +137,16 @@ class HeartbeatLogSerializer(serializers.ModelSerializer):
         ]
 
     def validate_pzem_error_count(self, value):
-        """Validate pzem_error_count is non-negative"""
         if value < 0:
             raise serializers.ValidationError("PZEM error count must be non-negative")
         return value
 
     def validate_voltage_stability(self, value):
-        """Validate voltage_stability is non-negative"""
         if value is not None and value < 0:
             raise serializers.ValidationError("Voltage stability must be non-negative")
         return value
 
     def validate_failed_readings(self, value):
-        """Validate failed_readings is non-negative"""
         if value < 0:
             raise serializers.ValidationError("Failed readings count must be non-negative")
         return value
@@ -173,41 +161,40 @@ class EnergySummarySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'component', 'component_name', 'room', 'room_name', 'period_start', 'period_end',
             'period_type', 'period_type_display', 'total_energy', 'avg_power', 'peak_power',
-            'reading_count', 'anomaly_count', 'created_at'
+            'reading_count', 'anomaly_count', 'total_cost', 'currency', 'created_at'
         ]
 
     def validate_total_energy(self, value):
-        """Validate total_energy is non-negative"""
         if value < 0:
             raise serializers.ValidationError("Total energy must be non-negative")
         return value
 
     def validate_avg_power(self, value):
-        """Validate avg_power is non-negative"""
         if value < 0:
             raise serializers.ValidationError("Average power must be non-negative")
         return value
 
     def validate_peak_power(self, value):
-        """Validate peak_power is non-negative"""
         if value < 0:
             raise serializers.ValidationError("Peak power must be non-negative")
         return value
 
     def validate_reading_count(self, value):
-        """Validate reading_count is non-negative"""
         if value < 0:
             raise serializers.ValidationError("Reading count must be non-negative")
         return value
 
     def validate_anomaly_count(self, value):
-        """Validate anomaly_count is non-negative"""
         if value < 0:
             raise serializers.ValidationError("Anomaly count must be non-negative")
         return value
 
+    def validate_total_cost(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Total cost must be non-negative")
+        return value
+
     def validate_period_type(self, value):
-        """Validate period_type against allowed choices"""
         valid_types = [choice[0] for choice in PERIOD_TYPE_CHOICES]
         if value not in valid_types:
             raise serializers.ValidationError(f"Invalid period type. Must be one of: {', '.join(valid_types)}")
@@ -221,7 +208,6 @@ class PredictiveAlertSerializer(serializers.ModelSerializer):
         fields = ['id', 'component', 'component_name', 'prediction', 'confidence', 'triggered_at', 'resolved', 'resolved_at']
 
     def validate_confidence(self, value):
-        """Validate confidence is between 0 and 1"""
         if not 0 <= value <= 1:
             raise serializers.ValidationError("Confidence must be between 0 and 1")
         return value
@@ -232,28 +218,56 @@ class BillingRateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BillingRate
-        fields = ['id', 'room', 'room_name', 'rate_per_kwh', 'currency', 'currency_display', 'time_period', 'created_at']
+        fields = ['id', 'room', 'room_name', 'rate_per_kwh', 'currency', 'currency_display', 'start_time', 'end_time', 'valid_from', 'valid_to', 'created_at']
         read_only_fields = ['id', 'created_at', 'currency_display']
 
     def validate_rate_per_kwh(self, value):
-        """Validate rate_per_kwh is positive"""
         if value <= 0:
             raise serializers.ValidationError("Rate per kWh must be positive")
         return value
 
     def validate_currency(self, value):
-        """Validate currency is 'PHP'"""
-        if value != 'PHP':
-            raise serializers.ValidationError("Only PHP currency is supported")
+        valid_currencies = [choice[0] for choice in CURRENCY_CHOICES]
+        if value not in valid_currencies:
+            raise serializers.ValidationError(f"Invalid currency. Must be one of: {', '.join(valid_currencies)}")
         return value
 
-    def validate_time_period(self, value):
-        """Validate time_period format (e.g., 'peak:09:00-17:00')"""
-        if value:
-            pattern = r"(peak|off-peak):(\d{2}:\d{2})-(\d{2}:\d{2})"
-            if not re.match(pattern, value):
-                raise serializers.ValidationError("Time period must be in format 'peak/off-peak:HH:MM-HH:MM'")
-        return value
+    def validate(self, data):
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        valid_from = data.get('valid_from')
+        valid_to = data.get('valid_to')
+        room = data.get('room')
+
+        if valid_to and valid_from and valid_from >= valid_to:
+            raise serializers.ValidationError("valid_from must be before valid_to")
+
+        if start_time and end_time:
+            if start_time >= end_time:
+                raise serializers.ValidationError("start_time must be before end_time")
+
+            start_minutes = start_time.hour * 60 + start_time.minute
+            end_minutes = end_time.hour * 60 + end_time.minute
+
+            existing_rates = BillingRate.objects.filter(room=room)
+            if self.instance:
+                existing_rates = existing_rates.exclude(id=self.instance.id)
+            
+            for rate in existing_rates:
+                if rate.start_time and rate.end_time:
+                    existing_start = rate.start_time.hour * 60 + rate.start_time.minute
+                    existing_end = rate.end_time.hour * 60 + rate.end_time.minute
+                    time_overlap = not (end_minutes <= existing_start or start_minutes >= existing_end)
+                    validity_overlap = (
+                        (rate.valid_to is None or (valid_from and valid_from < rate.valid_to)) and
+                        (valid_to is None or (rate.valid_from and rate.valid_from < valid_to))
+                    )
+                    if time_overlap and validity_overlap:
+                        raise serializers.ValidationError(
+                            f"Rate period overlaps with existing rate ID {rate.id} in time and validity."
+                        )
+
+        return data
 
 class AlertSerializer(serializers.ModelSerializer):
     equipment_name = serializers.CharField(source='equipment.name', read_only=True)
@@ -265,7 +279,6 @@ class AlertSerializer(serializers.ModelSerializer):
         fields = ['id', 'equipment', 'equipment_name', 'type', 'type_display', 'message', 'severity', 'severity_display', 'triggered_at', 'resolved', 'resolved_at']
 
     def validate_type(self, value):
-        """Validate alert type against allowed choices"""
         valid_types = [choice[0] for choice in ALERT_TYPE_CHOICES]
         if value not in valid_types:
             raise serializers.ValidationError(f"Invalid alert type. Must be one of: {', '.join(valid_types)}")
@@ -279,7 +292,6 @@ class MaintenanceAttachmentSerializer(serializers.ModelSerializer):
         fields = ['id', 'maintenance_request', 'file', 'file_name', 'file_type', 'uploaded_at', 'uploaded_by', 'uploaded_by_name']
     
     def validate_file(self, value):
-        """Validate file size and type"""
         max_size = 10 * 1024 * 1024  # 10MB limit
         allowed_types = ['image/jpeg', 'image/png', 'application/pdf']
         
@@ -304,7 +316,6 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
                  'created_at', 'attachments']
 
     def validate_status(self, value):
-        """Validate maintenance status against allowed choices"""
         valid_statuses = [choice[0] for choice in MAINTENANCE_STATUS_CHOICES]
         if value not in valid_statuses:
             raise serializers.ValidationError(f"Invalid status. Must be one of: {', '.join(valid_statuses)}")

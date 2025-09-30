@@ -2,8 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 import uuid
 from django.db.models import Avg
-import re
-from datetime import datetime
+from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 # Constants for standardized field values
@@ -247,12 +246,40 @@ class EnergySummary(models.Model):
     peak_power = models.FloatField()
     reading_count = models.IntegerField()
     anomaly_count = models.IntegerField(default=0)
+    total_cost = models.FloatField(validators=[MinValueValidator(0.0)], help_text="Total cost for the period in currency")
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='PHP')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['component', 'period_start', 'period_type']),
             models.Index(fields=['room', 'period_start']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(total_energy__gte=0),
+                name='total_energy_non_negative'
+            ),
+            models.CheckConstraint(
+                check=models.Q(avg_power__gte=0),
+                name='avg_power_non_negative'
+            ),
+            models.CheckConstraint(
+                check=models.Q(peak_power__gte=0),
+                name='peak_power_non_negative'
+            ),
+            models.CheckConstraint(
+                check=models.Q(reading_count__gte=0),
+                name='reading_count_non_negative'
+            ),
+            models.CheckConstraint(
+                check=models.Q(anomaly_count__gte=0),
+                name='anomaly_count_non_negative'
+            ),
+            models.CheckConstraint(
+                check=models.Q(total_cost__gte=0),
+                name='total_cost_non_negative'
+            ),
         ]
 
     def __str__(self):
@@ -279,36 +306,53 @@ class PredictiveAlert(models.Model):
 class BillingRate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
-    rate_per_kwh = models.FloatField()
+    rate_per_kwh = models.FloatField(validators=[MinValueValidator(0.01)], help_text="Rate per kWh in currency")
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='PHP')
-    time_period = models.CharField(max_length=255, null=True, blank=True, help_text="e.g., 'peak:09:00-17:00' or 'off-peak:17:00-09:00'")
+    start_time = models.TimeField(null=True, blank=True, help_text="Start time for rate applicability (e.g., 09:00)")
+    end_time = models.TimeField(null=True, blank=True, help_text="End time for rate applicability (e.g., 17:00)")
+    valid_from = models.DateTimeField(null=True, blank=True, help_text="Start date for rate validity")
+    valid_to = models.DateTimeField(null=True, blank=True, help_text="End date for rate validity")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         indexes = [
-            models.Index(fields=['room', 'time_period']),
+            models.Index(fields=['room', 'start_time', 'end_time']),
+            models.Index(fields=['valid_from', 'valid_to']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(start_time__lt=models.F('end_time')) | models.Q(start_time__isnull=True) | models.Q(end_time__isnull=True),
+                name='start_time_before_end_time'
+            ),
+            models.CheckConstraint(
+                check=models.Q(valid_from__lt=models.F('valid_to')) | models.Q(valid_from__isnull=True) | models.Q(valid_to__isnull=True),
+                name='valid_from_before_valid_to'
+            ),
+            models.UniqueConstraint(
+                fields=['room', 'start_time', 'end_time', 'valid_from', 'valid_to'],
+                condition=models.Q(start_time__isnull=False, end_time__isnull=False, valid_from__isnull=False),
+                name='unique_room_time_validity_period'
+            ),
         ]
 
     def __str__(self):
-        return f"Rate for {self.room.name if self.room else 'Global'} - {self.rate_per_kwh} {self.currency}/kWh"
+        room_name = self.room.name if self.room else 'Global'
+        time_range = f"{self.start_time.strftime('%H:%M')}-{self.end_time.strftime('%H:%M')}" if self.start_time and self.end_time else 'All Day'
+        validity_range = f"{self.valid_from.strftime('%Y-%m-%d') if self.valid_from else 'No start'} to {self.valid_to.strftime('%Y-%m-%d') if self.valid_to else 'Ongoing'}"
+        return f"Rate for {room_name} - {self.rate_per_kwh} {self.currency}/kWh ({time_range}, {validity_range})"
 
     def get_rate_for_time(self, timestamp):
-        """Return the applicable rate based on the time_period and timestamp."""
-        if not self.time_period:
+        """Return the applicable rate based on start_time, end_time, valid_from, valid_to, and timestamp."""
+        if self.valid_from and timestamp < self.valid_from:
+            return 0  # Rate not yet valid
+        if self.valid_to and timestamp > self.valid_to:
+            return 0  # Rate expired
+        if not self.start_time or not self.end_time:
+            return self.rate_per_kwh  # No time restriction, use full rate
+        current_time = timestamp.time()
+        if self.start_time <= current_time <= self.end_time:
             return self.rate_per_kwh
-        pattern = r"(peak|off-peak):(\d{2}:\d{2})-(\d{2}:\d{2})"
-        match = re.match(pattern, self.time_period)
-        if match:
-            period_type, start_time, end_time = match.groups()
-            start_hour, start_minute = map(int, start_time.split(':'))
-            end_hour, end_minute = map(int, end_time.split(':'))
-            current_hour, current_minute = timestamp.hour, timestamp.minute
-            current_time = current_hour * 60 + current_minute
-            start_minutes = start_hour * 60 + start_minute
-            end_minutes = end_hour * 60 + end_minute
-            if start_minutes <= current_time <= end_minutes:
-                return self.rate_per_kwh if period_type == 'peak' else self.rate_per_kwh * 0.8  # 20% discount for off-peak
-        return self.rate_per_kwh
+        return self.rate_per_kwh * 0.8  # 20% discount for off-peak times
 
 class Alert(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

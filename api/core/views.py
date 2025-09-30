@@ -1,5 +1,4 @@
-from rest_framework import viewsets
-from rest_framework import generics
+from rest_framework import viewsets, generics
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +20,7 @@ from .permissions import RoleBasedPermission
 import logging
 import datetime
 from django.db.models import Q
+import uuid
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -319,7 +319,43 @@ class SensorLogViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         user = self.request.user
         if hasattr(user, 'role') and user.role == 'client':
-            return queryset.filter(equipment__maintenancerequest__user=user).distinct()
+            queryset = queryset.filter(equipment__maintenancerequest__user=user).distinct()
+        
+        # Apply query parameter filters
+        room_id = self.request.query_params.get('room_id')
+        component_id = self.request.query_params.get('component_id')
+        period_start = self.request.query_params.get('period_start')
+        period_end = self.request.query_params.get('period_end')
+        
+        if room_id:
+            try:
+                uuid.UUID(room_id)
+                queryset = queryset.filter(equipment__room_id=room_id)
+            except ValueError:
+                logger.error(f"Invalid room_id format: {room_id}")
+                raise ValueError("Invalid room_id format. Must be a valid UUID")
+        if component_id:
+            try:
+                uuid.UUID(component_id)
+                queryset = queryset.filter(component_id=component_id)
+            except ValueError:
+                logger.error(f"Invalid component_id format: {component_id}")
+                raise ValueError("Invalid component_id format. Must be a valid UUID")
+        if period_start:
+            try:
+                period_start = timezone.datetime.fromisoformat(period_start.replace('Z', '+00:00'))
+                queryset = queryset.filter(recorded_at__gte=period_start)
+            except ValueError:
+                logger.error(f"Invalid period_start format: {period_start}")
+                raise ValueError("Invalid period_start format. Use ISO format")
+        if period_end:
+            try:
+                period_end = timezone.datetime.fromisoformat(period_end.replace('Z', '+00:00'))
+                queryset = queryset.filter(recorded_at__lte=period_end)
+            except ValueError:
+                logger.error(f"Invalid period_end format: {period_end}")
+                raise ValueError("Invalid period_end format. Use ISO format")
+        
         return queryset
 
 class HeartbeatLogViewSet(viewsets.ModelViewSet):
@@ -381,38 +417,41 @@ class BillingRateViewSet(viewsets.ModelViewSet):
         return queryset
     
     @action(detail=False, methods=['get'], permission_classes=[RoleBasedPermission])
+    def debug_test(self, request):
+        logger.info("Debug test endpoint hit with params: %s", request.query_params)
+        return Response({
+            'success': True,
+            'message': 'BillingRateViewSet debug endpoint working',
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], permission_classes=[RoleBasedPermission])
     def calculate_energy_cost(self, request):
-        """
-        Calculate energy cost for a room or equipment over a specified period.
-        Expected query params:
-        - room_id (optional): UUID of the room
-        - equipment_id (optional): UUID of the equipment
-        - period_start: ISO date (e.g., '2025-09-27')
-        - period_end: ISO date (e.g., '2025-09-27')
-        - period_type: 'daily', 'weekly', or 'monthly'
-        """
-        logger.info("Energy cost calculation requested")
+        logger.info("Energy cost calculation requested with params: %s", request.query_params)
         try:
             room_id = request.query_params.get('room_id')
             equipment_id = request.query_params.get('equipment_id')
+            component_id = request.query_params.get('component')
             period_start = request.query_params.get('period_start')
             period_end = request.query_params.get('period_end')
             period_type = request.query_params.get('period_type')
 
             if not period_start or not period_end or not period_type:
-                logger.error("Missing required query parameters")
+                logger.error("Missing required query parameters: period_start, period_end, period_type")
                 return Response(
                     {'error': 'period_start, period_end, and period_type are required'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
             try:
-                period_start = timezone.datetime.fromisoformat(period_start)
-                period_end = timezone.datetime.fromisoformat(period_end)
+                period_start = timezone.datetime.fromisoformat(period_start.replace('Z', '+00:00'))
+                period_end = timezone.datetime.fromisoformat(period_end.replace('Z', '+00:00'))
+                # Extend period_end by 1 second to account for microsecond precision
+                period_end = period_end + timezone.timedelta(seconds=1)
             except ValueError:
-                logger.error("Invalid date format")
+                logger.error("Invalid date format: period_start=%s, period_end=%s", period_start, period_end)
                 return Response(
-                    {'error': 'Invalid date format. Use ISO format (e.g., 2025-09-27)'},
+                    {'error': 'Invalid date format. Use ISO format (e.g., 2025-09-27T00:00:00Z)'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -423,40 +462,93 @@ class BillingRateViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Filter EnergySummary based on room_id or equipment_id
+            # Debug query
             energy_summaries = EnergySummary.objects.filter(
                 period_start__gte=period_start,
                 period_end__lte=period_end,
-                period_type=period_type
+                period_type='daily'
             )
+            logger.info("Initial query count: %s", energy_summaries.count())
             if room_id:
-                energy_summaries = energy_summaries.filter(room_id=room_id)
+                try:
+                    uuid.UUID(room_id)
+                    energy_summaries = energy_summaries.filter(room_id=room_id)
+                    logger.info("After room_id filter (%s): %s", room_id, energy_summaries.count())
+                except ValueError:
+                    logger.error(f"Invalid room_id format: {room_id}")
+                    return Response(
+                        {'error': 'Invalid room_id format. Must be a valid UUID'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
             if equipment_id:
-                energy_summaries = energy_summaries.filter(component__equipment_id=equipment_id)
+                try:
+                    uuid.UUID(equipment_id)
+                    energy_summaries = energy_summaries.filter(component__equipment_id=equipment_id)
+                    logger.info("After equipment_id filter (%s): %s", equipment_id, energy_summaries.count())
+                except ValueError:
+                    logger.error(f"Invalid equipment_id format: {equipment_id}")
+                    return Response(
+                        {'error': 'Invalid equipment_id format. Must be a valid UUID'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            if component_id:
+                try:
+                    uuid.UUID(component_id)
+                    energy_summaries = energy_summaries.filter(component_id=component_id)
+                    logger.info("After component_id filter (%s): %s", component_id, energy_summaries.count())
+                except ValueError:
+                    logger.error(f"Invalid component_id format: {component_id}")
+                    return Response(
+                        {'error': 'Invalid component_id format. Must be a valid UUID'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Log all EnergySummary records for debugging
+            all_summaries = EnergySummary.objects.filter(
+                period_type='daily',
+                room_id=room_id,
+                component_id=component_id
+            ).values('id', 'period_start', 'period_end', 'total_energy', 'total_cost')
+            logger.info("All matching EnergySummaries: %s", list(all_summaries))
 
             if not energy_summaries.exists():
-                logger.info("No energy summaries found for the given criteria")
+                logger.info("No daily energy summaries found for criteria: room_id=%s, equipment_id=%s, component_id=%s, period_start=%s, period_end=%s",
+                           room_id, equipment_id, component_id, period_start.isoformat(), period_end.isoformat())
                 return Response(
                     {'success': True, 'data': {'total_cost': 0, 'details': []}, 'timestamp': timezone.now().isoformat()},
                     status=status.HTTP_200_OK
                 )
 
             total_cost = 0
+            total_energy = 0
             details = []
             for summary in energy_summaries:
-                # Find the most recent applicable billing rate
                 rate = BillingRate.objects.filter(
                     Q(room=summary.room) | Q(room__isnull=True),
-                    created_at__lte=summary.period_start
+                    Q(valid_from__lte=summary.period_start) | Q(valid_from__isnull=True),
+                    Q(valid_to__gte=summary.period_start) | Q(valid_to__isnull=True)
                 ).order_by('-created_at').first()
 
                 if not rate:
-                    logger.warning(f"No billing rate found for room {summary.room.name}")
+                    logger.warning(f"No billing rate found for room {summary.room.name} on %s", summary.period_start)
+                    details.append({
+                        'room_id': str(summary.room.id),
+                        'room_name': summary.room.name,
+                        'component_id': str(summary.component.id),
+                        'component_type': summary.component.component_type,
+                        'total_energy': summary.total_energy,
+                        'rate_per_kwh': 0,
+                        'effective_rate': 0,
+                        'currency': 'PHP',
+                        'cost': 0,
+                        'period_start': summary.period_start.isoformat(),
+                        'period_end': summary.period_end.isoformat(),
+                    })
                     continue
 
-                # Calculate cost using time-based rate
                 cost = summary.total_energy * rate.get_rate_for_time(summary.period_start)
                 total_cost += cost
+                total_energy += summary.total_energy
                 details.append({
                     'room_id': str(summary.room.id),
                     'room_name': summary.room.name,
@@ -471,12 +563,15 @@ class BillingRateViewSet(viewsets.ModelViewSet):
                     'period_end': summary.period_end.isoformat(),
                 })
 
-            logger.info(f"Calculated total cost: {total_cost} PHP for {len(details)} summaries")
+            effective_rate = total_cost / total_energy if total_energy > 0 else 0
+            logger.info(f"Calculated total_cost=%s, total_energy=%s, effective_rate=%s, currency=%s for %s summaries",
+                       total_cost, total_energy, effective_rate, rate.currency if rate else 'PHP', len(details))
             return Response({
                 'success': True,
                 'data': {
                     'total_cost': round(total_cost, 2),
-                    'currency': 'PHP',
+                    'effective_rate': round(effective_rate, 2),
+                    'currency': rate.currency if rate else 'PHP',
                     'details': details
                 },
                 'timestamp': timezone.now().isoformat()
@@ -484,6 +579,107 @@ class BillingRateViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             logger.error(f"Error in calculate_energy_cost: {str(e)}")
+            return Response(
+                {'error': f'Server error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['get'], permission_classes=[RoleBasedPermission])
+    def energy_cost_simple(self, request):
+        # [Existing energy_cost_simple unchanged]
+        logger.info("Simple energy cost calculation requested with params: %s", request.query_params)
+        try:
+            room_id = request.query_params.get('room_id')
+            period_type = request.query_params.get('period_type')
+            date = request.query_params.get('date')
+
+            if not room_id or not period_type or not date:
+                logger.error("Missing required query parameters")
+                return Response(
+                    {'error': 'room_id, period_type, and date are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                date = timezone.datetime.fromisoformat(date.replace('Z', '+00:00')).date()
+            except ValueError:
+                logger.error("Invalid date format: %s", date)
+                return Response(
+                    {'error': 'Invalid date format. Use ISO format (e.g., 2025-09-27)'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if period_type not in [choice[0] for choice in PERIOD_TYPE_CHOICES]:
+                logger.error(f"Invalid period_type: {period_type}")
+                return Response(
+                    {'error': f"Invalid period_type. Must be one of: {', '.join([choice[0] for choice in PERIOD_TYPE_CHOICES])}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                uuid.UUID(room_id)
+            except ValueError:
+                logger.error(f"Invalid room_id format: {room_id}")
+                return Response(
+                    {'error': 'Invalid room_id format. Must be a valid UUID'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            summary = EnergySummary.objects.filter(
+                room_id=room_id,
+                period_type=period_type,
+                period_start__date=date
+            ).select_related('room', 'component').first()
+
+            if not summary:
+                logger.info(f"No energy summary found for room %s, period %s, date %s", room_id, period_type, date)
+                return Response(
+                    {'error': 'No data for this period'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            rate = BillingRate.objects.filter(
+                Q(room=summary.room) | Q(room__isnull=True),
+                Q(valid_from__lte=summary.period_start) | Q(valid_from__isnull=True),
+                Q(valid_to__gte=summary.period_start) | Q(valid_to__isnull=True)
+            ).order_by('-created_at').first()
+
+            total_cost = 0
+            effective_rate = 0
+            rate_per_kwh = 0
+            currency = 'PHP'
+            if rate:
+                effective_rate = rate.get_rate_for_time(summary.period_start)
+                rate_per_kwh = rate.rate_per_kwh
+                total_cost = round(summary.total_energy * effective_rate, 2)
+                currency = rate.currency
+            else:
+                logger.warning(f"No applicable billing rate found for room %s", summary.room.name)
+
+            data = {
+                'room_id': str(summary.room.id),
+                'room_name': summary.room.name,
+                'component_id': str(summary.component.id),
+                'component_type': summary.component.component_type,
+                'period_type': summary.period_type,
+                'period_start': summary.period_start.isoformat(),
+                'period_end': summary.period_end.isoformat(),
+                'total_energy': summary.total_energy,
+                'rate_per_kwh': rate_per_kwh,
+                'effective_rate': effective_rate,
+                'currency': currency,
+                'total_cost': total_cost,
+            }
+
+            logger.info(f"Simple energy cost: %s %s for room %s, period %s, date %s", total_cost, currency, room_id, period_type, date)
+            return Response({
+                'success': True,
+                'data': data,
+                'timestamp': timezone.now().isoformat()
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in energy_cost_simple: %s", str(e))
             return Response(
                 {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -784,44 +980,6 @@ def esp32_heartbeat(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def esp32_sensor_data(request):
-    """
-    Endpoint for ESP32 to send sensor data with component-specific payloads
-    Expected JSON format:
-    {
-        "device_id": "ESP32_001",
-        "components": [
-            {
-                "component_type": "pzem",
-                "identifier": "PZEM_SERIAL2",
-                "recorded_at": "2025-09-24T23:59:00Z",
-                "voltage": 220.0,
-                "current": 5.0,
-                "power": 1100.0,
-                "energy": 0.5,
-                "reset_flag": false
-            },
-            {
-                "component_type": "dht22",
-                "identifier": "DHT22_3PIN_MODULE_GPIO5",
-                "recorded_at": "2025-09-24T23:59:00Z",
-                "temperature": 22.0,
-                "humidity": 50.0
-            },
-            {
-                "component_type": "photoresistor",
-                "identifier": "PHOTO_GPIO19",
-                "recorded_at": "2025-09-24T23:59:00Z",
-                "light_detected": true
-            },
-            {
-                "component_type": "motion",
-                "identifier": "MOTION_GPIO18",
-                "recorded_at": "2025-09-24T23:59:00Z",
-                "motion_detected": false
-            }
-        ]
-    }
-    """
     logger.info(f"ESP32 sensor data received: {request.method} {request.path}")
     logger.info(f"Request data: {request.data}")
     try:
@@ -835,6 +993,12 @@ def esp32_sensor_data(request):
         try:
             equipment = Equipment.objects.get(device_id=data['device_id'])
             logger.info(f"Found equipment: {equipment.name}")
+            if not equipment.room:
+                logger.error(f"Equipment {equipment.name} has no associated room")
+                return Response(
+                    {'error': f'Equipment {equipment.name} has no associated room'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         except Equipment.DoesNotExist:
             logger.error(f"Equipment with device_id {data['device_id']} not found")
             return Response(
@@ -845,6 +1009,17 @@ def esp32_sensor_data(request):
         created_logs = []
         created_alert_ids = []
         resolved_alert_ids = []
+        recorded_at = timezone.now()
+        if data.get('recorded_at'):
+            try:
+                recorded_at = timezone.datetime.fromisoformat(data['recorded_at'].replace('Z', '+00:00'))
+            except ValueError:
+                logger.error(f"Invalid recorded_at format: {data['recorded_at']}")
+                return Response(
+                    {'error': 'Invalid recorded_at format. Use ISO format'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         for component_data in data.get('components', []):
             component_type = component_data.get('component_type')
             identifier = component_data.get('identifier')
@@ -861,7 +1036,7 @@ def esp32_sensor_data(request):
             sensor_log_data = {
                 'equipment': equipment,
                 'component': component,
-                'recorded_at': component_data.get('recorded_at', timezone.now()),
+                'recorded_at': recorded_at,
             }
             
             if component_type == 'pzem':
@@ -871,23 +1046,23 @@ def esp32_sensor_data(request):
                     'power': float(component_data.get('power', 0.0)),
                     'energy': float(component_data.get('energy', 0.0)),
                     'reset_flag': bool(component_data.get('reset_flag', False)),
-                    'pzem_recorded_at': component_data.get('recorded_at', timezone.now())
+                    'pzem_recorded_at': recorded_at
                 })
             elif component_type == 'dht22':
                 sensor_log_data.update({
                     'temperature': float(component_data.get('temperature', 0.0)),
                     'humidity': float(component_data.get('humidity', 0.0)),
-                    'dht22_recorded_at': component_data.get('recorded_at', timezone.now())
+                    'dht22_recorded_at': recorded_at
                 })
             elif component_type == 'photoresistor':
                 sensor_log_data.update({
                     'light_detected': bool(component_data.get('light_detected', False)),
-                    'photoresistor_recorded_at': component_data.get('recorded_at', timezone.now())
+                    'photoresistor_recorded_at': recorded_at
                 })
             elif component_type == 'motion':
                 sensor_log_data.update({
                     'motion_detected': bool(component_data.get('motion_detected', False)),
-                    'motion_recorded_at': component_data.get('recorded_at', timezone.now())
+                    'motion_recorded_at': recorded_at
                 })
             
             sensor_log = SensorLog.objects.create(**sensor_log_data)
@@ -913,7 +1088,6 @@ def esp32_sensor_data(request):
                     if created:
                         created_alert_ids.append(str(alert.id))
                 elif avg_power and sensor_log.power <= (avg_power * 2):
-                    # Resolve energy_anomaly alerts if power normalizes
                     alerts = Alert.objects.filter(
                         equipment=equipment,
                         type='energy_anomaly',
@@ -937,7 +1111,6 @@ def esp32_sensor_data(request):
                 if created:
                     created_alert_ids.append(str(alert.id))
             elif component_type == 'dht22' and sensor_log.temperature <= 40:
-                # Resolve temperature_threshold alerts if temperature normalizes
                 alerts = Alert.objects.filter(
                     equipment=equipment,
                     type='temperature_threshold',
@@ -961,7 +1134,6 @@ def esp32_sensor_data(request):
                 if created:
                     created_alert_ids.append(str(alert.id))
             elif component_type == 'dht22' and sensor_log.humidity <= 80:
-                # Resolve humidity_threshold alerts if humidity normalizes
                 alerts = Alert.objects.filter(
                     equipment=equipment,
                     type='humidity_threshold',
@@ -987,7 +1159,6 @@ def esp32_sensor_data(request):
                     if created:
                         created_alert_ids.append(str(alert.id))
             elif component_type == 'motion' and not sensor_log.motion_detected:
-                # Resolve motion alerts if no motion detected
                 alerts = Alert.objects.filter(
                     equipment=equipment,
                     type='motion',
@@ -1005,17 +1176,20 @@ def esp32_sensor_data(request):
         # Update EnergySummary for PZEM components
         pzem_components = Component.objects.filter(equipment=equipment, component_type='pzem')
         for component in pzem_components:
-            today = timezone.now().date()
+            today = recorded_at.date()
+            period_start = timezone.datetime.combine(today, datetime.time.min, tzinfo=timezone.get_current_timezone())
+            period_end = timezone.datetime.combine(today, datetime.time.max, tzinfo=timezone.get_current_timezone())
             recent_logs = SensorLog.objects.filter(
                 component=component,
-                pzem_recorded_at__date=today,
+                pzem_recorded_at__gte=period_start,
+                pzem_recorded_at__lte=period_end,
                 energy__isnull=False
             )
             log_count = recent_logs.count()
             logger.info(f"PZEM logs for {today}: {log_count}")
-            if log_count >= 2:
+            if log_count >= 1:  # Allow single reading for testing
                 energy_stats = recent_logs.aggregate(max_energy=Max('energy'), min_energy=Min('energy'))
-                total_energy = (energy_stats['max_energy'] - energy_stats['min_energy']) if energy_stats['max_energy'] is not None else 0
+                total_energy = (energy_stats['max_energy'] - energy_stats['min_energy']) if energy_stats['max_energy'] is not None and energy_stats['min_energy'] is not None else recent_logs.first().energy or 0
                 if recent_logs.filter(reset_flag=True).exists():
                     total_energy += energy_stats['max_energy'] or 0
                 avg_power = recent_logs.aggregate(avg=Avg('power'))['avg'] or 0
@@ -1023,23 +1197,56 @@ def esp32_sensor_data(request):
                 anomaly_count = Alert.objects.filter(
                     equipment=equipment,
                     type='energy_anomaly',
-                    triggered_at__date=today
+                    triggered_at__gte=period_start,
+                    triggered_at__lte=period_end
                 ).count()
-                EnergySummary.objects.update_or_create(
+
+                rate = BillingRate.objects.filter(
+                    Q(room=equipment.room) | Q(room__isnull=True),
+                    Q(valid_from__lte=period_start) | Q(valid_from__isnull=True),
+                    Q(valid_to__gte=period_start) | Q(valid_to__isnull=True)
+                ).order_by('-created_at').first()
+
+                if not rate:
+                    default_rate_per_kwh = 10.00
+                    if total_energy >= 0.1:
+                        default_rate_per_kwh = 15.00
+                    elif total_energy >= 0.01:
+                        default_rate_per_kwh = 12.50
+                    rate = BillingRate.objects.create(
+                        room=equipment.room,
+                        rate_per_kwh=default_rate_per_kwh,
+                        currency='PHP',
+                        valid_from=period_start,
+                        valid_to=period_start + timezone.timedelta(days=365),
+                        start_time=None,
+                        end_time=None
+                    )
+                    logger.info(f"Created default BillingRate {rate.id} for room {equipment.room.name} at {default_rate_per_kwh} PHP/kWh")
+
+                effective_rate = rate.get_rate_for_time(period_start)
+                total_cost = round(total_energy * effective_rate, 2)
+                currency = rate.currency
+
+                energy_summary, _ = EnergySummary.objects.update_or_create(
                     component=component,
                     room=equipment.room,
-                    period_start=timezone.datetime.combine(today, datetime.time.min, tzinfo=timezone.get_current_timezone()),
-                    period_end=timezone.datetime.combine(today, datetime.time.max, tzinfo=timezone.get_current_timezone()),
+                    period_start=period_start,
+                    period_end=period_end,
                     period_type='daily',
                     defaults={
                         'total_energy': total_energy,
                         'avg_power': avg_power,
                         'peak_power': peak_power,
                         'reading_count': log_count,
-                        'anomaly_count': anomaly_count
+                        'anomaly_count': anomaly_count,
+                        'total_cost': total_cost,
+                        'currency': currency,
+                        'effective_rate': effective_rate  # Added for frontend
                     }
                 )
-        
+                logger.info(f"Updated/Created EnergySummary {energy_summary.id} with total_cost {total_cost} {currency}, effective_rate {effective_rate}")
+
         if created_alert_ids:
             recent_request = MaintenanceRequest.objects.filter(
                 equipment=equipment,
@@ -1084,7 +1291,6 @@ def esp32_sensor_data(request):
             {'error': f'Server error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def esp32_health_check(request):
@@ -1180,7 +1386,8 @@ def dashboard_summary(request):
         for summary in energy_summaries:
             rate = BillingRate.objects.filter(
                 Q(room=summary.room) | Q(room__isnull=True),
-                created_at__lte=summary.period_start
+                Q(valid_from__lte=summary.period_start) | Q(valid_from__isnull=True),
+                Q(valid_to__gte=summary.period_start) | Q(valid_to__isnull=True)
             ).order_by('-created_at').first()
             if rate:
                 total_cost += summary.total_energy * rate.get_rate_for_time(summary.period_start)
@@ -1312,6 +1519,18 @@ def check_anomalies(request):
                     )
                     if created:
                         created_alerts.append(str(alert.id))
+                elif avg_power and latest_log.power <= (avg_power * 2):
+                    # Resolve energy_anomaly alerts if power normalizes
+                    alerts = Alert.objects.filter(
+                        equipment=component.equipment,
+                        type='energy_anomaly',
+                        resolved=False
+                    )
+                    for alert in alerts:
+                        alert.resolved = True
+                        alert.resolved_at = timezone.now()
+                        alert.save()
+                        created_alerts.append(str(alert.id))
             elif component.component_type == 'dht22' and latest_log.temperature > 40:
                 alert, created = Alert.objects.get_or_create(
                     equipment=component.equipment,
@@ -1324,6 +1543,18 @@ def check_anomalies(request):
                 )
                 if created:
                     created_alerts.append(str(alert.id))
+            elif component.component_type == 'dht22' and latest_log.temperature <= 40:
+                # Resolve temperature_threshold alerts if temperature normalizes
+                alerts = Alert.objects.filter(
+                    equipment=component.equipment,
+                    type='temperature_threshold',
+                    resolved=False
+                )
+                for alert in alerts:
+                    alert.resolved = True
+                    alert.resolved_at = timezone.now()
+                    alert.save()
+                    created_alerts.append(str(alert.id))
             elif component.component_type == 'dht22' and latest_log.humidity > 80:
                 alert, created = Alert.objects.get_or_create(
                     equipment=component.equipment,
@@ -1335,6 +1566,18 @@ def check_anomalies(request):
                     }
                 )
                 if created:
+                    created_alerts.append(str(alert.id))
+            elif component.component_type == 'dht22' and latest_log.humidity <= 80:
+                # Resolve humidity_threshold alerts if humidity normalizes
+                alerts = Alert.objects.filter(
+                    equipment=component.equipment,
+                    type='humidity_threshold',
+                    resolved=False
+                )
+                for alert in alerts:
+                    alert.resolved = True
+                    alert.resolved_at = timezone.now()
+                    alert.save()
                     created_alerts.append(str(alert.id))
             elif component.component_type == 'motion' and latest_log.motion_detected:
                 prev_log = SensorLog.objects.filter(component=component, recorded_at__lt=latest_log.recorded_at).order_by('-recorded_at').first()
@@ -1350,6 +1593,18 @@ def check_anomalies(request):
                     )
                     if created:
                         created_alerts.append(str(alert.id))
+            elif component.component_type == 'motion' and not latest_log.motion_detected:
+                # Resolve motion alerts if no motion detected
+                alerts = Alert.objects.filter(
+                    equipment=component.equipment,
+                    type='motion',
+                    resolved=False
+                )
+                for alert in alerts:
+                    alert.resolved = True
+                    alert.resolved_at = timezone.now()
+                    alert.save()
+                    created_alerts.append(str(alert.id))
             
             # Auto-create maintenance request if no recent request exists
             if created_alerts:
