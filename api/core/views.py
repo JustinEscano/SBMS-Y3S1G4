@@ -21,6 +21,7 @@ import logging
 import datetime
 from django.db.models import Q
 import uuid
+from dateutil.relativedelta import relativedelta
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -373,18 +374,144 @@ class EnergySummaryViewSet(viewsets.ModelViewSet):
     queryset = EnergySummary.objects.select_related('component', 'room').order_by('-period_start')
     serializer_class = EnergySummarySerializer
     permission_classes = [RoleBasedPermission]
+
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
         period_type = self.request.query_params.get('period_type')
         room_id = self.request.query_params.get('room_id')
+        period_start_str = self.request.query_params.get('start_time')  # Match app's param name
+
         if hasattr(user, 'role') and user.role == 'client':
             queryset = queryset.filter(room__maintenancerequest__user=user).distinct()
+
         if period_type:
             queryset = queryset.filter(period_type=period_type)
+
         if room_id:
             queryset = queryset.filter(room_id=room_id)
+
+        if period_start_str:
+            try:
+                period_start_dt = timezone.datetime.fromisoformat(period_start_str.replace('Z', '+00:00'))
+                queryset = queryset.filter(period_start__gte=period_start_dt)
+            except ValueError:
+                logger.error(f"Invalid start_time format: {period_start_str}")
+
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        period_type = request.query_params.get('period_type')
+        period_start_str = request.query_params.get('start_time')
+        room_id = request.query_params.get('room_id')
+
+        if period_start_str:
+            try:
+                period_start = timezone.datetime.fromisoformat(period_start_str.replace('Z', '+00:00'))
+            except ValueError:
+                return Response({'error': 'Invalid start_time format'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            period_start = None
+
+        if period_type in ['weekly', 'monthly']:
+            if not period_start:
+                return Response({'error': 'start_time is required for weekly/monthly summaries'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Determine period_end based on period_type
+            if period_type == 'weekly':
+                period_end = period_start + timezone.timedelta(days=7)
+            else:  # monthly
+                period_end = period_start + relativedelta(months=1)
+
+            # Fetch daily summaries in the period
+            daily_qs = EnergySummary.objects.filter(
+                period_type='daily',
+                period_start__gte=period_start,
+                period_end__lte=period_end,
+            )
+            if room_id:
+                daily_qs = daily_qs.filter(room_id=room_id)
+
+            if not daily_qs.exists():
+                # Return zero-filled summary
+                zero_data = {
+                    'id': None,
+                    'component': None,
+                    'room': room_id,
+                    'period_start': period_start.isoformat(),
+                    'period_end': period_end.isoformat(),
+                    'period_type': period_type,
+                    'total_energy': 0.0,
+                    'avg_power': 0.0,
+                    'peak_power': 0.0,
+                    'reading_count': 0,
+                    'anomaly_count': 0,
+                    'total_cost': 0.0,
+                    'currency': 'PHP',
+                    'effective_rate': 0.0,
+                }
+                return Response([zero_data])
+
+            # Aggregate data
+            agg = daily_qs.aggregate(
+                total_energy=Sum('total_energy'),
+                avg_power=Avg('avg_power'),
+                peak_power=Max('peak_power'),
+                reading_count=Sum('reading_count'),
+                anomaly_count=Sum('anomaly_count'),
+                total_cost=Sum('total_cost'),
+            )
+
+            effective_rate = agg['total_cost'] / agg['total_energy'] if agg['total_energy'] else 0.0
+            currency = daily_qs.first().currency  # Assume consistent currency
+
+            aggregated_data = {
+                'id': None,  # Aggregated, no single ID
+                'component': None,
+                'room': room_id,
+                'period_start': period_start.isoformat(),
+                'period_end': period_end.isoformat(),
+                'period_type': period_type,
+                'total_energy': agg['total_energy'] or 0.0,
+                'avg_power': agg['avg_power'] or 0.0,
+                'peak_power': agg['peak_power'] or 0.0,
+                'reading_count': agg['reading_count'] or 0,
+                'anomaly_count': agg['anomaly_count'] or 0,
+                'total_cost': agg['total_cost'] or 0.0,
+                'currency': currency,
+                'effective_rate': effective_rate,
+            }
+            return Response([aggregated_data])
+
+        # For daily (or other), use standard queryset with filtering
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists() and period_type == 'daily':
+            # Return zero-filled for daily if no data
+            zero_data = {
+                'id': None,
+                'component': None,
+                'room': room_id,
+                'period_start': period_start.isoformat() if period_start else timezone.now().isoformat(),
+                'period_end': (period_start + timezone.timedelta(days=1)).isoformat() if period_start else timezone.now().isoformat(),
+                'period_type': 'daily',
+                'total_energy': 0.0,
+                'avg_power': 0.0,
+                'peak_power': 0.0,
+                'reading_count': 0,
+                'anomaly_count': 0,
+                'total_cost': 0.0,
+                'currency': 'PHP',
+                'effective_rate': 0.0,
+            }
+            return Response([zero_data])
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class PredictiveAlertViewSet(viewsets.ModelViewSet):
     queryset = PredictiveAlert.objects.select_related('component', 'component__equipment').order_by('-triggered_at')
