@@ -1,36 +1,31 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import type { Room, Equipment } from "../types/dashboardTypes";
-import RoomModal from "../components/roomModal";
-import { roomService } from "../services/roomService";
-import { equipmentService } from "../services/equipmentService";
-import PageLayout from "../pages/PageLayout";
+// src/pages/DashboardScreen.tsx
+import React, { useMemo, useState, useRef, useEffect } from "react";
+import PageLayout from "./PageLayout";
 import Pagination from "../components/Pagination";
+import RoomModal from "../components/roomModal";
+import type { Room } from "../types/dashboardTypes";
+import { roomService } from "../services/roomService";
+import { useRooms } from "../hooks/useRooms";
 import "../pages/PageStyle.css";
 
-type RoomModalMode = "add" | "edit" | "delete";
+type RoomModalMode = "add" | "edit" | "delete" | null;
 const ITEMS_PER_PAGE = 5;
 
 const DashboardScreen: React.FC = () => {
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const { rooms, loading } = useRooms();
+  const [localRooms, setLocalRooms] = useState<Room[]>([]);
   const [search, setSearch] = useState("");
-  const [modalMode, setModalMode] = useState<RoomModalMode | null>(null);
+  const [modalMode, setModalMode] = useState<RoomModalMode>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
 
   const [showRequests, setShowRequests] = useState(false);
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
-
   const popupRef = useRef<HTMLDivElement>(null);
 
-  /** Fetch Rooms */
+  /** Sync hook rooms → local state */
   useEffect(() => {
-    roomService.getAll().then(setRooms).catch(console.error);
-  }, []);
-
-  /** Fetch Equipments */
-  useEffect(() => {
-    equipmentService.getAll().then(setEquipments).catch(console.error);
-  }, []);
+    if (!loading) setLocalRooms(rooms);
+  }, [rooms, loading]);
 
   /** Reset pagination on search change */
   useEffect(() => setCurrentPage(1), [search]);
@@ -48,8 +43,11 @@ const DashboardScreen: React.FC = () => {
 
   /** Filter + Paginate Rooms */
   const filteredRooms = useMemo(
-    () => rooms.filter((r) => r.name.toLowerCase().includes(search.toLowerCase())),
-    [rooms, search]
+    () =>
+      localRooms.filter((r) =>
+        r.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    [localRooms, search]
   );
   const totalPages = Math.ceil(filteredRooms.length / ITEMS_PER_PAGE);
   const paginatedRooms = useMemo(() => {
@@ -62,15 +60,15 @@ const DashboardScreen: React.FC = () => {
     try {
       if (modalMode === "add") {
         const newRoom = await roomService.create(data);
-        setRooms((prev) => [...prev, newRoom]);
+        setLocalRooms((prev) => [...prev, newRoom]);
       } else if (modalMode === "edit" && data.id) {
         const updated = await roomService.update(data.id, data);
-        setRooms((prev) =>
+        setLocalRooms((prev) =>
           prev.map((r) => (r.id === data.id ? { ...r, ...updated } : r))
         );
       } else if (modalMode === "delete" && data.id) {
         await roomService.remove(data.id);
-        setRooms((prev) => prev.filter((r) => r.id !== data.id));
+        setLocalRooms((prev) => prev.filter((r) => r.id !== data.id));
       }
     } catch (err) {
       console.error("Room operation failed:", err);
@@ -83,15 +81,20 @@ const DashboardScreen: React.FC = () => {
   return (
     <PageLayout initialSection={{ parent: "Dashboard" }}>
       <div className="page-header">
-        <h1>Dashboard &gt; Rooms</h1>
+        <h1>
+          <span className="title">Dashboard</span>
+          <span className="divider">|</span>
+          <span className="breadcrumb">Dashboard &gt; Rooms</span>
+        </h1>
       </div>
 
       <div className="content-container">
+        {/* Stats */}
         <div className="stats-boxes">
           <div className="stats-box">
             <div className="stat-icon">🏫</div>
             <div className="stat-info">
-              <p className="stat-number">{rooms.length}</p>
+              <p className="stat-number">{localRooms.length}</p>
               <p className="stat-label">Total Rooms</p>
             </div>
           </div>
@@ -99,49 +102,25 @@ const DashboardScreen: React.FC = () => {
             <div className="stat-icon">👔</div>
             <div className="stat-info">
               <p className="stat-number">
-                {rooms.filter((r) => r.type.toLowerCase() === "office").length}
+                {localRooms.filter((r) => r.type.toLowerCase() === "office").length}
               </p>
               <p className="stat-label">Offices</p>
-            </div>
-          </div>
-          <div className="stats-box">
-            <div className="stat-icon">🔬</div>
-            <div className="stat-info">
-              <p className="stat-number">
-                {rooms.filter((r) => r.type.toLowerCase() === "lab").length}
-              </p>
-              <p className="stat-label">Laboratory</p>
             </div>
           </div>
           <div className="stats-box">
             <div className="stat-icon">📢</div>
             <div className="stat-info">
               <p className="stat-number">
-                {rooms.filter((r) => r.type.toLowerCase() === "meeting").length}
+                {localRooms.filter((r) => r.type.toLowerCase() === "meeting").length}
               </p>
-              <p className="stat-label">Meeting Room</p>
-            </div>
-          </div>
-          <div className="stats-box">
-            <div className="stat-icon">📦</div>
-            <div className="stat-info">
-              <p className="stat-number">
-                {rooms.filter((r) => r.type.toLowerCase() === "storage").length}
-              </p>
-              <p className="stat-label">Storage</p>
-            </div>
-          </div>
-          <div className="stats-box">
-            <div className="stat-icon">🚪</div>
-            <div className="stat-info">
-              <p className="stat-number">
-                {rooms.filter((r) => r.type.toLowerCase() === "corridor").length}
-              </p>
-              <p className="stat-label">Corridor</p>
+              <p className="stat-label">Meeting Rooms</p>
             </div>
           </div>
         </div>
 
+        <h2> Room Table </h2>
+
+        {/* Filters */}
         <div className="table-controls">
           <input
             type="text"
@@ -151,24 +130,32 @@ const DashboardScreen: React.FC = () => {
           />
         </div>
 
+        {/* Table */}
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Floor</th>
-              <th>Capacity</th>
-              <th>Type</th>
-              <th>Actions</th>
+              <th className="table-title">Device Summary</th>
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Name</td>
+              <td>Floor</td>
+              <td>Capacity</td>
+              <td>Type</td>
+              <td>Actions</td>
+            </tr>
             {paginatedRooms.length > 0 ? (
               paginatedRooms.map((room) => (
                 <tr key={room.id}>
                   <td>{room.name}</td>
                   <td>{room.floor}</td>
                   <td>{room.capacity}</td>
-                  <td><span className={`type-color type-color-${room.type.toLowerCase()}`}>{room.type.toUpperCase()}</span></td>
+                  <td>
+                    <span className={`type-color type-color-${room.type.toLowerCase()}`}>
+                      {room.type.toUpperCase()}
+                    </span>
+                  </td>
                   <td>
                     <button
                       className="edt-btn"
@@ -216,6 +203,7 @@ const DashboardScreen: React.FC = () => {
           showRange
         />
 
+        {/* Modal */}
         {modalMode && (
           <RoomModal
             mode={modalMode}

@@ -1,45 +1,201 @@
-.modal-content textarea {
-    resize: none;
-    max-width: 100%;
-    width: 100%;
-    min-height: 150px;
-    width: 100%;
-    padding: 10px 12px;     /* space inside box */
-    font-size: 14px;        /* readable text */
-    line-height: 1.5;
-    border: 1px solid #ccc; /* light border */
-    border-radius: 8px;     /* smooth corners */
-    resize: none;       /* user can resize vertically only */
-    box-sizing: border-box; /* padding doesn’t push width */
-    background: #fafafa;    /* subtle background */
-}
-
-.modal-content textarea:focus {
-    outline: none;
-  border-color: #007bff;  /* highlight border when active */
-  background: #fff;
-}
-
-
-.modal-content {
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-.issue-textarea {
+/* --- Modal Container --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  padding: 10px 12px;     /* space inside box */
-  font-size: 14px;        /* readable text */
-  line-height: 1.5;
-  border: 1px solid #ccc; /* light border */
-  border-radius: 8px;     /* smooth corners */
-  resize: vertical;       /* user can resize vertically only */
-  box-sizing: border-box; /* padding doesn’t push width */
-  background: #fafafa;    /* subtle background */
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
 }
 
-.issue-textarea:focus {
-  outline: none;
-  border-color: #007bff;  /* highlight border when active */
+.modal {
   background: #fff;
+  border-radius: 12px;
+  max-width: 650px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: fadeInUp 0.25s ease-out;
+}
+
+/* --- Header --- */
+.modal-header {
+  padding: 16px 20px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.modal-close:hover {
+  color: #000;
+}
+
+/* --- Content --- */
+.modal-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-content p {
+  margin-bottom: 1rem;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+/* --- Sections --- */
+.section {
+  margin-bottom: 20px;
+}
+
+.section h3 {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+}
+
+/* --- Form Elements --- */
+.modal-content label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.modal-content textarea,
+.modal-content select,
+.modal-content input[type="file"] {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: #fafafa;
+  transition: border 0.2s, background 0.2s;
+  margin-bottom: 14px;
+}
+
+.modal-content textarea:focus,
+.modal-content select:focus,
+.modal-content input[type="file"]:focus {
+  outline: none;
+  border-color: #007bff;
+  background: #fff;
+}
+
+/* --- Attachments --- */
+.attachments-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.attachment-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  border-radius: 8px;
+  width: 110px;
+  background: #fafafa;
+  transition: box-shadow 0.2s;
+}
+
+.attachment-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.attachment-thumb {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: cover;
+  margin-bottom: 6px;
+  border-radius: 4px;
+}
+
+.attachment-name {
+  font-size: 0.8rem;
+  text-align: center;
+  word-break: break-word;
+  color: #555;
+}
+
+/* --- Actions --- */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: #e9ecef;
+  color: #333;
+}
+.btn-secondary:hover {
+  background: #d6d8db;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* --- Animations --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

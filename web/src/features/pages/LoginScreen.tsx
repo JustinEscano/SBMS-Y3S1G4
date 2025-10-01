@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loginUser } from '../services/authService';
+import { loginUser } from '../services/authService.tsx';
 import { Link } from 'react-router-dom';
 import '../pages/LoginScreen.css';
 

@@ -27,6 +27,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
   }
 
   return (
+  <div className="pagination-wrapper">
     <div className="pagination" role="navigation" aria-label="Pagination">
       <button
         onClick={() => onPageChange(1)}
@@ -76,14 +77,15 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       >
         {">>"}
       </button>
-
-      {showRange && (
-        <span className="page-range" style={{ marginLeft: 12 }}>
-          Page {currentPage} of {totalPages}
-        </span>
-      )}
     </div>
-  );
+
+    {showRange && (
+      <div className="page-range">
+        Page {currentPage} of {totalPages}
+      </div>
+    )}
+  </div>
+);
 };
 
 export default Pagination;
