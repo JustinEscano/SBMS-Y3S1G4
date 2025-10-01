@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../Services/llm_service.dart';
+import '../Services/auth_service.dart'; // Add AuthService import
 import '../Models/chat_message.dart';
 import '../Providers/chat_provider.dart';
-import '../Config/api.dart'; // Added import for ApiConfig
+import '../Config/api.dart';
 
 class ChatScreen extends StatefulWidget {
   final String accessToken;
@@ -23,27 +24,52 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late LLMService _llmService;
+  bool isRefreshingToken = false;
 
   @override
   void initState() {
     super.initState();
-    _llmService = LLMService(
-      accessToken: widget.accessToken,
-    );
+    AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
+    _llmService = LLMService(); // Updated to use AuthService-managed tokens
     _loadConversationHistory();
+  }
+
+  Future<bool> _refreshToken() async {
+    setState(() {
+      isRefreshingToken = true;
+    });
+    try {
+      final success = await AuthService().refresh();
+      if (success) {
+        _llmService = LLMService(); // Reinitialize LLMService with new tokens
+        return true;
+      }
+      Provider.of<ChatProvider>(context, listen: false)
+          .setError('Failed to refresh session. Please log in again.');
+      return false;
+    } catch (e) {
+      Provider.of<ChatProvider>(context, listen: false)
+          .setError('Error refreshing session: $e');
+      return false;
+    } finally {
+      setState(() {
+        isRefreshingToken = false;
+      });
+    }
   }
 
   Future<void> _loadConversationHistory() async {
     try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
       final conversations = await _llmService.getConversationHistory();
       if (conversations.isNotEmpty) {
         final recentConversation = conversations.first;
         Provider.of<ChatProvider>(context, listen: false)
             .setConversationId(recentConversation['id']);
-        // Optionally load messages from the conversation if your API supports it
       }
     } catch (e) {
-      print('Error loading conversation history: $e');
       Provider.of<ChatProvider>(context, listen: false)
           .setError('Failed to load conversation history: $e');
     }
@@ -55,7 +81,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
 
-    // Create user message
     final userMessage = ChatMessage(
       id: _llmService.generateMessageId(),
       content: message,
@@ -64,19 +89,20 @@ class _ChatScreenState extends State<ChatScreen> {
       conversationId: chatProvider.currentConversationId,
     );
 
-    // Add user message to provider
     chatProvider.addMessage(userMessage);
     chatProvider.setLoading(true);
     _messageController.clear();
     _scrollToBottom();
 
     try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
       final response = await _llmService.queryLLM(
         message,
-        userId: null, // Add userId if your backend requires it
+        userId: null,
       );
 
-      // Create assistant message from response
       final assistantMessage = ChatMessage(
         id: _llmService.generateMessageId(),
         content: response['answer'] ?? 'No response received',
@@ -88,7 +114,6 @@ class _ChatScreenState extends State<ChatScreen> {
             : null,
       );
 
-      // Update provider with response
       chatProvider.addMessage(assistantMessage);
       chatProvider.setConversationId(response['conversation_id'] ?? chatProvider.currentConversationId);
       chatProvider.setLoading(false);
@@ -186,7 +211,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        )).toList(),
+                        )),
                         if (message.sources!.length > 3)
                           Text(
                             '...and ${message.sources!.length - 3} more sources',
@@ -242,7 +267,7 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: _clearConversation,
+            onPressed: isRefreshingToken ? null : _clearConversation,
             tooltip: 'Clear Conversation',
           ),
         ],
@@ -273,7 +298,9 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           Expanded(
-            child: ListView.builder(
+            child: isRefreshingToken
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: chatProvider.messages.length + (chatProvider.isLoading ? 1 : 0),
@@ -363,7 +390,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
+                    onSubmitted: (_) => isRefreshingToken ? null : _sendMessage(),
                     maxLines: null,
                   ),
                 ),
@@ -373,7 +400,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Icons.send,
                     color: Theme.of(context).primaryColor,
                   ),
-                  onPressed: _sendMessage,
+                  onPressed: isRefreshingToken ? null : _sendMessage,
                 ),
               ],
             ),

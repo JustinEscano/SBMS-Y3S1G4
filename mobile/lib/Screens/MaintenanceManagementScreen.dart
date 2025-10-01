@@ -5,7 +5,8 @@ import 'dart:developer' as developer;
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/api.dart';
-import 'package:jwt_decode/jwt_decode.dart'; // Add this dependency for token parsing
+import '../Services/auth_service.dart'; // Add AuthService import
+import 'package:jwt_decode/jwt_decode.dart'; // Keep dependency for token parsing
 
 class MaintenanceManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -28,6 +29,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   List<dynamic> equipment = [];
   List<dynamic> users = [];
   bool isLoading = true;
+  bool isRefreshingToken = false;
   String _errorMessage = '';
   String _filterStatus = 'all';
   int _currentPage = 1;
@@ -42,6 +44,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   @override
   void initState() {
     super.initState();
+    AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
     developer.log('User Role in MaintenanceManagementScreen: ${widget.userRole}', name: 'MaintenanceManagementScreen');
     try {
       Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
@@ -53,6 +56,36 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     _loadData();
   }
 
+  Future<bool> _refreshToken() async {
+    setState(() {
+      isRefreshingToken = true;
+      _errorMessage = 'Refreshing session...';
+    });
+    try {
+      final success = await AuthService().refresh();
+      if (success) {
+        developer.log('Token refreshed successfully', name: 'MaintenanceScreen.Auth');
+        return true;
+      }
+      setState(() {
+        _errorMessage = 'Failed to refresh session. Please log in again.';
+      });
+      developer.log('Token refresh failed', name: 'MaintenanceScreen.Auth');
+      return false;
+    } catch (e, stackTrace) {
+      setState(() {
+        _errorMessage = 'Error refreshing session: $e';
+      });
+      developer.log('Token refresh error: $e', name: 'MaintenanceScreen.Auth');
+      developer.log('Stack trace: $stackTrace', name: 'MaintenanceScreen.Auth');
+      return false;
+    } finally {
+      setState(() {
+        isRefreshingToken = false;
+      });
+    }
+  }
+
   Future<void> _loadData() async {
     developer.log('=== STARTING MAINTENANCE DATA LOAD ===', name: 'MaintenanceScreen.LoadData');
     setState(() {
@@ -62,16 +95,15 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     });
 
     try {
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
 
       final responses = await Future.wait([
-        http.get(Uri.parse(ApiConfig.maintenanceRequest), headers: headers),
-        http.get(Uri.parse(ApiConfig.equipment), headers: headers),
-        http.get(Uri.parse(ApiConfig.users), headers: headers),
+        _makeHttpRequest(ApiConfig.maintenanceRequest, headers, 'Maintenance Requests'),
+        _makeHttpRequest(ApiConfig.equipment, headers, 'Equipment'),
+        _makeHttpRequest(ApiConfig.users, headers, 'Users'),
       ]).timeout(const Duration(seconds: 15));
 
       if (responses[0].statusCode == 200) {
@@ -110,12 +142,44 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       developer.log('Error: $e', name: 'MaintenanceScreen.LoadData');
       developer.log('Stack trace: $stackTrace', name: 'MaintenanceScreen.LoadData');
       setState(() {
-        _errorMessage = 'Error loading data: $e';
+        _errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
       });
     } finally {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<http.Response> _makeHttpRequest(String url, Map<String, String> headers, String requestName) async {
+    developer.log('--- $requestName REQUEST START ---', name: 'MaintenanceScreen.HTTP');
+    developer.log('URL: $url', name: 'MaintenanceScreen.HTTP');
+    developer.log('Headers: $headers', name: 'MaintenanceScreen.HTTP');
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      developer.log('--- $requestName RESPONSE ---', name: 'MaintenanceScreen.HTTP');
+      developer.log('Status Code: ${response.statusCode}', name: 'MaintenanceScreen.HTTP');
+      developer.log('Response Body Length: ${response.body.length}', name: 'MaintenanceScreen.HTTP');
+
+      if (response.statusCode >= 400) {
+        developer.log('ERROR RESPONSE BODY: ${response.body}', name: 'MaintenanceScreen.HTTP');
+        if (response.statusCode == 401) {
+          if (await _refreshToken()) {
+            final newHeaders = AuthService().getAuthHeaders();
+            developer.log('Retrying $requestName with new token', name: 'MaintenanceScreen.HTTP');
+            return await _makeHttpRequest(url, newHeaders, requestName);
+          } else {
+            throw Exception('Session expired. Please log in again.');
+          }
+        }
+      }
+      return response;
+    } catch (e, stackTrace) {
+      developer.log('--- $requestName REQUEST FAILED ---', name: 'MaintenanceScreen.HTTP');
+      developer.log('Error: $e', name: 'MaintenanceScreen.HTTP');
+      developer.log('Stack Trace: $stackTrace', name: 'MaintenanceScreen.HTTP');
+      rethrow;
     }
   }
 
@@ -158,7 +222,10 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   }
 
   String _getStatusLabel(String? status) {
-    final option = MAINTENANCE_STATUS_OPTIONS.firstWhere((option) => option['value'] == status, orElse: () => {'value': status ?? '', 'label': status ?? 'Unknown'});
+    final option = MAINTENANCE_STATUS_OPTIONS.firstWhere(
+          (option) => option['value'] == status,
+      orElse: () => {'value': status ?? '', 'label': status ?? 'Unknown'},
+    );
     return option['label']!;
   }
 
@@ -167,8 +234,8 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       context,
       MaterialPageRoute(
         builder: (context) => MaintenanceDetailsScreen(
-          accessToken: widget.accessToken,
-          refreshToken: widget.refreshToken,
+          accessToken: AuthService().accessToken ?? widget.accessToken,
+          refreshToken: AuthService().refreshToken ?? widget.refreshToken,
           userRole: widget.userRole,
           users: users,
           equipment: equipment,
@@ -320,8 +387,16 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         elevation: 0,
         actions: [
-          IconButton(icon: const Icon(Icons.filter_list), onPressed: _showFilterDialog, tooltip: 'Filter'),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData, tooltip: 'Refresh'),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+            tooltip: 'Filter',
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: isRefreshingToken ? null : _loadData,
+            tooltip: 'Refresh',
+          ),
         ],
       ),
       body: Column(
@@ -357,7 +432,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
               ),
             ),
           Expanded(
-            child: isLoading
+            child: isLoading || isRefreshingToken
                 ? const Center(child: CircularProgressIndicator())
                 : filtered.isEmpty
                 ? Center(
@@ -462,8 +537,8 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                               context,
                               MaterialPageRoute(
                                 builder: (context) => MaintenanceDetailsScreen(
-                                  accessToken: widget.accessToken,
-                                  refreshToken: widget.refreshToken,
+                                  accessToken: AuthService().accessToken ?? widget.accessToken,
+                                  refreshToken: AuthService().refreshToken ?? widget.refreshToken,
                                   userRole: widget.userRole,
                                   users: users,
                                   equipment: equipment,
@@ -487,9 +562,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                       children: [
                         IconButton(
                           icon: const Icon(Icons.chevron_left),
-                          onPressed: _currentPage > 1
-                              ? () => setState(() => _currentPage--)
-                              : null,
+                          onPressed: _currentPage > 1 ? () => setState(() => _currentPage--) : null,
                         ),
                         Text(
                           'Page $_currentPage of $totalPages',
@@ -497,9 +570,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                         ),
                         IconButton(
                           icon: const Icon(Icons.chevron_right),
-                          onPressed: _currentPage < totalPages
-                              ? () => setState(() => _currentPage++)
-                              : null,
+                          onPressed: _currentPage < totalPages ? () => setState(() => _currentPage++) : null,
                         ),
                       ],
                     ),
@@ -585,11 +656,42 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   String? _selectedAssignedToId;
   int _currentCommentPage = 1;
   final int _commentsPerPage = 5;
+  bool isRefreshingToken = false;
 
   @override
   void initState() {
     super.initState();
+    AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
     developer.log('User Role in MaintenanceDetailsScreen: ${widget.userRole}', name: 'MaintenanceDetailsScreen');
+  }
+
+  Future<bool> _refreshToken() async {
+    setState(() {
+      isRefreshingToken = true;
+    });
+    try {
+      final success = await AuthService().refresh();
+      if (success) {
+        developer.log('Token refreshed successfully', name: 'MaintenanceDetailsScreen.Auth');
+        return true;
+      }
+      developer.log('Token refresh failed', name: 'MaintenanceDetailsScreen.Auth');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to refresh session. Please log in again.'), backgroundColor: Colors.red),
+      );
+      return false;
+    } catch (e, stackTrace) {
+      developer.log('Token refresh error: $e', name: 'MaintenanceDetailsScreen.Auth');
+      developer.log('Stack trace: $stackTrace', name: 'MaintenanceDetailsScreen.Auth');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error refreshing session: $e'), backgroundColor: Colors.red),
+      );
+      return false;
+    } finally {
+      setState(() {
+        isRefreshingToken = false;
+      });
+    }
   }
 
   Future<void> _deleteMaintenanceRequest(String requestId, String issue) async {
@@ -616,11 +718,11 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
 
     if (confirmed == true) {
       try {
+        if (!(await AuthService().ensureValidToken())) {
+          throw Exception('Session expired. Please log in again.');
+        }
         final url = ApiConfig.maintenanceRequestDetail(requestId);
-        final headers = {
-          'Authorization': 'Bearer ${widget.accessToken}',
-          'Content-Type': 'application/json',
-        };
+        final headers = AuthService().getAuthHeaders();
 
         final response = await http.delete(Uri.parse(url), headers: headers).timeout(const Duration(seconds: 10));
 
@@ -630,6 +732,12 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           );
           widget.onSave();
           Navigator.of(context).pop();
+        } else if (response.statusCode == 401) {
+          if (await _refreshToken()) {
+            return _deleteMaintenanceRequest(requestId, issue);
+          } else {
+            throw Exception('Session expired. Please log in again.');
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to delete: ${response.statusCode}'), backgroundColor: Colors.red),
@@ -645,6 +753,11 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
 
   Future<void> _uploadAttachment(String requestId) async {
     try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
@@ -652,7 +765,6 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
 
       if (result != null && result.files.single.path != null) {
         final file = result.files.single;
-        final headers = {'Authorization': 'Bearer ${widget.accessToken}'};
         final request = http.MultipartRequest('POST', Uri.parse(ApiConfig.maintenanceRequestUploadAttachment(requestId)));
         request.headers.addAll(headers);
         request.files.add(await http.MultipartFile.fromPath('file', file.path!));
@@ -664,6 +776,12 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
             const SnackBar(content: Text('Attachment uploaded successfully'), backgroundColor: Colors.green),
           );
           widget.onSave();
+        } else if (response.statusCode == 401) {
+          if (await _refreshToken()) {
+            return _uploadAttachment(requestId);
+          } else {
+            throw Exception('Session expired. Please log in again.');
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to upload: ${response.statusCode}'), backgroundColor: Colors.red),
@@ -679,10 +797,10 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
 
   Future<void> _respondToMaintenanceRequest(String requestId, String responseText, String? assignedToId) async {
     try {
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       final body = <String, dynamic>{'response': responseText};
       if (assignedToId != null && assignedToId.isNotEmpty) {
         body['assigned_to'] = assignedToId;
@@ -704,6 +822,12 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           _currentCommentPage = 1;
         });
         widget.onSave();
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _respondToMaintenanceRequest(requestId, responseText, assignedToId);
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
       } else {
         final errorData = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -753,6 +877,10 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
     }
 
     try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       final requestBody = <String, dynamic>{
         'user': userId,
         'equipment': equipmentId,
@@ -766,10 +894,6 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       }
 
       final url = isEditing ? ApiConfig.maintenanceRequestDetail(requestId!) : ApiConfig.maintenanceRequest;
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-      };
 
       final response = isEditing
           ? await http.put(Uri.parse(url), headers: headers, body: json.encode(requestBody))
@@ -781,6 +905,21 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
         );
         widget.onSave();
         Navigator.of(context).pop();
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _saveMaintenanceRequest(
+            requestId: requestId,
+            userId: userId,
+            equipmentId: equipmentId,
+            issue: issue,
+            status: status,
+            scheduledDate: scheduledDate,
+            resolvedAt: resolvedAt,
+            isEditing: isEditing,
+          );
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
       } else {
         final errorData = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1159,7 +1298,9 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: isRefreshingToken
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1266,9 +1407,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.chevron_left),
-                              onPressed: _currentCommentPage > 1
-                                  ? () => setState(() => _currentCommentPage--)
-                                  : null,
+                              onPressed: _currentCommentPage > 1 ? () => setState(() => _currentCommentPage--) : null,
                             ),
                             Text(
                               'Page $_currentCommentPage of $totalCommentPages',
@@ -1276,9 +1415,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.chevron_right),
-                              onPressed: _currentCommentPage < totalCommentPages
-                                  ? () => setState(() => _currentCommentPage++)
-                                  : null,
+                              onPressed: _currentCommentPage < totalCommentPages ? () => setState(() => _currentCommentPage++) : null,
                             ),
                           ],
                         ),
@@ -1287,12 +1424,12 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32), // Increased spacing
+            const SizedBox(height: 32),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Divider(
                 color: Theme.of(context).colorScheme.primary,
-                thickness: 3, // Thicker divider
+                thickness: 3,
               ),
             ),
             const SizedBox(height: 16),
@@ -1312,7 +1449,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                 elevation: 5,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2), // Bolder border
+                  side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
                 ),
                 surfaceTintColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                 margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -1342,7 +1479,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                         child: Tooltip(
                           message: 'Post your comment',
                           child: ElevatedButton.icon(
-                            onPressed: _responseController.text.isEmpty
+                            onPressed: _responseController.text.isEmpty || isRefreshingToken
                                 ? null
                                 : () => _respondToMaintenanceRequest(request['id'], _responseController.text, _selectedAssignedToId),
                             icon: const Icon(Icons.send, size: 20),
@@ -1443,7 +1580,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ElevatedButton.icon(
-                onPressed: () => _uploadAttachment(request['id']),
+                onPressed: isRefreshingToken ? null : () => _uploadAttachment(request['id']),
                 icon: const Icon(Icons.attach_file),
                 label: const Text('Add Attachment'),
                 style: ElevatedButton.styleFrom(
@@ -1452,7 +1589,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32), // Extra padding at bottom
+            const SizedBox(height: 32),
           ],
         ),
       ),

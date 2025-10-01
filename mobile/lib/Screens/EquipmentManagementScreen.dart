@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
 import '../Config/api.dart';
+import '../Services/auth_service.dart'; // Import AuthService
 
 class EquipmentManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -23,6 +24,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   List<dynamic> equipment = [];
   List<dynamic> rooms = [];
   bool isLoading = true;
+  bool isRefreshingToken = false;
   String _errorMessage = '';
   String _filterRoom = 'all';
   String _filterType = 'all';
@@ -45,6 +47,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   @override
   void initState() {
     super.initState();
+    AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
     _logAppInfo();
     _loadData();
   }
@@ -57,11 +60,9 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     developer.log('Refresh Token Length: ${widget.refreshToken.length}', name: 'EquipmentScreen');
   }
 
-  // TEMPORARY BYPASS: Comment out the if (!hasNetwork) block below to skip the check and test API calls directly.
   Future<bool> _checkNetworkConnectivity() async {
     developer.log('=== CHECKING NETWORK CONNECTIVITY ===', name: 'EquipmentScreen.Network');
     try {
-      // Direct backend ping first (reliable, no external DNS)
       final backendResponse = await http.get(Uri.parse(ApiConfig.baseUrl)).timeout(const Duration(seconds: 5));
       if (backendResponse.statusCode >= 200 && backendResponse.statusCode < 300) {
         developer.log('Backend reachable: ${ApiConfig.baseUrl} (Status: ${backendResponse.statusCode})', name: 'EquipmentScreen.Network');
@@ -72,7 +73,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       developer.log('Backend ping failed: $e, falling back to google.com', name: 'EquipmentScreen.Network');
     }
 
-    // Fallback to google.com
     try {
       final result = await InternetAddress.lookup('google.com').timeout(const Duration(seconds: 5));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
@@ -85,6 +85,36 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
     developer.log('All connectivity checks failed', name: 'EquipmentScreen.Network');
     return false;
+  }
+
+  Future<bool> _refreshToken() async {
+    setState(() {
+      isRefreshingToken = true;
+      _errorMessage = 'Refreshing session...';
+    });
+    try {
+      final success = await AuthService().refresh();
+      if (success) {
+        developer.log('Token refreshed successfully', name: 'EquipmentScreen.Auth');
+        return true;
+      }
+      setState(() {
+        _errorMessage = 'Failed to refresh session. Please log in again.';
+      });
+      developer.log('Token refresh failed', name: 'EquipmentScreen.Auth');
+      return false;
+    } catch (e, stackTrace) {
+      setState(() {
+        _errorMessage = 'Error refreshing session: $e';
+      });
+      developer.log('Token refresh error: $e', name: 'EquipmentScreen.Auth');
+      developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.Auth');
+      return false;
+    } finally {
+      setState(() {
+        isRefreshingToken = false;
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -106,18 +136,14 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           _errorMessage = 'No internet connection detected. Backend ping failed. Check emulator network or backend server.';
           isLoading = false;
         });
-        // TEMPORARY BYPASS: Uncomment the line below to skip the check and test API calls
-        // return;  // Comment this out to force API calls even if check fails
+        // TEMPORARY BYPASS: Comment out to force API calls even if check fails
+        // return;
       }
 
-      developer.log('Connectivity OK - proceeding with API calls', name: 'EquipmentScreen.LoadData');
-
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       developer.log('Request headers: $headers', name: 'EquipmentScreen.LoadData');
 
       developer.log('Making API calls to:', name: 'EquipmentScreen.LoadData');
@@ -153,7 +179,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.LoadData');
 
       setState(() {
-        _errorMessage = 'Error loading data: $e';
+        _errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
       });
     } finally {
       setState(() {
@@ -181,6 +207,15 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
       if (response.statusCode >= 400) {
         developer.log('ERROR RESPONSE BODY: ${response.body}', name: 'EquipmentScreen.HTTP');
+        if (response.statusCode == 401) {
+          if (await _refreshToken()) {
+            final newHeaders = AuthService().getAuthHeaders();
+            developer.log('Retrying $requestName with new token', name: 'EquipmentScreen.HTTP');
+            return await _makeHttpRequest(url, newHeaders, requestName);
+          } else {
+            throw Exception('Session expired. Please log in again.');
+          }
+        }
       } else {
         final bodyPreview = response.body.length > 500 ? '${response.body.substring(0, 500)}...' : response.body;
         developer.log('Response Body Preview: $bodyPreview', name: 'EquipmentScreen.HTTP');
@@ -306,11 +341,11 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
     if (confirmed == true) {
       try {
+        if (!(await AuthService().ensureValidToken())) {
+          throw Exception('Session expired. Please log in again.');
+        }
         final url = '${ApiConfig.equipment}$equipmentId/';
-        final headers = {
-          'Authorization': 'Bearer ${widget.accessToken}',
-          'Content-Type': 'application/json',
-        };
+        final headers = AuthService().getAuthHeaders();
 
         developer.log('DELETE request URL: $url', name: 'EquipmentScreen.Delete');
         developer.log('DELETE request headers: $headers', name: 'EquipmentScreen.Delete');
@@ -332,6 +367,12 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
             ),
           );
           _loadData();
+        } else if (response.statusCode == 401) {
+          if (await _refreshToken()) {
+            return _deleteEquipment(equipmentId, equipmentName);
+          } else {
+            throw Exception('Session expired. Please log in again.');
+          }
         } else {
           developer.log('Delete failed with status: ${response.statusCode}', name: 'EquipmentScreen.Delete');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -372,7 +413,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     String selectedStatus = equipmentItem?['status'] ?? 'offline';
     String selectedType = equipmentItem?['type'] ?? 'sensor';
 
-    // Ensure the selected type exists in our options, otherwise default to 'sensor'
     if (!EQUIPMENT_TYPE_OPTIONS.any((option) => option['value'] == selectedType)) {
       developer.log('Invalid type "$selectedType", defaulting to "sensor"', name: 'EquipmentScreen.Dialog');
       selectedType = 'sensor';
@@ -394,12 +434,11 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                 width: double.maxFinite,
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.85,
-                  maxWidth: 500, // Maximum width for better UX on tablets
+                  maxWidth: 500,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Dialog Header
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -434,14 +473,12 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                         ],
                       ),
                     ),
-                    // Dialog Content
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Equipment Name Field
                             TextField(
                               controller: nameController,
                               decoration: const InputDecoration(
@@ -453,8 +490,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                               textInputAction: TextInputAction.next,
                             ),
                             const SizedBox(height: 16),
-
-                            // Equipment Type Dropdown - Fixed overflow
                             DropdownButtonFormField<String>(
                               value: selectedType,
                               decoration: const InputDecoration(
@@ -514,8 +549,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
-
-                            // Device ID Field
                             TextField(
                               controller: deviceIdController,
                               decoration: const InputDecoration(
@@ -528,8 +561,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                               textInputAction: TextInputAction.next,
                             ),
                             const SizedBox(height: 16),
-
-                            // QR Code Field
                             TextField(
                               controller: qrCodeController,
                               decoration: const InputDecoration(
@@ -542,8 +573,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                               textInputAction: TextInputAction.next,
                             ),
                             const SizedBox(height: 16),
-
-                            // Room Assignment Dropdown
                             DropdownButtonFormField<String>(
                               value: selectedRoomId.isEmpty ? null : selectedRoomId,
                               decoration: const InputDecoration(
@@ -597,8 +626,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
-
-                            // Status Dropdown - Fixed overflow
                             DropdownButtonFormField<String>(
                               value: selectedStatus,
                               decoration: const InputDecoration(
@@ -689,8 +716,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                               },
                             ),
                             const SizedBox(height: 12),
-
-                            // Required fields note
                             Row(
                               children: [
                                 Icon(
@@ -712,8 +737,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                         ),
                       ),
                     ),
-
-                    // Dialog Actions
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -805,6 +828,10 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     }
 
     try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       final requestBody = <String, dynamic>{
         'name': name,
         'type': type,
@@ -825,12 +852,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
       developer.log('Request URL: $url', name: 'EquipmentScreen.Save');
       developer.log('Request method: ${isEditing ? 'PUT' : 'POST'}', name: 'EquipmentScreen.Save');
-
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-      };
-
       developer.log('Request headers: $headers', name: 'EquipmentScreen.Save');
 
       final response = isEditing
@@ -857,6 +878,21 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           ),
         );
         _loadData();
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _saveEquipment(
+            equipmentId: equipmentId,
+            name: name,
+            type: type,
+            deviceId: deviceId,
+            qrCode: qrCode,
+            roomId: roomId,
+            status: status,
+            isEditing: isEditing,
+          );
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
       } else {
         developer.log('Save failed with status: ${response.statusCode}', name: 'EquipmentScreen.Save');
         try {
@@ -958,7 +994,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           IconButton(
             icon: const Icon(Icons.bug_report),
             onPressed: () {
-              // Show debug info dialog
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -966,11 +1001,12 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                   content: SingleChildScrollView(
                     child: Text(
                       'Base URL: ${ApiConfig.baseUrl}\n'
-                          'Token Length: ${widget.accessToken.length}\n'
+                          'Token Length: ${AuthService().accessToken?.length ?? widget.accessToken.length}\n'
                           'Equipment Count: ${equipment.length}\n'
                           'Rooms Count: ${rooms.length}\n'
                           'Error Message: $_errorMessage\n'
-                          'Is Loading: $isLoading',
+                          'Is Loading: $isLoading\n'
+                          'Is Refreshing Token: $isRefreshingToken',
                     ),
                   ),
                   actions: [
@@ -991,14 +1027,13 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
+            onPressed: isRefreshingToken ? null : _loadData,
             tooltip: 'Refresh',
           ),
         ],
       ),
       body: Column(
         children: [
-          // Summary Cards - Made more responsive
           Container(
             margin: const EdgeInsets.all(16),
             child: LayoutBuilder(
@@ -1083,8 +1118,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
               },
             ),
           ),
-
-          // Filter Chips - Made scrollable
           if (_filterRoom != 'all' || _filterType != 'all')
             Container(
               height: 50,
@@ -1112,8 +1145,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                 ),
               ),
             ),
-
-          // Error Message
           if (_errorMessage.isNotEmpty)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1135,10 +1166,8 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                 ],
               ),
             ),
-
-          // Equipment List
           Expanded(
-            child: isLoading
+            child: isLoading || isRefreshingToken
                 ? const Center(child: CircularProgressIndicator())
                 : filtered.isEmpty
                 ? Center(
@@ -1291,7 +1320,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Dialog Header
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -1320,7 +1348,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                         ],
                       ),
                     ),
-                    // Dialog Content
                     Flexible(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -1390,7 +1417,6 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                         ),
                       ),
                     ),
-                    // Dialog Actions
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),

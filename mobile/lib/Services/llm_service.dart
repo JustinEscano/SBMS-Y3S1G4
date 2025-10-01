@@ -1,21 +1,26 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../Models/chat_message.dart';
-import '../Config/api.dart'; // Updated import to use ApiConfig
+import '../Config/api.dart';
+import '../Services/auth_service.dart'; // Add AuthService import
 
 class LLMService {
-  final String accessToken;
+  LLMService(); // Remove accessToken parameter, use AuthService
 
-  LLMService({required this.accessToken});
+  Future<bool> _refreshToken() async {
+    try {
+      return await AuthService().refresh();
+    } catch (e) {
+      throw Exception('Error refreshing token: $e');
+    }
+  }
 
-  // Send a query to the LLM
   Future<Map<String, dynamic>> queryLLM(String query, {String? userId}) async {
     try {
-      final headers = {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
 
       final body = {
         'query': query,
@@ -23,14 +28,14 @@ class LLMService {
       };
 
       final url = Uri.parse(ApiConfig.llmQuery);
-      print('Sending POST to: $url with body: ${json.encode(body)}'); // Debug log
+      print('Sending POST to: $url with body: ${json.encode(body)}');
       final response = await http.post(
         url,
         headers: headers,
         body: json.encode(body),
       ).timeout(const Duration(seconds: 30));
 
-      print('queryLLM response: status=${response.statusCode}, body=${response.body}'); // Debug log
+      print('queryLLM response: status=${response.statusCode}, body=${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -40,47 +45,90 @@ class LLMService {
           'answer': data['answer'] ?? '',
           'sources': data['sources'],
           'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
+          'conversation_id': data['conversation_id'], // Include conversation_id
         };
       } else if (response.statusCode == 401) {
-        throw Exception('Authentication failed. Please login again.');
+        if (await _refreshToken()) {
+          return queryLLM(query, userId: userId); // Retry with new token
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
       } else {
         throw Exception('Failed to query LLM: ${response.statusCode}');
       }
     } catch (e) {
-      print('queryLLM error: $e'); // Debug log
+      print('queryLLM error: $e');
       throw Exception('Network error: $e');
     }
   }
 
-  // Check LLM health status
   Future<Map<String, dynamic>> checkHealth() async {
     try {
-      final headers = {
-        'Authorization': 'Bearer $accessToken',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
 
       final url = Uri.parse(ApiConfig.llmHealth);
-      print('Sending GET to: $url'); // Debug log
+      print('Sending GET to: $url');
       final response = await http.get(
         url,
         headers: headers,
       ).timeout(const Duration(seconds: 15));
 
-      print('checkHealth response: status=${response.statusCode}, body=${response.body}'); // Debug log
+      print('checkHealth response: status=${response.statusCode}, body=${response.body}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return checkHealth(); // Retry with new token
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
       } else {
         throw Exception('Failed to check LLM health: ${response.statusCode}');
       }
     } catch (e) {
-      print('checkHealth error: $e'); // Debug log
+      print('checkHealth error: $e');
       throw Exception('Network error: $e');
     }
   }
 
-  // Get suggested queries
+  Future<List<Map<String, dynamic>>> getConversationHistory() async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+
+      final url = Uri.parse(ApiConfig.llmQuery);
+      print('Sending GET to: $url');
+      final response = await http.get(
+        url,
+        headers: headers,
+      ).timeout(const Duration(seconds: 15));
+
+      print('getConversationHistory response: status=${response.statusCode}, body=${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return List<Map<String, dynamic>>.from(data);
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return getConversationHistory(); // Retry with new token
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else {
+        throw Exception('Failed to fetch conversation history: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('getConversationHistory error: $e');
+      throw Exception('Network error: $e');
+    }
+  }
+
   List<String> getSuggestedQueries() {
     return [
       "What is the average temperature?",
@@ -96,7 +144,6 @@ class LLMService {
     ];
   }
 
-  // Format timestamp
   String formatTimestamp(String timestamp) {
     try {
       final dateTime = DateTime.parse(timestamp);
@@ -106,37 +153,7 @@ class LLMService {
     }
   }
 
-  // Generate unique message ID
   String generateMessageId() {
     return 'msg_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecondsSinceEpoch}';
-  }
-
-  // Get conversation history
-  Future<List<Map<String, dynamic>>> getConversationHistory() async {
-    try {
-      final headers = {
-        'Authorization': 'Bearer $accessToken',
-        'Accept': 'application/json',
-      };
-
-      final url = Uri.parse(ApiConfig.llmQuery);
-      print('Sending GET to: $url'); // Debug log
-      final response = await http.get(
-        url,
-        headers: headers,
-      ).timeout(const Duration(seconds: 15));
-
-      print('getConversationHistory response: status=${response.statusCode}, body=${response.body}'); // Debug log
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return List<Map<String, dynamic>>.from(data);
-      } else {
-        throw Exception('Failed to fetch conversation history: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('getConversationHistory error: $e'); // Debug log
-      throw Exception('Network error: $e');
-    }
   }
 }

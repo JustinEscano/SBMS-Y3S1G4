@@ -12,6 +12,7 @@ import '../Screens/ChatScreen.dart';
 import '../Screens/EnergyAnalyticsScreen.dart';
 import '../Widgets/bottom_navbar.dart';
 import '../Config/api.dart';
+import '../Services/auth_service.dart'; // Import AuthService
 
 class DashboardScreen extends StatefulWidget {
   final String accessToken;
@@ -49,6 +50,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize AuthService with tokens
+    AuthService().setTokens(widget.accessToken, widget.refreshToken);
     loadData();
     _startAutoRefresh();
   }
@@ -81,17 +84,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<bool> _refreshToken() async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.refreshToken),
-        body: jsonEncode({'refresh': widget.refreshToken}),
-        headers: {'Content-Type': 'application/json'},
-      );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      final success = await AuthService().refresh();
+      if (success) {
+        final newAccessToken = AuthService().accessToken;
+        final newRefreshToken = AuthService().refreshToken ?? widget.refreshToken;
         setState(() {
           // Update tokens in widget (assumes mutable access, adjust if using Provider)
-          (widget as dynamic).accessToken = data['access'];
-          (widget as dynamic).refreshToken = data['refresh'] ?? widget.refreshToken;
+          (widget as dynamic).accessToken = newAccessToken;
+          (widget as dynamic).refreshToken = newRefreshToken;
         });
         return true;
       }
@@ -111,11 +111,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     try {
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
 
       final responses = await Future.wait([
         http.get(Uri.parse(ApiConfig.rooms), headers: headers),
@@ -323,6 +322,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         );
         break;
+      case 'maintenance_requests':
+        _navigateToMaintenanceManagement();
+        break;
       case 'notifications':
       case 'about':
         ScaffoldMessenger.of(context).showSnackBar(
@@ -381,7 +383,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _navigateToMaintenanceManagement() async {
     String userRole = 'Client';
     try {
-      final headers = {'Authorization': 'Bearer ${widget.accessToken}'};
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       final response = await http.get(Uri.parse(ApiConfig.userInfo), headers: headers).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final userData = json.decode(response.body);
@@ -1258,110 +1263,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 )).toList(),
-                const SizedBox(height: 24),
-              ],
-              if (rooms.isNotEmpty) ...[
-                Row(
-                  children: [
-                    const Text(
-                      'Rooms',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: _navigateToRoomManagement,
-                      icon: const Icon(Icons.settings, size: 16),
-                      label: const Text('Manage'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ...rooms.take(2).map((room) => Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blue[100],
-                      child: Text(
-                        room['floor']?.toString() ?? '?',
-                        style: TextStyle(
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    title: Text(room['name'] ?? 'Unknown Room'),
-                    subtitle: Text(
-                        'Floor ${room['floor']} • Capacity: ${room['capacity']} • ${room['type'] ?? 'Unknown'}'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _navigateToRoomManagement(),
-                  ),
-                )).toList(),
-                if (rooms.length > 2)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Center(
-                      child: TextButton(
-                        onPressed: _navigateToRoomManagement,
-                        child: Text('View all ${rooms.length} rooms'),
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 24),
-              ],
-              if (equipment.isNotEmpty) ...[
-                Row(
-                  children: [
-                    const Text(
-                      'Equipment',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: _navigateToEquipmentManagement,
-                      icon: const Icon(Icons.settings, size: 16),
-                      label: const Text('Manage'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ...equipment.take(2).map((item) {
-                  Color statusColor = _getStatusColor(item['status']);
-                  return Card(
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: statusColor.withOpacity(0.2),
-                        child: Icon(Icons.devices, color: statusColor),
-                      ),
-                      title: Text(item['name'] ?? 'Unknown Equipment'),
-                      subtitle: Text('Type: ${item['type']} • Device ID: ${item['device_id'] ?? 'N/A'}'),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          item['status']?.toUpperCase() ?? 'UNKNOWN',
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      onTap: () => _navigateToEquipmentManagement(),
-                    ),
-                  );
-                }).toList(),
-                if (equipment.length > 2)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Center(
-                      child: TextButton(
-                        onPressed: _navigateToEquipmentManagement,
-                        child: Text('View all ${equipment.length} equipment'),
-                      ),
-                    ),
-                  ),
                 const SizedBox(height: 24),
               ],
               if (rooms.isEmpty && equipment.isEmpty && sensorLogs.isEmpty && latestSensorData.isEmpty)

@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import '../Config/api.dart';
+import '../Screens/MaintenanceManagementScreen.dart';
 import '../Widgets/bottom_navbar.dart';
+import '../Services/auth_service.dart'; // Import AuthService
 
 class EnergyAnalyticsScreen extends StatefulWidget {
   final String accessToken;
@@ -23,6 +25,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   List<dynamic> sensorLogs = [];
   List<dynamic> rooms = [];
   List<dynamic> equipment = [];
+  List<dynamic> latestSensorData = [];
   String? selectedRoomId;
   String? selectedComponentId;
   String selectedScope = 'room';
@@ -32,11 +35,12 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   String timeFrame = 'daily';
   Map<String, dynamic> summaryData = {};
   Map<String, dynamic> billingData = {};
+  Map<String, dynamic> hvacData = {};
   Map<String, List<dynamic>> _cachedSensorLogs = {};
   Map<String, Map<String, dynamic>> _cachedBillingData = {};
   DateTime? _lastCacheTime;
-  String totalCost = 'N/A';
-  String effectiveRate = 'N/A';
+  String totalCost = '0.00';
+  String effectiveRate = '0.00';
 
   final Map<String, Duration> _periodDurations = {
     'daily': Duration(hours: 24),
@@ -53,6 +57,8 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize AuthService with tokens
+    AuthService().setTokens(widget.accessToken, widget.refreshToken);
     _loadRooms();
     _loadEquipment();
     loadEnergyData();
@@ -60,11 +66,10 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
 
   Future<void> _loadRooms() async {
     try {
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       final response = await http.get(Uri.parse(ApiConfig.rooms), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -90,11 +95,10 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
 
   Future<void> _loadEquipment() async {
     try {
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       final response = await http.get(Uri.parse(ApiConfig.equipment), headers: headers).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -132,17 +136,8 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       errorMessage = 'Refreshing session...';
     });
     try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.refreshToken),
-        body: jsonEncode({'refresh': widget.refreshToken}),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          (widget as dynamic).accessToken = data['access'];
-          (widget as dynamic).refreshToken = data['refresh'] ?? widget.refreshToken;
-        });
+      final success = await AuthService().refresh();
+      if (success) {
         return true;
       }
       setState(() {
@@ -213,16 +208,16 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       _cachedBillingData.clear();
       totalCost = '0.00';
       effectiveRate = '0.00';
+      hvacData = {};
     });
 
     final cacheKey = '$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame';
 
     try {
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
 
       DateTime now = DateTime.now();
       DateTime startTimeCalc = _getStartTime(now);
@@ -256,9 +251,10 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       final responses = await Future.wait([
         http.get(Uri.parse(sensorLogUrl), headers: headers),
         Future.value(billingResponse),
+        http.get(Uri.parse(ApiConfig.latestSensorData), headers: headers),
       ]).timeout(const Duration(seconds: 15));
 
-      if (responses[0].statusCode == 401) {
+      if (responses[0].statusCode == 401 || responses[2].statusCode == 401) {
         if (await _refreshToken()) {
           return loadEnergyData();
         } else {
@@ -266,13 +262,19 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         }
       } else if (responses[0].statusCode != 200) {
         throw Exception('Failed to load sensor data: ${responses[0].statusCode} - ${responses[0].reasonPhrase}');
+      } else if (responses[2].statusCode != 200) {
+        throw Exception('Failed to load latest sensor data: ${responses[2].statusCode} - ${responses[2].reasonPhrase}');
       }
 
       final sensorData = json.decode(responses[0].body);
       print('Sensor Log Response: $sensorData');
+      final latestData = json.decode(responses[2].body);
+      print('Latest Sensor Data Response: $latestData');
+
       setState(() {
         sensorLogs = sensorData is List ? sensorData : [];
         _cachedSensorLogs[cacheKey] = sensorLogs;
+        latestSensorData = latestData['success'] == true ? (latestData['data'] ?? []) : [];
       });
 
       if (responses[1].statusCode == 401) {
@@ -312,12 +314,20 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         effectiveRate = parsedBillingData['effective_rate'].toStringAsFixed(2);
       });
 
+      _generateHVACData();
       await _loadSummaryData(startTimeCalc);
     } catch (e) {
       setState(() {
         errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
         totalCost = '0.00';
         effectiveRate = '0.00';
+        hvacData = {
+          'avgTemperature': 0.0,
+          'avgHumidity': 0.0,
+          'activeZones': 0,
+          'totalZones': 0,
+          'status': 'offline',
+        };
       });
     } finally {
       setState(() {
@@ -326,13 +336,61 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
+  void _generateHVACData() {
+    double avgTemp = 0.0;
+    double avgHumidity = 0.0;
+    int activeZones = 0;
+    int totalZones = 0;
+
+    if (latestSensorData.isNotEmpty) {
+      final filteredSensors = latestSensorData.where((sensor) {
+        if (sensor['temperature'] == null || sensor['humidity'] == null) return false;
+        if (selectedScope == 'building') return true;
+        if (selectedScope == 'all_rooms' && sensor['room_id'] != null) return true;
+        if (selectedScope == 'room' && sensor['room_id'] == selectedRoomId) {
+          if (selectedComponentId == null || sensor['device_id'] == selectedComponentId) {
+            return true;
+          }
+        }
+        return false;
+      }).toList();
+
+      double totalTemp = 0.0;
+      double totalHumidity = 0.0;
+      int validReadings = 0;
+
+      for (var sensor in filteredSensors) {
+        totalTemp += (sensor['temperature'] as num).toDouble();
+        totalHumidity += (sensor['humidity'] as num).toDouble();
+        validReadings++;
+        if (sensor['status'] == 'online') activeZones++;
+      }
+
+      totalZones = filteredSensors.length;
+
+      if (validReadings > 0) {
+        avgTemp = totalTemp / validReadings;
+        avgHumidity = totalHumidity / validReadings;
+      }
+    }
+
+    setState(() {
+      hvacData = {
+        'avgTemperature': avgTemp.isNaN ? 0.0 : avgTemp,
+        'avgHumidity': avgHumidity.isNaN ? 0.0 : avgHumidity,
+        'activeZones': activeZones,
+        'totalZones': totalZones,
+        'status': activeZones > 0 ? 'operational' : 'offline',
+      };
+    });
+  }
+
   Future<void> _loadSummaryData(DateTime startTimeCalc) async {
     try {
-      final headers = {
-        'Authorization': 'Bearer ${widget.accessToken}',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       String summaryUrl = ApiConfig.energySummary(periodType: timeFrame, roomId: selectedScope == 'room' ? selectedRoomId : null);
       summaryUrl += '&start_time=${startTimeCalc.toIso8601String()}Z';
       final response = await http.get(
@@ -560,6 +618,59 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       );
       return '${selectedRoom['name']} - ${selectedEquipment['name']}';
     }
+  }
+
+  Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w400)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _navigateToMaintenanceManagement() async {
+    String userRole = 'Client';
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+      final response = await http.get(Uri.parse(ApiConfig.userInfo), headers: headers).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final userData = json.decode(response.body);
+        userRole = userData['role']?.toString() ?? 'Client';
+        if (!['Client', 'Employee', 'Admin', 'Superadmin'].contains(userRole)) {
+          userRole = 'Client';
+        }
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _navigateToMaintenanceManagement(); // Retry with new token
+        }
+      }
+    } catch (e) {
+      print('Error fetching user role: $e');
+      setState(() {
+        errorMessage = 'Error fetching user role: $e';
+      });
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MaintenanceManagementScreen(
+          accessToken: AuthService().accessToken ?? widget.accessToken,
+          refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+          userRole: userRole,
+        ),
+      ),
+    ).then((_) {
+      loadEnergyData();
+    });
   }
 
   @override
@@ -969,43 +1080,61 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_getScopeTitle()} HVAC Status',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildStatRow('Average Temperature', '${hvacData['avgTemperature']?.toStringAsFixed(1) ?? '0.0'}°C'),
+                      _buildStatRow('Average Humidity', '${hvacData['avgHumidity']?.toStringAsFixed(1) ?? '0.0'}%'),
+                      _buildStatRow('Active Zones', '${hvacData['activeZones'] ?? 0}/${hvacData['totalZones'] ?? 0}'),
+                      _buildStatRow('System Status', hvacData['status']?.toString().toUpperCase() ?? 'OFFLINE'),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
       bottomNavigationBar: BottomNavBar(
         onMenuSelection: (value) {
-          if (value == 'dashboard') {
-            Navigator.pop(context);
-          } else if (value == 'orb_chat') {
-            Navigator.pushNamed(
-              context,
-              '/chat',
-              arguments: {
-                'accessToken': widget.accessToken,
-                'refreshToken': widget.refreshToken,
-              },
-            );
-          } else if (value == 'notifications' || value == 'about') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${value.replaceAll('_', ' ').toUpperCase()} feature coming soon!')),
-            );
+          switch (value) {
+            case 'dashboard':
+              Navigator.pop(context);
+              break;
+            case 'maintenance_requests':
+              _navigateToMaintenanceManagement();
+              break;
+            case 'orb_chat':
+              Navigator.pushNamed(
+                context,
+                '/chat',
+                arguments: {
+                  'accessToken': AuthService().accessToken ?? widget.accessToken,
+                  'refreshToken': AuthService().refreshToken ?? widget.refreshToken,
+                },
+              );
+              break;
+            case 'notifications':
+            case 'about':
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${value.replaceAll('_', ' ').toUpperCase()} feature coming soon!')),
+              );
+              break;
+            default:
+              break;
           }
         },
         currentScreen: 'analytics',
-      ),
-    );
-  }
-
-  Widget _buildStatRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w400)),
-        ],
       ),
     );
   }

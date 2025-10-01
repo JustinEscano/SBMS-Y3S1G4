@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../Config/api.dart'; // Updated import to point to ../Config/api.dart
+import '../Config/api.dart';
+import '../Services/auth_service.dart';
 
 class RoomManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -20,9 +21,9 @@ class RoomManagementScreen extends StatefulWidget {
 class _RoomManagementScreenState extends State<RoomManagementScreen> {
   List<dynamic> rooms = [];
   bool isLoading = true;
+  bool isRefreshingToken = false;
   String _errorMessage = '';
 
-  // Standardized room type options - use these across web and mobile
   static const List<Map<String, String>> ROOM_TYPE_OPTIONS = [
     {'value': 'office', 'label': 'Office', 'description': 'Office spaces'},
     {'value': 'lab', 'label': 'Laboratory', 'description': 'Laboratory and research spaces'},
@@ -35,7 +36,34 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
   @override
   void initState() {
     super.initState();
+    AuthService().setTokens(widget.accessToken, widget.refreshToken);
     _loadRooms();
+  }
+
+  Future<bool> _refreshToken() async {
+    setState(() {
+      isRefreshingToken = true;
+      _errorMessage = 'Refreshing session...';
+    });
+    try {
+      final success = await AuthService().refresh();
+      if (success) {
+        return true;
+      }
+      setState(() {
+        _errorMessage = 'Failed to refresh session. Please log in again.';
+      });
+      return false;
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error refreshing session: $e';
+      });
+      return false;
+    } finally {
+      setState(() {
+        isRefreshingToken = false;
+      });
+    }
   }
 
   Future<void> _loadRooms() async {
@@ -45,12 +73,14 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     });
 
     try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+
       final response = await http.get(
         Uri.parse(ApiConfig.rooms),
-        headers: {
-          'Authorization': 'Bearer ${widget.accessToken}',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -58,6 +88,12 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
         setState(() {
           rooms = roomsData is List ? roomsData : [];
         });
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _loadRooms();
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
       } else {
         setState(() {
           _errorMessage = 'Failed to load rooms. Status: ${response.statusCode}';
@@ -65,7 +101,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error loading rooms: $e';
+        _errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading rooms: $e';
       });
     } finally {
       setState(() {
@@ -75,7 +111,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
   }
 
   Future<void> _deleteRoom(String roomId, String roomName) async {
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -99,12 +134,14 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
 
     if (confirmed == true) {
       try {
+        if (!(await AuthService().ensureValidToken())) {
+          throw Exception('Session expired. Please log in again.');
+        }
+        final headers = AuthService().getAuthHeaders();
+
         final response = await http.delete(
           Uri.parse('${ApiConfig.rooms}$roomId/'),
-          headers: {
-            'Authorization': 'Bearer ${widget.accessToken}',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 10));
 
         if (response.statusCode == 204) {
@@ -114,7 +151,13 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          _loadRooms(); // Refresh the list
+          _loadRooms();
+        } else if (response.statusCode == 401) {
+          if (await _refreshToken()) {
+            return _deleteRoom(roomId, roomName);
+          } else {
+            throw Exception('Session expired. Please log in again.');
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -142,7 +185,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
 
     String selectedType = room?['type'] ?? 'office';
 
-    // Ensure the selected type exists in our options, otherwise default to 'office'
     if (!ROOM_TYPE_OPTIONS.any((option) => option['value'] == selectedType)) {
       selectedType = 'office';
     }
@@ -191,7 +233,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 16),
-                      // Replace TextField with DropdownButtonFormField for Room Type
                       DropdownButtonFormField<String>(
                         value: selectedType,
                         decoration: const InputDecoration(
@@ -255,7 +296,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
                       type: selectedType,
                       isEditing: isEditing,
                     );
-                    Navigator.of(context).pop();
                   },
                   child: Text(isEditing ? 'Update' : 'Add'),
                 ),
@@ -275,7 +315,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     required String type,
     required bool isEditing,
   }) async {
-    // Validate inputs
     if (name.isEmpty || floor.isEmpty || capacity.isEmpty || type.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -286,7 +325,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
       return;
     }
 
-    // Validate numeric inputs
     int? floorNumber = int.tryParse(floor);
     int? capacityNumber = int.tryParse(capacity);
 
@@ -301,6 +339,10 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     }
 
     try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
       final requestBody = {
         'name': name,
         'floor': floorNumber,
@@ -308,25 +350,17 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
         'type': type,
       };
 
-      final url = isEditing
-          ? '${ApiConfig.rooms}$roomId/'
-          : ApiConfig.rooms;
+      final url = isEditing ? '${ApiConfig.rooms}$roomId/' : ApiConfig.rooms;
 
       final response = isEditing
           ? await http.put(
         Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer ${widget.accessToken}',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: json.encode(requestBody),
       ).timeout(const Duration(seconds: 10))
           : await http.post(
         Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer ${widget.accessToken}',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: json.encode(requestBody),
       ).timeout(const Duration(seconds: 10));
 
@@ -337,7 +371,20 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        _loadRooms(); // Refresh the list
+        _loadRooms();
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _saveRoom(
+            roomId: roomId,
+            name: name,
+            floor: floor,
+            capacity: capacity,
+            type: type,
+            isEditing: isEditing,
+          );
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
       } else {
         final errorData = json.decode(response.body);
         String errorMessage = 'Failed to ${isEditing ? 'update' : 'add'} room.';
@@ -371,7 +418,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate some statistics
     final totalCapacity = rooms.fold<int>(0, (sum, room) => sum + (room['capacity'] as int? ?? 0));
     final floorCount = rooms.map((room) => room['floor']).toSet().length;
 
@@ -382,14 +428,13 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadRooms,
+            onPressed: isRefreshingToken ? null : _loadRooms,
             tooltip: 'Refresh',
           ),
         ],
       ),
       body: Column(
         children: [
-          // Enhanced Summary Cards
           Container(
             height: 120,
             margin: const EdgeInsets.all(16),
@@ -457,8 +502,6 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
               ],
             ),
           ),
-
-          // Error Message
           if (_errorMessage.isNotEmpty)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -480,10 +523,8 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
                 ],
               ),
             ),
-
-          // Rooms List
           Expanded(
-            child: isLoading
+            child: isLoading || isRefreshingToken
                 ? const Center(child: CircularProgressIndicator())
                 : rooms.isEmpty
                 ? Center(
@@ -500,7 +541,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
                   const Text('Add your first room to get started'),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
-                    onPressed: () => _showAddEditRoomDialog(),
+                    onPressed: isRefreshingToken ? null : () => _showAddEditRoomDialog(),
                     icon: const Icon(Icons.add),
                     label: const Text('Add Room'),
                   ),
@@ -579,7 +620,7 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditRoomDialog(),
+        onPressed: isRefreshingToken ? null : () => _showAddEditRoomDialog(),
         tooltip: 'Add Room',
         child: const Icon(Icons.add),
       ),

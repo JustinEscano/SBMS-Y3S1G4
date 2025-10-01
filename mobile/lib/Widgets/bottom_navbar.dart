@@ -29,9 +29,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
       'icon': Icons.analytics,
     },
     {
-      'value': 'notifications',
-      'label': 'Notifications',
-      'icon': Icons.notifications,
+      'value': 'maintenance_requests',
+      'label': 'Maintenance Requests',
+      'icon': Icons.build,
     },
     {
       'value': 'orb_chat',
