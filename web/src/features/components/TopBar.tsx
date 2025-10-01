@@ -2,13 +2,31 @@ import React, { useEffect, useRef, useState } from "react";
 import "./TopBar.css";
 import { useNavigate } from "react-router-dom";
 import ModalLogout from "./ModalLogout";
+import { jwtDecode } from "jwt-decode";
 
 type TopBarProps = {
   collapsed: boolean;
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
   handleLogout: () => void;
-  user?: { initial?: string; name?: string; id?: string; roleLabel?: string };
+};
+
+type TokenPayload = {
+  user_id: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  role_display?: string;
+  exp: number;
+  token_type: string;
+};
+
+type User = {
+  id: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  role_display?: string;
 };
 
 const TopBar: React.FC<TopBarProps> = ({
@@ -16,17 +34,38 @@ const TopBar: React.FC<TopBarProps> = ({
   darkMode,
   setDarkMode,
   handleLogout,
-  user = { initial: "G", name: "Gemerald De Guzman", id: "97129", roleLabel: "Admin" },
 }) => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleConfirmLogout = () => {
     setLogoutModalOpen(false);
     handleLogout();
   };
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      const decoded = jwtDecode<TokenPayload>(token);
+
+      // we only *guarantee* user_id, but keep other fields if your backend puts them
+      setUser({
+        id: decoded.user_id,
+        username: decoded.username ?? undefined,
+        email: decoded.email ?? undefined,
+        role: decoded.role ?? undefined,
+        role_display: decoded.role_display ?? decoded.role ?? "Client",
+      });
+    } catch (err) {
+      console.error("Failed to decode JWT:", err);
+    }
+  }, []);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -57,23 +96,31 @@ const TopBar: React.FC<TopBarProps> = ({
             className="profile-button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
           >
-            <div className="avatar-circle">{user.initial}</div>
-            <span className="topbar-user">{user.roleLabel} ▾</span>
+            <div className="avatar-circle">
+              {user?.username?.charAt(0).toUpperCase() ?? "?"}
+            </div>
+            <span className="topbar-user">
+              {user?.role_display ?? "Guest"} ▾
+            </span>
           </div>
 
           {dropdownOpen && (
             <div className="dropdown-menu">
               <div className="dropdown-header">
-                <div className="avatar-large">{user.initial}</div>
+                <div className="avatar-large">
+                  {user?.username?.charAt(0).toUpperCase() ?? "?"}
+                </div>
                 <div>
-                  <h4>{user.name}</h4>
-                  <small>ID: {user.id}</small>
+                  <h4>{user?.username ?? "Guest"}</h4>
+                  <small>ID: {user?.id ?? "N/A"}</small>
                 </div>
               </div>
 
               <div className="dropdown-links">
                 <button onClick={() => navigate("/profile")}>My Profile</button>
-                <button onClick={() => alert("Go to settings")}>Settings</button>
+                <button onClick={() => alert("Go to settings")}>
+                  Settings
+                </button>
                 <label className="switch">
                   <input
                     type="checkbox"
@@ -88,7 +135,10 @@ const TopBar: React.FC<TopBarProps> = ({
               </div>
 
               <div className="dropdown-footer">
-                <button className="logout-btn" onClick={() => setLogoutModalOpen(true)}>
+                <button
+                  className="logout-btn"
+                  onClick={() => setLogoutModalOpen(true)}
+                >
                   Logout
                 </button>
               </div>

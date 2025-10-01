@@ -3,7 +3,6 @@ import PageLayout from "./PageLayout";
 import { useEquipment } from "../hooks/useEquipment";
 import { useRooms } from "../hooks/useRooms";
 import EquipmentModal from "../components/equipmentModal";
-import { equipmentService } from "../services/equipmentService";
 import Pagination from "../components/Pagination";
 import type { Equipment, EquipmentType, EquipmentStatus, Room } from "../types/dashboardTypes";
 import "../pages/PageStyle.css";
@@ -21,15 +20,22 @@ export const PAGE_TYPE_MAP: Record<PageType, EquipmentType[]> = {
 type ModalType = "add" | "edit" | "delete" | null;
 const ITEMS_PER_PAGE = 5;
 
+type EquipmentWithRoom = Equipment & { roomName?: string; floor?: number | "" };
+
 interface GenericEquipmentPageProps {
   pageType: PageType;
   icon: string;
 }
 
-type EquipmentWithRoom = Equipment & { roomName?: string; floor?: number | "" };
-
 const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, icon }) => {
-  const { equipment, loading, refetch } = useEquipment();
+  const {
+    equipment,
+    loading,
+    addEquipment,
+    updateEquipment,
+    deleteEquipment,
+  } = useEquipment();
+
   const { rooms } = useRooms();
 
   const [search, setSearch] = useState("");
@@ -37,20 +43,17 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selected, setSelected] = useState<Equipment | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [, setErrorMsg] = useState<string | null>(null);
 
   // Ensure allowedTypes is always defined
   const allowedTypes = PAGE_TYPE_MAP[pageType] ?? [];
-  if (!allowedTypes.length) console.warn("Unknown pageType:", pageType);
 
-  // Filter equipment by type
   const filteredByType: Equipment[] = useMemo(() => {
     return equipment
       .filter((e) => allowedTypes.includes(e.type))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [equipment, allowedTypes]);
 
-  // Attach room info
   const mappedEquipment: EquipmentWithRoom[] = useMemo(() => {
     return filteredByType.map((eq) => {
       const room = rooms.find((r: Room) => r.id === eq.room);
@@ -58,7 +61,6 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
     });
   }, [filteredByType, rooms]);
 
-  // Search + status filter
   const filteredEquipment: EquipmentWithRoom[] = useMemo(() => {
     const term = search.toLowerCase();
     return mappedEquipment.filter((e) => {
@@ -74,8 +76,7 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
     });
   }, [mappedEquipment, search, statusFilter]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE));
   const paginatedEquipment = filteredEquipment.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
@@ -93,7 +94,6 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
     setErrorMsg(null);
   };
 
-  // Backend payload formatter
   const formatPayload = (data: Partial<Equipment>): Partial<Equipment> => ({
     name: data.name ?? "",
     type: data.type as EquipmentType,
@@ -104,8 +104,7 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
 
   const handleAdd = async (data: Partial<Equipment>) => {
     try {
-      await equipmentService.create(formatPayload(data));
-      await refetch();
+      await addEquipment(formatPayload(data));
       closeModal();
     } catch (err: any) {
       setErrorMsg(err?.response?.data ? JSON.stringify(err.response.data) : err?.message || "Failed to create.");
@@ -115,8 +114,7 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
   const handleEdit = async (data: Partial<Equipment>) => {
     if (!selected) return;
     try {
-      await equipmentService.update(selected.id, { ...formatPayload(data), id: selected.id });
-      await refetch();
+      await updateEquipment(selected.id, { ...formatPayload(data), id: selected.id });
       closeModal();
     } catch (err: any) {
       setErrorMsg(err?.response?.data ? JSON.stringify(err.response.data) : err?.message || "Failed to update.");
@@ -126,24 +124,24 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
   const handleDelete = async () => {
     if (!selected) return;
     try {
-      await equipmentService.remove(selected.id);
-      await refetch();
+      await deleteEquipment(selected.id);
       closeModal();
     } catch (err: any) {
       setErrorMsg(err?.response?.data ? JSON.stringify(err.response.data) : err?.message || "Failed to delete.");
     }
   };
 
-  // Debugging logs
-  console.log("pageType:", pageType, "allowedTypes:", allowedTypes);
-  console.log("equipment count:", filteredByType.length);
-
   return (
     <PageLayout initialSection={{ parent: "Dashboard", child: pageType }}>
-      <h1>Dashboard &gt; {pageType.charAt(0).toUpperCase() + pageType.slice(1)}</h1>
+      <div className="page-header">
+        <h1>
+          <span className="title">Dashboard</span>
+          <span className="divider">|</span>
+          <span className="breadcrumb">Dashboard &gt; {pageType.charAt(0).toUpperCase() + pageType.slice(1)}</span>
+        </h1>
+      </div>
 
       <div className="content-container">
-        {/* Stats */}
         <div className="stats-boxes">
           <div className="stats-box">
             <div className="stat-icon">{icon}</div>
@@ -168,7 +166,8 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
           </div>
         </div>
 
-        {/* Filters */}
+        <h2> {pageType.charAt(0).toUpperCase() + pageType.slice(1)} Table </h2>
+
         <div className="table-controls">
           <input
             type="text"
@@ -194,58 +193,68 @@ const GenericEquipmentPage: React.FC<GenericEquipmentPageProps> = ({ pageType, i
           </select>
         </div>
 
-        {/* Table */}
         {loading ? (
-          <p>Loading {pageType} data...</p>
+          <p>Loading equipment...</p>
         ) : (
           <>
-            {errorMsg && <div className="error-banner">{errorMsg}</div>}
-
             <table>
               <thead>
                 <tr>
-                  <th>Room</th>
-                  <th>Floor</th>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>QR Code</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th className="table-title">Device Summary</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedEquipment.map((eq) => (
-                  <tr key={eq.id}>
-                    <td>{eq.roomName}</td>
-                    <td>{eq.floor}</td>
-                    <td>{eq.name}</td>
-                    <td>{eq.type}</td>
-                    <td><span className={`status-color status-color-${eq.status.toLowerCase()}`}>{eq.status.toUpperCase()}</span></td>
-                    <td>{eq.qr_code}</td>
-                    <td>{new Date(eq.created_at).toLocaleDateString()}</td>
-                    <td>
-                      <button className="edt-btn" onClick={() => openModal("edit", eq)}>Edit</button>
-                      <button className="dlt-btn" onClick={() => openModal("delete", eq)}>Delete</button>
-                    </td>
+                <tr>
+                  <td>Room</td>
+                  <td>Floor</td>
+                  <td>Name</td>
+                  <td>Type</td>
+                  <td>Status</td>
+                  <td>QR Code</td>
+                  <td>Created</td>
+                  <td>Actions</td>
+                </tr>
+                {paginatedEquipment.length > 0 ? (
+                  paginatedEquipment.map((eq) => (
+                    <tr key={eq.id}>
+                      <td>{eq.roomName}</td>
+                      <td>{eq.floor}</td>
+                      <td>{eq.name}</td>
+                      <td>{eq.type}</td>
+                      <td>
+                        <span className={`status-color status-color-${eq.status.toLowerCase()}`}>
+                          {eq.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td>{eq.qr_code}</td>
+                      <td>{new Date(eq.created_at).toLocaleDateString()}</td>
+                      <td>
+                        <button className="edt-btn" onClick={() => openModal("edit", eq)}>Edit</button>
+                        <button className="dlt-btn" onClick={() => openModal("delete", eq)}>Delete</button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8}>No equipment found</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
 
             <button className="add-btn-main" onClick={() => openModal("add")}>
               + Add Equipment
             </button>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              showRange
+            />
           </>
         )}
       </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        showRange
-      />
 
       {/* Shared Modal */}
       {modalType && (

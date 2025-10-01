@@ -14,9 +14,17 @@
   --white: #ffffff;
   --off-white: #f5f5f5;
   --light-purple: #a6b1ff;
+  --purple: #9b59b6;
+  --brown: #a0522d;
   --black: #000000;
   --gray: #aaa;
   --light-gray: #ddd;
+  --blue-gray: #607D8B;
+  --lime-green: #32cd32;
+  --success: #4CAF50;
+  --warning: #ff9800;
+  --error: #f44336;
+  transition: transform 0.2s ease;
 }
 
 html, body {
@@ -55,18 +63,50 @@ html, body {
   width: calc(100% - var(--sidebar-collapsed));
 }
 
-.dashboard-content h1 {
+.page-header h1 {
+  display: flex;
+  align-items: center;   /* makes all parts align vertically in the middle */
+  gap: 8px;              /* space between elements */
   font-size: 1.8rem;
-  margin-bottom: 16px;
   font-weight: 600;
-  color: var(--white);
+  color: #fff;
 }
+
+.page-header .title {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.page-header .divider {
+  font-size: 1.5rem;   /* slightly smaller bar if you want */
+  color: #fff;         /* subtle color for divider */
+}
+
+.page-header .breadcrumb {
+  font-size: 1rem;     /* smaller text */
+  font-weight: 400;
+  color: #aaa;
+}
+
+.table-title {
+  text-align: left;     /* align text to the left */
+  font-size: 1.25rem;   /* make it bigger (adjust as needed) */
+  font-weight: 600;     /* bold for emphasis */
+  padding: 16px 32px;    /* some breathing room */
+  color: #fff;          /* optional: white text */
+}
+
 
 .dashboard-content h2 {
   font-size: 1.3rem;
   margin: 20px 0 12px;
   font-weight: 500;
   color: var(--light-purple);
+}
+
+.content-container {
+  padding-bottom: 25px;
+  margin-bottom: 13px;
 }
 
 .stats-boxes {
@@ -82,7 +122,6 @@ html, body {
   border-radius: 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   transition: transform 0.2s ease;
@@ -93,18 +132,19 @@ html, body {
 }
 
 .stat-icon {
-  font-size: 1.8rem;
+  font-size: 5.3rem;
+  padding: 13px;
 }
 
 .stat-info p.stat-number {
-  font-size: 1.6rem;
+  font-size: 1.9rem;
   font-weight: bold;
   margin-bottom: 4px;
   color: var(--white);
 }
 
 .stat-info p.stat-label {
-  font-size: 0.9rem;
+  font-size: 1.3rem;
   color: var(--gray);
 }
 
@@ -189,11 +229,12 @@ table {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  outline: 2px solid var(--white);
+  outline: 1px solid var(--white);
 }
 
 table thead {
   background: var(--header-bg);
+  outline: 1px solid var(--white);
 }
 
 table thead th {
@@ -211,7 +252,8 @@ table tbody td {
 }
 
 .edt-btn,
-.dlt-btn {
+.dlt-btn,
+.view-btn {
   padding: 6px 12px;
   border-radius: 6px;
   border: none;
@@ -228,6 +270,16 @@ table tbody td {
 
 .edt-btn:hover {
   background: var(--hover-blue);
+}
+
+.view-btn {
+  background: var(--warning);
+  color: var(--white);
+}
+
+.view-btn:hover {
+  background: var(--brown);
+  color: var(--white);
 }
 
 .dlt-btn {
@@ -291,6 +343,14 @@ table tbody td {
   text-decoration: underline;
   font-weight: bold;
   cursor: default;
+}
+
+.pagination-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center horizontally */
+  gap: 6px;            /* spacing between buttons and text */
+  padding: 14px;
 }
 
 /* Jump to page input */
@@ -455,4 +515,60 @@ table tbody td {
     flex-direction: column;
     text-align: center;
   }
+}
+
+/* usage page */
+
+/* General page layout */
+.usage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.usage-header .left h2 {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.usage-header .right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.usage-header select {
+  background: #1e2a38;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.date-picker {
+  color: #bbb;
+  font-size: 14px;
+}
+
+/* Chart container */
+.usage-chart-container {
+  background: #1c2736;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 30px;
+  height: 360px; /* fixed height so chart stays consistent */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Inside chart */
+.chart-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
 }

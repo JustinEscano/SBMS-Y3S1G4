@@ -108,3 +108,55 @@
 .delete-btn:hover {
   color: #c0392b; /* Darker red on hover */
 }
+
+/* Darken read notifications */
+.notif-card.read {
+  opacity: 0.6;
+  background-color: #1a1a1a;
+}
+
+.notif-card.unread {
+  opacity: 1;
+  background-color: #222;
+}
+
+.notif-card .action-icons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mark-read-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.notif-actions {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.notif-actions.left {
+  justify-content: flex-start; /* push button to left */
+}
+
+.mark-all-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.mark-all-btn:hover {
+  background-color: #0056b3;
+}

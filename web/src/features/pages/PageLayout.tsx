@@ -24,6 +24,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
 
   function handleLogout(): void {
     logout();
+    localStorage.clear();
     navigate("/login");
   }
 
@@ -47,7 +48,6 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
           darkMode={darkMode}
           setDarkMode={setDarkMode}
           handleLogout={handleLogout}
-          user={{ initial: "G", name: "Geremald De Guzman", id: "97129", roleLabel: "Admin" }}
         />
 
         <div className={`dashboard-content ${collapsed ? "expanded" : ""}`}>

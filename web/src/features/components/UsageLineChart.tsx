@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// components/UsageLineChart.tsx
+import React from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -9,111 +10,82 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
-import { fetchUsageData, type UsageCategory } from "./UsageDataService";
-import "./UsageLineChart.css";
+import type { TrendDataPoint } from "../types/usageTypes";
 
-ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
+ChartJS.register(
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
-const categories: UsageCategory[] = ["HVAC", "Lighting", "Security", "Maintenance"];
+interface UsageLineChartProps {
+  data: TrendDataPoint[];
+}
 
-const UsageLineChart: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<UsageCategory>("HVAC");
-  const [chartData, setChartData] = useState<any>(null);
-  const [usageDetails, setUsageDetails] = useState<{ icons: string[]; labels: string[]; values: number[] }>({
-    icons: [],
-    labels: [],
-    values: [],
+const UsageLineChart: React.FC<UsageLineChartProps> = ({ data }) => {
+  if (!data || data.length === 0) {
+    return <p className="text-gray-500 text-center">No trend data available</p>;
+  }
+
+  // Ensure valid dates and numbers
+  const labels = data.map((d) => {
+    const date = new Date(d.periodStart);
+    return isNaN(date.getTime())
+      ? "Invalid date"
+      : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   });
 
-  useEffect(() => {
-    const data = fetchUsageData(selectedCategory);
-    setUsageDetails({
-      icons: data.icons,
-      labels: data.labels,
-      values: data.values,
-    });
-    setChartData({
-      labels: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      datasets: [
-        {
-          label: selectedCategory,
-          data: data.values,
-          borderColor: "#4B9CD3",
-          backgroundColor: "rgba(75, 156, 211, 0.2)",
-          fill: true,
-          tension: 0.3,
-        },
-      ],
-    });
-  }, [selectedCategory]);
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: "Total Energy (kWh)",
+        data: data.map((d) => Number(d.totalEnergy) || 0),
+        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        fill: true,
+        tension: 0.3,
+      },
+      {
+        label: "Avg Power (kW)",
+        data: data.map((d) => Number(d.avgPower) || 0),
+        borderColor: "rgba(255, 206, 86, 1)",
+        backgroundColor: "rgba(255, 206, 86, 0.2)",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "Peak Power (kW)",
+        data: data.map((d) => Number(d.peakPower) || 0),
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        fill: false,
+        tension: 0.3,
+      },
+    ],
+  };
 
   const options = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      labels: {
-        color: "#ffffff", // Legend text
-      },
+    responsive: true,
+    maintainAspectRatio: false, // allow container height to work
+    plugins: {
+      legend: { position: "top" as const },
+      title: { display: true, text: "Energy Usage Trends" },
     },
-    tooltip: {
-      bodyColor: "#ffffff", // Tooltip text
-      titleColor: "#ffffff",
+    scales: {
+      x: { title: { display: true, text: "Date" } },
+      y: { title: { display: true, text: "kWh / kW" } },
     },
-  },
-  scales: {
-    x: {
-      ticks: {
-        color: "#ffffff", // X-axis labels
-      },
-    },
-    y: {
-      ticks: {
-        color: "#ffffff", // Y-axis labels
-      },
-      grid: {
-        color: "rgba(255, 255, 255, 0.2)",
-      },
-    },
-  },
-};
+  };
 
-  return (
-    <div>        
-      <div className="content-container">
-        {/* Stat boxes */}
-        <div className="stats-boxes">
-          {usageDetails.labels.map((label, index) => (
-            <div className="stat-box" key={index}>
-              <div className="stat-icon">{usageDetails.icons[index]}</div>
-              <div className="stat-info">
-                <p className="stat-number">{usageDetails.values[index]}</p>
-                <p className="stat-label">{label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-        <div className="category-selector">
-            <label htmlFor="category-select">Select Category:</label>
-            <select
-                id="category-select"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value as UsageCategory)}
-            >
-                {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                    {cat}
-                </option>
-                ))}
-            </select>
-        </div>
-        <div className="line-chart">
-            {chartData && <Line data={chartData} options={options} />}
-        </div>
-    </div>
-  );
+  return <Line data={chartData} options={options} />;
 };
 
 export default UsageLineChart;
