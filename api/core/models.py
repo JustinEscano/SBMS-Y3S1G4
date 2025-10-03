@@ -80,6 +80,12 @@ CURRENCY_CHOICES = [
     ('PHP', 'Philippine Peso'),
 ]
 
+NOTIFICATION_CATEGORY_CHOICES = [
+    ('maintenance', 'Maintenance'),
+    ('alert', 'Alert'),
+    ('system', 'System'),
+]
+
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, role='client', **extra_fields):
         if not email:
@@ -406,6 +412,7 @@ class Notification(models.Model):
     title = models.CharField(max_length=255)
     message = models.TextField()
     read = models.BooleanField(default=False)
+    category = models.CharField(max_length=50, choices=NOTIFICATION_CATEGORY_CHOICES, default='system')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

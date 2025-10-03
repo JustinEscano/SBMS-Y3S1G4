@@ -73,7 +73,7 @@ class RoleBasedPermission(BasePermission):
             # Standard ownership check
             if hasattr(obj, 'user'):
                 return obj.user == db_user
-            elif hasattr(obj, 'equipment') and hasattr(obj.equipment, 'room') and request.user == db_user:  # Fallback for equipment-related
+            elif hasattr(obj, 'equipment') and hasattr(obj.equipment, 'room') and request.user == db_user:
                 return True
 
         return False

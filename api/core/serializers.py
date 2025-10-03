@@ -5,7 +5,7 @@ from .models import (
     PredictiveAlert, BillingRate, ROLE_CHOICES, EQUIPMENT_TYPE_CHOICES,
     EQUIPMENT_STATUS_CHOICES, ROOM_TYPE_CHOICES, COMPONENT_TYPE_CHOICES,
     MAINTENANCE_STATUS_CHOICES, ALERT_TYPE_CHOICES, ALERT_SEVERITY_CHOICES,
-    PERIOD_TYPE_CHOICES, CURRENCY_CHOICES
+    PERIOD_TYPE_CHOICES, CURRENCY_CHOICES, NOTIFICATION_CATEGORY_CHOICES
 )
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
@@ -323,10 +323,27 @@ class MaintenanceRequestSerializer(serializers.ModelSerializer):
 
 class NotificationSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
     
     class Meta:
         model = Notification
-        fields = ['id', 'user', 'user_name', 'title', 'message', 'read', 'created_at']
+        fields = ['id', 'user', 'user_name', 'title', 'message', 'read', 'category', 'category_display', 'created_at']
+
+    def to_representation(self, instance):
+        """Standardize notification payload for frontend"""
+        representation = super().to_representation(instance)
+        return {
+            'id': str(representation['id']),
+            'type': representation['category'],
+            'title': representation['title'],
+            'message': representation['message'],
+            'read': representation['read'],
+            'metadata': {
+                'user_name': representation['user_name'],
+                'category_display': representation['category_display'],
+                'created_at': representation['created_at']
+            }
+        }
 
 class LLMQuerySerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
