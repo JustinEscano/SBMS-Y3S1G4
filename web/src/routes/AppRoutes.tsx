@@ -2,7 +2,7 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import LoginScreen from "../features/pages/LoginScreen";
 import DashboardScreen from "../features/pages/DashboardScreen";
 import RegSignUpForm from "../features/pages/SignUpForm";
-import { useAuth } from "../features/context/authContext";
+import { useAuth } from "../features/context/AuthContext";
 import type { JSX } from "react";
 import GenericEquipmentPage from "../features/pages/EquipmentPage";
 import UsagePage from "../features/pages/UsagePage";

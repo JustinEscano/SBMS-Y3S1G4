@@ -1,14 +1,15 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (
+from core.views.auth_views import RegisterView
+from core.views.model_viewsets import (
     UserViewSet, RoomViewSet, EquipmentViewSet, SensorLogViewSet, HeartbeatLogViewSet, AlertViewSet,
     MaintenanceRequestViewSet, NotificationViewSet, LLMQueryViewSet, LLMSummaryViewSet,
     AuthTokenViewSet, MaintenanceAttachmentViewSet, ComponentViewSet, EnergySummaryViewSet,
-    PredictiveAlertViewSet, BillingRateViewSet, RegisterView,
-    dashboard_summary, room_realtime, check_anomalies, esp32_sensor_data,
-    esp32_health_check, latest_sensor_data, esp32_heartbeat, equipment_field_options,
-    predict_maintenance
+    PredictiveAlertViewSet, BillingRateViewSet
 )
+from core.views.esp32_views import esp32_sensor_data, esp32_health_check, latest_sensor_data, esp32_heartbeat, equipment_field_options
+from core.views.dashboard_views import dashboard_summary, room_realtime
+from core.views.anomaly_views import check_anomalies, predict_maintenance
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
