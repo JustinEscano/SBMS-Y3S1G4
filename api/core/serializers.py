@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     User, Room, Equipment, SensorLog, HeartbeatLog, MaintenanceRequest, LLMQuery, LLMSummary,
     AuthToken, Alert, Notification, MaintenanceAttachment, Component, EnergySummary,
-    PredictiveAlert, BillingRate, ROLE_CHOICES, EQUIPMENT_TYPE_CHOICES,
+    PredictiveAlert, BillingRate, Profile, ROLE_CHOICES, EQUIPMENT_TYPE_CHOICES,
     EQUIPMENT_STATUS_CHOICES, ROOM_TYPE_CHOICES, COMPONENT_TYPE_CHOICES,
     MAINTENANCE_STATUS_CHOICES, ALERT_TYPE_CHOICES, ALERT_SEVERITY_CHOICES,
     PERIOD_TYPE_CHOICES, CURRENCY_CHOICES, NOTIFICATION_CATEGORY_CHOICES
@@ -11,12 +11,28 @@ from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from datetime import time
 
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['full_name', 'organization', 'address', 'profile_picture']
+
+    def validate_profile_picture(self, value):
+        if value:
+            max_size = 2 * 1024 * 1024  # 2MB limit
+            allowed_types = ['image/jpeg', 'image/png']
+            if value.size > max_size:
+                raise serializers.ValidationError("Profile picture size exceeds 2MB limit")
+            if value.content_type not in allowed_types:
+                raise serializers.ValidationError(f"File type {value.content_type} not allowed. Allowed types: {', '.join(allowed_types)}")
+        return value
+
 class UserSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='get_role_display', read_only=True)
-    
+    profile = ProfileSerializer(read_only=True, allow_null=True)  # Allow null if no profile
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'role', 'role_display', 'created_at']
+        fields = ['id', 'username', 'email', 'password', 'role', 'role_display', 'created_at', 'profile']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):

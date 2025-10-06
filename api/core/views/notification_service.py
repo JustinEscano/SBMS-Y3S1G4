@@ -62,21 +62,21 @@ NOTIFICATION_TEMPLATES = {
             'recipient': instance.user.username,
         }
     },
-    'maintenance_attachment_uploaded': {
-        'category': 'maintenance',
-        'title': lambda instance: f"New Attachment: {instance.equipment.name}",
-        'message': lambda instance, attachment, *args: f"An attachment was added to your request #{instance.id}.",
-        'email_template': 'emails/maintenance_attachment_uploaded.html',
-        'context': lambda instance, attachment, *args: {
-            'request_id': instance.id,
-            'equipment_name': instance.equipment.name,
-            'file_name': attachment.file_name,
-            'user': instance.user.username,
-            'uploaded_by': args[-1].user.username if args and args[-1].user else 'Unknown',
-            'year': timezone.now().year,
-            'recipient': instance.user.username,
-        }
-    },
+   'maintenance_attachment_uploaded': {
+    'category': 'maintenance',
+    'title': lambda instance: f"New Attachment: {instance.equipment.name}",
+    'message': lambda instance, attachment, *args: f"An attachment was added to your request #{instance.id}.",
+    'email_template': 'emails/maintenance_attachment_uploaded.html',
+    'context': lambda instance, attachment, request, *args: {
+        'request_id': instance.id,
+        'equipment_name': instance.equipment.name,
+        'file_name': attachment.file_name,
+        'user': instance.user.username,
+        'uploaded_by': attachment.uploaded_by.username if attachment.uploaded_by else 'Unknown',
+        'year': timezone.now().year,
+        'recipient': instance.user.username,
+    }
+},
     'predictive_alert_created': {
         'category': 'alert',
         'title': lambda instance: f"Predictive Alert: {instance.component.component_type} Failure Likely",

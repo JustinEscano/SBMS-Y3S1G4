@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Count, StdDev, Sum, Max, Min
 from django.utils import timezone
@@ -17,10 +18,107 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [RoleBasedPermission]
+
+    def perform_create(self, serializer):
+        """Create a user and automatically create a Profile with default values."""
+        user = serializer.save()
+        Profile.objects.create(
+            user=user,
+            full_name=user.username,
+            organization="",
+            address=""
+        )
+        logger.info(f"User {user.username} created with default profile")
+        return user
+
+    @action(detail=False, methods=['get', 'patch', 'post', 'delete'], permission_classes=[IsAuthenticated, RoleBasedPermission])
+    def profile(self, request):
+        user = request.user
+        try:
+            profile = Profile.objects.get(user=user)
+        except Profile.DoesNotExist:
+            # If profile doesn't exist, create one for POST or PATCH requests
+            if request.method in ['POST', 'PATCH']:
+                profile = Profile.objects.create(
+                    user=user,
+                    full_name=user.username,
+                    organization="",
+                    address=""
+                )
+                logger.info(f"Created default profile for user {user.username}")
+            else:
+                return Response({
+                    'error': 'Profile not found',
+                    'detail': 'Please update your profile to create it'
+                }, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method =="GET":
+            serializer = UserSerializer(user, context={'request': request})
+            return Response(serializer.data)
+
+        elif request.method == 'POST':
+            # Allow explicit profile creation (if deleted or for re-initialization)
+            if Profile.objects.filter(user=user).exists():
+                return Response({
+                    'error': 'Profile already exists',
+                    'detail': 'Use PATCH to update the existing profile'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            profile_data = request.data
+            profile_serializer = ProfileSerializer(data=profile_data)
+            if profile_serializer.is_valid():
+                profile = profile_serializer.save(user=user)
+                logger.info(f"Profile created for user {user.username} via POST")
+                return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_201_CREATED)
+            return Response(profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == 'PATCH':
+            user_data = {}
+            profile_data = {}
+            for key, value in request.data.items():
+                if key in ['username', 'email']:
+                    user_data[key] = value
+                elif key in ['full_name', 'organization', 'address', 'profile_picture']:
+                    profile_data[key] = value
+
+            user_serializer = UserSerializer(user, data=user_data, partial=True, context={'request': request})
+            profile_serializer = ProfileSerializer(profile, data=profile_data, partial=True)
+
+            errors = {}
+            if user_data and not user_serializer.is_valid():
+                errors.update(user_serializer.errors)
+            if profile_data and not profile_serializer.is_valid():
+                errors.update(profile_serializer.errors)
+
+            if errors:
+                return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+            if user_data:
+                user_serializer.save()
+            if profile_data:
+                profile_serializer.save()
+
+            logger.info(f"Profile updated for user {user.username}")
+            return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
+
+        elif request.method == 'DELETE':
+            # Allow profile deletion (admin or user themselves)
+            if request.user != user and request.user.role not in ['admin', 'superadmin']:
+                return Response({
+                    'error': 'Permission denied',
+                    'detail': 'You can only delete your own profile unless you are an admin'
+                }, status=status.HTTP_403_FORBIDDEN)
+            profile.delete()
+            logger.info(f"Profile deleted for user {user.username}")
+            return Response({'status': 'Profile deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
@@ -123,7 +221,7 @@ class EnergySummaryViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(period_type=period_type)
 
         if room_id:
-            queryset = queryset.filter(room__id=room_id)  # Fixed: Use room__id instead of room_id
+            queryset = queryset.filter(room__id=room_id)
 
         if period_start_str:
             try:
@@ -137,7 +235,7 @@ class EnergySummaryViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         period_type = request.query_params.get('period_type')
         period_start_str = request.query_params.get('start_time')
-        room_id = request.query_params.get('room_id')
+        room_id = self.request.query_params.get('room_id')
 
         if period_start_str:
             try:
@@ -162,7 +260,7 @@ class EnergySummaryViewSet(viewsets.ModelViewSet):
                 period_end__lte=period_end,
             )
             if room_id:
-                daily_qs = daily_qs.filter(room__id=room_id)  # Fixed: Use room__id instead of room_id
+                daily_qs = daily_qs.filter(room__id=room_id)
 
             if not daily_qs.exists():
                 zero_data = {
@@ -268,7 +366,7 @@ class BillingRateViewSet(viewsets.ModelViewSet):
             return queryset.filter(room__maintenancerequest__user=user).distinct()
         room_id = self.request.query_params.get('room_id')
         if room_id:
-            return queryset.filter(room__id=room_id)  # Fixed: Use room__id instead of room_id
+            return queryset.filter(room__id=room_id)
         return queryset
     
     @action(detail=False, methods=['get'], permission_classes=[RoleBasedPermission])
@@ -326,7 +424,7 @@ class BillingRateViewSet(viewsets.ModelViewSet):
             if room_id:
                 try:
                     uuid.UUID(room_id)
-                    energy_summaries = energy_summaries.filter(room__id=room_id)  # Fixed: Use room__id instead of room_id
+                    energy_summaries = energy_summaries.filter(room__id=room_id)
                     logger.info("After room_id filter (%s): %s", room_id, energy_summaries.count())
                 except ValueError:
                     logger.error(f"Invalid room_id format: {room_id}")
@@ -359,7 +457,7 @@ class BillingRateViewSet(viewsets.ModelViewSet):
 
             all_summaries = EnergySummary.objects.filter(
                 period_type='daily',
-                room__id=room_id if room_id else None,  # Fixed: Use room__id instead of room_id
+                room__id=room_id if room_id else None,
                 component_id=component_id
             ).values('id', 'period_start', 'period_end', 'total_energy', 'total_cost')
             logger.info("All matching EnergySummaries: %s", list(all_summaries))
@@ -439,7 +537,7 @@ class BillingRateViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.exception(f"Error in calculate_energy_cost: {str(e)}")  # Use logger.exception for stack trace
+            logger.exception(f"Error in calculate_energy_cost: {str(e)}")
             return Response(
                 {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -487,7 +585,7 @@ class BillingRateViewSet(viewsets.ModelViewSet):
                 )
 
             summary = EnergySummary.objects.filter(
-                room__id=room_id,  # Fixed: Use room__id instead of room_id
+                room__id=room_id,
                 period_type=period_type,
                 period_start__date=date
             ).select_related('room', 'component').first()
@@ -540,7 +638,7 @@ class BillingRateViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.exception(f"Error in energy_cost_simple: {str(e)}")  # Use logger.exception for stack trace
+            logger.exception(f"Error in energy_cost_simple: {str(e)}")
             return Response(
                 {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -682,6 +780,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.select_related('user').order_by('-created_at')
     serializer_class = NotificationSerializer
     permission_classes = [RoleBasedPermission]
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -710,6 +809,32 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         logger.info(f"Notification {pk} marked as read for {request.user.username} (User ID: {request.user.id})")
         return Response({'status': 'Notification marked as read'})
+
+    def destroy(self, request, pk=None):
+        """
+        Delete a specific notification by ID, with permission checks.
+        Clients can only delete their own notifications; admins/superadmins can delete any.
+        """
+        try:
+            notification = get_object_or_404(Notification, pk=pk)
+            if request.user.role == 'client' and notification.user != request.user:
+                logger.warning(f"User {request.user.username} (ID: {request.user.id}) attempted to delete notification {pk} without permission")
+                return Response(
+                    {'error': 'Permission denied'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            notification.delete()
+            logger.info(f"Notification {pk} deleted by {request.user.username} (User ID: {request.user.id})")
+            return Response(
+                {'status': 'Notification deleted'},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            logger.error(f"Error deleting notification {pk} by {request.user.username} (User ID: {request.user.id}): {str(e)}")
+            return Response(
+                {'error': f'Server error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class LLMQueryViewSet(viewsets.ModelViewSet):
     queryset = LLMQuery.objects.select_related('user').all()
