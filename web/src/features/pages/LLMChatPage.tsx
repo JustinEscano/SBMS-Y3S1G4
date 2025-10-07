@@ -54,16 +54,18 @@ const LLMChatPage: React.FC = () => {
                lowerQuery.includes("strange") || lowerQuery.includes("weird")) {
       return "anomalies";
     } else if (lowerQuery.includes("energy") || lowerQuery.includes("power") || 
-               lowerQuery.includes("kwh") || lowerQuery.includes("consumption")) {
+               lowerQuery.includes("kwh") || lowerQuery.includes("consumption") ||
+               lowerQuery.includes("watt")) {
       return "energy";
     } else if (lowerQuery.includes("room") || lowerQuery.includes("utilization") || 
-               lowerQuery.includes("usage") || lowerQuery.includes("occupied")) {
+               lowerQuery.includes("usage") || lowerQuery.includes("occupied") ||
+               lowerQuery.includes("most used")) {
       return "utilization";
     } else if (lowerQuery.includes("summary") || lowerQuery.includes("report") || 
                lowerQuery.includes("week") || lowerQuery.includes("overview")) {
       return "summary";
     } else if (lowerQuery.includes("context") || lowerQuery.includes("situation") || 
-               lowerQuery.includes("current state")) {
+               lowerQuery.includes("current state") || lowerQuery.includes("status")) {
       return "context";
     }
     
@@ -88,59 +90,31 @@ const LLMChatPage: React.FC = () => {
     }
   };
 
-  // Function to call appropriate API endpoint
-  const callAPIEndpoint = async (query: string, type: QueryType) => {
-    let endpoint = "/llmquery";
-    let body = { query, type };
-    
-    switch (type) {
-      case "maintenance":
-        endpoint = "/maintenance/predict";
-        body = { query: query || "Analyze logs for maintenance suggestions" };
-        break;
-      case "anomalies":
-        endpoint = "/anomalies/detect";
-        body = { sensitivity: 0.8 };
-        break;
-      case "energy":
-        endpoint = "/insights/energy";
-        body = { analysis_type: "trends" };
-        break;
-      case "utilization":
-        endpoint = "/rooms/utilization";
-        body = {};
-        break;
-      case "summary":
-        endpoint = "/reports/weekly";
-        body = { type: "executive" };
-        break;
-      case "context":
-        endpoint = "/context/analyze";
-        body = { query: query || "Analyze current situation" };
-        break;
-    }
-    
+  // Function to call the LLM query API
+  const callLLMQuery = async (query: string, userRole: UserRole) => {
     try {
-      const userRole = determineUserRole(type);
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch("http://localhost:5000/llmquery", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-User-Role": userRole
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify({
+          query: query,
+          user_id: "web_user",
+          username: "Web User",
+          session_id: "web_session",
+          client_ip: "127.0.0.1"
+        })
       });
       
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error(`Permission denied. Inferred role (${userRole}) doesn't have access to this feature.`);
-        }
         throw new Error(`API error: ${response.status}`);
       }
       
       return await response.json();
     } catch (error) {
-      console.error(`API call failed for ${endpoint}:`, error);
+      console.error(`LLM query failed:`, error);
       throw error;
     }
   };
@@ -168,30 +142,48 @@ const LLMChatPage: React.FC = () => {
 
     try {
       const queryType = determineQueryType(messageText);
-      const response = await callAPIEndpoint(messageText, queryType);
+      const userRole = determineUserRole(queryType);
+      const response = await callLLMQuery(messageText, userRole);
+      
       let answer = "";
-
-      switch (queryType) {
-        case "maintenance":
-          answer = `Maintenance Analysis:\n\n${response.maintenance_suggestions.length} maintenance suggestions found.\n${response.anomalies.length} anomalies detected.\n\nKey suggestions:\n${response.maintenance_suggestions.slice(0, 3).map((m: any) => `• ${m.equipment}: ${m.issue} (${m.urgency})`).join("\n")}`;
-          break;
-        case "anomalies":
-          answer = `Anomaly Detection:\n\n${response.anomalies.length} anomalies found (${response.summary.critical} critical).\n\nCritical issues:\n${response.anomalies.filter((a: any) => a.severity === "Critical").slice(0, 3).map((a: any) => `• ${a.type} at ${a.location}`).join("\n")}`;
-          break;
-        case "energy":
-          answer = `Energy Analysis:\n\n${response.insights || "No specific energy insights available."}`;
-          break;
-        case "utilization":
-          answer = `Room Utilization:\n\n${response.summary || "Room utilization data not available."}`;
-          break;
-        case "summary":
-          answer = `Weekly Summary:\n\n${response.executive_summary || "No summary available."}`;
-          break;
-        case "context":
-          answer = `Context Analysis:\n\n${response.context_analysis || "No context analysis available."}`;
-          break;
-        default:
-          answer = response.answer || "No response received.";
+      
+      // Check if there's an error in the response
+      if (response.error) {
+        answer = `Sorry, I encountered an error: ${response.error}`;
+      } else if (response.answer) {
+        // Format the answer based on query type for better presentation
+        answer = response.answer;
+        
+        // Add some formatting for specific query types
+        switch (queryType) {
+          case "energy":
+            if (response.answer.includes("Energy Analysis:")) {
+              // Already formatted, use as is
+              answer = response.answer;
+            } else {
+              answer = `🔋 Energy Analysis:\n\n${response.answer}`;
+            }
+            break;
+          case "maintenance":
+            answer = `🔧 Maintenance Analysis:\n\n${response.answer}`;
+            break;
+          case "anomalies":
+            answer = `⚠️ Anomaly Detection:\n\n${response.answer}`;
+            break;
+          case "utilization":
+            answer = `🏢 Room Utilization:\n\n${response.answer}`;
+            break;
+          case "summary":
+            answer = `📊 Weekly Summary:\n\n${response.answer}`;
+            break;
+          case "context":
+            answer = `🌡️ Current Status:\n\n${response.answer}`;
+            break;
+          default:
+            answer = response.answer;
+        }
+      } else {
+        answer = "I received an empty response. Please try again.";
       }
 
       setMessages((prev) =>
@@ -202,10 +194,15 @@ const LLMChatPage: React.FC = () => {
         )
       );
     } catch (error: any) {
+      console.error("Error in handleSendMessage:", error);
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === loadingMessage.id
-            ? { ...msg, content: `Sorry, I encountered an error: ${error.message}`, isLoading: false }
+            ? { 
+                ...msg, 
+                content: `Sorry, I encountered an error: ${error.message || "Unknown error"}. Please check if the LLM server is running.`, 
+                isLoading: false 
+              }
             : msg
         )
       );
@@ -232,11 +229,13 @@ const LLMChatPage: React.FC = () => {
   const getSuggestions = () => {
     return [
       "What's the most used room?",
-      "Any energy consumption trends?",
-      "Show me weekly summary",
+      "Show me energy consumption trends",
+      "Generate weekly summary",
       "Check for maintenance issues",
-      "Detect anomalies",
-      "Analyze energy usage patterns",
+      "Detect any anomalies",
+      "What's the current room status?",
+      "Show me key performance indicators",
+      "Analyze energy usage patterns"
     ];
   };
 
@@ -258,8 +257,15 @@ const LLMChatPage: React.FC = () => {
             <div className="orb-greeting">
               <h2>Hello, I am Orb!</h2>
               <p>I can help you analyze your building's sensor data and energy consumption.</p>
-              <p>Your role will be automatically determined based on your question.</p>
-              <p>Ask me questions about temperature, humidity, energy usage, and more!</p>
+              <p>Ask me questions about:</p>
+              <ul>
+                <li>📊 Energy consumption and trends</li>
+                <li>🏢 Room utilization and occupancy</li>
+                <li>🔧 Maintenance suggestions</li>
+                <li>⚠️ Anomaly detection</li>
+                <li>📈 Weekly summaries and KPIs</li>
+                <li>🌡️ Current building status</li>
+              </ul>
             </div>
             <div className="orb-suggestions">
               <h3>Try asking:</h3>
@@ -289,7 +295,12 @@ const LLMChatPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <p>{message.content}</p>
+                    <pre style={{ 
+                      whiteSpace: 'pre-wrap', 
+                      fontFamily: 'inherit',
+                      margin: 0,
+                      padding: 0
+                    }}>{message.content}</pre>
                   )}
                 </div>
                 <div className="orb-message-time">

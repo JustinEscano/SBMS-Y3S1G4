@@ -5,12 +5,16 @@ Handles specialized queries for maintenance, anomalies, and advanced analytics
 
 import pandas as pd
 import numpy as np
-import json
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
-import re
+
+# Conditional import for DatabaseAdapter
+try:
+    from database_adapter import DatabaseAdapter
+except ImportError:
+    DatabaseAdapter = None
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +28,8 @@ class MaintenanceAlert:
     action: str
     cost_estimate: str
     risk_level: str
+    room: str = "Unknown"
+    component: str = "Unknown"
 
 @dataclass
 class AnomalyDetection:
@@ -35,6 +41,8 @@ class AnomalyDetection:
     value: float
     expected_range: Tuple[float, float]
     confidence: float
+    equipment: str = "Unknown"
+    component: str = "Unknown"
 
 @dataclass
 class EnergyInsight:
@@ -45,27 +53,41 @@ class EnergyInsight:
     opportunity: str
     potential_savings: str
     recommendation: str
+    room: str = "Unknown"
 
 class AdvancedLLMHandlers:
     """
-    Advanced handlers for predictive maintenance, anomaly detection, and insights
+    Advanced handlers for predictive maintenance, anomaly detection, and insights,
+    tailored to the provided database schema.
     """
     
-    def __init__(self, prompts_config):
+    def __init__(self, prompts_config, database_adapter: Optional['DatabaseAdapter'] = None):
         self.prompts = prompts_config
-        self.maintenance_rules = prompts_config.get_all_prompts().get("maintenance_rules", {})
-        self.insights_config = prompts_config.get_all_prompts().get("insights_config", {})
+        self.maintenance_rules = prompts_config.get_all_prompts().get("maintenance_rules", {
+            "power_anomaly_threshold": 1.5,
+            "temperature_anomaly_range": [18, 27],
+            "humidity_anomaly_range": [25, 70],
+            "runtime_anomaly_threshold": 12,
+            "current_anomaly_range": [0, 5],
+            "voltage_anomaly_range": [200, 240],
+            "power_anomaly_range": [0, 2000]
+        })
+        self.insights_config = prompts_config.get_all_prompts().get("insights_config", {
+            "default_cost_per_kwh": 0.15
+        })
+        self.db_adapter = database_adapter
+        if self.db_adapter is None:
+            logger.warning("No DatabaseAdapter provided - using default cost per kWh and no room-specific billing rates")
     
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Preprocess the DataFrame: Remove duplicates and handle missing columns"""
+        """Preprocess the DataFrame: Remove duplicates and handle missing columns."""
         if df.empty:
             logger.warning("Empty DataFrame provided for preprocessing")
             return df
         
-        # Log initial shape
         logger.info(f"Initial DataFrame shape: {df.shape}")
         
-        # Handle missing columns with defaults
+        # Handle missing columns with defaults based on core_sensorlog schema
         required_columns = {
             "timestamp": pd.NaT,
             "occupancy_count": 0,
@@ -76,26 +98,35 @@ class AdvancedLLMHandlers:
             "equipment_usage.lights_on_hours": 0.0,
             "equipment_usage.air_conditioner_on_hours": 0.0,
             "equipment_usage.projector_on_hours": 0.0,
-            "equipment_usage.computer_on_hours": 0.0
+            "equipment_usage.computer_on_hours": 0.0,
+            "current": 0.0,
+            "energy": 0.0,
+            "power": 0.0,
+            "voltage": 0.0,
+            "reset_flag": False,
+            "equipment_name": "Unknown",
+            "room_name": "Unknown",
+            "component_type": "Unknown"
         }
         for col, default in required_columns.items():
             if col not in df.columns:
                 logger.warning(f"Missing column '{col}', filling with default value {default}")
                 df[col] = default
         
-        # Convert timestamp to datetime if not already
+        # Convert timestamp to datetime
         if 'timestamp' in df.columns:
             df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
         
         # Remove duplicates based on key columns
-        key_columns = ["timestamp", "occupancy_count", "energy_consumption_kwh"]
+        key_columns = ["timestamp", "equipment_name", "room_name", "component_type"]
         df = df.drop_duplicates(subset=[col for col in key_columns if col in df.columns])
         
-        # Log after deduplication
         logger.info(f"DataFrame shape after deduplication: {df.shape}")
         
         # Check for zeroed data
-        numeric_cols = [col for col in df.columns if col.startswith(("power_consumption_watts", "energy_consumption_kwh", "environmental_data", "equipment_usage"))]
+        numeric_cols = [col for col in df.columns if col.startswith(("power_consumption_watts", "energy_consumption_kwh", 
+                                                                    "environmental_data", "equipment_usage", 
+                                                                    "current", "energy", "power", "voltage"))]
         zero_percentage = (df[numeric_cols] == 0).mean().mean() * 100
         if zero_percentage > 50:
             logger.warning(f"High percentage of zero values in numeric columns: {zero_percentage:.1f}% - Possible test data or sensor issues")
@@ -103,41 +134,48 @@ class AdvancedLLMHandlers:
         return df
     
     def detect_anomalies(self, df: pd.DataFrame) -> List[AnomalyDetection]:
-        """Detect anomalies in the sensor data"""
+        """Detect anomalies in the sensor data."""
         df = self.preprocess_data(df)
-        
         anomalies = []
         
         if df.empty:
             logger.warning("No data available for anomaly detection")
             return anomalies
         
-        # Power consumption anomalies
-        power_anomalies = self._detect_power_anomalies(df)
-        anomalies.extend(power_anomalies)
+        # Group by room and equipment for context-specific anomaly detection
+        grouped = df.groupby(['room_name', 'equipment_name', 'component_type'])
         
-        # Temperature anomalies
-        temp_anomalies = self._detect_temperature_anomalies(df)
-        anomalies.extend(temp_anomalies)
-        
-        # Humidity anomalies
-        humidity_anomalies = self._detect_humidity_anomalies(df)
-        anomalies.extend(humidity_anomalies)
-        
-        # Runtime anomalies
-        runtime_anomalies = self._detect_runtime_anomalies(df)
-        anomalies.extend(runtime_anomalies)
+        for (room, equipment, component), group in grouped:
+            # Power consumption anomalies
+            power_anomalies = self._detect_power_anomalies(group, room, equipment, component)
+            anomalies.extend(power_anomalies)
+            
+            # Temperature anomalies
+            temp_anomalies = self._detect_temperature_anomalies(group, room, equipment, component)
+            anomalies.extend(temp_anomalies)
+            
+            # Humidity anomalies
+            humidity_anomalies = self._detect_humidity_anomalies(group, room, equipment, component)
+            anomalies.extend(humidity_anomalies)
+            
+            # Runtime anomalies
+            runtime_anomalies = self._detect_runtime_anomalies(group, room, equipment, component)
+            anomalies.extend(runtime_anomalies)
+            
+            # Electrical anomalies (current, power, voltage)
+            electrical_anomalies = self._detect_electrical_anomalies(group, room, equipment, component)
+            anomalies.extend(electrical_anomalies)
         
         logger.info(f"Detected {len(anomalies)} anomalies")
         return anomalies
     
-    def _detect_power_anomalies(self, df: pd.DataFrame) -> List[AnomalyDetection]:
-        """Detect power consumption anomalies"""
+    def _detect_power_anomalies(self, df: pd.DataFrame, room: str, equipment: str, component: str) -> List[AnomalyDetection]:
+        """Detect power consumption anomalies."""
         anomalies = []
         threshold = self.maintenance_rules.get("power_anomaly_threshold", 1.5)
         
         if "power_consumption_watts.total" not in df.columns:
-            logger.warning("Missing 'power_consumption_watts.total' for power anomaly detection")
+            logger.warning(f"Missing 'power_consumption_watts.total' for {equipment} in {room}")
             return anomalies
         
         power_data = df["power_consumption_watts.total"]
@@ -145,7 +183,7 @@ class AdvancedLLMHandlers:
         std_power = power_data.std()
         
         if std_power == 0:
-            logger.warning("No variation in power data - skipping anomaly detection")
+            logger.warning(f"No variation in power data for {equipment} in {room}")
             return anomalies
         
         for idx, row in df.iterrows():
@@ -157,72 +195,144 @@ class AdvancedLLMHandlers:
                 anomalies.append(AnomalyDetection(
                     anomaly_type="Power Consumption",
                     severity=severity,
-                    location=f"Room at {row['timestamp']}",
-                    description=f"Power consumption {power}W is {z_score:.1f} standard deviations from normal",
+                    location=f"{room} - {equipment} ({component})",
+                    description=f"Power consumption {power:.1f}W is {z_score:.1f} standard deviations from normal",
                     timestamp=str(row['timestamp']),
                     value=power,
                     expected_range=(mean_power - std_power, mean_power + std_power),
-                    confidence=min(z_score / 3.0, 1.0)
+                    confidence=min(z_score / 3.0, 1.0),
+                    equipment=equipment,
+                    component=component
                 ))
         
         return anomalies
     
-    def _detect_temperature_anomalies(self, df: pd.DataFrame) -> List[AnomalyDetection]:
-        """Detect temperature anomalies"""
+    def _detect_temperature_anomalies(self, df: pd.DataFrame, room: str, equipment: str, component: str) -> List[AnomalyDetection]:
+        """Detect temperature anomalies."""
         anomalies = []
-        temp_range = self.maintenance_rules.get("temperature_anomaly_range", [18, 28])
+        temp_range = self.maintenance_rules.get("temperature_anomaly_range", [18, 27])
         
         if "environmental_data.temperature_celsius" not in df.columns:
-            logger.warning("Missing 'environmental_data.temperature_celsius' for temperature anomaly detection")
+            logger.warning(f"Missing 'environmental_data.temperature_celsius' for {equipment} in {room}")
             return anomalies
         
         for idx, row in df.iterrows():
             temp = row["environmental_data.temperature_celsius"]
             
-            if temp < temp_range[0] or temp > temp_range[1]:
+            if pd.notnull(temp) and (temp < temp_range[0] or temp > temp_range[1]):
                 severity = "Critical" if temp < 15 or temp > 32 else "High"
                 anomalies.append(AnomalyDetection(
                     anomaly_type="Temperature",
                     severity=severity,
-                    location=f"Room at {row['timestamp']}",
-                    description=f"Temperature {temp}°C is outside normal range",
+                    location=f"{room} - {equipment} ({component})",
+                    description=f"Temperature {temp:.1f}°C is outside normal range {temp_range}",
                     timestamp=str(row['timestamp']),
                     value=temp,
                     expected_range=(temp_range[0], temp_range[1]),
-                    confidence=0.9
+                    confidence=0.9,
+                    equipment=equipment,
+                    component=component
                 ))
         
         return anomalies
     
-    def _detect_humidity_anomalies(self, df: pd.DataFrame) -> List[AnomalyDetection]:
-        """Detect humidity anomalies"""
+    def _detect_humidity_anomalies(self, df: pd.DataFrame, room: str, equipment: str, component: str) -> List[AnomalyDetection]:
+        """Detect humidity anomalies."""
         anomalies = []
-        humidity_range = self.maintenance_rules.get("humidity_anomaly_range", [30, 70])
+        humidity_range = self.maintenance_rules.get("humidity_anomaly_range", [25, 70])
         
         if "environmental_data.humidity_percent" not in df.columns:
-            logger.warning("Missing 'environmental_data.humidity_percent' for humidity anomaly detection")
+            logger.warning(f"Missing 'environmental_data.humidity_percent' for {equipment} in {room}")
             return anomalies
         
         for idx, row in df.iterrows():
             humidity = row["environmental_data.humidity_percent"]
             
-            if humidity < humidity_range[0] or humidity > humidity_range[1]:
+            if pd.notnull(humidity) and (humidity < humidity_range[0] or humidity > humidity_range[1]):
                 severity = "Medium" if 20 <= humidity <= 80 else "High"
                 anomalies.append(AnomalyDetection(
                     anomaly_type="Humidity",
                     severity=severity,
-                    location=f"Room at {row['timestamp']}",
-                    description=f"Humidity {humidity}% is outside optimal range",
+                    location=f"{room} - {equipment} ({component})",
+                    description=f"Humidity {humidity:.1f}% is outside optimal range {humidity_range}",
                     timestamp=str(row['timestamp']),
                     value=humidity,
                     expected_range=(humidity_range[0], humidity_range[1]),
-                    confidence=0.8
+                    confidence=0.8,
+                    equipment=equipment,
+                    component=component
                 ))
         
         return anomalies
     
-    def _detect_runtime_anomalies(self, df: pd.DataFrame) -> List[AnomalyDetection]:
-        """Detect equipment runtime anomalies"""
+    def _detect_electrical_anomalies(self, df: pd.DataFrame, room: str, equipment: str, component: str) -> List[AnomalyDetection]:
+        """Detect anomalies in electrical metrics (current, power, voltage)."""
+        anomalies = []
+        
+        # Define ranges for electrical metrics
+        current_range = self.maintenance_rules.get("current_anomaly_range", [0, 5])
+        power_range = self.maintenance_rules.get("power_anomaly_range", [0, 2000])
+        voltage_range = self.maintenance_rules.get("voltage_anomaly_range", [200, 240])
+        
+        for idx, row in df.iterrows():
+            # Current anomalies
+            if "current" in df.columns and pd.notnull(row["current"]):
+                current = row["current"]
+                if current < current_range[0] or current > current_range[1]:
+                    severity = "High" if current > current_range[1] * 1.5 else "Medium"
+                    anomalies.append(AnomalyDetection(
+                        anomaly_type="Current",
+                        severity=severity,
+                        location=f"{room} - {equipment} ({component})",
+                        description=f"Current {current:.2f}A is outside normal range {current_range}",
+                        timestamp=str(row['timestamp']),
+                        value=current,
+                        expected_range=(current_range[0], current_range[1]),
+                        confidence=0.85,
+                        equipment=equipment,
+                        component=component
+                    ))
+            
+            # Power anomalies
+            if "power" in df.columns and pd.notnull(row["power"]):
+                power = row["power"]
+                if power < power_range[0] or power > power_range[1]:
+                    severity = "High" if power > power_range[1] * 1.5 else "Medium"
+                    anomalies.append(AnomalyDetection(
+                        anomaly_type="Power",
+                        severity=severity,
+                        location=f"{room} - {equipment} ({component})",
+                        description=f"Power {power:.1f}W is outside normal range {power_range}",
+                        timestamp=str(row['timestamp']),
+                        value=power,
+                        expected_range=(power_range[0], power_range[1]),
+                        confidence=0.85,
+                        equipment=equipment,
+                        component=component
+                    ))
+            
+            # Voltage anomalies
+            if "voltage" in df.columns and pd.notnull(row["voltage"]):
+                voltage = row["voltage"]
+                if voltage < voltage_range[0] or voltage > voltage_range[1]:
+                    severity = "Critical" if voltage < voltage_range[0] * 0.9 or voltage > voltage_range[1] * 1.1 else "High"
+                    anomalies.append(AnomalyDetection(
+                        anomaly_type="Voltage",
+                        severity=severity,
+                        location=f"{room} - {equipment} ({component})",
+                        description=f"Voltage {voltage:.1f}V is outside normal range {voltage_range}",
+                        timestamp=str(row['timestamp']),
+                        value=voltage,
+                        expected_range=(voltage_range[0], voltage_range[1]),
+                        confidence=0.9,
+                        equipment=equipment,
+                        component=component
+                    ))
+        
+        return anomalies
+    
+    def _detect_runtime_anomalies(self, df: pd.DataFrame, room: str, equipment: str, component: str) -> List[AnomalyDetection]:
+        """Detect equipment runtime anomalies."""
         anomalies = []
         runtime_threshold = self.maintenance_rules.get("runtime_anomaly_threshold", 12)
         
@@ -235,31 +345,33 @@ class AdvancedLLMHandlers:
         
         for col in runtime_columns:
             if col not in df.columns:
-                logger.warning(f"Missing '{col}' for runtime anomaly detection")
+                logger.warning(f"Missing '{col}' for {equipment} in {room}")
                 continue
                 
-            equipment_name = col.split('.')[-1].replace('_on_hours', '').replace('_', ' ').title()
+            equipment_type = col.split('.')[-1].replace('_on_hours', '').replace('_', ' ').title()
             
             for idx, row in df.iterrows():
                 runtime = row[col]
                 
-                if runtime > runtime_threshold:
+                if pd.notnull(runtime) and runtime > runtime_threshold:
                     severity = "High" if runtime > 16 else "Medium"
                     anomalies.append(AnomalyDetection(
                         anomaly_type="Equipment Runtime",
                         severity=severity,
-                        location=f"Room at {row['timestamp']}",
-                        description=f"{equipment_name} runtime {runtime}h exceeds normal operating hours",
+                        location=f"{room} - {equipment} ({component})",
+                        description=f"{equipment_type} runtime {runtime:.1f}h exceeds normal operating hours",
                         timestamp=str(row['timestamp']),
                         value=runtime,
                         expected_range=(0, runtime_threshold),
-                        confidence=0.7
+                        confidence=0.7,
+                        equipment=equipment,
+                        component=component
                     ))
         
         return anomalies
     
     def generate_maintenance_suggestions(self, df: pd.DataFrame, anomalies: List[AnomalyDetection]) -> List[MaintenanceAlert]:
-        """Generate maintenance suggestions based on data analysis"""
+        """Generate maintenance suggestions based on data analysis."""
         suggestions = []
         
         # Analyze anomalies for maintenance needs
@@ -276,248 +388,415 @@ class AdvancedLLMHandlers:
         return suggestions
     
     def _anomaly_to_maintenance_suggestion(self, anomaly: AnomalyDetection) -> Optional[MaintenanceAlert]:
-        """Convert anomaly to maintenance suggestion"""
+        """Convert anomaly to maintenance suggestion."""
         urgency_map = {
             "Critical": "critical",
-            "High": "high", 
+            "High": "high",
             "Medium": "medium",
             "Low": "low"
         }
         
-        if anomaly.anomaly_type == "Power Consumption":
-            return MaintenanceAlert(
-                equipment="Electrical Systems",
-                issue=f"Abnormal power consumption detected: {anomaly.value}W",
-                urgency=urgency_map.get(anomaly.severity, "medium"),
-                confidence=anomaly.confidence,
-                timeline="Within 48 hours" if anomaly.severity == "High" else "Within 1 week",
-                action="Inspect electrical connections and equipment efficiency",
-                cost_estimate="$200-500",
-                risk_level="Equipment damage, increased energy costs"
-            )
+        # Common cost estimates based on data
+        cost_estimates = {
+            "Power Consumption": "$200-500",
+            "Temperature": "$150-800",
+            "Humidity": "$100-400",
+            "Equipment Runtime": "$100-300",
+            "Current": "$150-400",
+            "Power": "$200-500",
+            "Voltage": "$200-600"
+        }
         
-        elif anomaly.anomaly_type == "Temperature":
-            return MaintenanceAlert(
-                equipment="HVAC System",
-                issue=f"Temperature outside normal range: {anomaly.value}°C",
-                urgency=urgency_map.get(anomaly.severity, "high"),
-                confidence=anomaly.confidence,
-                timeline="Immediate" if anomaly.severity == "Critical" else "Within 24 hours",
-                action="Check HVAC system, filters, and thermostat calibration",
-                cost_estimate="$150-800",
-                risk_level="Comfort issues, equipment stress, energy waste"
-            )
+        # Common actions based on component type
+        actions = {
+            "DHT22": "Check sensor calibration and HVAC integration",
+            "Motion Sensor": "Inspect motion sensor placement and sensitivity",
+            "Photoresistor": "Verify light sensor alignment and cleanliness",
+            "PZEM": "Inspect electrical connections and meter accuracy"
+        }
         
-        elif anomaly.anomaly_type == "Humidity":
-            return MaintenanceAlert(
-                equipment="Climate Control",
-                issue=f"Humidity outside optimal range: {anomaly.value}%",
-                urgency=urgency_map.get(anomaly.severity, "medium"),
-                confidence=anomaly.confidence,
-                timeline="Within 1 week",
-                action="Inspect humidity control systems and ventilation",
-                cost_estimate="$100-400",
-                risk_level="Air quality issues, potential mold growth"
-            )
+        # Map anomaly types to equipment
+        equipment_map = {
+            "Power Consumption": anomaly.equipment,
+            "Temperature": "HVAC System",
+            "Humidity": "Climate Control",
+            "Equipment Runtime": anomaly.equipment,
+            "Current": anomaly.equipment,
+            "Power": anomaly.equipment,
+            "Voltage": anomaly.equipment
+        }
         
-        elif anomaly.anomaly_type == "Equipment Runtime":
-            return MaintenanceAlert(
-                equipment="Equipment Systems",
-                issue=f"Excessive runtime detected: {anomaly.value}h",
-                urgency=urgency_map.get(anomaly.severity, "medium"),
-                confidence=anomaly.confidence,
-                timeline="Within 1 week",
-                action="Inspect equipment for efficiency and scheduling issues",
-                cost_estimate="$100-300",
-                risk_level="Premature wear, increased energy costs"
-            )
+        urgency = urgency_map.get(anomaly.severity, "medium")
+        timeline = "Immediate" if urgency == "critical" else "Within 24 hours" if urgency == "high" else "Within 1 week"
         
-        return None
+        return MaintenanceAlert(
+            equipment=equipment_map.get(anomaly.anomaly_type, anomaly.equipment),
+            issue=f"{anomaly.anomaly_type} anomaly: {anomaly.description}",
+            urgency=urgency,
+            confidence=anomaly.confidence,
+            timeline=timeline,
+            action=actions.get(anomaly.component, f"Inspect {anomaly.equipment} and {anomaly.component}"),
+            cost_estimate=cost_estimates.get(anomaly.anomaly_type, "$100-500"),
+            risk_level="Equipment failure, increased costs, or environmental issues",
+            room=anomaly.location.split(" - ")[0] if " - " in anomaly.location else "Unknown",
+            component=anomaly.component
+        )
     
     def _analyze_trends_for_maintenance(self, df: pd.DataFrame) -> List[MaintenanceAlert]:
-        """Analyze trends to predict maintenance needs"""
+        """Analyze trends to predict maintenance needs."""
         suggestions = []
         
-        if len(df) < 3:  # Need minimum data for trend analysis
+        if len(df) < 3:
             logger.warning("Insufficient data for trend analysis")
             return suggestions
         
-        # Analyze power consumption trends
-        if "power_consumption_watts.total" in df.columns:
-            power_trend = self._calculate_trend(df["power_consumption_watts.total"])
-            if power_trend["slope"] > 50:  # Increasing power consumption
-                suggestions.append(MaintenanceAlert(
-                    equipment="Building Systems",
-                    issue=f"Power consumption trending upward: +{power_trend['slope']:.1f}W/day",
-                    urgency="medium",
-                    confidence=power_trend["confidence"],
-                    timeline="Within 2 weeks",
-                    action="Investigate equipment efficiency degradation",
-                    cost_estimate="$300-1000",
-                    risk_level="Increased operational costs"
-                ))
+        # Group by room and equipment
+        grouped = df.groupby(['room_name', 'equipment_name'])
         
-        # Analyze temperature trends
-        if "environmental_data.temperature_celsius" in df.columns:
-            temp_trend = self._calculate_trend(df["environmental_data.temperature_celsius"])
-            if abs(temp_trend["slope"]) > 0.5:  # Significant temperature change
-                direction = "increasing" if temp_trend["slope"] > 0 else "decreasing"
-                suggestions.append(MaintenanceAlert(
-                    equipment="HVAC System",
-                    issue=f"Temperature trending {direction}: {abs(temp_trend['slope']):.1f}°C/day",
-                    urgency="high" if abs(temp_trend["slope"]) > 1.0 else "medium",
-                    confidence=temp_trend["confidence"],
-                    timeline="Within 48 hours",
-                    action="Check HVAC performance and calibration",
-                    cost_estimate="$200-600",
-                    risk_level="System inefficiency or failure"
-                ))
+        for (room, equipment), group in grouped:
+            # Power consumption trends
+            if "power_consumption_watts.total" in group.columns:
+                power_trend = self._calculate_trend(group["power_consumption_watts.total"])
+                if power_trend["slope"] > 50:
+                    suggestions.append(MaintenanceAlert(
+                        equipment=equipment,
+                        issue=f"Power consumption trending upward: +{power_trend['slope']:.1f}W/day",
+                        urgency="medium",
+                        confidence=power_trend["confidence"],
+                        timeline="Within 2 weeks",
+                        action="Investigate equipment efficiency degradation",
+                        cost_estimate="$300-1000",
+                        risk_level="Increased operational costs",
+                        room=room,
+                        component="Unknown"
+                    ))
+            
+            # Temperature trends
+            if "environmental_data.temperature_celsius" in group.columns:
+                temp_trend = self._calculate_trend(group["environmental_data.temperature_celsius"])
+                if abs(temp_trend["slope"]) > 0.5:
+                    direction = "increasing" if temp_trend["slope"] > 0 else "decreasing"
+                    suggestions.append(MaintenanceAlert(
+                        equipment="HVAC System",
+                        issue=f"Temperature trending {direction}: {abs(temp_trend['slope']):.1f}°C/day",
+                        urgency="high" if abs(temp_trend["slope"]) > 1.0 else "medium",
+                        confidence=temp_trend["confidence"],
+                        timeline="Within 48 hours",
+                        action="Check HVAC performance and calibration",
+                        cost_estimate="$200-600",
+                        risk_level="System inefficiency or failure",
+                        room=room,
+                        component="DHT22"
+                    ))
+            
+            # Voltage trends
+            if "voltage" in group.columns:
+                voltage_trend = self._calculate_trend(group["voltage"])
+                if abs(voltage_trend["slope"]) > 5:
+                    direction = "increasing" if voltage_trend["slope"] > 0 else "decreasing"
+                    suggestions.append(MaintenanceAlert(
+                        equipment=equipment,
+                        issue=f"Voltage trending {direction}: {abs(voltage_trend['slope']):.1f}V/day",
+                        urgency="high",
+                        confidence=voltage_trend["confidence"],
+                        timeline="Within 24 hours",
+                        action="Inspect electrical supply and connections",
+                        cost_estimate="$200-600",
+                        risk_level="Electrical system instability",
+                        room=room,
+                        component="PZEM"
+                    ))
         
         return suggestions
     
     def _calculate_trend(self, data: pd.Series) -> Dict[str, float]:
-        """Calculate trend slope and confidence"""
-        if len(data) < 2:
+        """Calculate trend slope and confidence."""
+        if len(data) < 2 or data.isna().all():
             return {"slope": 0, "confidence": 0}
         
         x = np.arange(len(data))
-        y = data.values
+        y = data.dropna().values
         
-        # Simple linear regression
+        if len(y) < 2:
+            return {"slope": 0, "confidence": 0}
+        
         slope = np.polyfit(x, y, 1)[0]
         correlation = np.corrcoef(x, y)[0, 1] if len(set(y)) > 1 else 0
         confidence = abs(correlation)
         
-        return {"slope": slope, "confidence": confidence}
+        return {"slope": slope, "confidence": min(confidence, 1.0)}
     
     def generate_energy_insights(self, df: pd.DataFrame) -> List[EnergyInsight]:
-        """Generate energy efficiency insights"""
+        """Generate comprehensive energy efficiency insights with detailed analysis."""
         df = self.preprocess_data(df)
         insights = []
         
         if df.empty:
             logger.warning("Empty DataFrame for energy insights")
+            # Return a default insight instead of empty list
+            insights.append(EnergyInsight(
+                metric="Data Availability",
+                current_value=0,
+                trend="No data",
+                benchmark=0,
+                opportunity="Collect more sensor data",
+                potential_savings="Unknown",
+                recommendation="Ensure sensors are properly configured and transmitting data",
+                room="All Rooms"
+            ))
             return insights
         
-        # Energy consumption analysis
-        if "energy_consumption_kwh" in df.columns:
-            energy_data = df["energy_consumption_kwh"]
-            avg_energy = energy_data.mean()
-            total_energy = energy_data.sum()
-            
-            # Cost analysis
-            cost_per_kwh = self.insights_config.get("cost_per_kwh", 0.12)
-            total_cost = total_energy * cost_per_kwh
-            
+        # Calculate overall energy metrics
+        total_energy = df["energy_consumption_kwh"].sum() if "energy_consumption_kwh" in df.columns else 0
+        total_power = df["power_consumption_watts.total"].sum() if "power_consumption_watts.total" in df.columns else 0
+        avg_power = df["power_consumption_watts.total"].mean() if "power_consumption_watts.total" in df.columns else 0
+        
+        # Calculate cost metrics
+        cost_per_kwh = self.insights_config.get("default_cost_per_kwh", 0.15)
+        total_cost = total_energy * cost_per_kwh
+        
+        # Generate overall energy insights
+        if total_energy > 0:
+            # Insight 1: Total Energy Consumption
             insights.append(EnergyInsight(
                 metric="Total Energy Consumption",
                 current_value=total_energy,
-                trend="Stable" if energy_data.std() < avg_energy * 0.1 else "Variable",
-                benchmark=avg_energy,
-                opportunity="Monitor peak usage periods",
+                trend="Cumulative",
+                benchmark=total_energy * 0.9,  # 10% reduction target
+                opportunity="Reduce overall consumption by 10%",
                 potential_savings=f"${total_cost * 0.1:.2f}",
-                recommendation="Implement energy monitoring and scheduling"
+                recommendation="Implement energy monitoring and optimize equipment schedules",
+                room="All Rooms"
+            ))
+            
+            # Insight 2: Average Power Usage
+            insights.append(EnergyInsight(
+                metric="Average Power Usage",
+                current_value=avg_power,
+                trend="Operational baseline",
+                benchmark=avg_power * 0.85,  # 15% efficiency target
+                opportunity="Improve equipment efficiency",
+                potential_savings="15-25% power reduction",
+                recommendation="Regular maintenance and equipment upgrades",
+                room="All Rooms"
             ))
         
-        # Power efficiency analysis
-        if "power_consumption_watts.total" in df.columns and "occupancy_count" in df.columns:
-            occupied_df = df[df["occupancy_count"] > 0]
-            if not occupied_df.empty:
-                power_per_person = occupied_df["power_consumption_watts.total"] / occupied_df["occupancy_count"]
-                avg_power_per_person = power_per_person.mean()
+        # Analyze by room for specific insights
+        if 'room_name' in df.columns:
+            grouped = df.groupby('room_name')
+            
+            for room, group in grouped:
+                room_energy = group["energy_consumption_kwh"].sum() if "energy_consumption_kwh" in group.columns else 0
+                room_power_avg = group["power_consumption_watts.total"].mean() if "power_consumption_watts.total" in group.columns else 0
+                room_occupancy = group["occupancy_count"].mean() if "occupancy_count" in group.columns else 0
                 
+                if room_energy > 0:
+                    # Room-specific energy efficiency
+                    insights.append(EnergyInsight(
+                        metric=f"Room {room} Energy",
+                        current_value=room_energy,
+                        trend="Room-specific",
+                        benchmark=room_energy * 0.9,
+                        opportunity="Room-specific optimization",
+                        potential_savings=f"${room_energy * cost_per_kwh * 0.1:.2f}",
+                        recommendation=f"Review {room} equipment usage patterns",
+                        room=room
+                    ))
+                
+                # Power per occupant insight
+                if room_occupancy > 0 and room_power_avg > 0:
+                    power_per_person = room_power_avg / room_occupancy
+                    insights.append(EnergyInsight(
+                        metric=f"Power per Person - {room}",
+                        current_value=power_per_person,
+                        trend="Efficiency metric",
+                        benchmark=150,  # Target watts per person
+                        opportunity="Optimize occupancy-based controls",
+                        potential_savings="20-30% with smart controls",
+                        recommendation=f"Implement occupancy sensors in {room}",
+                        room=room
+                    ))
+        
+        # Equipment usage insights
+        equipment_columns = [
+            "equipment_usage.lights_on_hours",
+            "equipment_usage.air_conditioner_on_hours", 
+            "equipment_usage.projector_on_hours",
+            "equipment_usage.computer_on_hours"
+        ]
+        
+        for eq_col in equipment_columns:
+            if eq_col in df.columns:
+                avg_hours = df[eq_col].mean()
+                equipment_name = eq_col.split('.')[-1].replace('_on_hours', '').replace('_', ' ').title()
+                
+                if avg_hours > 0:
+                    insights.append(EnergyInsight(
+                        metric=f"{equipment_name} Usage",
+                        current_value=avg_hours,
+                        trend="Equipment runtime",
+                        benchmark=avg_hours * 0.8,  # 20% reduction target
+                        opportunity=f"Optimize {equipment_name.lower()} scheduling",
+                        potential_savings=f"Reduce runtime by {avg_hours * 0.2:.1f} hours",
+                        recommendation=f"Implement smart controls for {equipment_name.lower()}",
+                        room="All Rooms"
+                    ))
+        
+        # Environmental insights
+        if "environmental_data.temperature_celsius" in df.columns:
+            avg_temp = df["environmental_data.temperature_celsius"].mean()
+            temp_std = df["environmental_data.temperature_celsius"].std()
+            
+            insights.append(EnergyInsight(
+                metric="Temperature Stability",
+                current_value=temp_std,  # Lower std = more stable
+                trend="Environmental control",
+                benchmark=2.0,  # Target temperature stability
+                opportunity="Improve HVAC efficiency",
+                potential_savings="10-15% HVAC energy",
+                recommendation="Maintain consistent temperature setpoints",
+                room="All Rooms"
+            ))
+        
+        # Peak demand analysis
+        if "power_consumption_watts.total" in df.columns:
+            peak_power = df["power_consumption_watts.total"].max()
+            avg_power = df["power_consumption_watts.total"].mean()
+            peak_ratio = peak_power / avg_power if avg_power > 0 else 1
+            
+            if peak_ratio > 2:
                 insights.append(EnergyInsight(
-                    metric="Power per Occupant",
-                    current_value=avg_power_per_person,
-                    trend="Efficiency metric",
-                    benchmark=200.0,  # Benchmark watts per person
-                    opportunity="Optimize occupancy-based controls",
-                    potential_savings="15-25% energy reduction",
-                    recommendation="Implement occupancy-based lighting and HVAC controls"
+                    metric="Peak Demand Management",
+                    current_value=peak_ratio,
+                    trend="Load distribution",
+                    benchmark=1.5,  # Target peak-to-average ratio
+                    opportunity="Reduce peak demand",
+                    potential_savings="Lower demand charges",
+                    recommendation="Stagger equipment startup times",
+                    room="All Rooms"
                 ))
+        
+        # If no insights were generated, provide diagnostic insight
+        if not insights:
+            insights.append(EnergyInsight(
+                metric="Energy Data Analysis",
+                current_value=len(df),
+                trend="Data quality",
+                benchmark=100,  # Minimum records for good analysis
+                opportunity="Improve data collection",
+                potential_savings="Better insights with more data",
+                recommendation="Ensure all sensors are active and transmitting consistently",
+                room="All Rooms"
+            ))
         
         logger.info(f"Generated {len(insights)} energy insights")
         return insights
     
     def handle_most_used_room_query(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Handle 'most used room' type queries"""
+        """Handle 'most used room' type queries."""
         df = self.preprocess_data(df)
         
         if df.empty:
             logger.warning("Empty DataFrame for most used room query")
             return {"error": "No data available for room analysis"}
         
-        # Since we're analyzing single room data, provide occupancy analysis
-        occupied_records = df[df["occupancy_count"] > 0]
-        total_records = len(df)
-        occupancy_rate = (len(occupied_records) / total_records * 100) if total_records > 0 else 0
+        # Group by room to find the most used
+        grouped = df.groupby('room_name')
+        room_metrics = []
         
-        total_occupancy_hours = occupied_records["occupancy_count"].sum()
-        avg_occupancy = occupied_records["occupancy_count"].mean() if not occupied_records.empty else 0
-        
-        # Find peak usage time
-        if not occupied_records.empty:
-            peak_record = occupied_records.loc[occupied_records["occupancy_count"].idxmax()]
-            peak_time = peak_record["timestamp"]
-            peak_occupancy = peak_record["occupancy_count"]
-        else:
+        for room, group in grouped:
+            occupied_records = group[group["occupancy_count"] > 0]
+            total_records = len(group)
+            occupancy_rate = (len(occupied_records) / total_records * 100) if total_records > 0 else 0
+            total_occupancy_hours = occupied_records["occupancy_count"].sum()
+            avg_occupancy = occupied_records["occupancy_count"].mean() if not occupied_records.empty else 0
+            
+            # Find peak usage time
             peak_time = "No peak usage"
             peak_occupancy = 0
-        
-        # Energy consumption during occupied periods
-        energy_during_occupancy = occupied_records["energy_consumption_kwh"].sum() if not occupied_records.empty else 0
-        
-        return {
-            "answer": f"Room utilization analysis shows {occupancy_rate:.1f}% occupancy rate with {total_occupancy_hours} total person-hours. Peak usage was {peak_occupancy} people at {peak_time}. Energy consumption during occupied periods: {energy_during_occupancy:.2f} kWh. Average occupancy when in use: {avg_occupancy:.1f} people.",
-            "metrics": {
+            if not occupied_records.empty:
+                peak_record = occupied_records.loc[occupied_records["occupancy_count"].idxmax()]
+                peak_time = peak_record["timestamp"]
+                peak_occupancy = peak_record["occupancy_count"]
+            
+            # Energy consumption during occupied periods
+            energy_during_occupancy = occupied_records["energy_consumption_kwh"].sum() if not occupied_records.empty else 0
+            
+            room_metrics.append({
+                "room": room,
                 "occupancy_rate": occupancy_rate,
                 "total_hours": total_occupancy_hours,
                 "peak_time": str(peak_time),
                 "peak_occupancy": peak_occupancy,
                 "energy_usage": energy_during_occupancy,
                 "avg_occupancy": avg_occupancy
+            })
+        
+        # Find the most used room
+        if room_metrics:
+            most_used = max(room_metrics, key=lambda x: x["total_hours"])
+            return {
+                "answer": (f"Most used room: {most_used['room']} with {most_used['occupancy_rate']:.1f}% occupancy rate, "
+                          f"{most_used['total_hours']:.1f} total person-hours. Peak usage: {most_used['peak_occupancy']} "
+                          f"people at {most_used['peak_time']}. Energy consumption during occupied periods: "
+                          f"{most_used['energy_usage']:.2f} kWh. Average occupancy when in use: {most_used['avg_occupancy']:.1f} people."),
+                "metrics": most_used,
+                "all_rooms": room_metrics
             }
-        }
+        else:
+            return {"error": "No room data available for analysis"}
     
     def handle_energy_trends_query(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Handle energy trends analysis queries"""
+        """Handle energy trends analysis queries."""
         df = self.preprocess_data(df)
         
         if df.empty or "energy_consumption_kwh" not in df.columns:
             logger.warning("No energy data available for trend analysis")
             return {"error": "No energy data available for trend analysis"}
         
-        energy_data = df["energy_consumption_kwh"]
-        total_energy = energy_data.sum()
-        avg_daily = energy_data.mean()
+        # Group by room for trend analysis
+        grouped = df.groupby('room_name')
+        room_trends = []
         
-        # Calculate trend
-        trend_info = self._calculate_trend(energy_data)
-        trend_direction = "Increasing" if trend_info["slope"] > 0.1 else "Decreasing" if trend_info["slope"] < -0.1 else "Stable"
-        change_rate = abs(trend_info["slope"] / avg_daily * 100) if avg_daily > 0 else 0
-        
-        # Find peak consumption
-        peak_consumption = energy_data.max()
-        peak_record = df.loc[energy_data.idxmax()]
-        peak_time = peak_record["timestamp"]
-        
-        # Cost analysis
-        cost_per_kwh = self.insights_config.get("cost_per_kwh", 0.12)
-        total_cost = total_energy * cost_per_kwh
-        
-        recommendations = []
-        if trend_direction == "Increasing":
-            recommendations.append("Investigate equipment efficiency")
-            recommendations.append("Consider energy-saving measures")
-        elif change_rate > 20:
-            recommendations.append("Monitor for equipment issues")
-            recommendations.append("Review usage patterns")
-        else:
-            recommendations.append("Maintain current efficiency practices")
-        
-        return {
-            "answer": f"Energy trend analysis shows {trend_direction.lower()} consumption with {change_rate:.1f}% change rate. Total energy: {total_energy:.2f} kWh, average daily: {avg_daily:.2f} kWh. Peak consumption: {peak_consumption:.2f} kWh at {peak_time}. Estimated cost: ${total_cost:.2f}. Recommendations: {', '.join(recommendations)}.",
-            "metrics": {
+        for room, group in grouped:
+            energy_data = group["energy_consumption_kwh"]
+            total_energy = energy_data.sum()
+            avg_daily = energy_data.mean()
+            
+            # Fetch billing rate
+            cost_per_kwh = self.insights_config.get("default_cost_per_kwh", 0.15)
+            if self.db_adapter is not None:
+                try:
+                    room_id = next((r['id'] for r in self.db_adapter.get_rooms_list() if r['name'] == room), None)
+                    if room_id:
+                        billing_rates = self.db_adapter.get_billing_rates(room_id=room_id, valid_date=datetime.now())
+                        cost_per_kwh = billing_rates[0]['rate_per_kwh'] if billing_rates else cost_per_kwh
+                except Exception as e:
+                    logger.warning(f"Failed to fetch billing rates for {room}: {e}. Using default cost_per_kwh.")
+            
+            total_cost = total_energy * cost_per_kwh
+            
+            # Calculate trend
+            trend_info = self._calculate_trend(energy_data)
+            trend_direction = "Increasing" if trend_info["slope"] > 0.1 else "Decreasing" if trend_info["slope"] < -0.1 else "Stable"
+            change_rate = abs(trend_info["slope"] / avg_daily * 100) if avg_daily > 0 else 0
+            
+            # Find peak consumption
+            peak_consumption = energy_data.max()
+            peak_time = group.loc[energy_data.idxmax()]["timestamp"] if not energy_data.empty else "No peak"
+            
+            recommendations = []
+            if trend_direction == "Increasing":
+                recommendations.append("Investigate equipment efficiency")
+                recommendations.append("Consider energy-saving measures")
+            elif change_rate > 20:
+                recommendations.append("Monitor for equipment issues")
+                recommendations.append("Review usage patterns")
+            else:
+                recommendations.append("Maintain current efficiency practices")
+            
+            room_trends.append({
+                "room": room,
                 "trend_direction": trend_direction,
                 "change_rate": change_rate,
                 "total_energy": total_energy,
@@ -526,116 +805,203 @@ class AdvancedLLMHandlers:
                 "peak_time": str(peak_time),
                 "cost_impact": total_cost,
                 "recommendations": recommendations
+            })
+        
+        # Aggregate summary
+        total_energy_all = df["energy_consumption_kwh"].sum()
+        avg_cost_per_kwh = np.mean([t["cost_impact"] / t["total_energy"] for t in room_trends if t["total_energy"] > 0]) if room_trends else self.insights_config.get("default_cost_per_kwh", 0.15)
+        total_cost_all = total_energy_all * avg_cost_per_kwh
+        
+        return {
+            "answer": (f"Energy trend analysis across rooms: Total energy {total_energy_all:.2f} kWh, "
+                      f"estimated cost ${total_cost_all:.2f}. Detailed room trends available."),
+            "metrics": {
+                "total_energy": total_energy_all,
+                "total_cost": total_cost_all,
+                "room_trends": room_trends
             }
         }
     
     def handle_kpi_query(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Handle key performance indicators query"""
+        """Handle key performance indicators query with energy insights."""
         df = self.preprocess_data(df)
         
         if df.empty:
             logger.warning("Empty DataFrame for KPI query")
             return {"error": "No data available for KPI analysis"}
         
-        # Calculate KPIs
+        # Calculate basic KPIs
         total_energy = df["energy_consumption_kwh"].sum() if "energy_consumption_kwh" in df.columns else 0
+        avg_power = df["power_consumption_watts.total"].mean() if "power_consumption_watts.total" in df.columns else 0
         avg_occupancy = df["occupancy_count"].mean() if "occupancy_count" in df.columns else 0
-        energy_per_person = total_energy / avg_occupancy if avg_occupancy > 0 else 0
-        cost_per_kwh = self.insights_config.get("cost_per_kwh", 0.12)
+        avg_temperature = df["environmental_data.temperature_celsius"].mean() if "environmental_data.temperature_celsius" in df.columns else 0
+        
+        # Calculate costs
+        cost_per_kwh = self.insights_config.get("default_cost_per_kwh", 0.15)
         total_cost = total_energy * cost_per_kwh
         
-        anomalies = self.detect_anomalies(df)
+        # Generate energy insights
+        energy_insights = self.generate_energy_insights(df)
         
-        kpis = {
-            "energy_efficiency": energy_per_person,
-            "total_energy_cost": total_cost,
-            "anomaly_count": len(anomalies),
-            "avg_occupancy": avg_occupancy
-        }
+        # Energy efficiency metrics
+        energy_per_person = total_energy / avg_occupancy if avg_occupancy > 0 else 0
+        power_variance = df["power_consumption_watts.total"].std() if "power_consumption_watts.total" in df.columns else 0
+        
+        # Equipment usage
+        equipment_metrics = {}
+        for col in ["equipment_usage.lights_on_hours", "equipment_usage.air_conditioner_on_hours"]:
+            if col in df.columns:
+                eq_name = col.split('.')[-1].replace('_on_hours', '').replace('_', ' ').title()
+                equipment_metrics[eq_name] = df[col].mean()
+        
+        # Format equipment metrics
+        equipment_summary = ", ".join([f"{k}: {v:.1f}h" for k, v in equipment_metrics.items()])
+        
+        # Compile KPI answer with energy insights
+        kpi_parts = [
+            "**Key Performance Indicators - Energy Management**",
+            "",
+            "**Core Metrics:**",
+            f"• Total Energy: {total_energy:.1f} kWh (${total_cost:.2f})",
+            f"• Average Power: {avg_power:.1f} W",
+            f"• Average Occupancy: {avg_occupancy:.1f} people",
+            f"• Average Temperature: {avg_temperature:.1f}°C",
+            "",
+            "**Efficiency Metrics:**",
+            f"• Energy per Person: {energy_per_person:.3f} kWh/person",
+            f"• Power Stability: {power_variance:.1f} W variance",
+            f"• Equipment Usage: {equipment_summary}",
+            "",
+            "**Energy Insights:**"
+        ]
+        
+        # Add top 3 energy insights
+        if energy_insights:
+            for i, insight in enumerate(energy_insights[:3]):
+                kpi_parts.append(f"• {insight.metric}: {insight.current_value:.1f} - {insight.recommendation}")
+        else:
+            kpi_parts.append("• No specific energy insights available")
+        
+        answer = "\n".join(kpi_parts)
         
         return {
-            "answer": f"Key Performance Indicators: Energy Efficiency: {energy_per_person:.2f} kWh/person, Total Cost: ${total_cost:.2f}, Anomalies: {len(anomalies)}, Avg Occupancy: {avg_occupancy:.1f} people.",
-            "metrics": kpis
+            "answer": answer,
+            "metrics": {
+                "total_energy": total_energy,
+                "total_cost": total_cost,
+                "avg_power": avg_power,
+                "avg_occupancy": avg_occupancy,
+                "energy_efficiency": energy_per_person,
+                "energy_insights_count": len(energy_insights)
+            },
+            "energy_insights": [
+                {
+                    "metric": i.metric,
+                    "value": i.current_value,
+                    "recommendation": i.recommendation,
+                    "potential_savings": i.potential_savings
+                } for i in energy_insights
+            ]
         }
     
     def generate_weekly_summary(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Generate automated weekly summary"""
+        """Generate comprehensive weekly summary with proper energy insights."""
         df = self.preprocess_data(df)
         
         if df.empty:
             logger.warning("Empty DataFrame for weekly summary")
             return {"error": "No data available for weekly summary"}
         
-        # Basic metrics
+        # Calculate basic metrics
         total_energy = df["energy_consumption_kwh"].sum() if "energy_consumption_kwh" in df.columns else 0
+        total_power = df["power_consumption_watts.total"].sum() if "power_consumption_watts.total" in df.columns else 0
         avg_occupancy = df["occupancy_count"].mean() if "occupancy_count" in df.columns else 0
         
-        # Detect anomalies and maintenance needs
-        anomalies = self.detect_anomalies(df)
-        maintenance_alerts = self.generate_maintenance_suggestions(df, anomalies)
-        
-        # Energy insights
-        energy_insights = self.generate_energy_insights(df)
-        
-        # Cost analysis
-        cost_per_kwh = self.insights_config.get("cost_per_kwh", 0.12)
+        # Calculate costs
+        cost_per_kwh = self.insights_config.get("default_cost_per_kwh", 0.15)
         total_cost = total_energy * cost_per_kwh
         
-        # Generate summary
+        # Generate energy insights
+        energy_insights = self.generate_energy_insights(df)
+        
+        # Format energy insights for the summary
+        energy_analysis = "Energy Analysis:\n"
+        if energy_insights:
+            for i, insight in enumerate(energy_insights[:5]):  # Show top 5 insights
+                energy_analysis += f"• {insight.metric}: {insight.current_value:.1f} {insight.trend.lower()} - {insight.recommendation}\n"
+        else:
+            energy_analysis += "• No specific energy insights available from current data\n"
+        
+        # Detect anomalies
+        anomalies = self.detect_anomalies(df)
+        anomaly_summary = f"Anomalies detected: {len(anomalies)}"
+        if anomalies:
+            critical_anomalies = [a for a in anomalies if a.severity in ["Critical", "High"]]
+            anomaly_summary += f" ({len(critical_anomalies)} require attention)"
+        
+        # Generate maintenance suggestions
+        maintenance_alerts = self.generate_maintenance_suggestions(df, anomalies)
+        maintenance_summary = f"Maintenance items: {len(maintenance_alerts)}"
+        if maintenance_alerts:
+            urgent_maintenance = [m for m in maintenance_alerts if m.urgency in ["critical", "high"]]
+            maintenance_summary += f" ({len(urgent_maintenance)} urgent)"
+        
+        # Room-specific analysis
+        room_analysis = ""
+        if 'room_name' in df.columns:
+            room_stats = df.groupby('room_name').agg({
+                'energy_consumption_kwh': 'sum',
+                'occupancy_count': 'mean',
+                'power_consumption_watts.total': 'mean'
+            }).round(2)
+            
+            room_analysis = "\nRoom Breakdown:\n"
+            for room, stats in room_stats.iterrows():
+                room_cost = stats['energy_consumption_kwh'] * cost_per_kwh
+                room_analysis += f"• {room}: {stats['energy_consumption_kwh']:.1f} kWh (${room_cost:.2f}), {stats['occupancy_count']:.1f} avg people\n"
+        
+        # Compile final summary
         summary_parts = [
-            f"Weekly facility summary: {total_energy:.1f} kWh consumed",
-            f"Average occupancy: {avg_occupancy:.1f} people",
-            f"Energy cost: ${total_cost:.2f}",
-            f"Anomalies detected: {len(anomalies)}",
-            f"Maintenance items: {len(maintenance_alerts)}"
+            f"📊 Weekly Facility Summary",
+            f"Total Energy: {total_energy:.1f} kWh (${total_cost:.2f})",
+            f"Average Power: {total_power/len(df) if len(df) > 0 else 0:.1f} W",
+            f"Average Occupancy: {avg_occupancy:.1f} people",
+            f"Records Analyzed: {len(df)}",
+            anomaly_summary,
+            maintenance_summary,
+            "",
+            energy_analysis,
+            room_analysis
         ]
         
-        if maintenance_alerts:
-            urgent_alerts = [a for a in maintenance_alerts if a.urgency in ["critical", "high"]]
-            if urgent_alerts:
-                summary_parts.append(f"Urgent maintenance items: {len(urgent_alerts)}")
+        answer = "\n".join(summary_parts)
         
         return {
-            "answer": ". ".join(summary_parts) + ".",
+            "answer": answer,
             "summary": {
                 "total_energy": total_energy,
+                "total_cost": total_cost,
                 "avg_occupancy": avg_occupancy,
                 "alert_count": len(anomalies),
                 "maintenance_count": len(maintenance_alerts),
-                "cost_impact": total_cost,
-                "urgent_maintenance": len([a for a in maintenance_alerts if a.urgency in ["critical", "high"]])
+                "energy_insights_count": len(energy_insights)
             },
-            "anomalies": [
-                {
-                    "type": a.anomaly_type,
-                    "severity": a.severity,
-                    "description": a.description,
-                    "timestamp": a.timestamp
-                } for a in anomalies
-            ],
-            "maintenance_alerts": [
-                {
-                    "equipment": m.equipment,
-                    "issue": m.issue,
-                    "urgency": m.urgency,
-                    "timeline": m.timeline,
-                    "action": m.action
-                } for m in maintenance_alerts
-            ],
-            "insights": [
+            "energy_insights": [
                 {
                     "metric": i.metric,
                     "value": i.current_value,
+                    "trend": i.trend,
                     "opportunity": i.opportunity,
-                    "recommendation": i.recommendation
+                    "potential_savings": i.potential_savings,
+                    "recommendation": i.recommendation,
+                    "room": i.room
                 } for i in energy_insights
             ]
         }
     
     def handle_context_aware_query(self, query: str, df: pd.DataFrame) -> Dict[str, Any]:
-        """Handle context-aware queries that consider current conditions and trends"""
+        """Handle context-aware queries that consider current conditions and trends."""
         df = self.preprocess_data(df)
-        
         current_time = datetime.now()
         
         # Analyze current context
@@ -646,45 +1012,55 @@ class AdvancedLLMHandlers:
             "data_timespan": self._get_data_timespan(df)
         }
         
-        # Get latest conditions
+        # Get latest conditions by room
+        room_contexts = []
         if not df.empty:
-            latest_record = df.iloc[-1]
-            context.update({
-                "current_occupancy": latest_record.get("occupancy_count", 0),
-                "current_temperature": latest_record.get("environmental_data.temperature_celsius", 0),
-                "current_power": latest_record.get("power_consumption_watts.total", 0)
-            })
+            grouped = df.groupby('room_name')
+            for room, group in grouped:
+                latest_record = group.iloc[-1]
+                room_context = {
+                    "room": room,
+                    "current_occupancy": latest_record.get("occupancy_count", 0),
+                    "current_temperature": latest_record.get("environmental_data.temperature_celsius", 0),
+                    "current_power": latest_record.get("power_consumption_watts.total", 0),
+                    "current_voltage": latest_record.get("voltage", 0)
+                }
+                room_contexts.append(room_context)
         
-        # Detect anomalies with context
+        # Detect anomalies
         anomalies = self.detect_anomalies(df)
         
-        # Generate context-aware response
+        # Generate context-aware insights
         context_insights = []
-        
-        # Time-based insights
-        if context["time_of_day"] < 8 or context["time_of_day"] > 18:
-            context_insights.append("Outside normal business hours - monitor for unnecessary energy usage")
-        
-        # Seasonal context
-        if context["season"] in ["summer", "winter"]:
-            context_insights.append(f"Peak {context['season']} season - expect higher HVAC usage")
-        
-        # Current conditions context
-        if context.get("current_temperature", 22) > 26:
-            context_insights.append("High temperature detected - cooling system may be under stress")
-        elif context.get("current_temperature", 22) < 18:
-            context_insights.append("Low temperature detected - heating system active")
+        for room_context in room_contexts:
+            room = room_context["room"]
+            if context["time_of_day"] < 8 or context["time_of_day"] > 18:
+                context_insights.append(f"{room}: Outside normal business hours - monitor for unnecessary energy usage")
+            
+            if context["season"] in ["summer", "winter"]:
+                context_insights.append(f"{room}: Peak {context['season']} season - expect higher HVAC usage")
+            
+            if room_context["current_temperature"] > 26:
+                context_insights.append(f"{room}: High temperature ({room_context['current_temperature']:.1f}°C) - cooling system may be under stress")
+            elif room_context["current_temperature"] < 18:
+                context_insights.append(f"{room}: Low temperature ({room_context['current_temperature']:.1f}°C) - heating system active")
+            
+            if room_context["current_voltage"] < 200 or room_context["current_voltage"] > 240:
+                context_insights.append(f"{room}: Voltage ({room_context['current_voltage']:.1f}V) outside normal range - check electrical system")
         
         return {
-            "answer": f"Context-aware analysis considering current conditions: {', '.join(context_insights) if context_insights else 'Normal operating conditions detected'}. {len(anomalies)} anomalies found in recent data.",
+            "answer": (f"Context-aware analysis for {current_time.strftime('%Y-%m-%d %H:%M:%S')}: "
+                      f"{', '.join(context_insights) if context_insights else 'Normal operating conditions detected'}. "
+                      f"{len(anomalies)} anomalies found in recent data."),
             "context": context,
+            "room_contexts": room_contexts,
             "insights": context_insights,
             "anomalies": len(anomalies),
             "recommendations": self._get_context_recommendations(context, anomalies)
         }
     
     def _get_season(self, date: datetime) -> str:
-        """Determine season based on date"""
+        """Determine season based on date."""
         month = date.month
         if month in [12, 1, 2]:
             return "winter"
@@ -696,7 +1072,7 @@ class AdvancedLLMHandlers:
             return "fall"
     
     def _get_data_timespan(self, df: pd.DataFrame) -> str:
-        """Get timespan of data"""
+        """Get timespan of data."""
         if df.empty:
             return "No data"
         
@@ -714,3 +1090,36 @@ class AdvancedLLMHandlers:
         except Exception as e:
             logger.warning(f"Error calculating data timespan: {e}")
             return "Unknown timespan"
+    
+    def _get_context_recommendations(self, context: Dict[str, Any], anomalies: List[AnomalyDetection]) -> List[str]:
+        """Generate recommendations based on context and anomalies."""
+        recommendations = []
+        
+        if context["time_of_day"] < 8 or context["time_of_day"] > 18:
+            recommendations.append("Reduce non-essential equipment usage during off-hours")
+        
+        if context["season"] in ["summer", "winter"]:
+            recommendations.append("Optimize HVAC settings for seasonal efficiency")
+        
+        for anomaly in anomalies:
+            if anomaly.severity in ["High", "Critical"]:
+                recommendations.append(f"Urgent: Address {anomaly.anomaly_type} issue in {anomaly.location}")
+        
+        return recommendations
+    
+    def handle_query(self, query: str, df: pd.DataFrame) -> Dict[str, Any]:
+        """Route queries to appropriate handlers."""
+        query = query.lower().strip()
+        if any(k in query for k in ["key performance indicators", "kpi", "performance metrics"]):
+            return self.handle_kpi_query(df)
+        elif "energy trends" in query:
+            return self.handle_energy_trends_query(df)
+        elif "most used room" in query:
+            return self.handle_most_used_room_query(df)
+        elif "weekly summary" in query:
+            return self.generate_weekly_summary(df)
+        elif "current status" in query:
+            return self.handle_context_aware_query(query, df)
+        else:
+            logger.warning(f"No deterministic match for query: '{query}'; falling back to LLM")
+            return {"error": "Query not supported, falling back to LLM"}
