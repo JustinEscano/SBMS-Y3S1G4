@@ -4,9 +4,14 @@ class ApiConfig {
   static const String _environment = 'dev';
   static const String _prodBaseUrl = 'https://your-api-domain.com/api/';
   static String get _devBaseUrl => Platform.isAndroid
-      ? 'http://10.0.2.2:8000/api'
-      : 'http://192.168.0.12:8000/api';
+      ? 'http://192.168.0.27:8000/api'
+      : 'http://192.168.0.27:8000/api';
   static String get baseUrl => _environment == 'prod' ? _prodBaseUrl : _devBaseUrl;
+
+  // Construct media URLs correctly
+  static String getMediaUrl(String relativePath) {
+    return '${baseUrl.replaceAll('/api', '')}/media/$relativePath';
+  }
 
   // Authentication Endpoints
   static String get register => '$baseUrl/register/';
@@ -53,11 +58,20 @@ class ApiConfig {
   static String maintenanceRequestUploadAttachment(String id) => '$maintenanceRequest$id/upload_attachment/';
 
   // Notification Endpoints
-  static String get notification => '$baseUrl/notification/';
+  static String notification({int? page, int? pageSize}) {
+    String url = '$baseUrl/notification/';
+    List<String> params = [];
+    if (page != null) params.add('page=$page');
+    if (pageSize != null) params.add('page_size=$pageSize');
+    return params.isNotEmpty ? '$url?${params.join('&')}' : url;
+  }
   static String get notificationMarkAllRead => '$baseUrl/notification/mark_all_read/';
+  static String notificationMarkRead(String id) => '$baseUrl/notification/$id/mark_read/';
+  static String notificationDelete(String id) => '$baseUrl/notification/$id/';
 
   // User Management
   static String get users => '$baseUrl/users/';
+  static String get profile => '$baseUrl/users/profile/';
 
   // Chat and LLM Endpoints
   static String get llmQuery => '$baseUrl/llm/query/';

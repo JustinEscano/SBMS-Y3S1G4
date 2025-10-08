@@ -5,6 +5,7 @@ import '../Screens/RoomManagementScreen.dart';
 import '../Screens/EquipmentManagementScreen.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
 import '../Screens/QRScannerScreen.dart';
+import '../Screens/NotificationsScreen.dart';
 import 'dart:convert';
 import 'dart:async';
 import '../Screens/LoginScreen.dart';
@@ -12,7 +13,7 @@ import '../Screens/ChatScreen.dart';
 import '../Screens/EnergyAnalyticsScreen.dart';
 import '../Widgets/bottom_navbar.dart';
 import '../Config/api.dart';
-import '../Services/auth_service.dart'; // Import AuthService
+import '../Services/auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String accessToken;
@@ -34,8 +35,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> sensorLogs = [];
   List<dynamic> latestSensorData = [];
   List<dynamic> maintenanceRequests = [];
+  List<dynamic> notifications = [];
+  int unreadNotificationCount = 0;
 
-  // Data structures for system sections
   Map<String, dynamic> hvacData = {};
   Map<String, dynamic> lightingData = {};
   Map<String, dynamic> securityData = {};
@@ -43,14 +45,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> maintenanceData = [];
 
   bool isLoading = true;
-  bool isAutoRefresh = true;
   String _errorMessage = '';
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    // Initialize AuthService with tokens
     AuthService().setTokens(widget.accessToken, widget.refreshToken);
     loadData();
     _startAutoRefresh();
@@ -65,21 +65,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (isAutoRefresh && mounted) {
+      if (mounted) {
         loadData();
       }
     });
-  }
-
-  void _toggleAutoRefresh() {
-    setState(() {
-      isAutoRefresh = !isAutoRefresh;
-    });
-    if (isAutoRefresh) {
-      _startAutoRefresh();
-    } else {
-      _refreshTimer?.cancel();
-    }
   }
 
   Future<bool> _refreshToken() async {
@@ -89,7 +78,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final newAccessToken = AuthService().accessToken;
         final newRefreshToken = AuthService().refreshToken ?? widget.refreshToken;
         setState(() {
-          // Update tokens in widget (assumes mutable access, adjust if using Provider)
           (widget as dynamic).accessToken = newAccessToken;
           (widget as dynamic).refreshToken = newRefreshToken;
         });
@@ -122,12 +110,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         http.get(Uri.parse(ApiConfig.sensorLog), headers: headers),
         http.get(Uri.parse(ApiConfig.latestSensorData), headers: headers),
         http.get(Uri.parse(ApiConfig.maintenanceRequest), headers: headers),
+        http.get(Uri.parse(ApiConfig.notification(page: 1, pageSize: 10)), headers: headers), // Fix for pagination
       ]).timeout(const Duration(seconds: 15));
 
       for (var i = 0; i < responses.length; i++) {
         if (responses[i].statusCode == 401) {
           if (await _refreshToken()) {
-            return loadData(); // Retry with new token
+            return loadData();
           } else {
             throw Exception('Session expired. Please log in again.');
           }
@@ -143,6 +132,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final latestData = json.decode(responses[3].body);
         latestSensorData = latestData['success'] == true ? (latestData['data'] ?? []) : [];
         maintenanceRequests = json.decode(responses[4].body) is List ? json.decode(responses[4].body) : [];
+        final notificationData = json.decode(responses[5].body);
+        notifications = notificationData['results'] is List ? notificationData['results'] : []; // Handle paginated response
+        unreadNotificationCount = notifications.where((n) => n['read'] == false).length;
       });
 
       await _loadSystemStatus();
@@ -326,9 +318,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _navigateToMaintenanceManagement();
         break;
       case 'notifications':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NotificationsScreen(
+              accessToken: widget.accessToken,
+              refreshToken: widget.refreshToken,
+            ),
+          ),
+        ).then((_) => loadData());
+        break;
       case 'about':
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${value.replaceAll('_', ' ').toUpperCase()} feature coming soon!')),
+          SnackBar(content: Text('About feature coming soon!')),
         );
         break;
       case 'orb_chat':
@@ -396,7 +398,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       } else if (response.statusCode == 401) {
         if (await _refreshToken()) {
-          return _navigateToMaintenanceManagement(); // Retry with new token
+          return _navigateToMaintenanceManagement();
         }
       }
     } catch (e) {
@@ -432,6 +434,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ).then((_) {
       loadData();
     });
+  }
+
+  void _navigateToNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationsScreen(
+          accessToken: widget.accessToken,
+          refreshToken: widget.refreshToken,
+        ),
+      ),
+    ).then((_) => loadData());
   }
 
   void _showSystemDetails(String systemType) {
@@ -711,10 +725,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
             tooltip: 'Management Center',
           ),
-          IconButton(
-            icon: Icon(isAutoRefresh ? Icons.pause : Icons.play_arrow),
-            onPressed: _toggleAutoRefresh,
-            tooltip: isAutoRefresh ? 'Pause Auto Refresh' : 'Start Auto Refresh',
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications),
+                tooltip: 'Notifications',
+                onPressed: _navigateToNotifications,
+              ),
+              if (unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '$unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -795,26 +838,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              if (isAutoRefresh)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.green[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.autorenew, size: 16, color: Colors.green[700]),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Auto-refresh ON (10s)',
-                        style: TextStyle(color: Colors.green[700], fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
               const Text(
                 'Building Systems',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -1256,7 +1279,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Last Update: ${_formatDateTime(sensorData['recorded_at'])}',
+                          'Last Update: ${_formatDateTime(sensorData['created_at'])}',
                           style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                         ),
                       ],
