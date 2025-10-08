@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:async';
-import '../Config/api.dart'; // Make sure this matches your project structure
+import 'package:dio/dio.dart';
+import '../Config/api.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,6 +19,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _errorMessage = '';
   String _selectedRole = 'client';
 
+  final Dio _dio = Dio();
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -38,42 +38,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _errorMessage = '';
     });
 
-    final requestData = {
-      'username': _usernameController.text,
-      'email': _emailController.text,
-      'password': _passwordController.text,
-      'role': _selectedRole,
-    };
-
     try {
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/register/'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+      final response = await _dio.post(
+        ApiConfig.register,
+        data: {
+          'username': _usernameController.text,
+          'email': _emailController.text,
+          'password': _passwordController.text,
+          'role': _selectedRole,
         },
-        body: json.encode(requestData),
-      ).timeout(const Duration(seconds: 15));
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
 
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Registration successful! Please login with your email.',
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration successful! Please login with your email.'),
+              backgroundColor: Colors.green,
             ),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
+          );
+          Navigator.pop(context);
+        }
       } else {
         setState(() {
-          _errorMessage =
-          'Registration failed. Status: ${response.statusCode}';
+          _errorMessage = 'Registration failed. Server returned ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Connection error: ${e.toString()}';
+        if (e is DioException) {
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.sendTimeout ||
+              e.type == DioExceptionType.receiveTimeout) {
+            _errorMessage = 'Request timed out. Server might be slow or down';
+          } else if (e.type == DioExceptionType.connectionError) {
+            _errorMessage = 'Cannot connect to server. Check if Django is running on port 8000';
+          } else if (e.response?.statusCode == 400) {
+            final errorData = e.response?.data;
+            String errorMsg = 'Registration failed: ';
+            if (errorData is Map) {
+              List<String> errors = [];
+              errorData.forEach((key, value) {
+                if (value is List && value.isNotEmpty) {
+                  errors.add('$key: ${value.first}');
+                } else if (value is String) {
+                  errors.add('$key: $value');
+                }
+              });
+              errorMsg += errors.join(', ');
+            } else {
+              errorMsg += 'Invalid request format';
+            }
+            _errorMessage = errorMsg;
+          } else {
+            _errorMessage = 'Error: ${e.message}';
+          }
+        } else {
+          _errorMessage = 'Error: $e';
+        }
       });
     } finally {
       setState(() {

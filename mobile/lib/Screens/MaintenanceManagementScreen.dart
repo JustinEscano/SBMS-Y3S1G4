@@ -4,9 +4,13 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'dart:typed_data';
 import '../Config/api.dart';
-import '../Services/auth_service.dart'; // Add AuthService import
-import 'package:jwt_decode/jwt_decode.dart'; // Keep dependency for token parsing
+import '../Services/auth_service.dart';
+import 'package:jwt_decode/jwt_decode.dart';
 
 class MaintenanceManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -44,7 +48,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   @override
   void initState() {
     super.initState();
-    AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
+    AuthService().setTokens(widget.accessToken, widget.refreshToken);
     developer.log('User Role in MaintenanceManagementScreen: ${widget.userRole}', name: 'MaintenanceManagementScreen');
     try {
       Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
@@ -343,7 +347,8 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     );
   }
 
-  Widget _buildDialogFooter(BuildContext context, {required VoidCallback onAction, String actionText = 'Create', Widget? extraAction}) {
+  Widget _buildDialogFooter(
+      BuildContext context, {required VoidCallback onAction, String actionText = 'Create', Widget? extraAction}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -661,7 +666,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
+    AuthService().setTokens(widget.accessToken, widget.refreshToken);
     developer.log('User Role in MaintenanceDetailsScreen: ${widget.userRole}', name: 'MaintenanceDetailsScreen');
   }
 
@@ -691,6 +696,81 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       setState(() {
         isRefreshingToken = false;
       });
+    }
+  }
+
+  String _getAttachmentUrl(String? filePath) {
+    if (filePath == null || filePath.isEmpty) {
+      return '';
+    }
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      return filePath;
+    }
+    return ApiConfig.getMediaUrl(filePath);
+  }
+
+  Future<Uint8List?> _fetchImageData(String url) async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+      final mediaUrl = _getAttachmentUrl(url);
+      final uri = Uri.parse(mediaUrl);
+      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return await _fetchImageData(url);
+        }
+      }
+      return null;
+    } catch (e) {
+      developer.log('Error fetching image data: $e', name: 'MaintenanceDetailsScreen.Image');
+      return null;
+    }
+  }
+
+  Future<void> _openAttachment(String url, String fileName) async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+      final mediaUrl = _getAttachmentUrl(url);
+      final uri = Uri.parse(mediaUrl);
+      developer.log('Opening attachment: $mediaUrl', name: 'MaintenanceDetailsScreen.Attachment');
+
+      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final tempDir = await getTemporaryDirectory();
+        final filePath = '${tempDir.path}/$fileName';
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        final result = await OpenFilex.open(filePath);
+        if (result.type != ResultType.done) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Cannot open $fileName: ${result.message}'), backgroundColor: Colors.red),
+          );
+        }
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _openAttachment(url, fileName);
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to download $fileName: ${response.statusCode}'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      developer.log('Error opening attachment: $e', name: 'MaintenanceDetailsScreen.Attachment');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening $fileName: $e'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -837,17 +917,6 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error adding comment: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  Future<void> _openAttachment(String url, String fileName) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cannot open $fileName'), backgroundColor: Colors.red),
       );
     }
   }
@@ -1131,7 +1200,9 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                                   filled: true,
                                   fillColor: Colors.grey[50],
                                 ),
-                                child: Text(selectedDate != null ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}' : 'Select date'),
+                                child: Text(selectedDate != null
+                                    ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
+                                    : 'Select date'),
                               ),
                             ),
                             if (selectedStatus == 'resolved' || resolvedDate != null) ...[
@@ -1237,7 +1308,8 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
     );
   }
 
-  Widget _buildDialogFooter(BuildContext context, {required VoidCallback onAction, String actionText = 'Create', Widget? extraAction}) {
+  Widget _buildDialogFooter(
+      BuildContext context, {required VoidCallback onAction, String actionText = 'Create', Widget? extraAction}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1415,7 +1487,9 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.chevron_right),
-                              onPressed: _currentCommentPage < totalCommentPages ? () => setState(() => _currentCommentPage++) : null,
+                              onPressed: _currentCommentPage < totalCommentPages
+                                  ? () => setState(() => _currentCommentPage++)
+                                  : null,
                             ),
                           ],
                         ),
@@ -1481,7 +1555,11 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                           child: ElevatedButton.icon(
                             onPressed: _responseController.text.isEmpty || isRefreshingToken
                                 ? null
-                                : () => _respondToMaintenanceRequest(request['id'], _responseController.text, _selectedAssignedToId),
+                                : () => _respondToMaintenanceRequest(
+                              request['id'],
+                              _responseController.text,
+                              _selectedAssignedToId,
+                            ),
                             icon: const Icon(Icons.send, size: 20),
                             label: const Text('Add Comment'),
                             style: ElevatedButton.styleFrom(
@@ -1560,18 +1638,94 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                     children: [
                       Text('Attachments', style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(height: 16),
-                      ...attachments.map((attachment) => ListTile(
-                        leading: Icon(
-                          attachment['file_type'].startsWith('image') ? Icons.image : Icons.picture_as_pdf,
-                          color: Colors.blue,
-                        ),
-                        title: Text(attachment['file_name'], style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
-                        subtitle: Text(
-                          'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                        ),
-                        onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
-                      )),
+                      ...attachments.map((attachment) {
+                        final mediaUrl = _getAttachmentUrl(attachment['file']);
+                        final isImage = attachment['file_type'].startsWith('image');
+                        developer.log(
+                          'Attachment URL: $mediaUrl',
+                          name: 'MaintenanceDetailsScreen.Attachment',
+                        );
+                        return isImage
+                            ? FutureBuilder<Uint8List?>(
+                          future: _fetchImageData(attachment['file']),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            if (snapshot.hasError || snapshot.data == null) {
+                              return ListTile(
+                                leading: const Icon(Icons.error, color: Colors.red),
+                                title: Text(
+                                  attachment['file_name'],
+                                  style: const TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(
+                                  'Failed to load image',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                                onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
+                              );
+                            }
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.memory(
+                                      snapshot.data!,
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return ListTile(
+                                          leading: const Icon(Icons.error, color: Colors.red),
+                                          title: Text(
+                                            attachment['file_name'],
+                                            style: const TextStyle(fontSize: 14),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          subtitle: Text(
+                                            'Failed to load image',
+                                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8, bottom: 8),
+                                  child: Text(
+                                    'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
+                                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        )
+                            : ListTile(
+                          leading: Icon(
+                            attachment['file_type'].startsWith('image') ? Icons.image : Icons.picture_as_pdf,
+                            color: Colors.blue,
+                          ),
+                          title: Text(
+                            attachment['file_name'],
+                            style: const TextStyle(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          ),
+                          onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
+                        );
+                      }),
                     ],
                   ),
                 ),
