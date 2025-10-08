@@ -2,13 +2,12 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import LoginScreen from "../features/pages/LoginScreen";
 import DashboardScreen from "../features/pages/DashboardScreen";
 import RegSignUpForm from "../features/pages/SignUpForm";
-import { useAuth } from "../features/context/authContext";
+import { useAuth } from "../features/context/AuthContext";
 import type { JSX } from "react";
 import GenericEquipmentPage from "../features/pages/EquipmentPage";
 import UsagePage from "../features/pages/UsagePage";
 import MaintenancePage from "../features/pages/MaintenancePage";
 import NotificationPage from "../features/pages/NotificationPage";
-import RoomAnalyticsPage from "../features/pages/RoomAnalyticsPage";
 import LLMChatPage from "../features/pages/LLMChatPage";
 import AboutPage from "../features/pages/AboutPage";
 import { PAGE_TYPES } from "../features/constants/constant";
@@ -73,7 +72,6 @@ const AppRoutes = () => {
       <Route path="/dashboard/maintenance" element={<ProtectedRoute><MaintenancePage /></ProtectedRoute>} />
 
       <Route path="/usage" element={<ProtectedRoute><UsagePage /></ProtectedRoute>} />
-      <Route path="/usage/room" element={<ProtectedRoute><RoomAnalyticsPage /></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
       <Route path="/llm" element={<ProtectedRoute><LLMChatPage /></ProtectedRoute>} />
       <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />

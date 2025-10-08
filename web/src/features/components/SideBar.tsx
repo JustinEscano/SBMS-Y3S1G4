@@ -18,7 +18,7 @@ interface SideBarProps {
 interface Section {
   id: string;
   label: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
   path?: string;
   subItems?: { id: string; label: string; path: string }[];
 }
@@ -36,13 +36,7 @@ const sections: Section[] = [
       { id: "Maintenance", label: "Maintenance", path: "/dashboard/maintenance" },
     ],
   },
-  {
-    id: "Usage",
-    label: "Usage Analytics",
-    icon: <BarChart2 size={18} />,
-    path: "/usage",
-    subItems: [{ id: "Room", label: "Room Use", path: "/usage/room" }],
-  },
+  { id: "Usage", label: "Usage", icon: <BarChart2 size={18} />, path: "/usage" },
   { id: "Notification", label: "Notification", icon: <Bell size={18} />, path: "/notifications" },
   { id: "LLM", label: "LLM Chat", icon: <Bot size={18} />, path: "/llm" },
   { id: "About", label: "About Us", icon: <Info size={18} />, path: "/about" },
