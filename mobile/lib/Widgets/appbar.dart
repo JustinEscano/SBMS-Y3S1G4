@@ -3,14 +3,10 @@ import '../Screens/ProfileScreen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final String accessToken;
-  final String refreshToken;
 
   const CustomAppBar({
     super.key,
     required this.title,
-    required this.accessToken,
-    required this.refreshToken,
   });
 
   @override
@@ -25,12 +21,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => ProfileScreen(
-                  accessToken: accessToken,
-                  refreshToken: refreshToken,
-                ),
-              ),
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
           },
         ),
