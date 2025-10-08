@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Screens/RegisterScreen.dart';
 import '../Screens/DashboardScreen.dart';
@@ -27,13 +25,15 @@ class _LoginScreenState extends State<LoginScreen> {
   static const String _refreshTokenKey = 'refresh_token';
   static const String _emailKey = 'user_email';
 
+  final Dio _dio = Dio();
+
   @override
   void initState() {
     super.initState();
     _checkStoredLogin();
   }
 
-  /// Check if user is already logged in with stored tokens
+  // Check if user is already logged in with stored tokens
   Future<void> _checkStoredLogin() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -42,11 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final storedEmail = prefs.getString(_emailKey);
 
       if (accessToken != null && refreshToken != null) {
-        // Verify token is still valid by making a test request
+        // Verify token is still valid
         final isValid = await _verifyToken(accessToken);
-
         if (isValid) {
-          // Navigate to dashboard if token is valid
           if (mounted) {
             Navigator.pushReplacement(
               context,
@@ -60,29 +58,22 @@ class _LoginScreenState extends State<LoginScreen> {
           }
           return;
         } else {
-          // Token expired, try to refresh
-          if (refreshToken.isNotEmpty) {
-            final newTokens = await _refreshAccessToken(refreshToken);
-            if (newTokens != null &&
-                newTokens['access'] != null &&
-                newTokens['refresh'] != null) {
-              final newAccessToken = newTokens['access']!;
-              final newRefreshToken = newTokens['refresh']!;
-
-              await _saveTokens(newAccessToken, newRefreshToken, storedEmail ?? '');
-              if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DashboardScreen(
-                      accessToken: newAccessToken,
-                      refreshToken: newRefreshToken,
-                    ),
+          // Try refreshing token
+          final newToken = await _refreshToken(refreshToken);
+          if (newToken != null) {
+            await prefs.setString(_accessTokenKey, newToken);
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DashboardScreen(
+                    accessToken: newToken,
+                    refreshToken: refreshToken,
                   ),
-                );
-              }
-              return;
+                ),
+              );
             }
+            return;
           }
           // Clear invalid tokens
           await _clearStoredTokens();
@@ -92,6 +83,23 @@ class _LoginScreenState extends State<LoginScreen> {
       // Pre-fill email if stored
       if (storedEmail != null && storedEmail.isNotEmpty) {
         _emailController.text = storedEmail;
+      }
+
+      // Fetch username from profile if available
+      if (accessToken != null) {
+        try {
+          final response = await _dio.get(
+            ApiConfig.profile,
+            options: Options(
+              headers: {'Authorization': 'Bearer $accessToken'},
+            ),
+          );
+          if (response.statusCode == 200 && response.data['username'] != null) {
+            _emailController.text = response.data['username'];
+          }
+        } catch (e) {
+          // Ignore profile fetch errors
+        }
       }
     } catch (e) {
       print('Error checking stored login: $e');
@@ -104,50 +112,38 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// Verify if the access token is still valid
+  // Verify token
   Future<bool> _verifyToken(String accessToken) async {
     try {
-      final response = await http.get(
-        Uri.parse(ApiConfig.verifyToken), // Use ApiConfig.verifyToken
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 10));
-
+      final response = await _dio.get(
+        ApiConfig.verifyToken,
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
       return response.statusCode == 200;
     } catch (e) {
       return false;
     }
   }
 
-  /// Refresh the access token using refresh token
-  Future<Map<String, String>?> _refreshAccessToken(String refreshToken) async {
+  // Refresh token
+  Future<String?> _refreshToken(String refreshToken) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.refreshToken), // Use ApiConfig.refreshToken
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({'refresh': refreshToken}),
-      ).timeout(const Duration(seconds: 10));
-
+      final response = await _dio.post(
+        ApiConfig.refreshToken,
+        data: {'refresh': refreshToken},
+      );
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data.containsKey('access') && data['access'] != null) {
-          return {
-            'access': data['access'] as String,
-            'refresh': refreshToken, // Keep the same refresh token
-          };
-        }
+        return response.data['access'];
       }
+      return null;
     } catch (e) {
-      print('Error refreshing token: $e');
+      return null;
     }
-    return null;
   }
 
-  /// Save tokens to SharedPreferences
+  // Save tokens
   Future<void> _saveTokens(String accessToken, String refreshToken, String email) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_accessTokenKey, accessToken);
@@ -155,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await prefs.setString(_emailKey, email);
   }
 
-  /// Clear stored tokens from SharedPreferences
+  // Clear tokens
   Future<void> _clearStoredTokens() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_accessTokenKey);
@@ -163,13 +159,14 @@ class _LoginScreenState extends State<LoginScreen> {
     // Keep email for convenience
   }
 
-  /// Static method to logout from anywhere in the app
+  // Static logout method
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
   }
 
+  // Login
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -184,33 +181,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final requestBody = {
-        'email': email,
-        'password': password,
-      };
-
-      final response = await http.post(
-        Uri.parse(ApiConfig.login), // Use ApiConfig.login
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+      final response = await _dio.post(
+        ApiConfig.login,
+        data: {
+          'email': email,
+          'password': password,
         },
-        body: json.encode(requestBody),
-      ).timeout(const Duration(seconds: 15));
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data.containsKey('access') &&
-            data.containsKey('refresh') &&
-            data['access'] != null &&
-            data['refresh'] != null) {
+        final data = response.data;
+        if (data.containsKey('access') && data.containsKey('refresh')) {
           final accessToken = data['access'] as String;
           final refreshToken = data['refresh'] as String;
 
-          // Save tokens to SharedPreferences
           await _saveTokens(accessToken, refreshToken, email);
-
           if (mounted) {
             Navigator.pushReplacement(
               context,
@@ -232,8 +223,8 @@ class _LoginScreenState extends State<LoginScreen> {
           _errorMessage = 'Invalid email or password';
         });
       } else if (response.statusCode == 400) {
-        try {
-          final errorData = json.decode(response.body);
+        setState(() {
+          final errorData = response.data;
           String errorMsg = 'Login failed: ';
           if (errorData is Map) {
             List<String> errors = [];
@@ -248,15 +239,8 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             errorMsg += 'Invalid request format';
           }
-
-          setState(() {
-            _errorMessage = errorMsg;
-          });
-        } catch (e) {
-          setState(() {
-            _errorMessage = 'Login failed. Please check your credentials.';
-          });
-        }
+          _errorMessage = errorMsg;
+        });
       } else {
         setState(() {
           _errorMessage = 'Login failed. Server returned ${response.statusCode}';
@@ -264,12 +248,18 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       setState(() {
-        if (e.toString().contains('SocketException')) {
-          _errorMessage = 'Cannot connect to server. Check if Django is running on port 8000';
-        } else if (e.toString().contains('TimeoutException')) {
-          _errorMessage = 'Request timed out. Server might be slow or down';
+        if (e is DioException) {
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.sendTimeout ||
+              e.type == DioExceptionType.receiveTimeout) {
+            _errorMessage = 'Request timed out. Server might be slow or down';
+          } else if (e.type == DioExceptionType.connectionError) {
+            _errorMessage = 'Cannot connect to server. Check if Django is running on port 8000';
+          } else {
+            _errorMessage = 'Error: ${e.message}';
+          }
         } else {
-          _errorMessage = 'Error: ${e.toString()}';
+          _errorMessage = 'Error: $e';
         }
       });
     } finally {
@@ -281,7 +271,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading screen while checking stored login
     if (_isCheckingStoredLogin) {
       return const Scaffold(
         body: Center(
@@ -326,17 +315,14 @@ class _LoginScreenState extends State<LoginScreen> {
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Email or Username',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Please enter a valid email address';
+                    return 'Please enter your email or username';
                   }
                   return null;
                 },
