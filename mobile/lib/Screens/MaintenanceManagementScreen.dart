@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:open_filex/open_filex.dart';
+import 'package:open_filex/open_filex.dart'; // Fixed import
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:typed_data';
@@ -38,6 +38,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   String _filterStatus = 'all';
   int _currentPage = 1;
   final int _itemsPerPage = 10;
+  String? _currentUserId;
 
   static const List<Map<String, String>> MAINTENANCE_STATUS_OPTIONS = [
     {'value': 'pending', 'label': 'Pending', 'description': 'Request submitted, awaiting assignment'},
@@ -54,6 +55,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
       developer.log('Token Payload: $payload', name: 'MaintenanceManagementScreen');
       developer.log('Token Role: ${payload['role']}', name: 'MaintenanceManagementScreen');
+      _currentUserId = payload['user_id']?.toString();
     } catch (e) {
       developer.log('Error decoding token: $e', name: 'MaintenanceManagementScreen');
     }
@@ -248,7 +250,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
           onSave: _loadData,
         ),
       ),
-    );
+    ).then((_) => _loadData()); // Refresh list after details screen closes
   }
 
   void _showFilterDialog() {
@@ -538,21 +540,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                                   ),
                               ],
                             ),
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MaintenanceDetailsScreen(
-                                  accessToken: AuthService().accessToken ?? widget.accessToken,
-                                  refreshToken: AuthService().refreshToken ?? widget.refreshToken,
-                                  userRole: widget.userRole,
-                                  users: users,
-                                  equipment: equipment,
-                                  statusOptions: MAINTENANCE_STATUS_OPTIONS,
-                                  request: request,
-                                  onSave: _loadData,
-                                ),
-                              ),
-                            ),
+                            onTap: () => _showAddEditMaintenanceDialog(request: request),
                           ),
                         );
                       },
@@ -585,12 +573,14 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: (widget.userRole == 'admin' || widget.userRole == 'superadmin' || widget.userRole == 'client' || widget.userRole == 'employee')
+          ? FloatingActionButton(
         onPressed: users.isEmpty || equipment.isEmpty ? null : () => _showAddEditMaintenanceDialog(),
         tooltip: 'Create Maintenance Request',
         child: const Icon(Icons.add),
         backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
+      )
+          : null,
     );
   }
 
@@ -639,6 +629,7 @@ class MaintenanceDetailsScreen extends StatefulWidget {
   final List<Map<String, String>> statusOptions;
   final Map<String, dynamic>? request;
   final VoidCallback onSave;
+  final String? currentUserId;
 
   const MaintenanceDetailsScreen({
     super.key,
@@ -650,6 +641,7 @@ class MaintenanceDetailsScreen extends StatefulWidget {
     required this.statusOptions,
     this.request,
     required this.onSave,
+    this.currentUserId,
   });
 
   @override
@@ -662,12 +654,80 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   int _currentCommentPage = 1;
   final int _commentsPerPage = 5;
   bool isRefreshingToken = false;
+  bool isLoadingDetails = true;
+  String? _currentUserId;
+  String? _verifiedUserRole;
+  Map<String, dynamic> _requestData = {};
 
   @override
   void initState() {
     super.initState();
     AuthService().setTokens(widget.accessToken, widget.refreshToken);
     developer.log('User Role in MaintenanceDetailsScreen: ${widget.userRole}', name: 'MaintenanceDetailsScreen');
+    try {
+      Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
+      developer.log('Token Payload: $payload', name: 'MaintenanceDetailsScreen');
+      developer.log('Token Role: ${payload['role']}', name: 'MaintenanceDetailsScreen');
+      setState(() {
+        _verifiedUserRole = payload['role']?.toString();
+        _currentUserId = widget.currentUserId ?? payload['user_id']?.toString();
+      });
+    } catch (e) {
+      developer.log('Error decoding token: $e', name: 'MaintenanceDetailsScreen');
+      setState(() {
+        _verifiedUserRole = null;
+        _currentUserId = widget.currentUserId;
+      });
+    }
+    _requestData = Map.from(widget.request ?? {});
+    if (widget.request == null) {
+      // Show dialog for new request immediately
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showAddEditMaintenanceDialog();
+      });
+    } else {
+      _refreshDetails();
+    }
+  }
+
+  Future<void> _refreshDetails() async {
+    if (widget.request == null) return;
+    setState(() {
+      isLoadingDetails = true;
+    });
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+      final response = await http.get(
+        Uri.parse(ApiConfig.maintenanceRequestDetail(widget.request!['id'].toString())),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _requestData = json.decode(response.body);
+        });
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _refreshDetails();
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else {
+        throw Exception('Failed to load request details: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log('Error refreshing details: $e', name: 'MaintenanceDetailsScreen');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading details: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() {
+        isLoadingDetails = false;
+      });
+    }
   }
 
   Future<bool> _refreshToken() async {
@@ -750,7 +810,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
         await file.writeAsBytes(response.bodyBytes);
 
         final result = await OpenFilex.open(filePath);
-        if (result.type != ResultType.done) {
+        if (result.message.isNotEmpty && result.message != 'done') {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Cannot open $fileName: ${result.message}'), backgroundColor: Colors.red),
           );
@@ -855,7 +915,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Attachment uploaded successfully'), backgroundColor: Colors.green),
           );
-          widget.onSave();
+          _refreshDetails();
         } else if (response.statusCode == 401) {
           if (await _refreshToken()) {
             return _uploadAttachment(requestId);
@@ -901,6 +961,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           _selectedAssignedToId = null;
           _currentCommentPage = 1;
         });
+        _refreshDetails();
         widget.onSave();
       } else if (response.statusCode == 401) {
         if (await _refreshToken()) {
@@ -973,7 +1034,10 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           SnackBar(content: Text(isEditing ? 'Request updated successfully' : 'Request created successfully'), backgroundColor: Colors.green),
         );
         widget.onSave();
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Pop the dialog
+        if (!isEditing) {
+          Navigator.of(context).pop(); // Pop the MaintenanceDetailsScreen to return to MaintenanceManagementScreen
+        }
       } else if (response.statusCode == 401) {
         if (await _refreshToken()) {
           return _saveMaintenanceRequest(
@@ -1048,33 +1112,42 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   }
 
   List<Map<String, String>> get paginatedComments {
-    final comments = _parseComments(widget.request?['comments']);
+    final comments = _parseComments(_requestData['comments']);
     final startIndex = (_currentCommentPage - 1) * _commentsPerPage;
     final endIndex = startIndex + _commentsPerPage;
     return comments.sublist(startIndex, endIndex.clamp(0, comments.length));
   }
 
   int get totalCommentPages {
-    final comments = _parseComments(widget.request?['comments']);
+    final comments = _parseComments(_requestData['comments']);
     return (comments.length / _commentsPerPage).ceil();
   }
 
   void _showAddEditMaintenanceDialog() {
     final isEditing = widget.request != null;
-    final issueController = TextEditingController(text: widget.request?['issue'] ?? '');
-    String selectedUserId = widget.request?['user']?.toString() ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '');
-    String selectedEquipmentId = widget.request?['equipment']?.toString() ?? (widget.equipment.isNotEmpty ? widget.equipment.first['id'].toString() : '');
-    String selectedStatus = widget.request?['status'] ?? 'pending';
-    DateTime selectedDate = widget.request?['scheduled_date'] != null
-        ? DateTime.parse(widget.request!['scheduled_date'])
+    final issueController = TextEditingController(text: _requestData['issue'] ?? '');
+    String selectedUserId = widget.userRole == 'client' && !isEditing
+        ? _currentUserId ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '')
+        : _requestData['user']?.toString() ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '');
+    String selectedEquipmentId = _requestData['equipment']?.toString() ?? (widget.equipment.isNotEmpty ? widget.equipment.first['id'].toString() : '');
+    String selectedStatus = _requestData['status'] ?? 'pending';
+    DateTime selectedDate = _requestData['scheduled_date'] != null
+        ? DateTime.parse(_requestData['scheduled_date'])
         : DateTime.now().add(const Duration(days: 1));
-    DateTime? resolvedDate = widget.request?['resolved_at'] != null
-        ? DateTime.parse(widget.request!['resolved_at'])
+    DateTime? resolvedDate = _requestData['resolved_at'] != null
+        ? DateTime.parse(_requestData['resolved_at'])
         : null;
 
     if (widget.users.isEmpty || widget.equipment.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot create/edit request: Users or equipment data not loaded'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (isEditing && widget.userRole == 'client' && _requestData['user']?.toString() != _currentUserId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can only edit your own requests'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -1102,22 +1175,30 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            DropdownButtonFormField<String>(
-                              value: selectedUserId.isEmpty ? null : selectedUserId,
-                              decoration: InputDecoration(
-                                labelText: 'User *',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                prefixIcon: const Icon(Icons.person),
-                                filled: true,
-                                fillColor: Colors.grey[50],
+                            if (widget.userRole == 'admin' || widget.userRole == 'superadmin' || isEditing) ...[
+                              DropdownButtonFormField<String>(
+                                value: selectedUserId.isEmpty ? null : selectedUserId,
+                                decoration: InputDecoration(
+                                  labelText: 'User *',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  prefixIcon: const Icon(Icons.person),
+                                  filled: true,
+                                  fillColor: Colors.grey[50],
+                                ),
+                                isExpanded: true,
+                                items: widget.users.map((user) => DropdownMenuItem<String>(
+                                  value: user['id'].toString(),
+                                  child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
+                                )).toList(),
+                                onChanged: widget.userRole == 'client' ? null : (value) => setDialogState(() => selectedUserId = value ?? ''),
+                                disabledHint: Text(widget.userRole == 'client' ? 'You (Client)' : 'Select user'),
                               ),
-                              isExpanded: true,
-                              items: widget.users.map((user) => DropdownMenuItem<String>(
-                                value: user['id'].toString(),
-                                child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
-                              )).toList(),
-                              onChanged: (value) => setDialogState(() => selectedUserId = value ?? ''),
-                            ),
+                            ] else ...[
+                              Text(
+                                'Requested by: You (${widget.userRole})',
+                                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                              ),
+                            ],
                             const SizedBox(height: 16),
                             DropdownButtonFormField<String>(
                               value: selectedEquipmentId.isEmpty ? null : selectedEquipmentId,
@@ -1150,38 +1231,40 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                               textInputAction: TextInputAction.newline,
                             ),
                             const SizedBox(height: 16),
-                            DropdownButtonFormField<String>(
-                              value: selectedStatus,
-                              decoration: InputDecoration(
-                                labelText: 'Status',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                prefixIcon: const Icon(Icons.assignment),
-                                filled: true,
-                                fillColor: Colors.grey[50],
-                              ),
-                              isExpanded: true,
-                              items: widget.statusOptions.map((option) => DropdownMenuItem<String>(
-                                value: option['value'],
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(color: _getStatusColor(option['value']!), shape: BoxShape.circle),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(option['label']!),
-                                  ],
+                            if (widget.userRole == 'admin' || widget.userRole == 'superadmin') ...[
+                              DropdownButtonFormField<String>(
+                                value: selectedStatus,
+                                decoration: InputDecoration(
+                                  labelText: 'Status',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  prefixIcon: const Icon(Icons.assignment),
+                                  filled: true,
+                                  fillColor: Colors.grey[50],
                                 ),
-                              )).toList(),
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  selectedStatus = value ?? 'pending';
-                                  if (selectedStatus != 'resolved') resolvedDate = null;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 16),
+                                isExpanded: true,
+                                items: widget.statusOptions.map((option) => DropdownMenuItem<String>(
+                                  value: option['value'],
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(color: _getStatusColor(option['value']!), shape: BoxShape.circle),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(option['label']!),
+                                    ],
+                                  ),
+                                )).toList(),
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    selectedStatus = value ?? 'pending';
+                                    if (selectedStatus != 'resolved') resolvedDate = null;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                             InkWell(
                               onTap: () async {
                                 final picked = await showDatePicker(
@@ -1205,7 +1288,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                                     : 'Select date'),
                               ),
                             ),
-                            if (selectedStatus == 'resolved' || resolvedDate != null) ...[
+                            if ((widget.userRole == 'admin' || widget.userRole == 'superadmin') && (selectedStatus == 'resolved' || resolvedDate != null)) ...[
                               const SizedBox(height: 16),
                               InkWell(
                                 onTap: () async {
@@ -1342,19 +1425,35 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.request == null) {
-      developer.log('Request is null in MaintenanceDetailsScreen', name: 'MaintenanceDetailsScreen');
+      // Return an empty Scaffold since the dialog is shown in initState
       return const Scaffold(
-        body: Center(child: Text('No request selected')),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    final request = widget.request!;
-    final statusColor = _getStatusColor(request['status'] ?? '');
-    final attachments = request['attachments'] as List<dynamic>? ?? [];
+    if (isLoadingDetails) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final statusColor = _getStatusColor(_requestData['status'] ?? '');
+    final attachments = _requestData['attachments'] as List<dynamic>? ?? [];
+    final effectiveRole = _verifiedUserRole ?? widget.userRole;
+    final canComment = effectiveRole == 'admin' ||
+        effectiveRole == 'superadmin' ||
+        ((effectiveRole == 'employee' || effectiveRole == 'client') &&
+            (_currentUserId != null &&
+                (_requestData['user'] != null && _currentUserId == _requestData['user']?.toString() ||
+                    _requestData['assigned_to'] != null && _currentUserId == _requestData['assigned_to']?.toString())));
+
+    developer.log('Can Comment: $canComment', name: 'MaintenanceDetailsScreen');
+    developer.log('Effective Role: $effectiveRole, Current User ID: $_currentUserId', name: 'MaintenanceDetailsScreen');
+    developer.log('Request User: ${_requestData['user']?.toString()}, Assigned To: ${_requestData['assigned_to']?.toString()}', name: 'MaintenanceDetailsScreen');
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getEquipmentName(request['equipment']?.toString())),
+        title: Text(_getEquipmentName(_requestData['equipment']?.toString())),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         elevation: 0,
         actions: [
@@ -1365,269 +1464,20 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteMaintenanceRequest(request['id'], request['issue'] ?? ''),
+            onPressed: () => _deleteMaintenanceRequest(widget.request!['id'].toString(), _requestData['issue'] ?? ''),
             tooltip: 'Delete Request',
           ),
         ],
       ),
       body: isRefreshingToken
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Request Details', style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 16),
-                    _buildDetailRow('Issue', request['issue'] ?? 'No description', Icons.description),
-                    const SizedBox(height: 12),
-                    _buildDetailRow('Status', _getStatusLabel(request['status']), Icons.assignment, statusColor),
-                    const SizedBox(height: 12),
-                    _buildDetailRow('Requested By', _getUserName(request['user']?.toString()), Icons.person),
-                    const SizedBox(height: 12),
-                    _buildDetailRow(
-                      'Scheduled Date',
-                      request['scheduled_date'] != null
-                          ? '${DateTime.parse(request['scheduled_date']).day}/${DateTime.parse(request['scheduled_date']).month}/${DateTime.parse(request['scheduled_date']).year}'
-                          : 'Not scheduled',
-                      Icons.calendar_today,
-                    ),
-                    if (request['resolved_at'] != null) ...[
-                      const SizedBox(height: 12),
-                      _buildDetailRow(
-                        'Resolved At',
-                        '${DateTime.parse(request['resolved_at']).day}/${DateTime.parse(request['resolved_at']).month}/${DateTime.parse(request['resolved_at']).year} ${DateTime.parse(request['resolved_at']).hour.toString().padLeft(2, '0')}:${DateTime.parse(request['resolved_at']).minute.toString().padLeft(2, '0')}',
-                        Icons.check_circle,
-                        Colors.green,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Comments', style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 16),
-                    if (paginatedComments.isEmpty)
-                      Text(
-                        'No comments yet',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      ),
-                    if (paginatedComments.isNotEmpty)
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: paginatedComments.length,
-                        itemBuilder: (context, index) {
-                          final comment = paginatedComments[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Theme.of(context).dividerColor),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '${comment['user'] ?? 'Unknown'} (${comment['role'] ?? 'Unknown'})',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                    ),
-                                    Text(
-                                      comment['timestamp'] ?? 'No timestamp',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  comment['text'] ?? 'No comment text',
-                                  style: TextStyle(color: Colors.grey[800], fontSize: 14),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    if (totalCommentPages > 1)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.chevron_left),
-                              onPressed: _currentCommentPage > 1 ? () => setState(() => _currentCommentPage--) : null,
-                            ),
-                            Text(
-                              'Page $_currentCommentPage of $totalCommentPages',
-                              style: const TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_right),
-                              onPressed: _currentCommentPage < totalCommentPages
-                                  ? () => setState(() => _currentCommentPage++)
-                                  : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Divider(
-                color: Theme.of(context).colorScheme.primary,
-                thickness: 3,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Post a New Comment',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (widget.userRole == 'admin' || widget.userRole == 'superadmin') ...[
-              Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                ),
-                surfaceTintColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Add Comment', style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _responseController,
-                        decoration: InputDecoration(
-                          labelText: 'Comment',
-                          hintText: 'Enter your comment...',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.comment),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                        ),
-                        maxLines: 3,
-                        textInputAction: TextInputAction.newline,
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Tooltip(
-                          message: 'Post your comment',
-                          child: ElevatedButton.icon(
-                            onPressed: _responseController.text.isEmpty || isRefreshingToken
-                                ? null
-                                : () => _respondToMaintenanceRequest(
-                              request['id'],
-                              _responseController.text,
-                              _selectedAssignedToId,
-                            ),
-                            icon: const Icon(Icons.send, size: 20),
-                            label: const Text('Add Comment'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              backgroundColor: Theme.of(context).colorScheme.primary,
-                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedAssignedToId,
-                        decoration: InputDecoration(
-                          labelText: 'Assign To (Optional)',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.person_add),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                        ),
-                        isExpanded: true,
-                        items: [
-                          const DropdownMenuItem<String>(
-                            value: null,
-                            child: Text('None', overflow: TextOverflow.ellipsis),
-                          ),
-                          ...widget.users
-                              .where((user) => user['role'] == 'employee' || user['role'] == 'admin')
-                              .map((user) => DropdownMenuItem<String>(
-                            value: user['id'].toString(),
-                            child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
-                          )),
-                        ],
-                        onChanged: (value) => setState(() => _selectedAssignedToId = value),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ] else ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.yellow[100],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.yellow[700]!),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.lock, color: Colors.yellow[700]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Commenting is restricted to Admin or Superadmin roles. Your role: ${widget.userRole}',
-                          style: TextStyle(color: Colors.yellow[900], fontSize: 14, fontStyle: FontStyle.italic),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            if (attachments.isNotEmpty)
+          : RefreshIndicator(
+        onRefresh: _refreshDetails,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Card(
                 elevation: 3,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -1636,115 +1486,373 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Attachments', style: Theme.of(context).textTheme.titleLarge),
+                      Text('Request Details', style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(height: 16),
-                      ...attachments.map((attachment) {
-                        final mediaUrl = _getAttachmentUrl(attachment['file']);
-                        final isImage = attachment['file_type'].startsWith('image');
-                        developer.log(
-                          'Attachment URL: $mediaUrl',
-                          name: 'MaintenanceDetailsScreen.Attachment',
-                        );
-                        return isImage
-                            ? FutureBuilder<Uint8List?>(
-                          future: _fetchImageData(attachment['file']),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Center(child: CircularProgressIndicator()),
-                              );
-                            }
-                            if (snapshot.hasError || snapshot.data == null) {
-                              return ListTile(
-                                leading: const Icon(Icons.error, color: Colors.red),
-                                title: Text(
-                                  attachment['file_name'],
-                                  style: const TextStyle(fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  'Failed to load image',
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                ),
-                                onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
-                              );
-                            }
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                GestureDetector(
-                                  onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.memory(
-                                      snapshot.data!,
-                                      width: double.infinity,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return ListTile(
-                                          leading: const Icon(Icons.error, color: Colors.red),
-                                          title: Text(
-                                            attachment['file_name'],
-                                            style: const TextStyle(fontSize: 14),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          subtitle: Text(
-                                            'Failed to load image',
-                                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8, bottom: 8),
-                                  child: Text(
-                                    'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        )
-                            : ListTile(
-                          leading: Icon(
-                            attachment['file_type'].startsWith('image') ? Icons.image : Icons.picture_as_pdf,
-                            color: Colors.blue,
-                          ),
-                          title: Text(
-                            attachment['file_name'],
-                            style: const TextStyle(fontSize: 14),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                          ),
-                          onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
-                        );
-                      }),
+                      _buildDetailRow('Issue', _requestData['issue'] ?? 'No description', Icons.description),
+                      const SizedBox(height: 12),
+                      _buildDetailRow('Status', _getStatusLabel(_requestData['status']), Icons.assignment, statusColor),
+                      const SizedBox(height: 12),
+                      _buildDetailRow('Requested By', _getUserName(_requestData['user']?.toString()), Icons.person),
+                      const SizedBox(height: 12),
+                      _buildDetailRow(
+                        'Scheduled Date',
+                        _requestData['scheduled_date'] != null
+                            ? '${DateTime.parse(_requestData['scheduled_date']).day}/${DateTime.parse(_requestData['scheduled_date']).month}/${DateTime.parse(_requestData['scheduled_date']).year}'
+                            : 'Not scheduled',
+                        Icons.calendar_today,
+                      ),
+                      if (_requestData['resolved_at'] != null) ...[
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          'Resolved At',
+                          '${DateTime.parse(_requestData['resolved_at']).day}/${DateTime.parse(_requestData['resolved_at']).month}/${DateTime.parse(_requestData['resolved_at']).year} ${DateTime.parse(_requestData['resolved_at']).hour.toString().padLeft(2, '0')}:${DateTime.parse(_requestData['resolved_at']).minute.toString().padLeft(2, '0')}',
+                          Icons.check_circle,
+                          Colors.green,
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton.icon(
-                onPressed: isRefreshingToken ? null : () => _uploadAttachment(request['id']),
-                icon: const Icon(Icons.attach_file),
-                label: const Text('Add Attachment'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              const SizedBox(height: 16),
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Comments', style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 16),
+                      if (paginatedComments.isEmpty)
+                        Text(
+                          'No comments yet',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      if (paginatedComments.isNotEmpty)
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: paginatedComments.length,
+                          itemBuilder: (context, index) {
+                            final comment = paginatedComments[index];
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Theme.of(context).dividerColor),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${comment['user'] ?? 'Unknown'} (${comment['role'] ?? 'Unknown'})',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                      ),
+                                      Text(
+                                        comment['timestamp'] ?? 'No timestamp',
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    comment['text'] ?? 'No comment text',
+                                    style: TextStyle(color: Colors.grey[800], fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      if (totalCommentPages > 1)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.chevron_left),
+                                onPressed: _currentCommentPage > 1 ? () => setState(() => _currentCommentPage--) : null,
+                              ),
+                              Text(
+                                'Page $_currentCommentPage of $totalCommentPages',
+                                style: const TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.chevron_right),
+                                onPressed: _currentCommentPage < totalCommentPages
+                                    ? () => setState(() => _currentCommentPage++)
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-          ],
+              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Divider(
+                  color: Theme.of(context).colorScheme.primary,
+                  thickness: 3,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Post a New Comment',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (canComment) ...[
+                Card(
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                  ),
+                  surfaceTintColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Add Comment', style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _responseController,
+                          decoration: InputDecoration(
+                            labelText: 'Comment',
+                            hintText: 'Enter your comment...',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            prefixIcon: const Icon(Icons.comment),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            errorText: _responseController.text.isEmpty && _responseController.text.trim().isEmpty
+                                ? 'Comment cannot be empty'
+                                : null,
+                          ),
+                          maxLines: 3,
+                          textInputAction: TextInputAction.newline,
+                          onChanged: (value) => setState(() {}),
+                        ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Tooltip(
+                            message: 'Post your comment',
+                            child: ElevatedButton.icon(
+                              onPressed: _responseController.text.isEmpty || isRefreshingToken
+                                  ? null
+                                  : () => _respondToMaintenanceRequest(
+                                widget.request!['id'].toString(),
+                                _responseController.text,
+                                _selectedAssignedToId,
+                              ),
+                              icon: const Icon(Icons.send, size: 20),
+                              label: const Text('Add Comment'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (effectiveRole == 'admin' || effectiveRole == 'superadmin') ...[
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<String>(
+                            value: _selectedAssignedToId,
+                            decoration: InputDecoration(
+                              labelText: 'Assign To (Optional)',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.person_add),
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                            ),
+                            isExpanded: true,
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('None', overflow: TextOverflow.ellipsis),
+                              ),
+                              ...widget.users
+                                  .where((user) => user['role'] == 'employee' || user['role'] == 'admin')
+                                  .map((user) => DropdownMenuItem<String>(
+                                value: user['id'].toString(),
+                                child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
+                              )),
+                            ],
+                            onChanged: (value) => setState(() => _selectedAssignedToId = value),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ] else ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow[100],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.yellow[700]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.lock, color: Colors.yellow[700]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Commenting is restricted to Admins, Superadmins, or owners/assigned Employees/Clients. Your role: $effectiveRole',
+                            style: TextStyle(color: Colors.yellow[900], fontSize: 14, fontStyle: FontStyle.italic),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              if (attachments.isNotEmpty)
+                Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Attachments', style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 16),
+                        ...attachments.map((attachment) {
+                          final mediaUrl = _getAttachmentUrl(attachment['file']);
+                          final isImage = attachment['file_type'].startsWith('image');
+                          developer.log(
+                            'Attachment URL: $mediaUrl',
+                            name: 'MaintenanceDetailsScreen.Attachment',
+                          );
+                          return isImage
+                              ? FutureBuilder<Uint8List?>(
+                            future: _fetchImageData(attachment['file']),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Center(child: CircularProgressIndicator()),
+                                );
+                              }
+                              if (snapshot.hasError || snapshot.data == null) {
+                                return ListTile(
+                                  leading: const Icon(Icons.error, color: Colors.red),
+                                  title: Text(
+                                    attachment['file_name'],
+                                    style: const TextStyle(fontSize: 14),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Text(
+                                    'Failed to load image',
+                                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                  ),
+                                  onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
+                                );
+                              }
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.memory(
+                                        snapshot.data!,
+                                        width: double.infinity,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return ListTile(
+                                            leading: const Icon(Icons.error, color: Colors.red),
+                                            title: Text(
+                                              attachment['file_name'],
+                                              style: const TextStyle(fontSize: 14),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            subtitle: Text(
+                                              'Failed to load image',
+                                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8, bottom: 8),
+                                    child: Text(
+                                      'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          )
+                              : ListTile(
+                            leading: Icon(
+                              attachment['file_type'].startsWith('image') ? Icons.image : Icons.picture_as_pdf,
+                              color: Colors.blue,
+                            ),
+                            title: Text(
+                              attachment['file_name'],
+                              style: const TextStyle(fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              'Uploaded by ${_getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
+                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            ),
+                            onTap: () => _openAttachment(attachment['file'], attachment['file_name']),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ElevatedButton.icon(
+                  onPressed: isRefreshingToken ? null : () => _uploadAttachment(widget.request!['id'].toString()),
+                  icon: const Icon(Icons.attach_file),
+                  label: const Text('Add Attachment'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );

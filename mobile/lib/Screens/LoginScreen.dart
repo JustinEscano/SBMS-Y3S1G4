@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../Screens/RegisterScreen.dart';
 import '../Screens/DashboardScreen.dart';
-import '../Config/api.dart';
+import '../Services/auth_service.dart';
+import '../providers/dashboard_provider.dart';
+import '../utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,11 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isCheckingStoredLogin = true;
   String _errorMessage = '';
 
-  // SharedPreferences keys
-  static const String _accessTokenKey = 'access_token';
-  static const String _refreshTokenKey = 'refresh_token';
-  static const String _emailKey = 'user_email';
-
   final Dio _dio = Dio();
 
   @override
@@ -33,63 +30,48 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkStoredLogin();
   }
 
-  // Check if user is already logged in with stored tokens
   Future<void> _checkStoredLogin() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final accessToken = prefs.getString(_accessTokenKey);
-      final refreshToken = prefs.getString(_refreshTokenKey);
-      final storedEmail = prefs.getString(_emailKey);
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final accessToken = authService.accessToken;
+      final refreshToken = authService.refreshToken;
+      final storedEmail = await authService.getStoredEmail();
 
       if (accessToken != null && refreshToken != null) {
-        // Verify token is still valid
-        final isValid = await _verifyToken(accessToken);
+        final isValid = await authService.verifyToken();
         if (isValid) {
           if (mounted) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => DashboardScreen(
-                  accessToken: accessToken,
-                  refreshToken: refreshToken,
-                ),
+                builder: (context) => DashboardScreen(accessToken: accessToken),
               ),
             );
           }
           return;
         } else {
-          // Try refreshing token
-          final newToken = await _refreshToken(refreshToken);
-          if (newToken != null) {
-            await prefs.setString(_accessTokenKey, newToken);
-            if (mounted) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DashboardScreen(
-                    accessToken: newToken,
-                    refreshToken: refreshToken,
-                  ),
-                ),
-              );
-            }
+          final success = await authService.refresh();
+          if (success && mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardScreen(accessToken: authService.accessToken!),
+              ),
+            );
             return;
           }
-          // Clear invalid tokens
-          await _clearStoredTokens();
+          await authService.clearTokens();
         }
       }
 
-      // Pre-fill email if stored
       if (storedEmail != null && storedEmail.isNotEmpty) {
         _emailController.text = storedEmail;
       }
 
-      // Fetch username from profile if available
       if (accessToken != null) {
         try {
           final response = await _dio.get(
-            ApiConfig.profile,
+            ApiConfig.userInfo,
             options: Options(
               headers: {'Authorization': 'Bearer $accessToken'},
             ),
@@ -112,61 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Verify token
-  Future<bool> _verifyToken(String accessToken) async {
-    try {
-      final response = await _dio.get(
-        ApiConfig.verifyToken,
-        options: Options(
-          headers: {'Authorization': 'Bearer $accessToken'},
-        ),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Refresh token
-  Future<String?> _refreshToken(String refreshToken) async {
-    try {
-      final response = await _dio.post(
-        ApiConfig.refreshToken,
-        data: {'refresh': refreshToken},
-      );
-      if (response.statusCode == 200) {
-        return response.data['access'];
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Save tokens
-  Future<void> _saveTokens(String accessToken, String refreshToken, String email) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_accessTokenKey, accessToken);
-    await prefs.setString(_refreshTokenKey, refreshToken);
-    await prefs.setString(_emailKey, email);
-  }
-
-  // Clear tokens
-  Future<void> _clearStoredTokens() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_accessTokenKey);
-    await prefs.remove(_refreshTokenKey);
-    // Keep email for convenience
-  }
-
-  // Static logout method
-  static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_accessTokenKey);
-    await prefs.remove(_refreshTokenKey);
-  }
-
-  // Login
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -182,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await _dio.post(
-        ApiConfig.login,
+        '${ApiConfig.baseUrl}/token/',
         data: {
           'email': email,
           'password': password,
@@ -201,15 +128,13 @@ class _LoginScreenState extends State<LoginScreen> {
           final accessToken = data['access'] as String;
           final refreshToken = data['refresh'] as String;
 
-          await _saveTokens(accessToken, refreshToken, email);
+          final provider = Provider.of<DashboardProvider>(context, listen: false);
+          await provider.setTokens(accessToken, refreshToken);
           if (mounted) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => DashboardScreen(
-                  accessToken: accessToken,
-                  refreshToken: refreshToken,
-                ),
+                builder: (context) => DashboardScreen(accessToken: accessToken),
               ),
             );
           }
