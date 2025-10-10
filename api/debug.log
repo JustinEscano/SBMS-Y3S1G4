@@ -1813,3 +1813,1442 @@ Latest sensor data requested
 Returning 4 sensor readings
 Latest sensor data requested
 Returning 4 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Marked 6 notifications as read for AceAdmin (User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-07T00:00:00.000Z'], 'period_end': ['2025-10-07T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-07T00:00:00+00:00, period_end=2025-10-08T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-07T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 2
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 2
+All matching EnergySummaries: []
+No billing rate found for room Server Room A on 2025-09-26 00:00:00+00:00
+Calculated total_cost=0.24000000000000002, total_energy=0.024, effective_rate=10.0, currency=PHP for 2 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-07T00:00:00.000Z'], 'period_end': ['2025-10-07T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-10-07T00:00:00+00:00, period_end=2025-10-08T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-07T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 2
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 2
+All matching EnergySummaries: []
+No billing rate found for room Server Room A on 2025-09-26 00:00:00+00:00
+Calculated total_cost=0.24000000000000002, total_energy=0.024, effective_rate=10.0, currency=PHP for 2 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-07T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 2
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 2
+All matching EnergySummaries: []
+No billing rate found for room Server Room A on 2025-09-26 00:00:00+00:00
+Calculated total_cost=0.24000000000000002, total_energy=0.024, effective_rate=10.0, currency=PHP for 2 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-07T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 2
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 2
+All matching EnergySummaries: []
+No billing rate found for room Server Room A on 2025-09-26 00:00:00+00:00
+Calculated total_cost=0.24000000000000002, total_energy=0.024, effective_rate=10.0, currency=PHP for 2 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-30T00:00:00.000Z'], 'period_end': ['2025-10-07T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-09-30T00:00:00+00:00, period_end=2025-10-07T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-07T00:00:00.000Z'], 'period_end': ['2025-10-07T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-07T00:00:00+00:00, period_end=2025-10-08T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-07T00:00:00.000Z'], 'period_end': ['2025-10-07T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-07T00:00:00+00:00, period_end=2025-10-08T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-07T00:00:00.000Z'], 'period_end': ['2025-10-07T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-07T00:00:00+00:00, period_end=2025-10-08T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-07T00:00:00.000Z'], 'period_end': ['2025-10-07T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-07T00:00:00+00:00, period_end=2025-10-08T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-08T00:00:00.000Z'], 'period_end': ['2025-10-08T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-08T00:00:00+00:00, period_end=2025-10-09T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-01T00:00:00.000Z'], 'period_end': ['2025-10-08T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-01T00:00:00+00:00, period_end=2025-10-08T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-09-08T00:00:00.000Z'], 'period_end': ['2025-10-08T00:00:00.000Z']}>
+Initial query count: 2
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-09-08T00:00:00+00:00, period_end=2025-10-08T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-09-08T00:00:00.000Z'], 'period_end': ['2025-10-08T00:00:00.000Z']}>
+Initial query count: 2
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-09-08T00:00:00+00:00, period_end=2025-10-08T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-08T00:00:00.000Z'], 'period_end': ['2025-10-08T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-08T00:00:00+00:00, period_end=2025-10-09T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-08T00:00:00.000Z'], 'period_end': ['2025-10-08T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-08T00:00:00+00:00, period_end=2025-10-09T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Profile created for user AceClient (ID: 38d41e73-aada-4420-8749-0c7d7d818b41) on token obtain
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-08T00:00:00.000Z'], 'period_end': ['2025-10-08T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-08T00:00:00+00:00, period_end=2025-10-09T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-08T00:00:00.000Z'], 'period_end': ['2025-10-08T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-08T00:00:00+00:00, period_end=2025-10-09T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-08T00:00:00.000Z'], 'period_end': ['2025-10-08T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-08T00:00:00+00:00, period_end=2025-10-09T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-08T00:00:00.000Z'], 'period_end': ['2025-10-08T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-08T00:00:00+00:00, period_end=2025-10-09T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-09T00:00:00.000Z'], 'period_end': ['2025-10-09T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-09T00:00:00+00:00, period_end=2025-10-10T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-10T00:00:00.000Z'], 'period_end': ['2025-10-10T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-10T00:00:00+00:00, period_end=2025-10-11T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-10T00:00:00.000Z'], 'period_end': ['2025-10-10T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-10-10T00:00:00+00:00, period_end=2025-10-11T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-10T00:00:00.000Z'], 'period_end': ['2025-10-10T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-10-10T00:00:00+00:00, period_end=2025-10-11T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-10T00:00:00.000Z'], 'period_end': ['2025-10-10T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-10T00:00:00+00:00, period_end=2025-10-11T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-10T00:00:00.000Z'], 'period_end': ['2025-10-10T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=52801213-d525-4b90-804f-fe98bdbba929, equipment_id=None, component_id=None, period_start=2025-10-10T00:00:00+00:00, period_end=2025-10-11T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Profile updated for user AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Profile updated for user AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Profile created for user AceEmployee (ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0) on token obtain
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-04T00:00:00.000Z'], 'period_end': ['2025-10-11T00:00:00.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-04T00:00:00+00:00, period_end=2025-10-11T00:00:01+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
+In-app notification created for AceEmployee (ID: 234db848-3024-4001-9c2d-6262527ecda0, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: 234db848-3024-4001-9c2d-6262527ecda0, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for admin (ID: a2e0c80d-4a76-48ce-82c7-9ea4bc7ef105, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: a2e0c80d-4a76-48ce-82c7-9ea4bc7ef105, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for AceEmployee (ID: 0d0f1b92-9a2f-42ce-9fa1-f5207e4ec4f6, Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to acedenulan20@gmail.com (Notification ID: 0d0f1b92-9a2f-42ce-9fa1-f5207e4ec4f6, Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for admin (ID: d2083597-b3a3-4722-9ad5-ddf009dd872e, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: d2083597-b3a3-4722-9ad5-ddf009dd872e, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: 8b5330eb-658a-4dea-b604-dcdaab551749, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: 8b5330eb-658a-4dea-b604-dcdaab551749, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 35507ad9-84b0-451f-88ee-27a9d69f0f7b, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 35507ad9-84b0-451f-88ee-27a9d69f0f7b, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 8a3d0e08-b846-4968-9017-d70c1d27fad8, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to dummy@example.com (Notification ID: 8a3d0e08-b846-4968-9017-d70c1d27fad8, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: f25ed542-0bf8-48b9-a4cf-a9710c08eebe, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: f25ed542-0bf8-48b9-a4cf-a9710c08eebe, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for admin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response added to maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification f25ed542-0bf8-48b9-a4cf-a9710c08eebe marked as read for AceAdmin (User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Notification 8a3d0e08-b846-4968-9017-d70c1d27fad8 marked as read for AceAdmin (User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6
+In-app notification created for AceClient (ID: fe5b895d-8fae-4c87-a40c-d25e7ed7661a, Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Email sent to acephilipdenulan12@gmail.com (Notification ID: fe5b895d-8fae-4c87-a40c-d25e7ed7661a, Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+In-app notification created for AceEmployee (ID: 3130eded-eeb5-4075-b2e8-132753edba4d, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: 3130eded-eeb5-4075-b2e8-132753edba4d, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6
+Skipped duplicate notification for AceClient (Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6
+Skipped duplicate notification for AceClient (Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
+In-app notification created for AceEmployee (ID: 4212773b-37e7-4fd1-b63b-a0abc8507f59, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: 4212773b-37e7-4fd1-b63b-a0abc8507f59, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for admin (ID: 1d51fe69-a4ce-4434-b096-69cbd16c5900, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to example@gmail.com (Notification ID: 1d51fe69-a4ce-4434-b096-69cbd16c5900, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response added to maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
+In-app notification created for AceEmployee (ID: 62028ad3-f342-4057-886b-b4853969d165, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: 62028ad3-f342-4057-886b-b4853969d165, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for admin (ID: 50382f8d-7a28-40e8-9a14-918f00dab81e, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to example@gmail.com (Notification ID: 50382f8d-7a28-40e8-9a14-918f00dab81e, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response added to maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for admin (Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response added to maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91 by AceAdmin
+Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for admin (Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response added to maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for admin (Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response added to maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification 50382f8d-7a28-40e8-9a14-918f00dab81e marked as read for AceAdmin (User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Marked 11 notifications as read for AceAdmin (User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
+In-app notification created for AceEmployee (ID: 1b9567ea-8894-466a-8a77-801f68b34c8a, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to acedenulan20@gmail.com (Notification ID: 1b9567ea-8894-466a-8a77-801f68b34c8a, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for admin (ID: 9fd0430a-bfed-42e1-92c0-23a719e731ae, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 9fd0430a-bfed-42e1-92c0-23a719e731ae, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response added to maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91 by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request b0c96ffa-456a-4cc6-bcb3-6d399158e93f
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request b0c96ffa-456a-4cc6-bcb3-6d399158e93f by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification 9fd0430a-bfed-42e1-92c0-23a719e731ae marked as read for AceEmployee (User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request dd5ffd7b-8fed-441e-a67d-84886a5c4e5b
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request dd5ffd7b-8fed-441e-a67d-84886a5c4e5b by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification 1b9567ea-8894-466a-8a77-801f68b34c8a marked as read for AceEmployee (User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 4ccd05bc-82d3-4e52-9b0f-a52742b9eabe
+In-app notification created for AceEmployee (ID: a99939a1-aede-413f-81f1-92e3b34273c4, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: a99939a1-aede-413f-81f1-92e3b34273c4, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request 4ccd05bc-82d3-4e52-9b0f-a52742b9eabe by AceAdmin
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification a99939a1-aede-413f-81f1-92e3b34273c4 marked as read for AceEmployee (User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Updating maintenance request 4ccd05bc-82d3-4e52-9b0f-a52742b9eabe by user AceEmployee
+Updated maintenance request 4ccd05bc-82d3-4e52-9b0f-a52742b9eabe with status in_progress
+In-app notification created for AceEmployee (ID: 49365040-d04f-43f0-8ff8-3e600e21f737, Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: 49365040-d04f-43f0-8ff8-3e600e21f737, Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for admin (ID: f5fcf346-23da-42b4-b020-0fdeffff7da4, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to example@gmail.com (Notification ID: f5fcf346-23da-42b4-b020-0fdeffff7da4, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: d7111834-e47c-4524-ba91-34cff42069b1, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to aceadmin@example.com (Notification ID: d7111834-e47c-4524-ba91-34cff42069b1, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 42081f2e-0956-4647-bb4b-948e830057c3, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 42081f2e-0956-4647-bb4b-948e830057c3, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: f2060d46-1d24-470c-a4a3-3737ccf52138, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: f2060d46-1d24-470c-a4a3-3737ccf52138, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: ba1d70f8-09c7-4cf9-9357-81bfe59fbff6, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to acephilipgclass18@gmail.com (Notification ID: ba1d70f8-09c7-4cf9-9357-81bfe59fbff6, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Attachment upload requested for maintenance request 4ccd05bc-82d3-4e52-9b0f-a52742b9eabe
+In-app notification created for AceEmployee (ID: efb296a0-ccf4-4bf4-a7e4-027e1385d971, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to acedenulan20@gmail.com (Notification ID: efb296a0-ccf4-4bf4-a7e4-027e1385d971, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for admin (ID: 3c18330f-0b0f-4451-a62d-d2d8873852f1, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 3c18330f-0b0f-4451-a62d-d2d8873852f1, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: bcb3e1f9-31da-4560-803a-40c913b78a6f, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: bcb3e1f9-31da-4560-803a-40c913b78a6f, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 9ea0bee3-6062-42e3-9eaf-49a4762fcc91, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 9ea0bee3-6062-42e3-9eaf-49a4762fcc91, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 370b62ba-fa52-40e0-a654-bf60565b3e1c, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to dummy@example.com (Notification ID: 370b62ba-fa52-40e0-a654-bf60565b3e1c, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: 532a0454-0ae2-45cc-b293-441e2d068bf3, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 532a0454-0ae2-45cc-b293-441e2d068bf3, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Attachment uploaded: 13bcc752-aa6b-4116-a399-c8197f31409c for 4ccd05bc-82d3-4e52-9b0f-a52742b9eabe
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6
+In-app notification created for AceClient (ID: 78250934-43dc-4012-8073-1b2390fe419c, Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Email sent to acephilipdenulan12@gmail.com (Notification ID: 78250934-43dc-4012-8073-1b2390fe419c, Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+In-app notification created for AceEmployee (ID: a4efa0a7-2e86-421b-8cb2-323e9a5a30fa, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: a4efa0a7-2e86-421b-8cb2-323e9a5a30fa, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request 6ba64ecf-b5f0-45d5-be6c-1833db0338c6 by AceClient
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification 78250934-43dc-4012-8073-1b2390fe419c marked as read for AceClient (User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification a4efa0a7-2e86-421b-8cb2-323e9a5a30fa marked as read for AceEmployee (User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Marked 12 notifications as read for AceEmployee (User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Response requested for maintenance request dd5ffd7b-8fed-441e-a67d-84886a5c4e5b
+In-app notification created for AceEmployee (ID: 06d6c788-b862-498a-a7b9-199e8ac55967, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to acedenulan20@gmail.com (Notification ID: 06d6c788-b862-498a-a7b9-199e8ac55967, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request dd5ffd7b-8fed-441e-a67d-84886a5c4e5b by AceEmployee
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Notification 06d6c788-b862-498a-a7b9-199e8ac55967 marked as read for AceEmployee (User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-11T00:00:00.000Z'], 'period_end': ['2025-10-11T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-11T00:00:00+00:00, period_end=2025-10-12T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Maintenance request created: 743b67e7-c6b1-48a2-9c96-1b3102abbec1 by AceClient
+In-app notification created for AceClient (ID: c83704f1-faf2-4303-912c-08557b92979c, Type: maintenance_request_created, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Email sent to acephilipdenulan12@gmail.com (Notification ID: c83704f1-faf2-4303-912c-08557b92979c, Type: maintenance_request_created, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+In-app notification created for admin (ID: fa641eaf-aa96-4db8-8373-44c3dbf51b31, Type: maintenance_request_created, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: fa641eaf-aa96-4db8-8373-44c3dbf51b31, Type: maintenance_request_created, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: 8b483f89-9f95-420c-979a-27b229445ef0, Type: maintenance_request_created, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to aceadmin@example.com (Notification ID: 8b483f89-9f95-420c-979a-27b229445ef0, Type: maintenance_request_created, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 05bf6f1b-5556-4b0b-9374-e4cf0d3afddf, Type: maintenance_request_created, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 05bf6f1b-5556-4b0b-9374-e4cf0d3afddf, Type: maintenance_request_created, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 5ea5a45e-4b31-48ea-98b1-1651e4f70b42, Type: maintenance_request_created, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: 5ea5a45e-4b31-48ea-98b1-1651e4f70b42, Type: maintenance_request_created, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: 6feeb32c-9e04-46d7-a46c-ae372ffcfaff, Type: maintenance_request_created, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Email sent to acephilipgclass18@gmail.com (Notification ID: 6feeb32c-9e04-46d7-a46c-ae372ffcfaff, Type: maintenance_request_created, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings

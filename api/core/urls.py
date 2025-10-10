@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views.auth_views import RegisterView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenVerifyView
+from core.views.auth_views import RegisterView, CustomTokenObtainPairView
 from core.views.model_viewsets import (
     UserViewSet, RoomViewSet, EquipmentViewSet, SensorLogViewSet, HeartbeatLogViewSet, AlertViewSet,
     MaintenanceRequestViewSet, NotificationViewSet, LLMQueryViewSet, LLMSummaryViewSet,
@@ -32,6 +33,11 @@ router.register(r'billingrate', BillingRateViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('register/', RegisterView.as_view(), name='register'),
+    
+    # JWT Authentication endpoints
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenObtainPairView.as_view(), name='token_refresh'),
+    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
     # Dashboard endpoints
     path('dashboard/summary/', dashboard_summary, name='dashboard_summary'),

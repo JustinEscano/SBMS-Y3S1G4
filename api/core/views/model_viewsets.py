@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg, Count, StdDev, Sum, Max, Min
+from django.db.models import Avg, Count, Count, Sum, Max, Min
 from django.utils import timezone
 from django.db.models import Q
 import uuid
@@ -40,13 +40,24 @@ class UserViewSet(viewsets.ModelViewSet):
         logger.info(f"User {user.username} created with default profile")
         return user
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        """Return the authenticated user's data."""
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            user = User.objects.get(id=request.user.id)
+            serializer = self.get_serializer(user, context={'request': request})
+            return Response(serializer.data)
+        except User.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
     @action(detail=False, methods=['get', 'patch', 'post', 'delete'], permission_classes=[IsAuthenticated, RoleBasedPermission])
     def profile(self, request):
         user = request.user
         try:
             profile = Profile.objects.get(user=user)
         except Profile.DoesNotExist:
-            # If profile doesn't exist, create one for POST or PATCH requests
             if request.method in ['POST', 'PATCH']:
                 profile = Profile.objects.create(
                     user=user,
@@ -61,12 +72,11 @@ class UserViewSet(viewsets.ModelViewSet):
                     'detail': 'Please update your profile to create it'
                 }, status=status.HTTP_404_NOT_FOUND)
 
-        if request.method =="GET":
+        if request.method == "GET":
             serializer = UserSerializer(user, context={'request': request})
             return Response(serializer.data)
 
         elif request.method == 'POST':
-            # Allow explicit profile creation (if deleted or for re-initialization)
             if Profile.objects.filter(user=user).exists():
                 return Response({
                     'error': 'Profile already exists',
@@ -110,7 +120,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 
         elif request.method == 'DELETE':
-            # Allow profile deletion (admin or user themselves)
             if request.user != user and request.user.role not in ['admin', 'superadmin']:
                 return Response({
                     'error': 'Permission denied',
@@ -715,7 +724,7 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             old_assigned_to = maintenance_request.assigned_to
-            if assigned_to_id:
+            if assigned_to_id and request.user.role in ['admin', 'superadmin']:
                 try:
                     new_assigned_to = User.objects.get(id=assigned_to_id)
                     maintenance_request.assigned_to = new_assigned_to
@@ -726,7 +735,8 @@ class MaintenanceRequestViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_400_BAD_REQUEST
                     )
             current_time = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
-            new_comment = f"\n[{current_time}] {request.user.username} (Admin): {response_text}"
+            role_label = request.user.role.capitalize()
+            new_comment = f"\n[{current_time}] {request.user.username} ({role_label}): {response_text}"
             maintenance_request.comments = (maintenance_request.comments or '') + new_comment
             maintenance_request.save()
             NotificationService.notify_maintenance_request_responded(maintenance_request, response_text, request)
