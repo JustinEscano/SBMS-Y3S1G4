@@ -1,8 +1,3 @@
-"""
-Room-Specific LLM Handlers with Fuzzy Matching
-Handles room-specific queries like "What are the predictions for Room 1?"
-"""
-
 import pandas as pd
 import numpy as np
 import logging
@@ -21,7 +16,7 @@ class RoomSpecificHandlers:
     def __init__(self, prompts_config, db_adapter):
         self.prompts = prompts_config
         self.db_adapter = db_adapter
-        self.advanced_handlers = AdvancedLLMHandlers(prompts_config)
+        self.advanced_handlers = AdvancedLLMHandlers(prompts_config, self.db_adapter)
         self._available_rooms_cache = None
         self._room_mappings_cache = None
     
@@ -216,46 +211,33 @@ class RoomSpecificHandlers:
                 for data_room_name in room_names_in_data:
                     if pd.isna(data_room_name):
                         continue
-                        
-                    # Try multiple matching strategies
-                    data_room_lower = str(data_room_name).lower()
-                    query_room_lower = room_name.lower()
-                    
-                    # 1. Exact substring match
-                    if query_room_lower in data_room_lower or data_room_lower in query_room_lower:
-                        best_match = data_room_name
-                        break
-                    
-                    # 2. Fuzzy matching
                     try:
                         from fuzzywuzzy import fuzz
-                        score = fuzz.partial_ratio(query_room_lower, data_room_lower)
-                        if score > best_score and score > 70:
+                        score = fuzz.partial_ratio(room_name.lower(), str(data_room_name).lower())
+                        if score > best_score:
                             best_score = score
                             best_match = data_room_name
                     except ImportError:
-                        # Fallback to simple similarity
-                        similarity = self._calculate_similarity_score(query_room_lower, data_room_lower)
-                        if similarity > best_score and similarity > 0.6:
+                        similarity = self._calculate_similarity_score(room_name.lower(), str(data_room_name).lower())
+                        if similarity > best_score:
                             best_score = similarity
                             best_match = data_room_name
                 
-                if best_match:
+                if best_match and best_score > 60:
                     room_df = df[df['room_name'] == best_match]
                     logger.info(f"Fuzzy matched '{room_name}' to '{best_match}' in sensor data")
             
             # If still empty, try to see if there are any room-like patterns
             if room_df.empty:
-                # Look for patterns like "Conference", "Room A", etc.
                 for data_room_name in df['room_name'].unique():
                     if pd.isna(data_room_name):
                         continue
                         
                     data_room_lower = str(data_room_name).lower()
                     # Check if both contain "room" or other common patterns
-                    if ('room' in query_room_lower and 'room' in data_room_lower) or \
-                       ('conference' in query_room_lower and 'conference' in data_room_lower) or \
-                       ('server' in query_room_lower and 'server' in data_room_lower):
+                    if ('room' in room_name.lower() and 'room' in data_room_lower) or \
+                       ('conference' in room_name.lower() and 'conference' in data_room_lower) or \
+                       ('server' in room_name.lower() and 'server' in data_room_lower):
                         room_df = df[df['room_name'] == data_room_name]
                         if not room_df.empty:
                             logger.info(f"Pattern matched '{room_name}' to '{data_room_name}'")
@@ -268,6 +250,116 @@ class RoomSpecificHandlers:
             logger.error(f"Error getting room data for '{room_name}': {e}")
             return pd.DataFrame()
     
+    def handle_maintenance_analysis(self) -> Dict[str, Any]:
+        """Analyze maintenance requests from core_maintenancerequest and provide recommendations"""
+        try:
+            # Query maintenance requests from the database
+            query = """
+            SELECT id, issue, status
+            FROM core_maintenancerequest
+            ORDER BY status, issue
+            """
+            df = pd.read_sql_query(query, self.db_adapter.connection)
+            
+            if df is None or df.empty:
+                logger.warning("No maintenance requests found")
+                return {
+                    "analysis_type": "maintenance_analysis",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "answer": "No maintenance requests found in the database.",
+                    "maintenance_issues": [],
+                    "recommendations": []
+                }
+            
+            # Analyze pending and resolved issues
+            pending = df[df['status'] == 'pending']
+            resolved = df[df['status'] == 'resolved']
+            
+            pending_counts = pending['issue'].value_counts().to_dict()
+            resolved_counts = resolved['issue'].value_counts().to_dict()
+            
+            # Generate response structure
+            response = {
+                "analysis_type": "maintenance_analysis",
+                "timestamp": datetime.utcnow().isoformat(),
+                "maintenance_issues": [],
+                "recommendations": []
+            }
+            
+            # Add pending issues
+            if not pending.empty:
+                response["maintenance_issues"].append({
+                    "status": "pending",
+                    "issues": [
+                        {"issue": issue, "count": count}
+                        for issue, count in pending_counts.items()
+                    ]
+                })
+            
+            # Add resolved issues
+            if not resolved.empty:
+                response["maintenance_issues"].append({
+                    "status": "resolved",
+                    "issues": [
+                        {"issue": issue, "count": count}
+                        for issue, count in resolved_counts.items()
+                    ]
+                })
+            
+            # Generate recommendations based on issues
+            if "Sensor malfunction" in pending_counts:
+                response["recommendations"].append(
+                    f"Prioritize repair of {pending_counts['Sensor malfunction']} sensor malfunctions to ensure accurate data collection."
+                )
+            if "Temperature sensor error" in pending_counts:
+                response["recommendations"].append(
+                    f"Investigate and fix {pending_counts['Temperature sensor error']} temperature sensor errors to maintain reliable environmental data."
+                )
+            if "Motion detector fault" in pending_counts:
+                response["recommendations"].append(
+                    "Address motion detector fault to ensure accurate occupancy tracking."
+                )
+            if pending_counts:
+                response["recommendations"].append(
+                    "Conduct a comprehensive sensor infrastructure audit to identify systemic issues."
+                )
+            
+            if "High energy usage" in resolved_counts:
+                response["recommendations"].append(
+                    "Verify that energy efficiency measures are sustained for resolved high energy usage issues."
+                )
+            if "Humidity calibration needed" in resolved_counts:
+                response["recommendations"].append(
+                    "Schedule regular maintenance to prevent recurrence of humidity calibration issues."
+                )
+            if "Power supply issue" in resolved_counts:
+                response["recommendations"].append(
+                    "Monitor power supply stability to ensure the fix is sustained."
+                )
+            
+            response["recommendations"].append(
+                "Implement a preventive maintenance schedule for sensors to reduce future issues."
+            )
+            
+            # Generate summary answer
+            pending_summary = f"Pending issues: {', '.join([f'{issue} ({count})' for issue, count in pending_counts.items()])}" if pending_counts else "No pending issues"
+            resolved_summary = f"Resolved issues: {', '.join([f'{issue} ({count})' for issue, count in resolved_counts.items()])}" if resolved_counts else "No resolved issues"
+            response["answer"] = f"Maintenance analysis completed. {pending_summary}. {resolved_summary}. {len(response['recommendations'])} recommendations provided."
+            
+            logger.info(f"Maintenance analysis completed: {response['answer']}")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error analyzing maintenance requests: {e}")
+            return {
+                "analysis_type": "maintenance_analysis",
+                "timestamp": datetime.utcnow().isoformat(),
+                "answer": f"Error analyzing maintenance requests: {str(e)}",
+                "maintenance_issues": [],
+                "recommendations": [],
+                "error": str(e)
+            }
+    
     def handle_room_specific_query(self, query: str) -> Dict[str, Any]:
         """Handle room-specific queries with better error messages"""
         # First, ensure we have room data
@@ -277,6 +369,11 @@ class RoomSpecificHandlers:
             return {
                 "error": "No room information available. Please check database connection."
             }
+        
+        # Check for maintenance-related queries first
+        query_lower = query.lower()
+        if any(keyword in query_lower for keyword in ["maintenance", "issues", "maintenance requests"]):
+            return self.handle_maintenance_analysis()
         
         room_name = self.parse_room_query(query)
         
@@ -330,9 +427,7 @@ class RoomSpecificHandlers:
             return {"error": error_msg}
         
         # Determine query type and handle accordingly
-        query_lower = query.lower()
-        
-        if any(keyword in query_lower for keyword in ["predict", "prediction", "forecast", "maintenance"]):
+        if any(keyword in query_lower for keyword in ["predict", "prediction", "forecast"]):
             return self.handle_room_predictions(room_name, room_df, query)
         
         elif any(keyword in query_lower for keyword in ["anomaly", "unusual", "abnormal", "alert"]):
@@ -346,6 +441,9 @@ class RoomSpecificHandlers:
         
         elif any(keyword in query_lower for keyword in ["utilization", "occupancy", "usage pattern"]):
             return self.handle_room_utilization(room_name, room_df)
+        
+        elif any(keyword in query_lower for keyword in ["highest", "lowest", "max", "min", "average"]):
+            return self.handle_room_min_max_avg(query_lower, room_name, room_df)
         
         else:
             # General room analysis
@@ -619,6 +717,75 @@ class RoomSpecificHandlers:
         result["analysis_type"] = "room_utilization"
         
         return result
+    
+    def handle_room_min_max_avg(self, q_lower: str, room_name: str, room_df: pd.DataFrame) -> Dict[str, Any]:
+        """Handle min/max/average queries for a specific room."""
+        col_map = {
+            "temperature": "environmental_data.temperature_celsius",
+            "temp": "environmental_data.temperature_celsius",
+            "energy": "energy_consumption_kwh",
+            "power": "power_consumption_watts.total",
+            "humidity": "environmental_data.humidity_percent",
+            "occupancy": "occupancy_count",
+            "lighting": "power_consumption_watts.lighting",
+            "hvac": "power_consumption_watts.hvac_fan",
+            "fan": "power_consumption_watts.hvac_fan",
+            "compressor": "power_consumption_watts.air_conditioner_compressor",
+            "air conditioner": "power_consumption_watts.air_conditioner_compressor",
+            "projector power": "power_consumption_watts.projector",
+            "computer": "power_consumption_watts.computer",
+            "standby": "power_consumption_watts.standby_misc",
+            "misc": "power_consumption_watts.standby_misc"
+        }
+        
+        op_map = {
+            "highest": "max",
+            "maximum": "max",
+            "max": "max",
+            "lowest": "min",
+            "minimum": "min",
+            "min": "min",
+            "average": "mean",
+            "mean": "mean",
+            "avg": "mean"
+        }
+
+        found_op = None
+        found_col = None
+        for op_word, op_func in op_map.items():
+            if op_word in q_lower:
+                found_op = op_func
+                break
+        for col_word, col_name in col_map.items():
+            if col_word in q_lower:
+                found_col = col_name
+                break
+
+        if found_op and found_col and found_col in room_df.columns:
+            if found_op == "max":
+                value = room_df[found_col].max()
+                op_word = "highest"
+            elif found_op == "min":
+                value = room_df[found_col].min()
+                op_word = "lowest"
+            elif found_op == "mean":
+                value = room_df[found_col].mean()
+                op_word = "average"
+
+            matching_rows = room_df[room_df[found_col] == value] if found_op != "mean" else room_df.sample(min(3, len(room_df)))
+            timestamps = [str(row["timestamp"]) for _, row in matching_rows.iterrows()]
+
+            answer = f"The {op_word} {col_word} in {room_name} is {value} at {', '.join(timestamps[:2])}{'...' if len(timestamps) > 2 else ''}."
+            sources = [{"page_content": str(row.to_dict()), "metadata": {}} for _, row in matching_rows.iterrows()]
+
+            return {
+                "room": room_name,
+                "analysis_type": "statistical",
+                "answer": answer,
+                "sources": sources
+            }
+
+        return {"error": "Unable to process min/max/avg query for the specified metric in this room."}
     
     def handle_general_room_analysis(self, room_name: str, room_df: pd.DataFrame, query: str) -> Dict[str, Any]:
         """Handle general room analysis queries"""
