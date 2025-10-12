@@ -5,7 +5,7 @@ import time
 import json
 import shutil
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 from langchain_ollama import OllamaEmbeddings
@@ -14,24 +14,15 @@ from langchain_community.vectorstores import Chroma
 from database_adapter import DatabaseAdapter
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from prompts_config import PromptsConfig
-from advanced_llm_handlers import AdvancedLLMHandlers
-from room_specific_handlers import RoomSpecificHandlers
 import sys
 from pathlib import Path
-
-from logging_manager import LoggingManager
+from typing import Dict, List, Optional, Any, Union
+import numpy as np
+import logging
 
 # FIXED: Correct path resolution
 BASE_DIR = Path(__file__).resolve().parent  # Points to llm/static_remote_LLM/
 PROJECT_ROOT = BASE_DIR.parent.parent  # Points to SBMS-Y3S1G4/
-
-# Instantiate global logger_manager for early debug logs
-logger_manager = LoggingManager(project_root=PROJECT_ROOT)
-logger = logger_manager.logger  # Global logger
-
-logger.debug(f"BASE_DIR: {BASE_DIR}")
-logger.debug(f"PROJECT_ROOT: {PROJECT_ROOT}")
 
 # Add SBMS-Y3S1G4/api/ to sys.path
 sys.path.append(str(PROJECT_ROOT / 'api'))
@@ -41,55 +32,650 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbmsAPI.settings')
 
 # FIXED: Load environment variables from .env in the correct project directory
 env_path = PROJECT_ROOT / ".env"
-logger.debug(f"Looking for .env at: {env_path}")
 if os.path.exists(env_path):
     load_dotenv(dotenv_path=env_path)
-    logger.debug(f"Successfully loaded .env from {env_path}")
 else:
-    # Reduced alternative paths for efficiency
-    alternative_paths = [
-        BASE_DIR / ".env", 
-        Path.cwd() / ".env"
-    ]
+    alternative_paths = [BASE_DIR / ".env", Path.cwd() / ".env"]
     for alt_path in alternative_paths:
-        logger.debug(f"Trying alternative path: {alt_path}")
         if os.path.exists(alt_path):
             load_dotenv(dotenv_path=alt_path)
-            logger.debug(f"Successfully loaded .env from {alt_path}")
             break
-    else:
-        logger.warning("No .env file found in any location")
 
-logger.debug(f"MONGO_ATLAS_URI: {os.getenv('MONGO_ATLAS_URI')}")
-
-def debug_environment(debug=False):
-    """Debug function to check environment variables"""
-    if not debug:
-        return
-    logger.debug("=== ENVIRONMENT DEBUG ===")
-    logger.debug(f"Current file: {__file__}")
-    logger.debug(f"BASE_DIR: {BASE_DIR}")
-    logger.debug(f"PROJECT_ROOT: {PROJECT_ROOT}")
-    logger.debug(f"Current working directory: {os.getcwd()}")
-    logger.debug(f"MONGO_ATLAS_URI exists: {bool(os.getenv('MONGO_ATLAS_URI'))}")
+class LoggingManager:
+    """Enhanced logging manager with MongoDB support"""
     
-    # List files in project root to verify structure
-    try:
-        files_in_root = os.listdir(PROJECT_ROOT)
-        logger.debug(f"Files in project root: {files_in_root}")
-    except OSError as e:
-        logger.debug(f"Could not list project root: {e}")
+    def __init__(self, project_root, use_database=True, mongo_uri=None, mongo_db_name=None, mongo_collection_name=None, prompt_logs_db_name=None, prompt_logs_collection_name=None):
+        self.project_root = project_root
+        self.use_database = use_database
+        self.mongo_uri = mongo_uri or os.getenv("MONGO_ATLAS_URI")
+        self.mongo_db_name = mongo_db_name or os.getenv("MONGO_DB_NAME", "LLM_logs")
+        self.mongo_collection_name = mongo_collection_name or os.getenv("MONGO_COLLECTION_NAME", "logs")
+        self.prompt_logs_db_name = prompt_logs_db_name or os.getenv("PROMPT_LOGS_DB_NAME", "chat_logs")
+        self.prompt_logs_collection_name = prompt_logs_collection_name or os.getenv("PROMPT_LOGS_COLLECTION_NAME", "conversations")
+        
+        # Setup logging
+        self._setup_logging()
+        self.logger = logging.getLogger(__name__)
+        
+        # MongoDB clients
+        self.mongo_client = None
+        self.prompt_mongo_client = None
+        
+    def _setup_logging(self):
+        """Setup logging configuration"""
+        log_dir = self.project_root / "logs"
+        log_dir.mkdir(exist_ok=True)
+        
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(log_dir / "room_analyzer.log"),
+                logging.StreamHandler()
+            ]
+        )
+    
+    def ensure_mongodb_connection(self, mongo_uri=None, db_name=None, collection_name=None,
+                                 prompt_db_name=None, prompt_collection_name=None):
+        """Ensure MongoDB connection is established"""
+        if not self.use_database:
+            return
+            
+        try:
+            mongo_uri = mongo_uri or self.mongo_uri
+            if not mongo_uri:
+                self.logger.warning("No MongoDB URI provided")
+                return
+                
+            self.mongo_client = MongoClient(mongo_uri)
+            self.prompt_mongo_client = MongoClient(mongo_uri)
+            
+            # Test connection
+            self.mongo_client.admin.command('ping')
+            self.logger.info("MongoDB connection established successfully")
+            
+        except Exception as e:
+            self.logger.error(f"MongoDB connection failed: {e}")
+            self.mongo_client = None
+            self.prompt_mongo_client = None
+    
+    def log_to_mongodb(self, document, processed_hashes=None, save_callback=None):
+        """Log document to MongoDB"""
+        if not self.use_database or not self.mongo_client:
+            return
+            
+        try:
+            db = self.mongo_client[self.mongo_db_name]
+            collection = db[self.mongo_collection_name]
+            
+            # Check for duplicates
+            if processed_hashes and document.get('doc_hash') in processed_hashes:
+                return
+                
+            collection.insert_one(document)
+            
+            if processed_hashes is not None and save_callback is not None:
+                processed_hashes.add(document.get('doc_hash'))
+                save_callback()
+                
+        except Exception as e:
+            self.logger.error(f"Failed to log to MongoDB: {e}")
+    
+    def log_prompt_to_mongodb(self, query, response, user_id=None, username=None, session_id=None, client_ip=None, sources=None, 
+                             error=None, prompt_type="base_enhancement", document_template="standard"):
+        """Log prompt and response to MongoDB"""
+        if not self.use_database or not self.prompt_mongo_client:
+            return
+            
+        try:
+            db = self.prompt_mongo_client[self.prompt_logs_db_name]
+            collection = db[self.prompt_logs_collection_name]
+            
+            log_entry = {
+                "timestamp": datetime.utcnow(),
+                "query": query,
+                "response": response,
+                "user_id": user_id or "anonymous",
+                "username": username or "anonymous",
+                "session_id": session_id,
+                "client_ip": client_ip,
+                "prompt_type": prompt_type,
+                "document_template": document_template,
+                "sources_count": len(sources) if sources else 0,
+                "error": error
+            }
+            
+            if sources:
+                log_entry["sources_sample"] = sources[:3]  # Store first 3 sources
+                
+            collection.insert_one(log_entry)
+            
+        except Exception as e:
+            self.logger.error(f"Failed to log prompt to MongoDB: {e}")
+    
+    def recover_backup_logs(self):
+        """Recover logs from backup if needed"""
+        # Implementation for backup recovery
+        pass
+
+class PromptsConfig:
+    """Configuration manager for prompts and templates"""
+    
+    def __init__(self, config_file=None):
+        self.config_file = config_file
+        self.default_prompts = {
+            "system_prompts": {
+                "base_enhancement": """You are an intelligent room management assistant. Analyze the provided room sensor data and maintenance information to answer questions accurately. Focus on:
+
+1. Room occupancy and usage patterns
+2. Energy and power consumption analysis  
+3. Environmental conditions (temperature, humidity)
+4. Maintenance requests and equipment status
+5. Efficiency recommendations
+
+Always base your answers on the actual data provided. If specific numbers aren't available, provide general insights. Be concise and helpful.
+
+User Question: {query}""",
+
+                "analytical": """You are a data analyst specializing in building management systems. Provide detailed analysis of:
+
+- Energy consumption trends and patterns
+- Room utilization efficiency  
+- Equipment performance metrics
+- Maintenance optimization opportunities
+- Cost-saving recommendations
+
+Support your analysis with specific data points when available. Provide actionable insights.
+
+User Question: {query}""",
+
+                "technical": """You are a technical building operations specialist. Focus on:
+
+- Equipment performance and efficiency
+- Power consumption breakdowns
+- Environmental control systems
+- Maintenance scheduling and prioritization
+- Technical specifications and recommendations
+
+Use technical terminology appropriately and provide precise information.
+
+User Question: {query}"""
+            },
+            
+            "document_templates": {
+                "standard": """Room: {room_name}
+Timestamp: {timestamp}
+Occupancy: {occupancy_status} ({occupancy_count} people)
+Energy: {energy_consumption_kwh} kWh
+Power Breakdown:
+- Lighting: {lighting_power}W
+- HVAC Fan: {hvac_power}W  
+- AC Compressor: {ac_compressor_power}W
+- Projector: {projector_power}W
+- Computer: {computer_power}W
+- Standby: {standby_power}W
+- Total: {total_power}W
+Equipment Usage:
+- Lights: {lights_hours}h
+- AC: {ac_hours}h
+- Projector: {projector_hours}h
+- Computer: {computer_hours}h
+Environment: {temperature}°C, {humidity}% humidity""",
+
+                "analytical": """DATA POINT: Room {room_name} at {timestamp}
+OCCUPANCY: {occupancy_count} people ({occupancy_status})
+ENERGY: {energy_consumption_kwh} kWh consumed
+POWER: {total_power}W total ({lighting_power}W lighting, {hvac_power}W HVAC, {ac_compressor_power}W AC)
+USAGE: Lights {lights_hours}h, AC {ac_hours}h, Projector {projector_hours}h
+ENVIRONMENT: {temperature}°C, {humidity}% humidity""",
+
+                "maintenance": """MAINTENANCE REQUEST: {issue_description}
+STATUS: {status}
+SCHEDULED: {requested_date}
+RESOLVED: {resolved_date}
+EQUIPMENT: {equipment_id}
+REQUESTED BY: {requested_by}
+ASSIGNED TO: {assigned_to}
+NOTES: {notes}"""
+            },
+            
+            # ADD THIS SECTION for maintenance rules
+            "maintenance_rules": {
+                "sensor_malfunction": {
+                    "urgency": "high",
+                    "timeline": "48 hours",
+                    "action": "Replace or calibrate sensor",
+                    "impact": "Data accuracy compromised"
+                },
+                "temperature_sensor_error": {
+                    "urgency": "medium", 
+                    "timeline": "1 week",
+                    "action": "Calibrate or replace temperature sensor",
+                    "impact": "Environmental control affected"
+                },
+                "motion_detector_fault": {
+                    "urgency": "medium",
+                    "timeline": "1 week", 
+                    "action": "Repair or replace motion detector",
+                    "impact": "Occupancy tracking inaccurate"
+                },
+                "high_energy_usage": {
+                    "urgency": "medium",
+                    "timeline": "2 weeks",
+                    "action": "Investigate energy consumption patterns",
+                    "impact": "Increased operational costs"
+                },
+                "humidity_calibration_needed": {
+                    "urgency": "low",
+                    "timeline": "1 month",
+                    "action": "Schedule calibration",
+                    "impact": "Minor environmental data inaccuracy"
+                },
+                "power_supply_issue": {
+                    "urgency": "high",
+                    "timeline": "24 hours",
+                    "action": "Immediate inspection required",
+                    "impact": "Potential system failure"
+                }
+            }
+        }
+        
+        self.prompts = self.default_prompts
+        if config_file and os.path.exists(config_file):
+            try:
+                with open(config_file, 'r') as f:
+                    custom_prompts = json.load(f)
+                    self.prompts.update(custom_prompts)
+            except Exception as e:
+                logging.error(f"Error loading custom prompts: {e}")
+    
+    def get_system_prompt(self, prompt_type="base_enhancement"):
+        """Get system prompt by type"""
+        return self.prompts["system_prompts"].get(prompt_type, self.prompts["system_prompts"]["base_enhancement"])
+    
+    def get_document_template(self, template_type="standard"):
+        """Get document template by type"""
+        return self.prompts["document_templates"].get(template_type, self.prompts["document_templates"]["standard"])
+    
+    # ADD THIS METHOD to fix the error
+    def get_all_prompts(self):
+        """Get all prompts configuration - required by advanced_llm_handlers"""
+        return self.prompts
+
+class AdvancedLLMHandlers:
+    """Advanced query handlers for complex analytical queries"""
+    
+    def __init__(self, prompts_config, db_adapter):
+        self.prompts = prompts_config
+        self.db_adapter = db_adapter
+        self.logger = logging.getLogger(__name__)
+    
+    def handle_kpi_query(self, df):
+        """Handle Key Performance Indicators queries"""
+        try:
+            if df.empty:
+                return {"error": "No data available for KPI analysis"}
+            
+            kpis = {}
+            
+            # Energy KPIs
+            if 'energy_consumption_kwh' in df.columns:
+                kpis['total_energy'] = df['energy_consumption_kwh'].sum()
+                kpis['avg_energy_per_room'] = df.groupby('room_name')['energy_consumption_kwh'].mean().mean()
+            
+            # Occupancy KPIs
+            if 'occupancy_count' in df.columns:
+                kpis['total_occupancy'] = df['occupancy_count'].sum()
+                kpis['avg_occupancy'] = df['occupancy_count'].mean()
+            
+            # Power KPIs
+            if 'power_consumption_watts.total' in df.columns:
+                kpis['avg_power'] = df['power_consumption_watts.total'].mean()
+                kpis['peak_power'] = df['power_consumption_watts.total'].max()
+            
+            # Environmental KPIs
+            if 'environmental_data.temperature_celsius' in df.columns:
+                kpis['avg_temperature'] = df['environmental_data.temperature_celsius'].mean()
+            
+            kpi_text = []
+            for kpi, value in kpis.items():
+                if 'energy' in kpi:
+                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.2f} kWh")
+                elif 'power' in kpi:
+                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.2f} W")
+                elif 'temperature' in kpi:
+                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.1f}°C")
+                else:
+                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.1f}")
+            
+            answer = "Key Performance Indicators:\n" + "\n".join([f"• {kpi}" for kpi in kpi_text])
+            
+            return {
+                "answer": answer,
+                "kpis": kpis
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error in KPI handler: {e}")
+            return {"error": f"KPI analysis failed: {str(e)}"}
+    
+    def handle_energy_trends_query(self, df):
+        """Handle energy trend analysis queries"""
+        try:
+            if df.empty or 'timestamp' not in df.columns or 'energy_consumption_kwh' not in df.columns:
+                return {"error": "Insufficient data for energy trend analysis"}
+            
+            # Convert timestamp and group by date
+            df['date'] = pd.to_datetime(df['timestamp']).dt.date
+            daily_energy = df.groupby('date')['energy_consumption_kwh'].sum()
+            
+            if len(daily_energy) < 2:
+                return {"answer": "Insufficient data points for trend analysis"}
+            
+            # Calculate trends
+            trend_direction = "increasing" if daily_energy.iloc[-1] > daily_energy.iloc[0] else "decreasing"
+            avg_daily = daily_energy.mean()
+            max_daily = daily_energy.max()
+            min_daily = daily_energy.min()
+            
+            # Room-wise analysis
+            room_energy = df.groupby('room_name')['energy_consumption_kwh'].sum()
+            highest_room = room_energy.idxmax() if not room_energy.empty else "N/A"
+            
+            answer = f"""Energy Consumption Trends:
+• Overall trend: {trend_direction}
+• Average daily consumption: {avg_daily:.2f} kWh
+• Peak daily consumption: {max_daily:.2f} kWh
+• Lowest daily consumption: {min_daily:.2f} kWh
+• Highest consuming room: {highest_room}"""
+            
+            return {
+                "answer": answer,
+                "trends": {
+                    "direction": trend_direction,
+                    "average_daily": avg_daily,
+                    "peak_daily": max_daily,
+                    "lowest_daily": min_daily,
+                    "highest_room": highest_room
+                }
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error in energy trends handler: {e}")
+            return {"error": f"Energy trend analysis failed: {str(e)}"}
+    
+    def generate_weekly_summary(self, df):
+        """Generate weekly summary report"""
+        try:
+            if df.empty or 'timestamp' not in df.columns:
+                return {"error": "No timestamp data available for weekly summary"}
+            
+            # Get data from the last 7 days
+            latest_date = pd.to_datetime(df['timestamp']).max()
+            week_ago = latest_date - timedelta(days=7)
+            weekly_data = df[pd.to_datetime(df['timestamp']) >= week_ago]
+            
+            if weekly_data.empty:
+                return {"answer": "No data available for the past week"}
+            
+            summary_parts = ["Weekly Summary Report:"]
+            
+            # Energy summary
+            if 'energy_consumption_kwh' in weekly_data.columns:
+                total_energy = weekly_data['energy_consumption_kwh'].sum()
+                avg_daily_energy = total_energy / 7
+                summary_parts.append(f"• Total Energy: {total_energy:.2f} kWh ({avg_daily_energy:.2f} kWh/day)")
+            
+            # Occupancy summary
+            if 'occupancy_count' in weekly_data.columns:
+                total_occupancy = weekly_data['occupancy_count'].sum()
+                avg_daily_occupancy = total_occupancy / 7
+                summary_parts.append(f"• Total Occupancy: {total_occupancy} people ({avg_daily_occupancy:.1f} people/day)")
+            
+            # Room utilization
+            if 'room_name' in weekly_data.columns:
+                room_counts = weekly_data['room_name'].value_counts()
+                top_room = room_counts.index[0] if not room_counts.empty else "N/A"
+                summary_parts.append(f"• Most Used Room: {top_room}")
+            
+            # Environmental summary
+            if 'environmental_data.temperature_celsius' in weekly_data.columns:
+                avg_temp = weekly_data['environmental_data.temperature_celsius'].mean()
+                summary_parts.append(f"• Average Temperature: {avg_temp:.1f}°C")
+            
+            answer = "\n".join(summary_parts)
+            
+            return {
+                "answer": answer,
+                "weekly_metrics": {
+                    "total_energy": total_energy if 'energy_consumption_kwh' in weekly_data.columns else 0,
+                    "total_occupancy": total_occupancy if 'occupancy_count' in weekly_data.columns else 0
+                }
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error generating weekly summary: {e}")
+            return {"error": f"Weekly summary generation failed: {str(e)}"}
+    
+    def detect_anomalies(self, df):
+        """Detect anomalies in the data"""
+        # Simplified anomaly detection - in practice, you'd use more sophisticated methods
+        anomalies = []
+        
+        try:
+            # High energy consumption anomaly
+            if 'energy_consumption_kwh' in df.columns:
+                energy_mean = df['energy_consumption_kwh'].mean()
+                energy_std = df['energy_consumption_kwh'].std()
+                high_energy = df[df['energy_consumption_kwh'] > energy_mean + 2 * energy_std]
+                
+                for _, row in high_energy.iterrows():
+                    anomalies.append({
+                        'type': 'High Energy Consumption',
+                        'severity': 'Medium',
+                        'description': f"Room {row.get('room_name', 'Unknown')} consumed {row['energy_consumption_kwh']:.2f} kWh"
+                    })
+            
+            # High temperature anomaly
+            if 'environmental_data.temperature_celsius' in df.columns:
+                high_temp = df[df['environmental_data.temperature_celsius'] > 28]  # Above 28°C
+                for _, row in high_temp.iterrows():
+                    anomalies.append({
+                        'type': 'High Temperature',
+                        'severity': 'Low',
+                        'description': f"Room {row.get('room_name', 'Unknown')} temperature: {row['environmental_data.temperature_celsius']}°C"
+                    })
+                    
+        except Exception as e:
+            self.logger.error(f"Error in anomaly detection: {e}")
+            
+        return anomalies
+    
+    def handle_context_aware_query(self, query, df):
+        """Handle context-aware queries about current situation"""
+        try:
+            if df.empty:
+                return {"answer": "No current data available"}
+            
+            # Get latest data point
+            latest_data = df.iloc[-1] if not df.empty else None
+            
+            if latest_data is None:
+                return {"answer": "No recent data available"}
+            
+            context_info = []
+            
+            if 'room_name' in latest_data:
+                context_info.append(f"Latest data from {latest_data['room_name']}")
+            
+            if 'occupancy_count' in latest_data:
+                context_info.append(f"Occupancy: {latest_data['occupancy_count']} people")
+            
+            if 'environmental_data.temperature_celsius' in latest_data:
+                context_info.append(f"Temperature: {latest_data['environmental_data.temperature_celsius']}°C")
+            
+            if 'power_consumption_watts.total' in latest_data:
+                context_info.append(f"Power: {latest_data['power_consumption_watts.total']}W")
+            
+            answer = "Current situation: " + ", ".join(context_info)
+            
+            return {
+                "answer": answer,
+                "current_data": latest_data.to_dict() if hasattr(latest_data, 'to_dict') else dict(latest_data)
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error in context-aware handler: {e}")
+            return {"error": f"Context analysis failed: {str(e)}"}
+
+    # === ADDED MISSING METHODS ===
+    def generate_energy_insights(self, df):
+        """Generate detailed energy insights and recommendations"""
+        insights = []
+        
+        try:
+            if df.empty or 'energy_consumption_kwh' not in df.columns:
+                return insights
+                
+            # Basic energy metrics
+            total_energy = df['energy_consumption_kwh'].sum()
+            avg_energy = df['energy_consumption_kwh'].mean()
+            peak_energy = df['energy_consumption_kwh'].max()
+            
+            # Energy trends
+            if 'timestamp' in df.columns:
+                df_sorted = df.sort_values('timestamp')
+                if len(df_sorted) > 1:
+                    energy_trend = "increasing" if df_sorted['energy_consumption_kwh'].iloc[-1] > df_sorted['energy_consumption_kwh'].iloc[0] else "decreasing"
+                else:
+                    energy_trend = "stable"
+            else:
+                energy_trend = "unknown"
+            
+            # Room-specific insights
+            if 'room_name' in df.columns:
+                room_energy = df.groupby('room_name')['energy_consumption_kwh'].sum()
+                highest_room = room_energy.idxmax() if not room_energy.empty else "N/A"
+                lowest_room = room_energy.idxmin() if not room_energy.empty else "N/A"
+            else:
+                highest_room = "N/A"
+                lowest_room = "N/A"
+            
+            # Create insights
+            insights.extend([
+                {
+                    "metric": "total_energy_consumption",
+                    "current_value": round(total_energy, 2),
+                    "trend": energy_trend,
+                    "opportunity": "Optimize usage during peak hours",
+                    "recommendation": f"Total consumption: {total_energy:.2f} kWh across all rooms"
+                },
+                {
+                    "metric": "average_energy_per_reading",
+                    "current_value": round(avg_energy, 2),
+                    "trend": energy_trend,
+                    "opportunity": "Improve energy efficiency",
+                    "recommendation": f"Average: {avg_energy:.2f} kWh per reading"
+                },
+                {
+                    "metric": "peak_energy_consumption",
+                    "current_value": round(peak_energy, 2),
+                    "trend": "peak_analysis",
+                    "opportunity": "Reduce peak demand",
+                    "recommendation": f"Peak consumption: {peak_energy:.2f} kWh"
+                }
+            ])
+            
+            if highest_room != "N/A":
+                insights.append({
+                    "metric": "highest_consumption_room",
+                    "current_value": highest_room,
+                    "trend": "focus_room",
+                    "opportunity": "Target efficiency measures",
+                    "recommendation": f"Focus efficiency efforts on {highest_room}"
+                })
+                
+        except Exception as e:
+            self.logger.error(f"Error generating energy insights: {e}")
+        
+        return insights
+
+    def _calculate_trend(self, data):
+        """Calculate trend from time series data"""
+        try:
+            if len(data) < 2:
+                return {"slope": 0, "confidence": "low"}
+            
+            # Simple linear trend calculation
+            x = np.arange(len(data))
+            y = data.values
+            slope = np.polyfit(x, y, 1)[0]
+            
+            # Basic confidence based on data points
+            confidence = "high" if len(data) > 10 else "medium" if len(data) > 5 else "low"
+            
+            return {"slope": slope, "confidence": confidence}
+            
+        except Exception as e:
+            self.logger.error(f"Error calculating trend: {e}")
+            return {"slope": 0, "confidence": "low"}
+
+# ADD THIS IMPORT - Import the comprehensive RoomSpecificHandlers
+try:
+    from room_specific_handlers import RoomSpecificHandlers
+    print("Successfully imported comprehensive RoomSpecificHandlers from room_specific_handlers.py")
+except ImportError as e:
+    print(f"Failed to import RoomSpecificHandlers from room_specific_handlers.py: {e}")
+    print("Falling back to basic RoomSpecificHandlers")
+    
+    # Fallback to the basic version (keep your existing basic class as backup)
+    class RoomSpecificHandlers:
+        """Basic fallback handlers for room-specific queries"""
+        
+        def __init__(self, prompts_config, db_adapter):
+            self.prompts = prompts_config
+            self.db_adapter = db_adapter
+            self.logger = logging.getLogger(__name__)
+        
+        def handle_room_specific_query(self, query):
+            """Handle queries about specific rooms"""
+            try:
+                # Extract room name from query
+                room_pattern = r'(?:room|Room)\s+([A-Za-z0-9\s]+)'
+                match = re.search(room_pattern, query)
+                
+                if not match:
+                    return {"error": "No room specified in query"}
+                
+                room_name = match.group(1).strip()
+                self.logger.info(f"Processing query for room: {room_name}")
+                
+                # This would typically query the database for specific room data
+                # For now, return a generic response
+                return {
+                    "answer": f"Room {room_name} data would be retrieved and analyzed here. Specific room queries are supported.",
+                    "sources": []
+                }
+                
+            except Exception as e:
+                self.logger.error(f"Error in room-specific handler: {e}")
+                return {"error": f"Room-specific query failed: {str(e)}"}
 
 class RoomLogAnalyzer:
+    """
+    Advanced AI-powered room log analyzer that processes sensor data, 
+    maintenance requests, and energy consumption patterns.
+    """
+    
     def __init__(self, chroma_dir=None, use_database=True,
                  mongo_uri=None, mongo_db_name=None, mongo_collection_name=None,
                  prompt_logs_db_name=None, prompt_logs_collection_name=None,
                  prompts_config_file=None, prompt_type="base_enhancement",
                  document_template="standard"):
-        # Run environment debug only if needed
-        debug_environment(debug=False)  # Set to True for debugging
-        
-        # Dynamically set paths relative to llm/static_remote_LLM/
+        """
+        Initialize the Room Log Analyzer.
+        """
+        # Dynamically set paths
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.chroma_dir = chroma_dir or os.path.join(script_dir, "chroma_room_logs")
         self.use_database = use_database
@@ -100,7 +686,7 @@ class RoomLogAnalyzer:
         self.maintenance_df = None
         self.db_adapter = None
 
-        # Initialize logging manager (replaces all logging init)
+        # Initialize logging manager
         self.logger_manager = LoggingManager(
             project_root=PROJECT_ROOT,
             use_database=use_database,
@@ -110,10 +696,7 @@ class RoomLogAnalyzer:
             prompt_logs_db_name=prompt_logs_db_name or os.getenv("PROMPT_LOGS_DB_NAME", "chat_logs"),
             prompt_logs_collection_name=prompt_logs_collection_name or os.getenv("PROMPT_LOGS_COLLECTION_NAME", "conversations")
         )
-        self.logger = self.logger_manager.logger  # Use this for class logging
-
-        # Optional: Recover backups on init
-        self.logger_manager.recover_backup_logs()
+        self.logger = self.logger_manager.logger
 
         # Initialize prompts configuration
         config_path = prompts_config_file or os.path.join(script_dir, "custom_prompts.json")
@@ -133,7 +716,7 @@ class RoomLogAnalyzer:
                 self.db_adapter = None
                 self.logger.warning("Continuing without PostgreSQL database connection")
 
-        # FIXED: Initialize advanced handlers with database adapter
+        # Initialize advanced handlers with database adapter
         self.advanced_handlers = AdvancedLLMHandlers(self.prompts, self.db_adapter)
         self.room_handlers = None
 
@@ -141,13 +724,42 @@ class RoomLogAnalyzer:
 
         if self.use_database and self.db_adapter:
             try:
+                # USE THE COMPREHENSIVE ROOM HANDLERS
                 self.room_handlers = RoomSpecificHandlers(self.prompts, self.db_adapter)
-                self.logger.info("Room-specific handlers initialized successfully")
+                self.logger.info("Comprehensive RoomSpecificHandlers initialized successfully")
+                
+                # Test room handlers by getting available rooms
+                available_rooms = self.room_handlers.get_available_rooms()
+                if available_rooms:
+                    room_names = [room.get('name', 'Unknown') for room in available_rooms]
+                    self.logger.info(f"Available rooms detected: {', '.join(room_names)}")
+                else:
+                    self.logger.warning("No rooms found in the system")
+                    
             except Exception as e:
-                self.logger.error(f"Failed to initialize room handlers: {e}")
-                self.room_handlers = None
+                self.logger.error(f"Failed to initialize comprehensive room handlers: {e}")
+                self.logger.warning("Falling back to basic room handlers")
+                # Fallback to basic handlers
+                self.room_handlers = self._create_basic_room_handlers()
         else:
             self.logger.warning("No database adapter available, room-specific handlers not initialized")
+            self.room_handlers = self._create_basic_room_handlers()
+
+    def _create_basic_room_handlers(self):
+        """Create basic fallback room handlers"""
+        class BasicRoomHandlers:
+            def __init__(self, prompts_config, db_adapter):
+                self.prompts = prompts_config
+                self.db_adapter = db_adapter
+                self.logger = logging.getLogger(__name__)
+            
+            def handle_room_specific_query(self, query):
+                return {
+                    "answer": f"Room-specific queries are supported but comprehensive room analysis is not available. Query: {query}",
+                    "sources": []
+                }
+        
+        return BasicRoomHandlers(self.prompts, self.db_adapter)
 
     def _load_processed_hashes(self):
         """Load hashes of already processed documents to avoid duplication"""
@@ -173,24 +785,27 @@ class RoomLogAnalyzer:
 
     def _generate_document_hash(self, row):
         """Generate a unique hash for a document based on all relevant fields"""
-        content = (
-            f"{row['timestamp']}_"
-            f"{row['occupancy_count']}_"
-            f"{row['energy_consumption_kwh']}_"
-            f"{row['power_consumption_watts.lighting']}_"
-            f"{row['power_consumption_watts.hvac_fan']}_"
-            f"{row.get('power_consumption_watts.air_conditioner_compressor', 0)}_"
-            f"{row.get('power_consumption_watts.projector', 0)}_"
-            f"{row.get('power_consumption_watts.computer', 0)}_"
-            f"{row['power_consumption_watts.standby_misc']}_"
-            f"{row['power_consumption_watts.total']}_"
-            f"{row['equipment_usage.lights_on_hours']}_"
-            f"{row['equipment_usage.air_conditioner_on_hours']}_"
-            f"{row['equipment_usage.projector_on_hours']}_"
-            f"{row['equipment_usage.computer_on_hours']}_"
-            f"{row['environmental_data.temperature_celsius']}_"
-            f"{row['environmental_data.humidity_percent']}"
-        )
+        content_parts = [
+            str(row.get('timestamp', '')),
+            str(row.get('room_name', 'Unknown')),
+            str(row.get('occupancy_status', '')),
+            str(row.get('occupancy_count', 0)),
+            str(row.get('energy_consumption_kwh', 0)),
+            str(row.get('power_consumption_watts.lighting', 0)),
+            str(row.get('power_consumption_watts.hvac_fan', 0)),
+            str(row.get('power_consumption_watts.air_conditioner_compressor', 0)),
+            str(row.get('power_consumption_watts.projector', 0)),
+            str(row.get('power_consumption_watts.computer', 0)),
+            str(row.get('power_consumption_watts.standby_misc', 0)),
+            str(row.get('power_consumption_watts.total', 0)),
+            str(row.get('equipment_usage.lights_on_hours', 0)),
+            str(row.get('equipment_usage.air_conditioner_on_hours', 0)),
+            str(row.get('equipment_usage.projector_on_hours', 0)),
+            str(row.get('equipment_usage.computer_on_hours', 0)),
+            str(row.get('environmental_data.temperature_celsius', 0)),
+            str(row.get('environmental_data.humidity_percent', 0))
+        ]
+        content = "_".join(content_parts)
         return hashlib.md5(content.encode()).hexdigest()
 
     def load_from_postgresql(self, limit=None):
@@ -201,12 +816,14 @@ class RoomLogAnalyzer:
                 return None
 
             df = self.db_adapter.get_sensor_data_as_dataframe(limit=limit)
-            if df is None:
+            if df is None or df.empty:
                 self.logger.warning("PostgreSQL returned no data")
                 return None
 
+            # Filter for occupied rooms only
             df = df[df["occupancy_status"] == "occupied"]
 
+            # Convert numeric columns
             numeric_cols = [
                 "occupancy_count", "energy_consumption_kwh",
                 "power_consumption_watts.lighting", "power_consumption_watts.hvac_fan",
@@ -219,7 +836,7 @@ class RoomLogAnalyzer:
             ]
             for col in numeric_cols:
                 if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors="coerce")
+                    df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
             self.logger.info(f"Loaded {len(df)} unique occupied room records from PostgreSQL")
             return df
@@ -234,10 +851,8 @@ class RoomLogAnalyzer:
                 self.logger.error("PostgreSQL adapter not initialized; cannot load maintenance data")
                 return None
 
-            # Try using Django ORM first (more reliable)
             df = self.db_adapter.get_maintenance_requests_using_django(limit=limit)
             
-            # If Django ORM fails, try direct SQL
             if df is None or df.empty:
                 self.logger.info("Trying direct SQL for maintenance data")
                 df = self.db_adapter.get_maintenance_requests_as_dataframe(limit=limit)
@@ -247,8 +862,6 @@ class RoomLogAnalyzer:
                 return None
 
             self.logger.info(f"Loaded {len(df)} maintenance requests from PostgreSQL")
-            if not df.empty:
-                self.logger.info(f"Maintenance data sample: {df[['issue_description', 'status', 'requested_date']].head(2).to_dict('records')}")
             return df
         except Exception as e:
             self.logger.error(f"Error loading maintenance data: {e}")
@@ -328,17 +941,15 @@ class RoomLogAnalyzer:
             self.logger.info("Loading sensor data from PostgreSQL")
             sensor_df = self.load_from_postgresql(limit=limit)
             
-            # Load maintenance data if requested
             maintenance_df = None
             if include_maintenance:
                 self.logger.info("Loading maintenance data from PostgreSQL")
                 maintenance_df = self.load_maintenance_data(limit=limit)
 
-            # Combine or use sensor data as primary
             self.df = sensor_df if sensor_df is not None else pd.DataFrame()
             self.maintenance_df = maintenance_df
 
-            # Log sensor data to MongoDB (existing code)
+            # Log new sensor records to MongoDB
             if self.use_database and sensor_df is not None and not sensor_df.empty:
                 new_docs = []
                 for _, row in sensor_df.iterrows():
@@ -371,6 +982,7 @@ class RoomLogAnalyzer:
             return self.df
 
     def _create_document_from_row(self, row):
+        """Convert DataFrame row into a LangChain Document, including room_name"""
         try:
             timestamp_str = row['timestamp'].strftime("%Y-%m-%d %H:%M:%S")
         except AttributeError:
@@ -379,6 +991,7 @@ class RoomLogAnalyzer:
         template = self.prompts.get_document_template(self.document_template)
         page_content = template.format(
             timestamp=timestamp_str,
+            room_name=row.get('room_name', 'Unknown'),
             occupancy_status=row['occupancy_status'],
             occupancy_count=row['occupancy_count'],
             energy_consumption_kwh=row['energy_consumption_kwh'],
@@ -398,17 +1011,19 @@ class RoomLogAnalyzer:
         )
 
         doc_hash = self._generate_document_hash(row)
+        metadata = {
+            "timestamp": timestamp_str,
+            "room_name": row.get('room_name', 'Unknown'),
+            "occupancy_count": int(row["occupancy_count"]),
+            "energy_kwh": float(row["energy_consumption_kwh"]),
+            "power_total": float(row["power_consumption_watts.total"]),
+            "temperature": float(row["environmental_data.temperature_celsius"]),
+            "humidity": float(row["environmental_data.humidity_percent"]),
+            "doc_hash": doc_hash
+        }
         return Document(
             page_content=page_content,
-            metadata={
-                "timestamp": timestamp_str,
-                "occupancy_count": int(row["occupancy_count"]),
-                "energy_kwh": float(row["energy_consumption_kwh"]),
-                "power_total": float(row["power_consumption_watts.total"]),
-                "temperature": float(row["environmental_data.temperature_celsius"]),
-                "humidity": float(row["environmental_data.humidity_percent"]),
-                "doc_hash": doc_hash
-            }
+            metadata=metadata
         )
 
     def create_documents(self, df, include_maintenance=True):
@@ -416,11 +1031,10 @@ class RoomLogAnalyzer:
         documents = []
         new_document_count = 0
 
-        # Create sensor documents (existing code)
+        # Process sensor data documents
         for _, row in df.iterrows():
             doc_hash = self._generate_document_hash(row)
             if doc_hash in self.processed_hashes:
-                self.logger.debug(f"Skipping duplicate sensor document with hash {doc_hash}")
                 continue
 
             doc = self._create_document_from_row(row)
@@ -428,7 +1042,7 @@ class RoomLogAnalyzer:
             self.processed_hashes.add(doc_hash)
             new_document_count += 1
 
-        # Create maintenance documents
+        # Process maintenance documents
         if include_maintenance and hasattr(self, 'maintenance_df') and self.maintenance_df is not None:
             for _, row in self.maintenance_df.iterrows():
                 doc = self._create_maintenance_document(row)
@@ -437,7 +1051,7 @@ class RoomLogAnalyzer:
                     self.processed_hashes.add(doc.metadata['doc_hash'])
                     new_document_count += 1
 
-        self.logger.info(f"Created {new_document_count} new documents ({len(documents) - new_document_count} maintenance), skipped {len(df) - new_document_count} duplicates")
+        self.logger.info(f"Created {new_document_count} new documents")
         return documents
 
     def initialize_vector_store(self, documents, reset=False):
@@ -603,19 +1217,19 @@ class RoomLogAnalyzer:
 
             matching_rows = df[df[col] == value]
             timestamps = []
-            rooms = []  # Added to collect rooms
+            rooms = []
             for _, row in matching_rows.iterrows():
                 try:
                     timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
                 except AttributeError:
                     timestamps.append(str(row["timestamp"]))
-                if 'room_name' in row:
+                if 'room_name' in row and pd.notna(row['room_name']):
                     rooms.append(row["room_name"])
 
             sources = self._get_source_documents_for_rows(matching_rows.head(2))
             all_sources.extend(sources)
             col_display = col.split('.')[-1]
-            room_str = f" in room(s) {', '.join(set(rooms))}" if rooms else ""  # Added room info
+            room_str = f" in room(s) {', '.join(set(rooms))}" if rooms else ""
             results.append(f"The {op_word} {col_display} is {value} at {', '.join(timestamps[:2])}{'...' if len(timestamps) > 2 else ''}{room_str}")
 
         if results:
@@ -656,7 +1270,7 @@ class RoomLogAnalyzer:
                     min_value = df[col].min()
                     max_value = df[col].max()
                     min_rows = df[df[col] == min_value]
-                    max_rows = df[col] == max_value
+                    max_rows = df[df[col] == max_value]
                     min_timestamps = []
                     min_rooms = []
                     max_timestamps = []
@@ -666,14 +1280,14 @@ class RoomLogAnalyzer:
                             min_timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
                         except AttributeError:
                             min_timestamps.append(str(row["timestamp"]))
-                        if 'room_name' in row:
+                        if 'room_name' in row and pd.notna(row['room_name']):
                             min_rooms.append(row["room_name"])
                     for _, row in max_rows.iterrows():
                         try:
                             max_timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
                         except AttributeError:
                             max_timestamps.append(str(row["timestamp"]))
-                        if 'room_name' in row:
+                        if 'room_name' in row and pd.notna(row['room_name']):
                             max_rooms.append(row["room_name"])
                     sources = self._get_source_documents_for_rows(pd.concat([min_rows.head(2), max_rows.head(2)]))
                     min_room_str = f" in room(s) {', '.join(set(min_rooms))}" if min_rooms else ""
@@ -692,16 +1306,16 @@ class RoomLogAnalyzer:
 
                 matching_rows = df[df[col] == value]
                 timestamps = []
-                rooms = []  # Added
+                rooms = []
                 for _, row in matching_rows.iterrows():
                     try:
                         timestamps.append(row["timestamp"].strftime("%Y-%m-%d %H:%M:%S"))
                     except AttributeError:
                         timestamps.append(str(row["timestamp"]))
-                    if 'room_name' in row:
+                    if 'room_name' in row and pd.notna(row['room_name']):
                         rooms.append(row["room_name"])
                 sources = self._get_source_documents_for_rows(matching_rows.head(3))
-                room_str = f" in room(s) {', '.join(set(rooms))}" if rooms else ""  # Added
+                room_str = f" in room(s) {', '.join(set(rooms))}" if rooms else ""
                 return {
                     "answer": f"The {op_word} {key} is {value} at {', '.join(timestamps[:2])}{'...' if len(timestamps) > 2 else ''}{room_str}.",
                     "sources": sources
@@ -743,7 +1357,6 @@ class RoomLogAnalyzer:
         try:
             self.logger.info(f"Matched maintenance query: '{query}'")
             
-            # Ensure maintenance data is loaded
             if not hasattr(self, 'maintenance_df') or self.maintenance_df is None or self.maintenance_df.empty:
                 self.load_and_process_data(force_reload=True, include_maintenance=True)
                 
@@ -753,7 +1366,6 @@ class RoomLogAnalyzer:
                     "sources": []
                 }
 
-            # Handle different types of maintenance queries
             if "pending" in q_lower or "open" in q_lower:
                 pending_issues = self.maintenance_df[self.maintenance_df['status'] == 'pending']
                 if not pending_issues.empty:
@@ -774,22 +1386,19 @@ class RoomLogAnalyzer:
                     answer = "No resolved maintenance issues found."
                     
             else:
-                # General maintenance query
                 total_issues = len(self.maintenance_df)
                 pending_count = len(self.maintenance_df[self.maintenance_df['status'] == 'pending'])
                 resolved_count = len(self.maintenance_df[self.maintenance_df['status'] == 'resolved'])
                 
                 answer = f"There are {total_issues} maintenance requests: {pending_count} pending and {resolved_count} resolved."
                 
-                # Add some recent issues for context
                 recent_issues = self.maintenance_df.head(3)
                 if not recent_issues.empty:
                     answer += "\nRecent issues:"
                     for _, issue in recent_issues.iterrows():
-                        status_icon = "⏳" if issue['status'] == 'pending' else "✅"
+                        status_icon = "⏳" if issue['status'] == 'pending' else ""
                         answer += f"\n{status_icon} {issue['issue_description']}"
 
-            # Create source documents from maintenance data
             sample_maintenance = self.maintenance_df.head(2)
             sources = []
             for _, row in sample_maintenance.iterrows():
@@ -805,7 +1414,6 @@ class RoomLogAnalyzer:
                 "sources": sources
             }
             
-            # PROMPT LOGGING
             self.logger_manager.log_prompt_to_mongodb(
                 query=query,
                 response=result["answer"],
@@ -835,12 +1443,11 @@ class RoomLogAnalyzer:
             return {"error": str(e)}
 
     def _handle_deterministic_query(self, query, user_id=None, username=None, session_id=None, client_ip=None):
-        """Handle specific queries deterministically to avoid hallucinations - FIXED LOGGING"""
+        """Handle specific queries deterministically to avoid hallucinations"""
         q_lower = query.lower().strip()
         df = self.load_and_process_data(include_maintenance=True)
         if df is None or df.empty:
             self.logger.error("DataFrame is empty or None; cannot process query")
-            # LOG THE ERROR
             self.logger_manager.log_prompt_to_mongodb(
                 query=query,
                 response=None,
@@ -856,22 +1463,25 @@ class RoomLogAnalyzer:
 
         self.logger.info(f"Processing deterministic query: '{q_lower}'")
 
-        # MAINTENANCE QUERIES - ADDED THIS SECTION
-        if any(keyword in q_lower for keyword in ["maintenance", "repair", "issue", "fault", "broken", "malfunction"]):
-            maintenance_result = self._handle_maintenance_query(query, q_lower, user_id, username, session_id, client_ip)
-            if maintenance_result:
-                return maintenance_result
-
-        # ROOM-SPECIFIC HANDLERS
-        if self.room_handlers and any(keyword in q_lower for keyword in ["room", "for room", "in room"]):
+        # FIRST: Try comprehensive room handlers for all room-related queries
+        if self.room_handlers and any(keyword in q_lower for keyword in [
+            "room", "for room", "in room", "conference", "laboratory", "hall", 
+            "how many rooms", "occupied rooms", "room capacity", "most used room",
+            "room utilization", "highest occupancy", "usage patterns", "temperature in",
+            "what's happening in", "show me data for", "people in", "conference room",
+            "main hall", "laboratory"
+        ]):
             try:
+                self.logger.info(f" Delegating to comprehensive room handlers for: '{query}'")
+                
+                # Use the comprehensive room handlers
                 room_result = self.room_handlers.handle_room_specific_query(query)
+                
                 if room_result and "error" not in room_result:
-                    self.logger.info(f"Used room-specific handler for query: '{query}'")
-                    # PROMPT LOGGING: Always log deterministic results
+                    self.logger.info(f"Room handlers successfully processed: '{query}'")
                     self.logger_manager.log_prompt_to_mongodb(
                         query=query,
-                        response=room_result["answer"],
+                        response=room_result.get("answer", "No answer"),
                         user_id=user_id,
                         username=username,
                         session_id=session_id,
@@ -882,8 +1492,20 @@ class RoomLogAnalyzer:
                     )
                     return room_result
                 elif "error" in room_result:
-                    self.logger.warning(f"Room-specific handler error: {room_result['error']}")
-                    # LOG THE ERROR
+                    self.logger.warning(f"Room handlers returned error: {room_result['error']}")
+                    # Continue to other handlers below
+                    
+            except Exception as e:
+                self.logger.error(f"Error in comprehensive room handlers: {e}")
+                # Continue to other handlers below
+
+        # Continue with existing deterministic handlers for other query types
+        # ROOM COUNT QUERIES (these will now be handled by the comprehensive handlers above)
+        if "how many rooms" in q_lower or "number of rooms" in q_lower:
+            try:
+                self.logger.info(f"Matched room count query: '{query}'")
+                if 'room_name' not in df.columns:
+                    self.logger.error("room_name column not found in DataFrame")
                     self.logger_manager.log_prompt_to_mongodb(
                         query=query,
                         response=None,
@@ -891,14 +1513,34 @@ class RoomLogAnalyzer:
                         username=username,
                         session_id=session_id,
                         client_ip=client_ip,
-                        error=room_result["error"],
+                        error="room_name column not found in DataFrame",
                         prompt_type=self.prompt_type,
                         document_template=self.document_template
                     )
-                    return room_result
+                    return {"answer": "Room information is not available in the dataset.", "sources": []}
+                
+                unique_rooms = df['room_name'].dropna().unique()
+                room_count = len(unique_rooms)
+                sample_df = df.sample(min(3, len(df))) if not df.empty else pd.DataFrame()
+                sources = self._get_source_documents_for_rows(sample_df)
+                result = {
+                    "answer": f"There are {room_count} unique rooms in the dataset: {', '.join(unique_rooms[:5])}{'...' if len(unique_rooms) > 5 else ''}.",
+                    "sources": sources
+                }
+                self.logger_manager.log_prompt_to_mongodb(
+                    query=query,
+                    response=result["answer"],
+                    user_id=user_id,
+                    username=username,
+                    session_id=session_id,
+                    client_ip=client_ip,
+                    sources=sources,
+                    prompt_type=self.prompt_type,
+                    document_template=self.document_template
+                )
+                return result
             except Exception as e:
-                self.logger.error(f"Error in room-specific handler: {e}")
-                # LOG THE ERROR
+                self.logger.error(f"Error in room count handler: {e}")
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=None,
@@ -906,11 +1548,104 @@ class RoomLogAnalyzer:
                     username=username,
                     session_id=session_id,
                     client_ip=client_ip,
-                    error=f"Room-specific handler failed: {str(e)}",
+                    error=f"Room count handler failed: {str(e)}",
                     prompt_type=self.prompt_type,
                     document_template=self.document_template
                 )
-                return {"error": str(e)}
+                return {"error": f"Failed to count rooms: {str(e)}"}
+
+        # OCCUPIED ROOMS COUNT QUERIES
+        if "how many occupied rooms" in q_lower or "number of occupied rooms" in q_lower or "occupied rooms count" in q_lower:
+            try:
+                self.logger.info(f"Matched occupied room count query: '{query}'")
+                if 'room_name' not in df.columns or 'occupancy_status' not in df.columns:
+                    self.logger.error("room_name or occupancy_status column not found in DataFrame")
+                    self.logger_manager.log_prompt_to_mongodb(
+                        query=query,
+                        response=None,
+                        user_id=user_id,
+                        username=username,
+                        session_id=session_id,
+                        client_ip=client_ip,
+                        error="room_name or occupancy_status column not found in DataFrame",
+                        prompt_type=self.prompt_type,
+                        document_template=self.document_template
+                    )
+                    return {"answer": "Room or occupancy information is not available in the dataset.", "sources": []}
+                
+                # Get the most recent timestamp to find current occupied rooms
+                if 'timestamp' in df.columns:
+                    latest_timestamp = df['timestamp'].max()
+                    # Get rooms that were occupied at the most recent timestamp
+                    recent_occupied_rooms = df[
+                        (df['timestamp'] == latest_timestamp) & 
+                        (df['occupancy_status'] == 'occupied')
+                    ]['room_name'].dropna().unique()
+                    occupied_room_count = len(recent_occupied_rooms)
+                    occupied_rooms_list = list(recent_occupied_rooms)
+                else:
+                    # Fallback: count all unique rooms with any occupied status
+                    occupied_rooms = df[df['occupancy_status'] == 'occupied']['room_name'].dropna().unique()
+                    occupied_room_count = len(occupied_rooms)
+                    occupied_rooms_list = list(occupied_rooms)
+                
+                # Get sample documents for sources
+                if occupied_room_count > 0:
+                    sample_rooms = occupied_rooms_list[:3]
+                    sample_df = df[df['room_name'].isin(sample_rooms)].head(3)
+                else:
+                    sample_df = df.head(3) if not df.empty else pd.DataFrame()
+                    
+                sources = self._get_source_documents_for_rows(sample_df)
+                
+                if occupied_room_count > 0:
+                    room_list = ", ".join(occupied_rooms_list[:5])
+                    if len(occupied_rooms_list) > 5:
+                        room_list += f" and {len(occupied_rooms_list) - 5} more"
+                    
+                    result = {
+                        "answer": f"There are {occupied_room_count} occupied rooms: {room_list}.",
+                        "sources": sources
+                    }
+                else:
+                    result = {
+                        "answer": "There are currently no occupied rooms in the system.",
+                        "sources": sources
+                    }
+                    
+                self.logger_manager.log_prompt_to_mongodb(
+                    query=query,
+                    response=result["answer"],
+                    user_id=user_id,
+                    username=username,
+                    session_id=session_id,
+                    client_ip=client_ip,
+                    sources=sources,
+                    prompt_type=self.prompt_type,
+                    document_template=self.document_template
+                )
+                return result
+                
+            except Exception as e:
+                self.logger.error(f"Error in occupied room count handler: {e}")
+                self.logger_manager.log_prompt_to_mongodb(
+                    query=query,
+                    response=None,
+                    user_id=user_id,
+                    username=username,
+                    session_id=session_id,
+                    client_ip=client_ip,
+                    error=f"Occupied room count handler failed: {str(e)}",
+                    prompt_type=self.prompt_type,
+                    document_template=self.document_template
+                )
+                return {"error": f"Failed to count occupied rooms: {str(e)}"}
+
+        # MAINTENANCE QUERIES
+        if any(keyword in q_lower for keyword in ["maintenance", "repair", "issue", "fault", "broken", "malfunction"]):
+            maintenance_result = self._handle_maintenance_query(query, q_lower, user_id, username, session_id, client_ip)
+            if maintenance_result:
+                return maintenance_result
 
         # KPI QUERIES
         if any(keyword in q_lower for keyword in ["key performance indicators", "kpi", "performance metrics"]):
@@ -919,19 +1654,7 @@ class RoomLogAnalyzer:
                 result = self.advanced_handlers.handle_kpi_query(df)
                 if "error" in result:
                     self.logger.error(f"KPI query failed: {result['error']}")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error=result["error"],
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return result
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -946,64 +1669,6 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in KPI handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"KPI handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
-                return {"error": str(e)}
-
-        # MOST USED ROOM QUERIES
-        if any(keyword in q_lower for keyword in ["most used room", "room usage", "room utilization"]):
-            try:
-                self.logger.info(f"Matched most used room query: '{query}'")
-                result = self.advanced_handlers.handle_most_used_room_query(df)
-                if "error" in result:
-                    self.logger.error(f"Most used room query failed: {result['error']}")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error=result["error"],
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
-                    return result
-                # PROMPT LOGGING: Always log deterministic results
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=result["answer"],
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    sources=result.get("sources", []),
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
-                return result
-            except Exception as e:
-                self.logger.error(f"Error in most used room handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Most used room handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
         # ENERGY TREND QUERIES
@@ -1013,19 +1678,7 @@ class RoomLogAnalyzer:
                 result = self.advanced_handlers.handle_energy_trends_query(df)
                 if "error" in result:
                     self.logger.error(f"Energy trend query failed: {result['error']}")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error=result["error"],
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return result
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -1040,40 +1693,17 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in energy trend handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Energy trend handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
-        # WEEKLY SUMMARY QUERIES - FIXED
+        # WEEKLY SUMMARY QUERIES
         if any(keyword in q_lower for keyword in ["weekly summary", "weekly report", "summary", "show me weekly summary", "generate weekly summary"]):
             try:
                 self.logger.info(f"Attempting to generate weekly summary for query: '{query}'")
                 result = self.advanced_handlers.generate_weekly_summary(df)
                 if "error" in result:
                     self.logger.error(f"Weekly summary generation failed: {result['error']}")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error=result["error"],
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return result
                 self.logger.info(f"Weekly summary generated: {result['answer'][:100]}...")
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -1088,17 +1718,6 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in weekly summary handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Weekly summary handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": f"Failed to generate weekly summary: {str(e)}"}
 
         # ANOMALY DETECTION QUERIES
@@ -1107,15 +1726,14 @@ class RoomLogAnalyzer:
                 self.logger.info(f"Matched anomaly detection query: '{query}'")
                 anomalies = self.advanced_handlers.detect_anomalies(df)
                 if anomalies:
-                    anomaly_descriptions = [f"{a.anomaly_type}: {a.description}" for a in anomalies[:3]]
+                    anomaly_descriptions = [f"{a['type']}: {a['description']}" for a in anomalies[:3]]
                     result = {
                         "answer": f"Detected {len(anomalies)} anomalies: {'; '.join(anomaly_descriptions)}",
-                        "anomalies": [{"type": a.anomaly_type, "severity": a.severity, "description": a.description} for a in anomalies]
+                        "anomalies": anomalies
                     }
                 else:
                     result = {"answer": "No anomalies detected in the current data.", "sources": []}
                 
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -1130,17 +1748,6 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in anomaly detection handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Anomaly detection handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
         # CONTEXT-AWARE QUERIES
@@ -1150,19 +1757,7 @@ class RoomLogAnalyzer:
                 result = self.advanced_handlers.handle_context_aware_query(query, df)
                 if "error" in result:
                     self.logger.error(f"Context-aware query failed: {result['error']}")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error=result["error"],
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return result
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -1177,17 +1772,6 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in context-aware handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Context-aware handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
         # ALL READINGS QUERIES
@@ -1205,7 +1789,6 @@ class RoomLogAnalyzer:
                     "answer": f"The room logs contain {len(timestamps)} occupied readings: {', '.join(timestamps[:5])}{'...' if len(timestamps) > 5 else ''}.",
                     "sources": sources
                 }
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -1220,17 +1803,6 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in all readings handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"All readings handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
         # RECORD COUNT QUERIES
@@ -1244,7 +1816,6 @@ class RoomLogAnalyzer:
                     "answer": f"There are {count} occupied room records in the dataset.",
                     "sources": sources
                 }
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -1259,17 +1830,6 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in record count handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Record count handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
         # PEOPLE COUNT QUERIES
@@ -1283,7 +1843,6 @@ class RoomLogAnalyzer:
                     "answer": f"There are a total of {total_people} people across all occupied room records.",
                     "sources": sources
                 }
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=result["answer"],
@@ -1298,20 +1857,9 @@ class RoomLogAnalyzer:
                 return result
             except Exception as e:
                 self.logger.error(f"Error in people count handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"People count handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
-        # POWER CONSUMPTION BREAKDOWN QUERIES
+        # POWER BREAKDOWN QUERIES
         if "power consumption breakdown" in q_lower or "power breakdown" in q_lower:
             try:
                 self.logger.info(f"Matched power breakdown query: '{query}'")
@@ -1337,7 +1885,6 @@ class RoomLogAnalyzer:
                                 "answer": f"At {target_timestamp}, the power consumption breakdown is: {breakdown}.",
                                 "sources": sources
                             }
-                            # PROMPT LOGGING: Always log deterministic results
                             self.logger_manager.log_prompt_to_mongodb(
                                 query=query,
                                 response=result["answer"],
@@ -1353,32 +1900,9 @@ class RoomLogAnalyzer:
                     except ValueError:
                         self.logger.warning(f"Invalid timestamp format in query: {target_timestamp}")
                 self.logger.warning("No valid timestamp found for power breakdown query")
-                # LOG THE FAILURE
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error="No valid timestamp found for power breakdown",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": "No valid timestamp found for power breakdown query"}
             except Exception as e:
                 self.logger.error(f"Error in power breakdown handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Power breakdown handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
         # MIXED QUERIES
@@ -1386,7 +1910,6 @@ class RoomLogAnalyzer:
         if mixed_result:
             try:
                 self.logger.info(f"Matched mixed query: '{query}'")
-                # PROMPT LOGGING: Always log deterministic results
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=mixed_result["answer"],
@@ -1401,20 +1924,9 @@ class RoomLogAnalyzer:
                 return mixed_result
             except Exception as e:
                 self.logger.error(f"Error in mixed query handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Mixed query handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
-        # MIN/MAX QUERIES
+        # MIN/MAX COMBINED QUERIES
         has_lowest = "lowest" in q_lower or "minimum" in q_lower or "min " in q_lower
         has_highest = "highest" in q_lower or "maximum" in q_lower or "max " in q_lower
 
@@ -1423,7 +1935,6 @@ class RoomLogAnalyzer:
                 self.logger.info(f"Matched combined min/max query: '{query}'")
                 result = self._handle_min_max_query(q_lower, df, "combined")
                 if result:
-                    # PROMPT LOGGING: Always log deterministic results
                     self.logger_manager.log_prompt_to_mongodb(
                         query=query,
                         response=result["answer"],
@@ -1437,39 +1948,15 @@ class RoomLogAnalyzer:
                     )
                     return result
                 else:
-                    self.logger.warning("No result for combined min/max query")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error="No result for combined min/max query",
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return {"error": "No result for combined min/max query"}
             except Exception as e:
                 self.logger.error(f"Error in combined min/max handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Combined min/max handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
         elif has_lowest:
             try:
                 self.logger.info(f"Matched min query: '{query}'")
                 result = self._handle_min_max_query(q_lower, df, "min")
                 if result:
-                    # PROMPT LOGGING: Always log deterministic results
                     self.logger_manager.log_prompt_to_mongodb(
                         query=query,
                         response=result["answer"],
@@ -1483,39 +1970,15 @@ class RoomLogAnalyzer:
                     )
                     return result
                 else:
-                    self.logger.warning("No result for min query")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error="No result for min query",
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return {"error": "No result for min query"}
             except Exception as e:
                 self.logger.error(f"Error in min handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Min handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
         elif has_highest:
             try:
                 self.logger.info(f"Matched max query: '{query}'")
                 result = self._handle_min_max_query(q_lower, df, "max")
                 if result:
-                    # PROMPT LOGGING: Always log deterministic results
                     self.logger_manager.log_prompt_to_mongodb(
                         query=query,
                         response=result["answer"],
@@ -1529,39 +1992,15 @@ class RoomLogAnalyzer:
                     )
                     return result
                 else:
-                    self.logger.warning("No result for max query")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error="No result for max query",
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return {"error": "No result for max query"}
             except Exception as e:
                 self.logger.error(f"Error in max handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Max handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
         elif "average" in q_lower or "mean" in q_lower:
             try:
                 self.logger.info(f"Matched average query: '{query}'")
                 result = self._handle_avg_query(q_lower, df)
                 if result:
-                    # PROMPT LOGGING: Always log deterministic results
                     self.logger_manager.log_prompt_to_mongodb(
                         query=query,
                         response=result["answer"],
@@ -1575,32 +2014,9 @@ class RoomLogAnalyzer:
                     )
                     return result
                 else:
-                    self.logger.warning("No result for average query")
-                    self.logger_manager.log_prompt_to_mongodb(
-                        query=query,
-                        response=None,
-                        user_id=user_id,
-                        username=username,
-                        session_id=session_id,
-                        client_ip=client_ip,
-                        error="No result for average query",
-                        prompt_type=self.prompt_type,
-                        document_template=self.document_template
-                    )
                     return {"error": "No result for average query"}
             except Exception as e:
                 self.logger.error(f"Error in average handler: {e}")
-                self.logger_manager.log_prompt_to_mongodb(
-                    query=query,
-                    response=None,
-                    user_id=user_id,
-                    username=username,
-                    session_id=session_id,
-                    client_ip=client_ip,
-                    error=f"Average handler failed: {str(e)}",
-                    prompt_type=self.prompt_type,
-                    document_template=self.document_template
-                )
                 return {"error": str(e)}
 
         self.logger.warning(f"No deterministic match for query: '{q_lower}'; falling back to LLM")
@@ -1623,10 +2039,9 @@ class RoomLogAnalyzer:
         return system_prompt.format(query=query)
 
     def ask(self, query, user_id=None, username=None, session_id=None, client_ip=None):
-        """Ask a question about the room logs with robust logging - FIXED VERSION"""
+        """Ask a question about the room logs with robust logging"""
         self.logger.info(f"Processing ask request for query: '{query}' with user_id: {user_id}, username: {username}")
         
-        # Ensure MongoDB connection before processing
         if self.use_database:
             mongo_uri = os.getenv("MONGO_ATLAS_URI")
             mongo_db_name = os.getenv("MONGO_DB_NAME", "LLM_logs")
@@ -1638,7 +2053,6 @@ class RoomLogAnalyzer:
         
         if not self.qa_chain:
             self.logger.error("QA chain not initialized")
-            # PROMPT LOGGING: Always log errors
             self.logger_manager.log_prompt_to_mongodb(
                 query=query,
                 response=None,
@@ -1653,11 +2067,9 @@ class RoomLogAnalyzer:
             return {"error": "QA chain not initialized. Please initialize the analyzer."}
 
         try:
-            # Load data but don't let document duplication affect prompt logging
             df = self.load_and_process_data(include_maintenance=True)
             if df is None or df.empty:
                 self.logger.warning("No data available for processing query")
-                # PROMPT LOGGING: Always log no data scenario
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
                     response=None,
@@ -1671,7 +2083,6 @@ class RoomLogAnalyzer:
                 )
                 return {"answer": "No data available to process the query.", "sources": []}
 
-            # Update vector store with any new documents, but continue even if no new documents
             documents = self.create_documents(df, include_maintenance=True)
             if documents:
                 self.logger.info(f"Adding {len(documents)} new documents due to data changes")
@@ -1684,14 +2095,11 @@ class RoomLogAnalyzer:
             else:
                 self.logger.info("No new documents to add to vector store - using existing knowledge")
 
-            # Try deterministic handlers first
             deterministic_result = self._handle_deterministic_query(query, user_id, username, session_id, client_ip)
             if deterministic_result:
                 self.logger.info(f"Used deterministic handler for query: '{query}'")
-                # Note: Prompt logging already handled inside _handle_deterministic_query
                 return deterministic_result
 
-            # Fall back to LLM for complex queries
             enhanced_query = self._enhance_query_for_llm(query)
             result = self.qa_chain({"query": enhanced_query})
             self.logger.info(f"Query: '{query}' - Response generated using LLM")
@@ -1715,7 +2123,6 @@ class RoomLogAnalyzer:
                 "sources": unique_source_docs
             }
 
-            # PROMPT LOGGING: Always log LLM responses
             self.logger_manager.log_prompt_to_mongodb(
                 query=query,
                 response=validated_answer,
@@ -1731,7 +2138,6 @@ class RoomLogAnalyzer:
 
         except Exception as e:
             self.logger.error(f"Error processing query '{query}': {e}")
-            # PROMPT LOGGING: Always log errors
             self.logger_manager.log_prompt_to_mongodb(
                 query=query,
                 response=None,
@@ -1762,84 +2168,83 @@ class RoomLogAnalyzer:
 analyzer = None
 
 def initialize_analyzer(reset_vector_store=False):
+    """Initialize the global analyzer instance"""
     global analyzer
     try:
+        logger = logging.getLogger(__name__)
         logger.info("Starting analyzer initialization with MongoDB Atlas")
         
-        # Test MongoDB connection first
         mongo_uri = os.getenv("MONGO_ATLAS_URI")
-        if not mongo_uri:
-            logger.error("MONGO_ATLAS_URI not found in environment")
-            return False
-
-        try:
-            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
-            client.admin.command('ping')
-            client.close()
-        except (ConnectionFailure, OperationFailure) as e:
-            logger.error(f"MongoDB connection test failed: {e}")
-            return False
-
-        # Set Django environment
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbmsAPI.settings')
-        import django
-        django.setup()
-        logger.info("Django environment initialized")
-
+        mongo_db_name = os.getenv("MONGO_DB_NAME", "LLM_logs")
+        mongo_collection_name = os.getenv("MONGO_COLLECTION_NAME", "logs")
+        prompt_logs_db_name = os.getenv("PROMPT_LOGS_DB_NAME", "chat_logs")
+        prompt_logs_collection_name = os.getenv("PROMPT_LOGS_COLLECTION_NAME", "conversations")
+        
         analyzer = RoomLogAnalyzer(
             use_database=True,
+            mongo_uri=mongo_uri,
+            mongo_db_name=mongo_db_name,
+            mongo_collection_name=mongo_collection_name,
+            prompt_logs_db_name=prompt_logs_db_name,
+            prompt_logs_collection_name=prompt_logs_collection_name
         )
-        logger.info("RoomLogAnalyzer instance created")
-        df = analyzer.load_and_process_data(include_maintenance=True)
-        logger.info(f"Data loaded, rows: {len(df) if df is not None else 0}")
-        if df is None or df.empty:
-            logger.warning("DataFrame is empty or None; check data sources")
-            raise ValueError("No valid data to process")
-        documents = analyzer.create_documents(df, include_maintenance=True)
-        logger.info(f"Documents created: {len(documents)}")
-        analyzer.initialize_vector_store(documents, reset=reset_vector_store)
-        logger.info("Vector store initialized")
-        analyzer.initialize_qa_chain()
-        logger.info("QA chain initialized")
-        logger.info("Analyzer initialized successfully with MongoDB Atlas")
-        return True
-    except ValueError as e:
-        logger.error(f"Error initializing analyzer: {e}")
-        return False
+        
+        df = analyzer.load_and_process_data(force_reload=True, include_maintenance=True)
+        if df is not None and not df.empty:
+            documents = analyzer.create_documents(df, include_maintenance=True)
+            analyzer.initialize_vector_store(documents, reset=reset_vector_store)
+            analyzer.initialize_qa_chain()
+            logger.info("Analyzer initialized successfully")
+        else:
+            logger.warning("No data loaded during analyzer initialization")
+        
+        return analyzer
+    except Exception as e:
+        logger.error(f"Failed to initialize analyzer: {e}")
+        return None
 
 def ask(query, user_id=None, username=None, session_id=None, client_ip=None):
-    """Public function to ask questions"""
+    """Wrapper function to allow importing ask as a function"""
     global analyzer
-    logger.info(f"Calling ask with query: '{query}', user_id: {user_id}, username: {username}")
     if analyzer is None:
-        if not initialize_analyzer():
-            logger.error("Analyzer initialization failed")
-            return {"error": "Analyzer not initialized"}
-    try:
-        result = analyzer.ask(query, user_id=user_id, username=username, session_id=session_id, client_ip=client_ip)
-        return result
-    except Exception as e:
-        logger.error(f"Error processing query: {e}")
-        return {"error": str(e)}
+        analyzer = initialize_analyzer()
+        if analyzer is None:
+            logger = logging.getLogger(__name__)
+            logger.error("Failed to initialize analyzer in ask function")
+            return {"error": "Failed to initialize analyzer"}
+    return analyzer.ask(query, user_id, username, session_id, client_ip)
 
-# Test block
 if __name__ == "__main__":
-    debug_environment(debug=True)
-    
-    if initialize_analyzer(reset_vector_store=False):
-        queries = [
-            "What is the highest temperature?",
-            "Show me the weekly summary", 
-            "What is the room status?",
-            "Check for maintenance issues",
-            "Show me pending maintenance requests"
+    analyzer = initialize_analyzer(reset_vector_store=False)
+    if analyzer:
+        # Example queries that should work correctly
+        test_queries = [
+            "How many rooms are in the system?",
+            "What's the most used room?",
+            "Show me the highest temperature recorded",
+            "How many maintenance requests are pending?",
+            "What's the average energy consumption?",
+            "Generate weekly summary",
+            "Show me energy trends",
+            "What are the key performance indicators?",
+            "What's happening in Conference room A right now?",
+            "Which room has the highest occupancy?",
+            "Temperature in conference room A",
+            "Show me data for Conference Room A",
+            # Test energy queries
+            "Energy consumption in Room 101",
+            "Show me energy trends",
+            "Power usage analysis",
+            "Highest energy consumption room"
         ]
-        for query in queries:
-            result = ask(
-                query=query,
-                user_id="test_user",
-                username="TestUser", 
-                session_id="test_session",
-                client_ip="127.0.0.1"
-            )
-            print(f"Query: {query}\nResult: {result}\n")
+        
+        for query in test_queries:
+            print(f"\n=== Query: {query} ===")
+            result = analyzer.ask(query)
+            print(f"Answer: {result.get('answer', 'No answer')}")
+            if 'error' in result:
+                print(f"Error: {result['error']}")
+            if 'insights' in result:
+                print(f"Energy Insights: {result['insights']}")
+    else:
+        print("Failed to initialize analyzer")

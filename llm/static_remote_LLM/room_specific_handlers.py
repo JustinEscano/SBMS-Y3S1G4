@@ -1,3 +1,8 @@
+"Total rooms and occupied rooms"
+
+
+"🏢 Room Utilization:"
+
 import pandas as pd
 import numpy as np
 import logging
@@ -249,7 +254,610 @@ class RoomSpecificHandlers:
         except Exception as e:
             logger.error(f"Error getting room data for '{room_name}': {e}")
             return pd.DataFrame()
-    
+
+    def handle_basic_room_info(self, query: str) -> Dict[str, Any]:
+        """Handle basic room information queries"""
+        query_lower = query.lower()
+        
+        try:
+            # Get all rooms
+            rooms = self.get_available_rooms()
+            
+            if not rooms:
+                return {
+                    "analysis_type": "basic_room_info",
+                    "answer": "No rooms found in the system.",
+                    "rooms": []
+                }
+            
+            # Get current sensor data for occupancy analysis
+            sensor_data = self.db_adapter.get_sensor_data_as_dataframe(limit=1000)
+            
+            # Count total rooms
+            total_rooms = len(rooms)
+            
+            # Count occupied rooms
+            occupied_count = 0
+            room_details = []
+            
+            if sensor_data is not None and not sensor_data.empty and 'room_name' in sensor_data.columns:
+                # Get latest record for each room
+                latest_data = sensor_data.sort_values('timestamp', ascending=False).groupby('room_name').first().reset_index()
+                
+                for room in rooms:
+                    room_name = room.get('name', 'Unknown')
+                    room_data = latest_data[latest_data['room_name'] == room_name]
+                    
+                    room_info = {
+                        "name": room_name,
+                        "capacity": room.get('capacity', 'Unknown'),
+                        "type": room.get('type', 'Unknown'),
+                        "current_status": "unknown",
+                        "occupant_count": 0,
+                        "temperature": None,
+                        "last_updated": None
+                    }
+                    
+                    if not room_data.empty:
+                        latest_record = room_data.iloc[0]
+                        room_info["current_status"] = latest_record.get('occupancy_status', 'unknown')
+                        room_info["occupant_count"] = int(latest_record.get('occupancy_count', 0))
+                        room_info["temperature"] = latest_record.get('environmental_data.temperature_celsius')
+                        room_info["last_updated"] = str(latest_record.get('timestamp', 'unknown'))
+                        
+                        if room_info["current_status"] == "occupied" or room_info["occupant_count"] > 0:
+                            occupied_count += 1
+                    
+                    room_details.append(room_info)
+            else:
+                # If no sensor data, just return basic room info
+                room_details = [{
+                    "name": room.get('name', 'Unknown'),
+                    "capacity": room.get('capacity', 'Unknown'),
+                    "type": room.get('type', 'Unknown'),
+                    "current_status": "unknown"
+                } for room in rooms]
+            
+            # Build response based on query type
+            if "how many rooms" in query_lower:
+                if "occupied" in query_lower:
+                    answer = f"There are {occupied_count} rooms currently occupied out of {total_rooms} total rooms."
+                else:
+                    answer = f"There are {total_rooms} rooms in the system."
+            
+            elif "show me all available rooms" in query_lower or "list all rooms" in query_lower:
+                room_list = ", ".join([room['name'] for room in rooms])
+                answer = f"Available rooms: {room_list}. Total: {total_rooms} rooms."
+            
+            elif "room capacity" in query_lower or "building capacity" in query_lower:
+                total_capacity = sum(room.get('capacity', 0) for room in rooms if isinstance(room.get('capacity'), (int, float)))
+                answer = f"Total building capacity: {total_capacity} people across {total_rooms} rooms."
+            
+            else:
+                answer = f"Room system summary: {total_rooms} total rooms, {occupied_count} currently occupied."
+            
+            return {
+                "analysis_type": "basic_room_info",
+                "timestamp": datetime.utcnow().isoformat(),
+                "total_rooms": total_rooms,
+                "occupied_rooms": occupied_count,
+                "available_rooms": total_rooms - occupied_count,
+                "room_details": room_details,
+                "answer": answer
+            }
+            
+        except Exception as e:
+            logger.error(f"Error handling basic room info: {e}")
+            return {
+                "analysis_type": "basic_room_info",
+                "error": f"Error retrieving room information: {str(e)}",
+                "answer": "Unable to retrieve room information at this time."
+            }
+
+    def handle_room_usage_analysis(self, query: str) -> Dict[str, Any]:
+        """Handle room usage and utilization queries"""
+        query_lower = query.lower()
+        
+        try:
+            # Get sensor data for analysis
+            sensor_data = self.db_adapter.get_sensor_data_as_dataframe(limit=5000)
+            
+            if sensor_data is None or sensor_data.empty or 'room_name' not in sensor_data.columns:
+                return {
+                    "analysis_type": "room_usage",
+                    "answer": "No room usage data available for analysis.",
+                    "usage_metrics": {}
+                }
+            
+            # Analyze room usage patterns
+            usage_metrics = self._analyze_room_usage_patterns(sensor_data)
+            
+            # Build response based on query
+            if "most used room" in query_lower or "highest usage" in query_lower:
+                if usage_metrics.get("most_used_room"):
+                    most_used = usage_metrics["most_used_room"]
+                    answer = f"The most used room is {most_used['name']} with {most_used['utilization_rate']}% utilization rate."
+                else:
+                    answer = "Unable to determine the most used room from available data."
+            
+            elif "highest occupancy" in query_lower:
+                if usage_metrics.get("highest_occupancy_room"):
+                    high_occ = usage_metrics["highest_occupancy_room"]
+                    answer = f"The room with highest occupancy is {high_occ['name']} with peak of {high_occ['peak_occupancy']} people."
+                else:
+                    answer = "Unable to determine the room with highest occupancy from available data."
+            
+            elif "utilization statistics" in query_lower or "usage patterns" in query_lower:
+                total_utilization = usage_metrics.get("average_utilization_rate", 0)
+                underutilized = usage_metrics.get("underutilized_rooms", [])
+                answer = f"Overall room utilization: {total_utilization}%. {len(underutilized)} rooms are underutilized."
+            
+            elif "this week" in query_lower:
+                weekly_patterns = self._analyze_weekly_patterns(sensor_data)
+                answer = self._create_weekly_patterns_summary(weekly_patterns)
+            
+            else:
+                # General usage summary
+                total_utilization = usage_metrics.get("average_utilization_rate", 0)
+                most_used = usage_metrics.get("most_used_room", {})
+                answer = f"Room utilization analysis: Average utilization rate is {total_utilization}%. "
+                if most_used:
+                    answer += f"Most used room: {most_used.get('name')} ({most_used.get('utilization_rate', 0)}%)."
+            
+            return {
+                "analysis_type": "room_usage",
+                "timestamp": datetime.utcnow().isoformat(),
+                "usage_metrics": usage_metrics,
+                "answer": answer
+            }
+            
+        except Exception as e:
+            logger.error(f"Error handling room usage analysis: {e}")
+            return {
+                "analysis_type": "room_usage",
+                "error": f"Error analyzing room usage: {str(e)}",
+                "answer": "Unable to analyze room usage patterns at this time."
+            }
+
+    def _analyze_room_usage_patterns(self, sensor_data: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze room usage patterns from sensor data"""
+        usage_metrics = {
+            "room_utilization": {},
+            "most_used_room": None,
+            "highest_occupancy_room": None,
+            "average_utilization_rate": 0,
+            "underutilized_rooms": [],
+            "overutilized_rooms": []
+        }
+        
+        try:
+            # Group data by room
+            room_groups = sensor_data.groupby('room_name')
+            all_utilization_rates = []
+            
+            for room_name, room_data in room_groups:
+                room_metrics = self._calculate_room_utilization(room_name, room_data)
+                usage_metrics["room_utilization"][room_name] = room_metrics
+                all_utilization_rates.append(room_metrics.get("occupancy_rate", 0))
+                
+                # Track most used room
+                if not usage_metrics["most_used_room"] or \
+                   room_metrics.get("occupancy_rate", 0) > usage_metrics["most_used_room"].get("utilization_rate", 0):
+                    usage_metrics["most_used_room"] = {
+                        "name": room_name,
+                        "utilization_rate": room_metrics.get("occupancy_rate", 0),
+                        "peak_occupancy": room_metrics.get("peak_occupancy", 0),
+                        "usage_pattern": room_metrics.get("usage_pattern", "unknown")
+                    }
+                
+                # Track highest occupancy room
+                if not usage_metrics["highest_occupancy_room"] or \
+                   room_metrics.get("peak_occupancy", 0) > usage_metrics["highest_occupancy_room"].get("peak_occupancy", 0):
+                    usage_metrics["highest_occupancy_room"] = {
+                        "name": room_name,
+                        "peak_occupancy": room_metrics.get("peak_occupancy", 0),
+                        "average_occupancy": room_metrics.get("average_occupancy", 0)
+                    }
+                
+                # Track underutilized rooms
+                if room_metrics.get("usage_pattern") == "underutilized":
+                    usage_metrics["underutilized_rooms"].append({
+                        "name": room_name,
+                        "utilization_rate": room_metrics.get("occupancy_rate", 0)
+                    })
+                
+                # Track overutilized rooms (high utilization)
+                if room_metrics.get("usage_pattern") == "high_utilization":
+                    usage_metrics["overutilized_rooms"].append({
+                        "name": room_name,
+                        "utilization_rate": room_metrics.get("occupancy_rate", 0)
+                    })
+            
+            # Calculate average utilization rate
+            if all_utilization_rates:
+                usage_metrics["average_utilization_rate"] = round(sum(all_utilization_rates) / len(all_utilization_rates), 1)
+            
+        except Exception as e:
+            logger.error(f"Error analyzing room usage patterns: {e}")
+        
+        return usage_metrics
+
+    def _analyze_weekly_patterns(self, sensor_data: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze weekly usage patterns"""
+        weekly_patterns = {
+            "daily_averages": {},
+            "peak_days": [],
+            "trends": {}
+        }
+        
+        try:
+            if 'timestamp' in sensor_data.columns:
+                df = sensor_data.copy()
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                df['day_of_week'] = df['timestamp'].dt.day_name()
+                df['hour'] = df['timestamp'].dt.hour
+                
+                # Daily averages
+                if 'occupancy_count' in df.columns:
+                    daily_avg = df.groupby('day_of_week')['occupancy_count'].mean().sort_values(ascending=False)
+                    weekly_patterns["daily_averages"] = daily_avg.to_dict()
+                    
+                    # Peak days (above average)
+                    overall_avg = df['occupancy_count'].mean()
+                    weekly_patterns["peak_days"] = daily_avg[daily_avg > overall_avg].index.tolist()
+                
+                # Hourly trends
+                hourly_avg = df.groupby('hour')['occupancy_count'].mean()
+                weekly_patterns["trends"]["hourly"] = hourly_avg.to_dict()
+                
+        except Exception as e:
+            logger.error(f"Error analyzing weekly patterns: {e}")
+        
+        return weekly_patterns
+
+    def _create_weekly_patterns_summary(self, weekly_patterns: Dict[str, Any]) -> str:
+        """Create summary of weekly patterns"""
+        if not weekly_patterns.get("daily_averages"):
+            return "No weekly pattern data available."
+        
+        daily_avgs = weekly_patterns["daily_averages"]
+        peak_days = weekly_patterns.get("peak_days", [])
+        
+        # Find busiest and quietest days
+        if daily_avgs:
+            busiest_day = max(daily_avgs, key=daily_avgs.get)
+            quietest_day = min(daily_avgs, key=daily_avgs.get)
+            
+            summary = f"Weekly usage patterns: Busiest day is {busiest_day}, quietest is {quietest_day}. "
+            if peak_days:
+                summary += f"Peak usage days: {', '.join(peak_days)}."
+            
+            return summary
+        
+        return "Insufficient data for weekly pattern analysis."
+
+    def handle_room_environmental_query(self, room_name: str, room_df: pd.DataFrame, query: str) -> Dict[str, Any]:
+        """Handle environmental queries for specific rooms"""
+        query_lower = query.lower()
+        
+        try:
+            if room_df.empty:
+                return {
+                    "room": room_name,
+                    "error": "No environmental data available"
+                }
+            
+            # Get latest record
+            latest_record = room_df.iloc[0]
+            
+            response = {
+                "room": room_name,
+                "analysis_type": "environmental_query",
+                "timestamp": datetime.utcnow().isoformat(),
+                "current_data": {}
+            }
+            
+            # Build response based on query
+            if "temperature" in query_lower:
+                temp = latest_record.get("environmental_data.temperature_celsius")
+                if temp is not None:
+                    response["current_data"]["temperature_celsius"] = float(temp)
+                    response["answer"] = f"Current temperature in {room_name} is {temp:.1f}°C."
+                else:
+                    response["answer"] = f"Temperature data not available for {room_name}."
+            
+            elif "people" in query_lower or "how many" in query_lower:
+                occupants = latest_record.get("occupancy_count", 0)
+                status = latest_record.get("occupancy_status", "unknown")
+                response["current_data"]["occupant_count"] = int(occupants)
+                response["current_data"]["occupancy_status"] = status
+                response["answer"] = f"There are {int(occupants)} people in {room_name}. Status: {status}."
+            
+            elif "humidity" in query_lower:
+                humidity = latest_record.get("environmental_data.humidity_percent")
+                if humidity is not None:
+                    response["current_data"]["humidity_percent"] = float(humidity)
+                    response["answer"] = f"Current humidity in {room_name} is {humidity:.1f}%."
+                else:
+                    response["answer"] = f"Humidity data not available for {room_name}."
+            
+            else:
+                # General environmental overview
+                temp = latest_record.get("environmental_data.temperature_celsius")
+                humidity = latest_record.get("environmental_data.humidity_percent")
+                occupants = latest_record.get("occupancy_count", 0)
+                
+                answer_parts = [f"Current status of {room_name}:"]
+                if temp is not None:
+                    answer_parts.append(f"Temperature: {temp:.1f}°C")
+                if humidity is not None:
+                    answer_parts.append(f"Humidity: {humidity:.1f}%")
+                answer_parts.append(f"Occupants: {int(occupants)}")
+                
+                response["answer"] = ". ".join(answer_parts) + "."
+                response["current_data"] = {
+                    "temperature_celsius": float(temp) if temp is not None else None,
+                    "humidity_percent": float(humidity) if humidity is not None else None,
+                    "occupant_count": int(occupants)
+                }
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error handling environmental query for {room_name}: {e}")
+            return {
+                "room": room_name,
+                "error": f"Error retrieving environmental data: {str(e)}",
+                "answer": f"Unable to retrieve environmental data for {room_name}."
+            }
+
+    def handle_room_specific_query(self, query: str) -> Dict[str, Any]:
+        """Handle room-specific queries with better error messages"""
+        # First, check for basic room information queries
+        query_lower = query.lower()
+        
+        # Basic room information queries
+        basic_info_keywords = ["how many rooms", "room capacity", "show me all available rooms", "list all rooms"]
+        if any(keyword in query_lower for keyword in basic_info_keywords):
+            return self.handle_basic_room_info(query)
+        
+        # Room usage and utilization queries
+        usage_keywords = ["most used room", "room utilization", "highest occupancy", "usage patterns", "utilization statistics"]
+        if any(keyword in query_lower for keyword in usage_keywords):
+            return self.handle_room_usage_analysis(query)
+        
+        # Check for maintenance-related queries
+        if any(keyword in query_lower for keyword in ["maintenance", "issues", "maintenance requests"]):
+            return self.handle_maintenance_analysis()
+        
+        # Try to extract room name for specific room queries
+        room_name = self.parse_room_query(query)
+        
+        if not room_name:
+            # If no specific room found, check if it's a general query that should be handled
+            if any(keyword in query_lower for keyword in ["temperature", "people", "happening", "data for"]):
+                available_rooms = [room.get('name', 'Unknown') for room in self.get_available_rooms()]
+                return {
+                    "error": f"Could not identify specific room from query. Available rooms: {', '.join(available_rooms)}. Please specify like 'Room 101 status' or 'What's happening in Conference Room'"
+                }
+            else:
+                # Try basic room info as fallback
+                return self.handle_basic_room_info(query)
+        
+        # Get room data for specific room queries
+        room_df = self.get_room_data(room_name)
+        
+        if room_df.empty:
+            # Provide helpful error message with available rooms
+            available_rooms = [room.get('name', 'Unknown') for room in self.get_available_rooms()]
+            return {
+                "error": f"No data found for '{room_name}'. Available rooms: {', '.join(available_rooms)}"
+            }
+        
+        # Determine query type and handle accordingly
+        if any(keyword in query_lower for keyword in ["predict", "prediction", "forecast"]):
+            return self.handle_room_predictions(room_name, room_df, query)
+        
+        elif any(keyword in query_lower for keyword in ["anomaly", "unusual", "abnormal", "alert"]):
+            return self.handle_room_anomalies(room_name, room_df)
+        
+        elif any(keyword in query_lower for keyword in ["energy", "consumption", "power", "usage"]):
+            return self.handle_room_energy_analysis(room_name, room_df)
+        
+        elif any(keyword in query_lower for keyword in ["status", "condition", "current", "overview", "happening", "right now"]):
+            return self.handle_room_status(room_name, room_df)
+        
+        elif any(keyword in query_lower for keyword in ["utilization", "occupancy", "usage pattern"]):
+            return self.handle_room_utilization(room_name, room_df)
+        
+        elif any(keyword in query_lower for keyword in ["temperature", "people", "how many"]):
+            return self.handle_room_environmental_query(room_name, room_df, query)
+        
+        elif any(keyword in query_lower for keyword in ["highest", "lowest", "max", "min", "average"]):
+            return self.handle_room_min_max_avg(query_lower, room_name, room_df)
+        
+        else:
+            # General room analysis
+            return self.handle_general_room_analysis(room_name, room_df, query)
+
+    def handle_room_utilization(self, room_name: str, room_df: pd.DataFrame) -> Dict[str, Any]:
+        """Handle utilization analysis for a specific room"""
+        try:
+            if room_df.empty:
+                return {
+                    "room": room_name,
+                    "analysis_type": "room_utilization",
+                    "error": "No data available for utilization analysis",
+                    "answer": f"No utilization data available for {room_name}"
+                }
+            
+            # Calculate utilization metrics
+            utilization_metrics = self._calculate_room_utilization(room_name, room_df)
+            
+            return {
+                "room": room_name,
+                "analysis_type": "room_utilization",
+                "timestamp": datetime.utcnow().isoformat(),
+                "utilization_metrics": utilization_metrics,
+                "answer": self._create_utilization_summary(room_name, utilization_metrics)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in room utilization analysis for {room_name}: {e}")
+            return {
+                "room": room_name,
+                "analysis_type": "room_utilization",
+                "error": f"Failed to analyze room utilization: {str(e)}",
+                "answer": f"Unable to analyze utilization for {room_name} due to data processing error"
+            }
+
+    def _calculate_room_utilization(self, room_name: str, room_df: pd.DataFrame) -> Dict[str, Any]:
+        """Calculate detailed utilization metrics for a room"""
+        metrics = {
+            "occupancy_rate": 0.0,
+            "peak_occupancy": 0,
+            "average_occupancy": 0.0,
+            "utilization_hours": 0,
+            "energy_per_occupant": 0.0,
+            "usage_pattern": "unknown"
+        }
+        
+        try:
+            # Occupancy analysis
+            if "occupancy_count" in room_df.columns:
+                occupancy_data = room_df["occupancy_count"].dropna()
+                if not occupancy_data.empty:
+                    metrics["peak_occupancy"] = int(occupancy_data.max())
+                    metrics["average_occupancy"] = float(occupancy_data.mean())
+                    
+                    # Calculate occupancy rate (percentage of time occupied)
+                    occupied_records = occupancy_data[occupancy_data > 0]
+                    metrics["occupancy_rate"] = round(len(occupied_records) / len(occupancy_data) * 100, 1)
+                    
+                    # Estimate utilization hours (assuming data points represent time intervals)
+                    metrics["utilization_hours"] = len(occupied_records)  # Simplified - adjust based on your data frequency
+            
+            # Energy efficiency per occupant
+            if "energy_consumption_kwh" in room_df.columns and "occupancy_count" in room_df.columns:
+                energy_data = room_df["energy_consumption_kwh"].dropna()
+                occupancy_data = room_df["occupancy_count"].dropna()
+                
+                if not energy_data.empty and not occupancy_data.empty:
+                    total_energy = energy_data.sum()
+                    total_occupant_hours = occupancy_data.sum()  # Simplified metric
+                    if total_occupant_hours > 0:
+                        metrics["energy_per_occupant"] = round(total_energy / total_occupant_hours, 3)
+            
+            # Determine usage pattern
+            occupancy_rate = metrics["occupancy_rate"]
+            if occupancy_rate > 70:
+                metrics["usage_pattern"] = "high_utilization"
+            elif occupancy_rate > 40:
+                metrics["usage_pattern"] = "medium_utilization"
+            elif occupancy_rate > 10:
+                metrics["usage_pattern"] = "low_utilization"
+            else:
+                metrics["usage_pattern"] = "underutilized"
+            
+            # Time-based analysis if timestamp data is available
+            if "timestamp" in room_df.columns:
+                time_analysis = self._analyze_temporal_utilization(room_df)
+                metrics.update(time_analysis)
+                
+        except Exception as e:
+            logger.error(f"Error calculating utilization metrics for {room_name}: {e}")
+        
+        return metrics
+
+    def _analyze_temporal_utilization(self, room_df: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze utilization patterns over time"""
+        temporal_metrics = {
+            "peak_usage_hours": [],
+            "off_peak_usage": 0.0,
+            "weekly_pattern": "consistent"
+        }
+        
+        try:
+            # Convert timestamp to datetime if needed
+            if "timestamp" in room_df.columns:
+                df = room_df.copy()
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                
+                # Extract hour of day
+                df['hour'] = df['timestamp'].dt.hour
+                
+                # Analyze hourly patterns
+                if "occupancy_count" in df.columns:
+                    hourly_occupancy = df.groupby('hour')['occupancy_count'].mean()
+                    if not hourly_occupancy.empty:
+                        peak_hours = hourly_occupancy[hourly_occupancy > hourly_occupancy.mean()].index.tolist()
+                        temporal_metrics["peak_usage_hours"] = sorted(peak_hours)
+                        
+                        # Calculate off-peak usage
+                        off_peak_mask = ~df['hour'].isin(peak_hours)
+                        if off_peak_mask.any():
+                            off_peak_occupied = df[off_peak_mask & (df['occupancy_count'] > 0)]
+                            temporal_metrics["off_peak_usage"] = round(len(off_peak_occupied) / len(df) * 100, 1)
+                
+                # Analyze day of week patterns
+                df['day_of_week'] = df['timestamp'].dt.day_name()
+                weekday_occupancy = df[df['day_of_week'].isin(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])]['occupancy_count'].mean()
+                weekend_occupancy = df[df['day_of_week'].isin(['Saturday', 'Sunday'])]['occupancy_count'].mean()
+                
+                if weekday_occupancy > weekend_occupancy * 1.5:
+                    temporal_metrics["weekly_pattern"] = "weekday_heavy"
+                elif weekend_occupancy > weekday_occupancy * 1.5:
+                    temporal_metrics["weekly_pattern"] = "weekend_heavy"
+                else:
+                    temporal_metrics["weekly_pattern"] = "balanced"
+                    
+        except Exception as e:
+            logger.error(f"Error in temporal utilization analysis: {e}")
+        
+        return temporal_metrics
+
+    def _create_utilization_summary(self, room_name: str, metrics: Dict[str, Any]) -> str:
+        """Create a natural language summary of room utilization"""
+        occupancy_rate = metrics.get("occupancy_rate", 0)
+        peak_occupancy = metrics.get("peak_occupancy", 0)
+        usage_pattern = metrics.get("usage_pattern", "unknown")
+        
+        summary_parts = [f"Utilization analysis for {room_name}:"]
+        
+        # Occupancy summary
+        if occupancy_rate > 0:
+            summary_parts.append(f"Occupancy rate: {occupancy_rate}%")
+            summary_parts.append(f"Peak occupancy: {peak_occupancy} people")
+        
+        # Usage pattern description
+        pattern_descriptions = {
+            "high_utilization": "This room is frequently occupied with high utilization",
+            "medium_utilization": "This room has moderate usage patterns",
+            "low_utilization": "This room is underutilized with low occupancy",
+            "underutilized": "This room is rarely occupied and may be underutilized"
+        }
+        
+        if usage_pattern in pattern_descriptions:
+            summary_parts.append(pattern_descriptions[usage_pattern])
+        
+        # Time-based insights
+        peak_hours = metrics.get("peak_usage_hours", [])
+        if peak_hours:
+            summary_parts.append(f"Peak usage hours: {', '.join(map(str, peak_hours))}:00")
+        
+        weekly_pattern = metrics.get("weekly_pattern", "")
+        if weekly_pattern == "weekday_heavy":
+            summary_parts.append("Primarily used on weekdays")
+        elif weekly_pattern == "weekend_heavy":
+            summary_parts.append("Primarily used on weekends")
+        
+        # Energy insights
+        energy_per_occupant = metrics.get("energy_per_occupant", 0)
+        if energy_per_occupant > 0:
+            summary_parts.append(f"Energy efficiency: {energy_per_occupant} kWh per occupant-hour")
+        
+        return ". ".join(summary_parts) + "."
+
     def handle_maintenance_analysis(self) -> Dict[str, Any]:
         """Analyze maintenance requests from core_maintenancerequest and provide recommendations"""
         try:
@@ -359,96 +967,7 @@ class RoomSpecificHandlers:
                 "recommendations": [],
                 "error": str(e)
             }
-    
-    def handle_room_specific_query(self, query: str) -> Dict[str, Any]:
-        """Handle room-specific queries with better error messages"""
-        # First, ensure we have room data
-        self.get_available_rooms()
-        
-        if not self._available_rooms_cache:
-            return {
-                "error": "No room information available. Please check database connection."
-            }
-        
-        # Check for maintenance-related queries first
-        query_lower = query.lower()
-        if any(keyword in query_lower for keyword in ["maintenance", "issues", "maintenance requests"]):
-            return self.handle_maintenance_analysis()
-        
-        room_name = self.parse_room_query(query)
-        
-        if not room_name:
-            available_rooms = [room.get('name', 'Unknown') for room in self._available_rooms_cache]
-            return {
-                "error": f"Could not identify room from query. Available rooms: {', '.join(available_rooms)}. Please specify like 'Room 1 status' or 'What's happening in Conference Room'"
-            }
-        
-        # Get room data
-        room_df = self.get_room_data(room_name)
-        
-        if room_df.empty:
-            # Let's debug what rooms are actually in the sensor data
-            try:
-                df = self.db_adapter.get_sensor_data_as_dataframe(limit=100)
-                if df is not None and 'room_name' in df.columns:
-                    actual_rooms_in_data = df['room_name'].unique()
-                    logger.info(f"Actual rooms found in sensor data: {actual_rooms_in_data}")
-                    
-                    # Try to find the closest match in the actual data
-                    best_data_match = None
-                    best_score = 0
-                    
-                    for data_room in actual_rooms_in_data:
-                        if pd.isna(data_room):
-                            continue
-                        try:
-                            from fuzzywuzzy import fuzz
-                            score = fuzz.partial_ratio(room_name.lower(), str(data_room).lower())
-                            if score > best_score:
-                                best_score = score
-                                best_data_match = data_room
-                        except ImportError:
-                            similarity = self._calculate_similarity_score(room_name.lower(), str(data_room).lower())
-                            if similarity > best_score:
-                                best_score = similarity
-                                best_data_match = data_room
-                    
-                    if best_data_match and best_score > 60:
-                        error_msg = f"No data found for '{room_name}'. Did you mean '{best_data_match}'? Available rooms in data: {', '.join([str(r) for r in actual_rooms_in_data if not pd.isna(r)])}"
-                    else:
-                        error_msg = f"No data found for '{room_name}'. Available rooms in sensor data: {', '.join([str(r) for r in actual_rooms_in_data if not pd.isna(r)])}"
-                else:
-                    error_msg = f"No data found for '{room_name}'. No room data available in sensor records."
-                    
-            except Exception as e:
-                logger.error(f"Error debugging room data: {e}")
-                error_msg = f"No data found for '{room_name}'. Error checking sensor data: {e}"
-            
-            return {"error": error_msg}
-        
-        # Determine query type and handle accordingly
-        if any(keyword in query_lower for keyword in ["predict", "prediction", "forecast"]):
-            return self.handle_room_predictions(room_name, room_df, query)
-        
-        elif any(keyword in query_lower for keyword in ["anomaly", "unusual", "abnormal", "alert"]):
-            return self.handle_room_anomalies(room_name, room_df)
-        
-        elif any(keyword in query_lower for keyword in ["energy", "consumption", "power", "usage"]):
-            return self.handle_room_energy_analysis(room_name, room_df)
-        
-        elif any(keyword in query_lower for keyword in ["status", "condition", "current", "overview"]):
-            return self.handle_room_status(room_name, room_df)
-        
-        elif any(keyword in query_lower for keyword in ["utilization", "occupancy", "usage pattern"]):
-            return self.handle_room_utilization(room_name, room_df)
-        
-        elif any(keyword in query_lower for keyword in ["highest", "lowest", "max", "min", "average"]):
-            return self.handle_room_min_max_avg(query_lower, room_name, room_df)
-        
-        else:
-            # General room analysis
-            return self.handle_general_room_analysis(room_name, room_df, query)
-    
+
     def handle_room_predictions(self, room_name: str, room_df: pd.DataFrame, query: str) -> Dict[str, Any]:
         """Handle predictive analysis for a specific room"""
         try:
@@ -707,16 +1226,6 @@ class RoomSpecificHandlers:
             },
             "answer": f"{room_name} is currently {latest_record.get('occupancy_status', 'unknown')} with {int(latest_record.get('occupancy_count', 0))} occupants. Temperature: {latest_record.get('environmental_data.temperature_celsius', 0):.1f}°C, Power: {latest_record.get('power_consumption_watts.total', 0):.0f}W"
         }
-    
-    def handle_room_utilization(self, room_name: str, room_df: pd.DataFrame) -> Dict[str, Any]:
-        """Handle utilization analysis for a specific room"""
-        result = self.advanced_handlers.handle_most_used_room_query(room_df)
-        
-        # Customize for specific room
-        result["room"] = room_name
-        result["analysis_type"] = "room_utilization"
-        
-        return result
     
     def handle_room_min_max_avg(self, q_lower: str, room_name: str, room_df: pd.DataFrame) -> Dict[str, Any]:
         """Handle min/max/average queries for a specific room."""
