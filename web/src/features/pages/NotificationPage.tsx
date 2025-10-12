@@ -8,7 +8,7 @@ import { notificationService } from "../services/notificationService";
 
 const NotificationPage: React.FC = () => {
   const userId = localStorage.getItem("user_id");
-  const { notifications, loading, markAsRead, markAllAsRead } = useNotifications(userId || undefined);
+  const { notifications, loading, markAsUnread, markAsRead, markAllAsRead } = useNotifications(userId || undefined);
 
   const handleDelete = async (id: string) => {
     try {
@@ -41,11 +41,12 @@ const NotificationPage: React.FC = () => {
                 notif={{
                   id: notif.id,
                   title: notif.title,
-                  content: notif.message,
+                  message: notif.message,
                   created_at: notif.created_at,
                   read: notif.read,
                 }}
                 onMarkRead={markAsRead}
+                onMarkUnread={markAsUnread}
                 onDelete={handleDelete}
               />
             ))}
