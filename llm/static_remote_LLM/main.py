@@ -360,49 +360,123 @@ class AdvancedLLMHandlers:
             return {"error": f"KPI analysis failed: {str(e)}"}
     
     def handle_energy_trends_query(self, df):
-        """Handle energy trend analysis queries"""
+        """Handle energy trend analysis queries with enhanced insights"""
         try:
-            if df.empty or 'timestamp' not in df.columns or 'energy_consumption_kwh' not in df.columns:
-                return {"error": "Insufficient data for energy trend analysis"}
+            if df.empty:
+                return {"answer": "🔋 Energy Analysis:\nNo energy consumption data available for analysis. Please ensure sensor data is being collected."}
+            
+            # Check for required columns
+            missing_columns = []
+            if 'timestamp' not in df.columns:
+                missing_columns.append("timestamp")
+            if 'energy_consumption_kwh' not in df.columns:
+                missing_columns.append("energy_consumption_kwh")
+            
+            if missing_columns:
+                return {"answer": f"🔋 Energy Analysis:\nMissing required data columns: {', '.join(missing_columns)}. Cannot perform trend analysis."}
             
             # Convert timestamp and group by date
             df['date'] = pd.to_datetime(df['timestamp']).dt.date
             daily_energy = df.groupby('date')['energy_consumption_kwh'].sum()
             
-            if len(daily_energy) < 2:
-                return {"answer": "Insufficient data points for trend analysis"}
+            # Enhanced data assessment
+            data_points = len(df)
+            unique_days = len(daily_energy)
+            time_span = (pd.to_datetime(df['timestamp'].max()) - pd.to_datetime(df['timestamp'].min())).days
             
-            # Calculate trends
+            if unique_days < 2:
+                # Provide partial insights even with limited data
+                current_energy = df['energy_consumption_kwh'].mean() if not df.empty else 0
+                total_energy = df['energy_consumption_kwh'].sum()
+                
+                answer = f"""🔋 Energy Analysis:
+
+Insufficient data points for trend analysis.
+
+📊 Available Data:
+• Data Points: {data_points}
+• Time Span: {time_span} days
+• Current Average: {current_energy:.2f} kWh
+• Total Energy: {total_energy:.2f} kWh
+
+💡 Recommendations:
+• Collect data for at least 7 days for reliable trend analysis
+• Ensure continuous data collection without gaps
+• Monitor energy consumption patterns over longer periods"""
+                
+                return {"answer": answer}
+            
+            # Calculate comprehensive trends
             trend_direction = "increasing" if daily_energy.iloc[-1] > daily_energy.iloc[0] else "decreasing"
             avg_daily = daily_energy.mean()
             max_daily = daily_energy.max()
             min_daily = daily_energy.min()
+            trend_percentage = ((daily_energy.iloc[-1] - daily_energy.iloc[0]) / daily_energy.iloc[0] * 100) if daily_energy.iloc[0] > 0 else 0
             
             # Room-wise analysis
             room_energy = df.groupby('room_name')['energy_consumption_kwh'].sum()
             highest_room = room_energy.idxmax() if not room_energy.empty else "N/A"
+            highest_consumption = room_energy.max() if not room_energy.empty else 0
             
-            answer = f"""Energy Consumption Trends:
-• Overall trend: {trend_direction}
+            # Power breakdown analysis if available
+            power_breakdown = ""
+            if 'power_consumption_watts.total' in df.columns:
+                avg_power = df['power_consumption_watts.total'].mean()
+                power_breakdown = f"• Average Power: {avg_power:.0f}W"
+            
+            # Efficiency metrics
+            efficiency_metrics = ""
+            if 'occupancy_count' in df.columns:
+                avg_occupancy = df['occupancy_count'].mean()
+                energy_per_occupant = avg_daily / (avg_occupancy + 1)  # +1 to avoid division by zero
+                efficiency_metrics = f"• Energy per Occupant: {energy_per_occupant:.2f} kWh/person"
+            
+            # Cost analysis
+            cost_per_kwh = 0.12  # Standard rate
+            daily_cost = avg_daily * cost_per_kwh
+            monthly_cost = daily_cost * 30
+            annual_cost = daily_cost * 365
+            
+            answer = f"""🔋 Energy Analysis:
+
+📈 TREND ANALYSIS:
+• Overall trend: {trend_direction} ({trend_percentage:+.1f}%)
 • Average daily consumption: {avg_daily:.2f} kWh
 • Peak daily consumption: {max_daily:.2f} kWh
 • Lowest daily consumption: {min_daily:.2f} kWh
-• Highest consuming room: {highest_room}"""
+• Highest consuming room: {highest_room} ({highest_consumption:.2f} kWh)
+
+📊 EFFICIENCY METRICS:
+{efficiency_metrics}
+{power_breakdown}
+
+💰 COST ANALYSIS:
+• Daily cost: ${daily_cost:.2f}
+• Monthly cost: ${monthly_cost:.2f}
+• Annual cost: ${annual_cost:.2f}
+
+💡 OPTIMIZATION OPPORTUNITIES:
+• Monitor peak consumption periods
+• Implement energy-saving measures in {highest_room}
+• Consider occupancy-based energy controls
+• Regular energy audits for efficiency improvements"""
             
             return {
                 "answer": answer,
                 "trends": {
                     "direction": trend_direction,
+                    "percentage_change": trend_percentage,
                     "average_daily": avg_daily,
                     "peak_daily": max_daily,
                     "lowest_daily": min_daily,
-                    "highest_room": highest_room
+                    "highest_room": highest_room,
+                    "data_quality": f"{unique_days} days, {data_points} points"
                 }
             }
             
         except Exception as e:
             self.logger.error(f"Error in energy trends handler: {e}")
-            return {"error": f"Energy trend analysis failed: {str(e)}"}
+            return {"answer": f"🔋 Energy Analysis:\nError analyzing energy trends: {str(e)}. Please check data quality and try again."}
     
     def generate_weekly_summary(self, df):
         """Generate weekly summary report"""
@@ -530,75 +604,179 @@ class AdvancedLLMHandlers:
 
     # === ADDED MISSING METHODS ===
     def generate_energy_insights(self, df):
-        """Generate detailed energy insights and recommendations"""
+        """Generate comprehensive energy insights and recommendations"""
         insights = []
         
         try:
-            if df.empty or 'energy_consumption_kwh' not in df.columns:
+            if df.empty:
                 return insights
                 
-            # Basic energy metrics
-            total_energy = df['energy_consumption_kwh'].sum()
-            avg_energy = df['energy_consumption_kwh'].mean()
-            peak_energy = df['energy_consumption_kwh'].max()
+            # Enhanced data quality assessment
+            data_points = len(df)
+            time_span = (pd.to_datetime(df['timestamp'].max()) - pd.to_datetime(df['timestamp'].min())).days if 'timestamp' in df.columns else 0
             
-            # Energy trends
-            if 'timestamp' in df.columns:
-                df_sorted = df.sort_values('timestamp')
-                if len(df_sorted) > 1:
-                    energy_trend = "increasing" if df_sorted['energy_consumption_kwh'].iloc[-1] > df_sorted['energy_consumption_kwh'].iloc[0] else "decreasing"
+            # Basic energy metrics
+            if 'energy_consumption_kwh' in df.columns:
+                total_energy = df['energy_consumption_kwh'].sum()
+                avg_energy = df['energy_consumption_kwh'].mean()
+                peak_energy = df['energy_consumption_kwh'].max()
+                min_energy = df['energy_consumption_kwh'].min()
+                
+                # Energy trends with percentage change
+                if 'timestamp' in df.columns and len(df) > 1:
+                    df_sorted = df.sort_values('timestamp')
+                    first_energy = df_sorted['energy_consumption_kwh'].iloc[0]
+                    last_energy = df_sorted['energy_consumption_kwh'].iloc[-1]
+                    energy_trend = "increasing" if last_energy > first_energy else "decreasing" if last_energy < first_energy else "stable"
+                    trend_percentage = ((last_energy - first_energy) / first_energy * 100) if first_energy > 0 else 0
                 else:
-                    energy_trend = "stable"
-            else:
-                energy_trend = "unknown"
+                    energy_trend = "unknown"
+                    trend_percentage = 0
+                
+                # Energy intensity calculation
+                energy_intensity = total_energy / time_span if time_span > 0 else avg_energy
+                
+                # Cost analysis
+                cost_per_kwh = 0.12  # Standard rate
+                daily_cost = avg_energy * cost_per_kwh
+                annual_cost = daily_cost * 365
+                
+                insights.extend([
+                    {
+                        "metric": "total_energy_consumption",
+                        "current_value": f"{total_energy:.2f} kWh",
+                        "trend": f"{energy_trend} ({trend_percentage:+.1f}%)",
+                        "opportunity": f"Energy intensity: {energy_intensity:.2f} kWh/day",
+                        "recommendation": f"Total consumption: {total_energy:.2f} kWh with {trend_percentage:+.1f}% trend"
+                    },
+                    {
+                        "metric": "average_energy_per_reading",
+                        "current_value": f"{avg_energy:.2f} kWh (Range: {min_energy:.2f}-{peak_energy:.2f})",
+                        "trend": energy_trend,
+                        "opportunity": "Optimize usage during peak consumption periods",
+                        "recommendation": f"Average: {avg_energy:.2f} kWh per reading"
+                    },
+                    {
+                        "metric": "energy_cost_analysis",
+                        "current_value": f"${annual_cost:.2f}/year (${daily_cost:.2f}/day)",
+                        "trend": "cost_analysis",
+                        "opportunity": f"Potential savings through efficiency measures",
+                        "recommendation": f"Current annual cost: ${annual_cost:.2f} at ${cost_per_kwh}/kWh"
+                    }
+                ])
+            
+            # Power consumption analysis
+            if 'power_consumption_watts.total' in df.columns:
+                avg_power = df['power_consumption_watts.total'].mean()
+                max_power = df['power_consumption_watts.total'].max()
+                power_trend = self._calculate_trend(df['power_consumption_watts.total'])
+                
+                insights.append({
+                    "metric": "power_consumption",
+                    "current_value": f"{avg_power:.0f}W (Peak: {max_power:.0f}W)",
+                    "trend": "increasing" if power_trend["slope"] > 10 else "decreasing" if power_trend["slope"] < -10 else "stable",
+                    "opportunity": "Optimize power usage and reduce peak demand",
+                    "recommendation": f"Average power: {avg_power:.0f}W, Peak: {max_power:.0f}W"
+                })
+            
+            # Component-wise analysis
+            component_insights = self._analyze_power_components(df)
+            insights.extend(component_insights)
             
             # Room-specific insights
             if 'room_name' in df.columns:
                 room_energy = df.groupby('room_name')['energy_consumption_kwh'].sum()
-                highest_room = room_energy.idxmax() if not room_energy.empty else "N/A"
-                lowest_room = room_energy.idxmin() if not room_energy.empty else "N/A"
-            else:
-                highest_room = "N/A"
-                lowest_room = "N/A"
+                if not room_energy.empty:
+                    highest_room = room_energy.idxmax()
+                    lowest_room = room_energy.idxmin()
+                    highest_consumption = room_energy.max()
+                    lowest_consumption = room_energy.min()
+                    
+                    insights.extend([
+                        {
+                            "metric": "highest_consumption_room",
+                            "current_value": f"{highest_room} ({highest_consumption:.2f} kWh)",
+                            "trend": "focus_room",
+                            "opportunity": "Target efficiency measures for highest consumption",
+                            "recommendation": f"Focus efficiency efforts on {highest_room} - highest consumer"
+                        },
+                        {
+                            "metric": "lowest_consumption_room",
+                            "current_value": f"{lowest_room} ({lowest_consumption:.2f} kWh)",
+                            "trend": "efficiency_baseline",
+                            "opportunity": "Use as efficiency benchmark for other rooms",
+                            "recommendation": f"Model efficiency practices from {lowest_room}"
+                        }
+                    ])
             
-            # Create insights
-            insights.extend([
-                {
-                    "metric": "total_energy_consumption",
-                    "current_value": round(total_energy, 2),
-                    "trend": energy_trend,
-                    "opportunity": "Optimize usage during peak hours",
-                    "recommendation": f"Total consumption: {total_energy:.2f} kWh across all rooms"
-                },
-                {
-                    "metric": "average_energy_per_reading",
-                    "current_value": round(avg_energy, 2),
-                    "trend": energy_trend,
-                    "opportunity": "Improve energy efficiency",
-                    "recommendation": f"Average: {avg_energy:.2f} kWh per reading"
-                },
-                {
-                    "metric": "peak_energy_consumption",
-                    "current_value": round(peak_energy, 2),
-                    "trend": "peak_analysis",
-                    "opportunity": "Reduce peak demand",
-                    "recommendation": f"Peak consumption: {peak_energy:.2f} kWh"
-                }
-            ])
+            # Energy efficiency per occupant
+            if 'energy_consumption_kwh' in df.columns and 'occupancy_count' in df.columns:
+                occupied_data = df[df['occupancy_count'] > 0]
+                if not occupied_data.empty:
+                    total_energy_occupied = occupied_data['energy_consumption_kwh'].sum()
+                    total_occupant_hours = occupied_data['occupancy_count'].sum()
+                    energy_per_occupant = total_energy_occupied / total_occupant_hours if total_occupant_hours > 0 else 0
+                    
+                    insights.append({
+                        "metric": "energy_efficiency_per_occupant",
+                        "current_value": f"{energy_per_occupant:.2f} kWh/person-hour",
+                        "trend": "efficiency_metric",
+                        "opportunity": "Target: <0.1 kWh/person-hour for optimal efficiency",
+                        "recommendation": f"Energy efficiency: {energy_per_occupant:.2f} kWh per occupant-hour"
+                    })
             
-            if highest_room != "N/A":
+            # Data quality insight
+            if data_points < 100 or time_span < 7:
                 insights.append({
-                    "metric": "highest_consumption_room",
-                    "current_value": highest_room,
-                    "trend": "focus_room",
-                    "opportunity": "Target efficiency measures",
-                    "recommendation": f"Focus efficiency efforts on {highest_room}"
+                    "metric": "data_quality",
+                    "current_value": f"{data_points} points over {time_span} days",
+                    "trend": "needs_improvement",
+                    "opportunity": "Extend data collection for more reliable analysis",
+                    "recommendation": "Collect data for at least 7 days with 100+ points for comprehensive insights"
                 })
                 
         except Exception as e:
             self.logger.error(f"Error generating energy insights: {e}")
         
         return insights
+    
+    def _analyze_power_components(self, df):
+        """Analyze individual power components for detailed insights"""
+        component_insights = []
+        
+        try:
+            power_components = {
+                'power_consumption_watts.lighting': 'Lighting',
+                'power_consumption_watts.hvac_fan': 'HVAC Fan',
+                'power_consumption_watts.air_conditioner_compressor': 'AC Compressor',
+                'power_consumption_watts.computer': 'Computers',
+                'power_consumption_watts.projector': 'Projector',
+                'power_consumption_watts.standby_misc': 'Standby/Misc'
+            }
+            
+            total_power = df['power_consumption_watts.total'].mean() if 'power_consumption_watts.total' in df.columns else 0
+            
+            for col, component_name in power_components.items():
+                if col in df.columns:
+                    component_power = df[col].mean()
+                    component_percentage = (component_power / total_power * 100) if total_power > 0 else 0
+                    
+                    # Usage hours analysis
+                    usage_col = col.replace('power_consumption_watts.', 'equipment_usage.').replace('_power', '_on_hours')
+                    usage_hours = df[usage_col].mean() if usage_col in df.columns else 0
+                    
+                    component_insights.append({
+                        "metric": f"{component_name.lower().replace(' ', '_')}_analysis",
+                        "current_value": f"{component_power:.0f}W ({component_percentage:.1f}%)",
+                        "trend": "component_analysis",
+                        "opportunity": f"Usage: {usage_hours:.1f}h - {'High' if component_percentage > 20 else 'Moderate' if component_percentage > 10 else 'Low'} consumption component",
+                        "recommendation": f"{component_name}: {component_power:.0f}W ({component_percentage:.1f}% of total)"
+                    })
+                    
+        except Exception as e:
+            self.logger.error(f"Error analyzing power components: {e}")
+        
+        return component_insights
 
     def _calculate_trend(self, data):
         """Calculate trend from time series data"""

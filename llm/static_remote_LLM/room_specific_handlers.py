@@ -390,7 +390,22 @@ class RoomSpecificHandlers:
             elif "utilization statistics" in query_lower or "usage patterns" in query_lower:
                 total_utilization = usage_metrics.get("average_utilization_rate", 0)
                 underutilized = usage_metrics.get("underutilized_rooms", [])
-                answer = f"Overall room utilization: {total_utilization}%. {len(underutilized)} rooms are underutilized."
+                
+                # Enhanced response with energy insights
+                answer = f"""🏢 Room Utilization Analysis:
+
+Overall room utilization: {total_utilization}%. {len(underutilized)} rooms are underutilized.
+
+📊 Key Insights:
+• Average utilization rate: {total_utilization}%
+• Underutilized rooms: {len(underutilized)}
+• High utilization rooms: {len(usage_metrics.get('overutilized_rooms', []))}
+
+💡 Energy Efficiency Opportunities:
+• Underutilized rooms may have energy waste during unoccupied periods
+• Consider implementing occupancy-based energy controls
+• Optimize HVAC and lighting schedules based on actual usage patterns
+• Regular utilization reviews to identify space optimization opportunities"""
             
             elif "this week" in query_lower:
                 weekly_patterns = self._analyze_weekly_patterns(sensor_data)
@@ -634,25 +649,15 @@ class RoomSpecificHandlers:
         room_name = self.parse_room_query(query)
         
         if not room_name:
-            # If no specific room found, check if it's a general query that should be handled
-            if any(keyword in query_lower for keyword in ["temperature", "people", "happening", "data for"]):
-                available_rooms = [room.get('name', 'Unknown') for room in self.get_available_rooms()]
-                return {
-                    "error": f"Could not identify specific room from query. Available rooms: {', '.join(available_rooms)}. Please specify like 'Room 101 status' or 'What's happening in Conference Room'"
-                }
-            else:
-                # Try basic room info as fallback
-                return self.handle_basic_room_info(query)
+            # Enhanced room detection with better guidance
+            return self._handle_room_not_found(query_lower, query)
         
         # Get room data for specific room queries
         room_df = self.get_room_data(room_name)
         
         if room_df.empty:
-            # Provide helpful error message with available rooms
-            available_rooms = [room.get('name', 'Unknown') for room in self.get_available_rooms()]
-            return {
-                "error": f"No data found for '{room_name}'. Available rooms: {', '.join(available_rooms)}"
-            }
+            # Enhanced room not found handling with suggestions
+            return self._handle_room_data_not_found(room_name, query_lower)
         
         # Determine query type and handle accordingly
         if any(keyword in query_lower for keyword in ["predict", "prediction", "forecast"]):
@@ -859,114 +864,290 @@ class RoomSpecificHandlers:
         return ". ".join(summary_parts) + "."
 
     def handle_maintenance_analysis(self) -> Dict[str, Any]:
-        """Analyze maintenance requests from core_maintenancerequest and provide recommendations"""
+        """Generate comprehensive maintenance reports and analysis"""
         try:
-            # Query maintenance requests from the database
+            # Enhanced query to get more detailed maintenance data
             query = """
-            SELECT id, issue, status
+            SELECT id, issue, status, requested_date, resolved_date, equipment_id, requested_by, assigned_to, notes
             FROM core_maintenancerequest
-            ORDER BY status, issue
+            ORDER BY status, requested_date DESC
             """
             df = pd.read_sql_query(query, self.db_adapter.connection)
             
             if df is None or df.empty:
-                logger.warning("No maintenance requests found")
-                return {
-                    "analysis_type": "maintenance_analysis",
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "answer": "No maintenance requests found in the database.",
-                    "maintenance_issues": [],
-                    "recommendations": []
-                }
+                return self._create_no_maintenance_response()
             
-            # Analyze pending and resolved issues
-            pending = df[df['status'] == 'pending']
-            resolved = df[df['status'] == 'resolved']
+            # Comprehensive maintenance analysis
+            analysis = self._analyze_maintenance_data(df)
+            report = self._generate_maintenance_report(analysis)
             
-            pending_counts = pending['issue'].value_counts().to_dict()
-            resolved_counts = resolved['issue'].value_counts().to_dict()
-            
-            # Generate response structure
-            response = {
-                "analysis_type": "maintenance_analysis",
+            return {
+                "analysis_type": "maintenance_report",
                 "timestamp": datetime.utcnow().isoformat(),
-                "maintenance_issues": [],
-                "recommendations": []
+                "answer": report,
+                "maintenance_summary": analysis["summary"],
+                "pending_issues": analysis["pending_issues"],
+                "resolved_issues": analysis["resolved_issues"],
+                "trends": analysis["trends"],
+                "recommendations": analysis["recommendations"],
+                "statistics": analysis["statistics"]
             }
-            
-            # Add pending issues
-            if not pending.empty:
-                response["maintenance_issues"].append({
-                    "status": "pending",
-                    "issues": [
-                        {"issue": issue, "count": count}
-                        for issue, count in pending_counts.items()
-                    ]
-                })
-            
-            # Add resolved issues
-            if not resolved.empty:
-                response["maintenance_issues"].append({
-                    "status": "resolved",
-                    "issues": [
-                        {"issue": issue, "count": count}
-                        for issue, count in resolved_counts.items()
-                    ]
-                })
-            
-            # Generate recommendations based on issues
-            if "Sensor malfunction" in pending_counts:
-                response["recommendations"].append(
-                    f"Prioritize repair of {pending_counts['Sensor malfunction']} sensor malfunctions to ensure accurate data collection."
-                )
-            if "Temperature sensor error" in pending_counts:
-                response["recommendations"].append(
-                    f"Investigate and fix {pending_counts['Temperature sensor error']} temperature sensor errors to maintain reliable environmental data."
-                )
-            if "Motion detector fault" in pending_counts:
-                response["recommendations"].append(
-                    "Address motion detector fault to ensure accurate occupancy tracking."
-                )
-            if pending_counts:
-                response["recommendations"].append(
-                    "Conduct a comprehensive sensor infrastructure audit to identify systemic issues."
-                )
-            
-            if "High energy usage" in resolved_counts:
-                response["recommendations"].append(
-                    "Verify that energy efficiency measures are sustained for resolved high energy usage issues."
-                )
-            if "Humidity calibration needed" in resolved_counts:
-                response["recommendations"].append(
-                    "Schedule regular maintenance to prevent recurrence of humidity calibration issues."
-                )
-            if "Power supply issue" in resolved_counts:
-                response["recommendations"].append(
-                    "Monitor power supply stability to ensure the fix is sustained."
-                )
-            
-            response["recommendations"].append(
-                "Implement a preventive maintenance schedule for sensors to reduce future issues."
-            )
-            
-            # Generate summary answer
-            pending_summary = f"Pending issues: {', '.join([f'{issue} ({count})' for issue, count in pending_counts.items()])}" if pending_counts else "No pending issues"
-            resolved_summary = f"Resolved issues: {', '.join([f'{issue} ({count})' for issue, count in resolved_counts.items()])}" if resolved_counts else "No resolved issues"
-            response["answer"] = f"Maintenance analysis completed. {pending_summary}. {resolved_summary}. {len(response['recommendations'])} recommendations provided."
-            
-            logger.info(f"Maintenance analysis completed: {response['answer']}")
-            return response
             
         except Exception as e:
-            logger.error(f"Error analyzing maintenance requests: {e}")
+            logger.error(f"Error generating maintenance report: {e}")
             return {
-                "analysis_type": "maintenance_analysis",
+                "analysis_type": "maintenance_report",
                 "timestamp": datetime.utcnow().isoformat(),
-                "answer": f"Error analyzing maintenance requests: {str(e)}",
-                "maintenance_issues": [],
-                "recommendations": [],
+                "answer": f"🔧 **Maintenance Report Error**\n\nUnable to generate maintenance report due to: {str(e)}\n\nPlease check database connection and try again.",
                 "error": str(e)
             }
+
+    def _create_no_maintenance_response(self) -> Dict[str, Any]:
+        """Create response when no maintenance data is available"""
+        return {
+            "analysis_type": "maintenance_report",
+            "timestamp": datetime.utcnow().isoformat(),
+            "answer": """🔧 **Maintenance Report**
+
+📊 **Current Status: No Maintenance Data Found**
+
+✅ **Good News:** No maintenance requests are currently in the system.
+
+💡 **Recommendations:**
+• Continue regular preventive maintenance schedules
+• Monitor equipment performance for early issue detection
+• Implement proactive maintenance tracking
+• Set up automated maintenance reminders
+
+📋 **Next Steps:**
+• Schedule routine equipment inspections
+• Review maintenance history from other systems
+• Consider implementing predictive maintenance analytics""",
+            "maintenance_summary": {"total_requests": 0, "pending": 0, "resolved": 0},
+            "pending_issues": [],
+            "resolved_issues": [],
+            "trends": {},
+            "recommendations": ["Continue preventive maintenance", "Monitor equipment performance"],
+            "statistics": {"total": 0, "pending": 0, "resolved": 0, "avg_resolution_time": 0}
+        }
+
+    def _analyze_maintenance_data(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Perform comprehensive maintenance data analysis"""
+        analysis = {
+            "summary": {},
+            "pending_issues": [],
+            "resolved_issues": [],
+            "trends": {},
+            "recommendations": [],
+            "statistics": {}
+        }
+        
+        # Basic statistics
+        total_requests = len(df)
+        pending = df[df['status'] == 'pending'] if 'status' in df.columns else pd.DataFrame()
+        resolved = df[df['status'] == 'resolved'] if 'status' in df.columns else pd.DataFrame()
+        
+        analysis["statistics"] = {
+            "total": total_requests,
+            "pending": len(pending),
+            "resolved": len(resolved),
+            "pending_percentage": round(len(pending) / total_requests * 100, 1) if total_requests > 0 else 0,
+            "resolved_percentage": round(len(resolved) / total_requests * 100, 1) if total_requests > 0 else 0
+        }
+        
+        # Issue analysis
+        if 'issue' in df.columns:
+            issue_counts = df['issue'].value_counts()
+            analysis["trends"]["most_common_issues"] = issue_counts.head(5).to_dict()
+            
+            # Pending issues analysis
+            if not pending.empty:
+                pending_issues = pending['issue'].value_counts()
+                for issue, count in pending_issues.items():
+                    analysis["pending_issues"].append({
+                        "issue": issue,
+                        "count": count,
+                        "priority": self._determine_priority(issue),
+                        "urgency": self._assess_urgency(issue, count)
+                    })
+            
+            # Resolved issues analysis
+            if not resolved.empty:
+                resolved_issues = resolved['issue'].value_counts()
+                for issue, count in resolved_issues.items():
+                    analysis["resolved_issues"].append({
+                        "issue": issue,
+                        "count": count,
+                        "resolution_rate": round(count / total_requests * 100, 1)
+                    })
+        
+        # Timeline analysis
+        if 'requested_date' in df.columns and 'resolved_date' in df.columns:
+            resolution_times = self._calculate_resolution_times(df)
+            analysis["statistics"]["avg_resolution_time"] = resolution_times.get("average_days", 0)
+            analysis["trends"]["resolution_times"] = resolution_times
+        
+        # Generate recommendations
+        analysis["recommendations"] = self._generate_maintenance_recommendations(analysis)
+        
+        return analysis
+
+    def _determine_priority(self, issue: str) -> str:
+        """Determine priority level for maintenance issues"""
+        high_priority_keywords = ["critical", "emergency", "failure", "broken", "malfunction"]
+        medium_priority_keywords = ["error", "calibration", "performance", "efficiency"]
+        
+        issue_lower = issue.lower()
+        
+        if any(keyword in issue_lower for keyword in high_priority_keywords):
+            return "High"
+        elif any(keyword in issue_lower for keyword in medium_priority_keywords):
+            return "Medium"
+        else:
+            return "Low"
+
+    def _assess_urgency(self, issue: str, count: int) -> str:
+        """Assess urgency level for maintenance issues"""
+        if count > 3:
+            return "Critical"
+        elif count > 1:
+            return "High"
+        else:
+            return "Normal"
+
+    def _calculate_resolution_times(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Calculate resolution time statistics"""
+        try:
+            resolved_df = df[df['status'] == 'resolved'].copy()
+            if resolved_df.empty:
+                return {"average_days": 0, "fastest_resolution": 0, "slowest_resolution": 0}
+            
+            # Convert dates
+            resolved_df['requested_date'] = pd.to_datetime(resolved_df['requested_date'])
+            resolved_df['resolved_date'] = pd.to_datetime(resolved_df['resolved_date'])
+            
+            # Calculate resolution times
+            resolved_df['resolution_days'] = (resolved_df['resolved_date'] - resolved_df['requested_date']).dt.days
+            
+            return {
+                "average_days": round(resolved_df['resolution_days'].mean(), 1),
+                "fastest_resolution": int(resolved_df['resolution_days'].min()),
+                "slowest_resolution": int(resolved_df['resolution_days'].max()),
+                "median_days": round(resolved_df['resolution_days'].median(), 1)
+            }
+        except Exception as e:
+            logger.error(f"Error calculating resolution times: {e}")
+            return {"average_days": 0, "fastest_resolution": 0, "slowest_resolution": 0}
+
+    def _generate_maintenance_recommendations(self, analysis: Dict[str, Any]) -> List[str]:
+        """Generate actionable maintenance recommendations"""
+        recommendations = []
+        
+        stats = analysis["statistics"]
+        pending_issues = analysis["pending_issues"]
+        
+        # Priority recommendations
+        if stats["pending"] > 0:
+            recommendations.append(f"🚨 **Priority Action**: Address {stats['pending']} pending maintenance request(s)")
+            
+            # High priority issues
+            high_priority = [issue for issue in pending_issues if issue["priority"] == "High"]
+            if high_priority:
+                recommendations.append(f"⚠️ **Critical**: {len(high_priority)} high-priority issues require immediate attention")
+        
+        # Performance recommendations
+        if stats["avg_resolution_time"] > 7:
+            recommendations.append("📈 **Efficiency**: Consider streamlining maintenance processes to reduce resolution time")
+        
+        # Preventive recommendations
+        most_common = analysis["trends"].get("most_common_issues", {})
+        if most_common:
+            top_issue = list(most_common.keys())[0]
+            recommendations.append(f"🔧 **Preventive**: Implement proactive measures to reduce '{top_issue}' occurrences")
+        
+        # General recommendations
+        recommendations.extend([
+            "📋 **Tracking**: Maintain detailed maintenance logs for better analytics",
+            "🔄 **Scheduling**: Establish regular preventive maintenance schedules",
+            "📊 **Monitoring**: Implement predictive maintenance analytics"
+        ])
+        
+        return recommendations
+
+    def _generate_maintenance_report(self, analysis: Dict[str, Any]) -> str:
+        """Generate comprehensive maintenance report"""
+        stats = analysis["statistics"]
+        pending_issues = analysis["pending_issues"]
+        resolved_issues = analysis["resolved_issues"]
+        trends = analysis["trends"]
+        recommendations = analysis["recommendations"]
+        
+        report_parts = [
+            "🔧 **Comprehensive Maintenance Report**",
+            "",
+            "📊 **MAINTENANCE OVERVIEW**",
+            f"• Total Requests: {stats['total']}",
+            f"• Pending: {stats['pending']} ({stats['pending_percentage']}%)",
+            f"• Resolved: {stats['resolved']} ({stats['resolved_percentage']}%)",
+            f"• Average Resolution Time: {stats['avg_resolution_time']} days"
+        ]
+        
+        # Pending Issues Section
+        if pending_issues:
+            report_parts.extend([
+                "",
+                "🚨 **PENDING ISSUES**"
+            ])
+            for issue in pending_issues[:5]:  # Show top 5
+                priority_emoji = "🔴" if issue["priority"] == "High" else "🟡" if issue["priority"] == "Medium" else "🟢"
+                urgency_emoji = "⚡" if issue["urgency"] == "Critical" else "⚠️" if issue["urgency"] == "High" else "📋"
+                report_parts.append(f"{priority_emoji} {issue['issue']} ({issue['count']} instances) {urgency_emoji}")
+        else:
+            report_parts.extend([
+                "",
+                "✅ **PENDING ISSUES: None**",
+                "All maintenance requests have been resolved!"
+            ])
+        
+        # Resolved Issues Section
+        if resolved_issues:
+            report_parts.extend([
+                "",
+                "✅ **RECENTLY RESOLVED ISSUES**"
+            ])
+            for issue in resolved_issues[:5]:  # Show top 5
+                report_parts.append(f"• {issue['issue']} ({issue['count']} resolved)")
+        
+        # Trends Section
+        if trends.get("most_common_issues"):
+            report_parts.extend([
+                "",
+                "📈 **MAINTENANCE TRENDS**",
+                "Most Common Issues:"
+            ])
+            for issue, count in list(trends["most_common_issues"].items())[:3]:
+                report_parts.append(f"• {issue}: {count} occurrences")
+        
+        # Recommendations Section
+        if recommendations:
+            report_parts.extend([
+                "",
+                "💡 **RECOMMENDATIONS**"
+            ])
+            for i, rec in enumerate(recommendations[:6], 1):  # Show top 6
+                report_parts.append(f"{i}. {rec}")
+        
+        # Next Steps
+        report_parts.extend([
+            "",
+            "🎯 **NEXT STEPS**",
+            "• Review pending high-priority issues",
+            "• Schedule preventive maintenance",
+            "• Monitor resolution time improvements",
+            "• Implement predictive maintenance strategies"
+        ])
+        
+        return "\n".join(report_parts)
 
     def handle_room_predictions(self, room_name: str, room_df: pd.DataFrame, query: str) -> Dict[str, Any]:
         """Handle predictive analysis for a specific room"""
@@ -1313,3 +1494,218 @@ class RoomSpecificHandlers:
             "maintenance_alerts_count": len(maintenance_alerts),
             "answer": f"Comprehensive analysis for {room_name}: {predictions.get('recommendations', ['Analysis completed'])[0] if predictions.get('recommendations') else 'Analysis completed successfully'}"
         }
+
+    def _handle_room_not_found(self, query_lower: str, original_query: str) -> Dict[str, Any]:
+        """Enhanced handling when room name cannot be identified from query"""
+        available_rooms = self.get_available_rooms()
+        room_names = [room.get('name', 'Unknown') for room in available_rooms if room.get('name')]
+        
+        # Try to extract potential room names from the query
+        potential_rooms = self._extract_potential_room_names(original_query)
+        
+        # Check if it's a general query that should be handled differently
+        if any(keyword in query_lower for keyword in ["temperature", "people", "happening", "data for", "status", "energy", "power", "consumption"]):
+            # Provide enhanced guidance with room suggestions
+            return {
+                "analysis_type": "room_guidance",
+                "answer": self._create_room_guidance_response(room_names, potential_rooms, original_query),
+                "available_rooms": room_names,
+                "potential_matches": potential_rooms,
+                "suggestions": self._generate_room_suggestions(room_names, potential_rooms)
+            }
+        else:
+            # Try basic room info as fallback
+            return self.handle_basic_room_info(original_query)
+
+    def _handle_room_data_not_found(self, room_name: str, query_lower: str) -> Dict[str, Any]:
+        """Enhanced handling when room is identified but no data found"""
+        available_rooms = self.get_available_rooms()
+        room_names = [room.get('name', 'Unknown') for room in available_rooms if room.get('name')]
+        
+        # Find similar room names
+        similar_rooms = self._find_similar_rooms(room_name, room_names)
+        
+        return {
+            "analysis_type": "room_data_not_found",
+            "requested_room": room_name,
+            "answer": self._create_room_not_found_response(room_name, room_names, similar_rooms),
+            "available_rooms": room_names,
+            "similar_rooms": similar_rooms,
+            "suggestions": self._generate_room_suggestions(room_names, [room_name])
+        }
+
+    def _extract_potential_room_names(self, query: str) -> List[str]:
+        """Extract potential room names from query using various patterns"""
+        potential_rooms = []
+        query_lower = query.lower()
+        
+        # Common room patterns
+        room_patterns = [
+            r'room\s+([a-z0-9]+)',
+            r'([a-z0-9]+)\s+room',
+            r'conference\s+room\s+([a-z0-9]+)',
+            r'meeting\s+room\s+([a-z0-9]+)',
+            r'lab\s+([a-z0-9]+)',
+            r'office\s+([a-z0-9]+)',
+            r'hall\s+([a-z0-9]+)',
+            r'([a-z0-9]+)\s+hall',
+            r'r([0-9]+)',
+        ]
+        
+        for pattern in room_patterns:
+            matches = re.findall(pattern, query_lower)
+            potential_rooms.extend(matches)
+        
+        # Also look for standalone words that might be room identifiers
+        words = query_lower.split()
+        for word in words:
+            if len(word) > 2 and word not in ['the', 'and', 'for', 'what', 'how', 'about', 'status', 'data', 'energy', 'power', 'consumption', 'temperature', 'people']:
+                potential_rooms.append(word)
+        
+        return list(set(potential_rooms))  # Remove duplicates
+
+    def _find_similar_rooms(self, target_room: str, available_rooms: List[str]) -> List[str]:
+        """Find rooms similar to the requested room name"""
+        similar_rooms = []
+        target_lower = target_room.lower()
+        
+        for room in available_rooms:
+            if pd.isna(room):
+                continue
+            room_lower = room.lower()
+            
+            # Exact match (shouldn't happen if we're here, but just in case)
+            if target_lower == room_lower:
+                continue
+            
+            # Check for partial matches
+            if target_lower in room_lower or room_lower in target_lower:
+                similar_rooms.append(room)
+                continue
+            
+            # Check for word overlap
+            target_words = set(target_lower.split())
+            room_words = set(room_lower.split())
+            overlap = target_words.intersection(room_words)
+            
+            if overlap and len(overlap) > 0:
+                similar_rooms.append(room)
+                continue
+            
+            # Use fuzzy matching if available
+            try:
+                from fuzzywuzzy import fuzz
+                similarity = fuzz.partial_ratio(target_lower, room_lower)
+                if similarity > 60:  # 60% similarity threshold
+                    similar_rooms.append(room)
+            except ImportError:
+                # Fallback to simple similarity
+                similarity = len(overlap) / max(len(target_words), len(room_words)) if target_words or room_words else 0
+                if similarity > 0.3:
+                    similar_rooms.append(room)
+        
+        return similar_rooms[:5]  # Limit to top 5 similar rooms
+
+    def _create_room_guidance_response(self, available_rooms: List[str], potential_rooms: List[str], original_query: str) -> str:
+        """Create a comprehensive room guidance response"""
+        response_parts = [
+            "🏢 **Room Detection & Guidance**",
+            "",
+            "I couldn't identify a specific room from your query. Here's how I can help:"
+        ]
+        
+        if available_rooms:
+            response_parts.extend([
+                "",
+                "📋 **Available Rooms in System:**",
+                "• " + "\n• ".join(available_rooms[:10])  # Show first 10 rooms
+            ])
+            
+            if len(available_rooms) > 10:
+                response_parts.append(f"• ... and {len(available_rooms) - 10} more rooms")
+        
+        if potential_rooms:
+            response_parts.extend([
+                "",
+                "🔍 **Potential Room Names I Detected:**",
+                "• " + "\n• ".join(potential_rooms)
+            ])
+        
+        response_parts.extend([
+            "",
+            "💡 **How to Query Specific Rooms:**",
+            "• 'Power consumption for Conference Room A'",
+            "• 'Energy usage in Room 101'", 
+            "• 'Temperature in Lab 205'",
+            "• 'Occupancy status for Meeting Room 3'",
+            "",
+            "🎯 **Alternative Queries:**",
+            "• 'Show me all available rooms' - List all rooms",
+            "• 'What's the most used room?' - Room utilization analysis",
+            "• 'Energy consumption trends' - Overall energy analysis",
+            "• 'Room utilization statistics' - Usage patterns"
+        ])
+        
+        return "\n".join(response_parts)
+
+    def _create_room_not_found_response(self, requested_room: str, available_rooms: List[str], similar_rooms: List[str]) -> str:
+        """Create response when room is identified but not found in data"""
+        response_parts = [
+            f"🔍 **Room Not Found: '{requested_room}'**",
+            "",
+            "The room you requested is not found in the current data."
+        ]
+        
+        if similar_rooms:
+            response_parts.extend([
+                "",
+                "🎯 **Did you mean one of these similar rooms?**",
+                "• " + "\n• ".join(similar_rooms)
+            ])
+        
+        if available_rooms:
+            response_parts.extend([
+                "",
+                "📋 **Available Rooms with Data:**",
+                "• " + "\n• ".join(available_rooms[:10])
+            ])
+            
+            if len(available_rooms) > 10:
+                response_parts.append(f"• ... and {len(available_rooms) - 10} more rooms")
+        
+        response_parts.extend([
+            "",
+            "💡 **Suggestions:**",
+            "• Check the exact room name spelling",
+            "• Try asking 'Show me all available rooms'",
+            "• Use a more general query like 'Energy consumption trends'",
+            "• Ask for room utilization analysis"
+        ])
+        
+        return "\n".join(response_parts)
+
+    def _generate_room_suggestions(self, available_rooms: List[str], potential_rooms: List[str]) -> List[str]:
+        """Generate helpful room query suggestions"""
+        suggestions = []
+        
+        if available_rooms:
+            # Suggest queries for first few available rooms
+            for room in available_rooms[:3]:
+                suggestions.extend([
+                    f"Power consumption for {room}",
+                    f"Energy usage in {room}",
+                    f"Temperature in {room}",
+                    f"Occupancy status for {room}"
+                ])
+        
+        # Add general suggestions
+        suggestions.extend([
+            "Show me all available rooms",
+            "What's the most used room?",
+            "Room utilization statistics",
+            "Energy consumption trends",
+            "Power consumption breakdown",
+            "Environmental conditions overview"
+        ])
+        
+        return suggestions[:8]  # Limit to 8 suggestions
