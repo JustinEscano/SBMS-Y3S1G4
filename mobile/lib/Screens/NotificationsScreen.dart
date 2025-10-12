@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../Config/api.dart';
 import '../Services/auth_service.dart';
+import 'MaintenanceDetailsScreen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   final String accessToken;
@@ -20,6 +21,9 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   List<dynamic> notifications = [];
+  List<dynamic> users = [];
+  List<dynamic> equipment = [];
+  List<Map<String, String>> statusOptions = [];
   bool isLoading = true;
   bool isLoadingMore = false;
   String errorMessage = '';
@@ -32,7 +36,91 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     AuthService().setTokens(widget.accessToken, widget.refreshToken);
-    _loadNotifications();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await Future.wait([
+      _loadNotifications(),
+      _loadUsers(),
+      _loadEquipment(),
+      _loadStatusOptions(),
+    ]);
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        return;
+      }
+      final headers = AuthService().getAuthHeaders();
+      final response = await http.get(
+        Uri.parse(ApiConfig.users),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          users = data is List ? data : [];
+        });
+      }
+    } catch (e) {
+      // Silently fail for users - not critical for notifications
+    }
+  }
+
+  Future<void> _loadEquipment() async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        return;
+      }
+      final headers = AuthService().getAuthHeaders();
+      final response = await http.get(
+        Uri.parse(ApiConfig.equipment),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          equipment = data is List ? data : [];
+        });
+      }
+    } catch (e) {
+      // Silently fail for equipment - not critical for notifications
+    }
+  }
+
+  Future<void> _loadStatusOptions() async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        return;
+      }
+      final headers = AuthService().getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/esp32/field-options/'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          statusOptions = (data['maintenance_status_options'] as List?)
+              ?.map((option) => Map<String, String>.from(option))
+              .toList() ?? [];
+        });
+      }
+    } catch (e) {
+      // Set default status options if API fails
+      setState(() {
+        statusOptions = [
+          {'value': 'pending', 'label': 'Pending'},
+          {'value': 'in_progress', 'label': 'In Progress'},
+          {'value': 'resolved', 'label': 'Resolved'},
+        ];
+      });
+    }
   }
 
   Future<void> _loadNotifications({bool loadMore = false}) async {
@@ -198,6 +286,55 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  // New method: Navigate to maintenance request
+  Future<void> _navigateToMaintenanceRequest(String? maintenanceRequestId) async {
+    if (maintenanceRequestId == null || maintenanceRequestId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No maintenance request associated with this notification')),
+      );
+      return;
+    }
+
+    try {
+      // Find the maintenance request in the equipment list or fetch it
+      final maintenanceRequest = equipment.firstWhere(
+            (eq) => eq['id'] == maintenanceRequestId,
+        orElse: () => null,
+      );
+
+      if (maintenanceRequest == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Maintenance request not found')),
+        );
+        return;
+      }
+
+      // Navigate to maintenance details screen
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MaintenanceDetailsScreen(
+            accessToken: widget.accessToken,
+            refreshToken: widget.refreshToken,
+            userRole: 'client', // You might want to get this from user data
+            users: users,
+            equipment: equipment,
+            statusOptions: statusOptions,
+            request: maintenanceRequest,
+            onSave: () {
+              // Refresh notifications when maintenance request is updated
+              _loadNotifications();
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error navigating to maintenance request: $e')),
+      );
+    }
+  }
+
   String _formatDateTime(String? dateTimeString) {
     if (dateTimeString == null) return 'Unknown';
     try {
@@ -217,6 +354,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (e) {
       return 'Unknown';
     }
+  }
+
+  // Helper method to check if notification has maintenance request
+  bool _hasMaintenanceRequest(Map<String, dynamic> notification) {
+    final type = notification['type']?.toString() ?? '';
+    return type.contains('maintenance') &&
+        (notification['maintenance_request_id'] != null ||
+            notification['metadata']?['maintenance_request_id'] != null);
+  }
+
+  // Helper method to get maintenance request ID
+  String? _getMaintenanceRequestId(Map<String, dynamic> notification) {
+    return notification['maintenance_request_id']?.toString() ??
+        notification['metadata']?['maintenance_request_id']?.toString();
   }
 
   @override
@@ -278,6 +429,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               );
             }
             final notification = notifications[index];
+            final hasMaintenance = _hasMaintenanceRequest(notification);
+
             return Card(
               color: notification['read']
                   ? Colors.grey[100]
@@ -311,6 +464,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       style: TextStyle(
                           fontSize: 12, color: Colors.grey[600]),
                     ),
+                    if (hasMaintenance) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'View Maintenance Request',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 trailing: Row(
@@ -335,18 +506,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   if (!notification['read']) {
                     await _markNotificationRead(notification['id']);
                   }
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotificationDetailsScreen(
-                        notification: notification,
-                        accessToken: widget.accessToken,
-                        refreshToken: widget.refreshToken,
+
+                  if (hasMaintenance) {
+                    // Navigate directly to maintenance request
+                    await _navigateToMaintenanceRequest(_getMaintenanceRequestId(notification));
+                  } else {
+                    // Show notification details
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NotificationDetailsScreen(
+                          notification: notification,
+                          accessToken: widget.accessToken,
+                          refreshToken: widget.refreshToken,
+                          users: users,
+                          equipment: equipment,
+                          statusOptions: statusOptions,
+                          onNavigateToMaintenance: _navigateToMaintenanceRequest,
+                        ),
                       ),
-                    ),
-                  );
-                  if (result == true) {
-                    await _loadNotifications();
+                    );
+                    if (result == true) {
+                      await _loadNotifications();
+                    }
                   }
                 },
               ),
@@ -392,12 +574,20 @@ class NotificationDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> notification;
   final String accessToken;
   final String refreshToken;
+  final List<dynamic> users;
+  final List<dynamic> equipment;
+  final List<Map<String, String>> statusOptions;
+  final Function(String?) onNavigateToMaintenance;
 
   const NotificationDetailsScreen({
     super.key,
     required this.notification,
     required this.accessToken,
     required this.refreshToken,
+    required this.users,
+    required this.equipment,
+    required this.statusOptions,
+    required this.onNavigateToMaintenance,
   });
 
   Future<void> _markNotificationRead(BuildContext context) async {
@@ -522,8 +712,25 @@ class NotificationDetailsScreen extends StatelessWidget {
     }
   }
 
+  // Helper method to check if notification has maintenance request
+  bool _hasMaintenanceRequest() {
+    final type = notification['type']?.toString() ?? '';
+    return type.contains('maintenance') &&
+        (notification['maintenance_request_id'] != null ||
+            notification['metadata']?['maintenance_request_id'] != null);
+  }
+
+  // Helper method to get maintenance request ID
+  String? _getMaintenanceRequestId() {
+    return notification['maintenance_request_id']?.toString() ??
+        notification['metadata']?['maintenance_request_id']?.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasMaintenance = _hasMaintenanceRequest();
+    final maintenanceRequestId = _getMaintenanceRequestId();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -615,6 +822,82 @@ class NotificationDetailsScreen extends StatelessWidget {
               'Received: ${_formatDateTime(notification['created_at'])}',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
+
+            // New: Maintenance Request Navigation Section
+            if (hasMaintenance) ...[
+              const SizedBox(height: 24),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.build,
+                          color: Colors.blue[700],
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Related Maintenance Request',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'This notification is related to a maintenance request. You can view the full details and respond to it.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blue[600],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          await onNavigateToMaintenance(maintenanceRequestId);
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(Icons.arrow_forward),
+                        label: const Text('View Maintenance Request'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[700],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (maintenanceRequestId != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Request ID: $maintenanceRequestId',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

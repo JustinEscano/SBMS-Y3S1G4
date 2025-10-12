@@ -515,29 +515,98 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   }
 
   void _showAddEditMaintenanceDialog() {
+    final isEditing = widget.request != null;
+    final issueController = TextEditingController(text: _requestData['issue'] ?? '');
+    String selectedUserId = widget.userRole == 'client' && !isEditing
+        ? _currentUserId ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '')
+        : _requestData['user']?.toString() ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '');
+    String selectedEquipmentId = _requestData['equipment']?.toString() ?? (widget.equipment.isNotEmpty ? widget.equipment.first['id'].toString() : '');
+    String selectedStatus = _requestData['status'] ?? 'pending';
+    DateTime selectedDate = _requestData['scheduled_date'] != null
+        ? DateTime.parse(_requestData['scheduled_date'])
+        : DateTime.now().add(const Duration(days: 1));
+    DateTime? resolvedDate = _requestData['resolved_at'] != null
+        ? DateTime.parse(_requestData['resolved_at'])
+        : null;
+
+    if (widget.users.isEmpty || widget.equipment.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot create/edit request: Users or equipment data not loaded'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (isEditing && widget.userRole == 'client' && _requestData['user']?.toString() != _currentUserId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can only edit your own requests'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
-      builder: (context) => MaintenanceAddEditDialog(
-        isEditing: widget.request != null,
-        users: widget.users,
-        equipment: widget.equipment,
-        statusOptions: widget.statusOptions,
-        userRole: widget.userRole,
-        currentUserId: _currentUserId,
-        requestData: _requestData,
-        onSave: _saveMaintenanceRequest,
-      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return MaintenanceDetailsWidgets.buildAddEditMaintenanceDialog(
+              context,
+              isEditing: isEditing,
+              requestData: _requestData,
+              users: widget.users,
+              equipment: widget.equipment,
+              statusOptions: widget.statusOptions,
+              userRole: widget.userRole,
+              currentUserId: _currentUserId,
+              issueController: issueController,
+              selectedUserId: selectedUserId,
+              selectedEquipmentId: selectedEquipmentId,
+              selectedStatus: selectedStatus,
+              selectedDate: selectedDate,
+              resolvedDate: resolvedDate,
+              onUserIdChanged: (value) => setDialogState(() => selectedUserId = value),
+              onEquipmentIdChanged: (value) => setDialogState(() => selectedEquipmentId = value),
+              onStatusChanged: (value) {
+                setDialogState(() {
+                  selectedStatus = value;
+                  if (selectedStatus != 'resolved') resolvedDate = null;
+                });
+              },
+              onDateChanged: (value) => setDialogState(() => selectedDate = value),
+              onResolvedDateChanged: (value) => setDialogState(() => resolvedDate = value),
+              onSave: () {
+                _saveMaintenanceRequest(
+                  requestId: widget.request?['id'],
+                  userId: selectedUserId,
+                  equipmentId: selectedEquipmentId,
+                  issue: issueController.text,
+                  status: selectedStatus,
+                  scheduledDate: selectedDate,
+                  resolvedAt: resolvedDate,
+                  isEditing: isEditing,
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.request == null || isLoadingDetails) {
+    if (widget.request == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    if (isLoadingDetails) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final statusColor = _getStatusColor(_requestData['status'] ?? '');
     final attachments = _requestData['attachments'] as List<dynamic>? ?? [];
     final effectiveRole = _verifiedUserRole ?? widget.userRole;
     final canComment = effectiveRole == 'admin' ||
@@ -547,6 +616,10 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
                 (_requestData['user'] != null && _currentUserId == _requestData['user']?.toString() ||
                     _requestData['assigned_to'] != null && _currentUserId == _requestData['assigned_to']?.toString())));
 
+    developer.log('Can Comment: $canComment', name: 'MaintenanceDetailsScreen');
+    developer.log('Effective Role: $effectiveRole, Current User ID: $_currentUserId', name: 'MaintenanceDetailsScreen');
+    developer.log('Request User: ${_requestData['user']?.toString()}, Assigned To: ${_requestData['assigned_to']?.toString()}', name: 'MaintenanceDetailsScreen');
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_getEquipmentName(_requestData['equipment']?.toString())),
@@ -555,7 +628,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: _showAddEditMaintenanceDialog,
+            onPressed: () => _showAddEditMaintenanceDialog(),
             tooltip: 'Edit Request',
           ),
           IconButton(
@@ -574,51 +647,79 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Fixed: Removed getEquipmentName parameter
-              MaintenanceRequestDetailsCard(
+              MaintenanceDetailsWidgets.buildRequestDetailsCard(
+                context,
                 requestData: _requestData,
+                getEquipmentName: _getEquipmentName,
+                getUserName: _getUserName,
                 getStatusLabel: _getStatusLabel,
                 getStatusColor: _getStatusColor,
-                getUserName: _getUserName,
               ),
               const SizedBox(height: 16),
-              MaintenanceCommentsCard(
-                paginatedComments: paginatedComments,
-                totalCommentPages: totalCommentPages,
-                currentCommentPage: _currentCommentPage,
-                onPrevious: _currentCommentPage > 1 ? () => setState(() => _currentCommentPage--) : null,
-                onNext: _currentCommentPage < totalCommentPages ? () => setState(() => _currentCommentPage++) : null,
+              MaintenanceDetailsWidgets.buildCommentSection(
+                context,
+                comments: paginatedComments,
+                currentPage: _currentCommentPage,
+                totalPages: totalCommentPages,
+                onPreviousPage: () => setState(() => _currentCommentPage--),
+                onNextPage: () => setState(() => _currentCommentPage++),
               ),
               const SizedBox(height: 32),
-              const MaintenanceDivider(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Divider(
+                  color: Theme.of(context).colorScheme.primary,
+                  thickness: 3,
+                ),
+              ),
               const SizedBox(height: 16),
-              MaintenanceCommentInput(
-                canComment: canComment,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Post a New Comment',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              MaintenanceDetailsWidgets.buildCommentInputSection(
+                context,
                 responseController: _responseController,
-                selectedAssignedToId: _selectedAssignedToId,
-                onAssignedToChanged: (value) => setState(() => _selectedAssignedToId = value),
-                users: widget.users,
+                canComment: canComment,
                 effectiveRole: effectiveRole,
-                isRefreshingToken: isRefreshingToken,
                 onAddComment: () => _respondToMaintenanceRequest(
                   widget.request!['id'].toString(),
                   _responseController.text,
                   _selectedAssignedToId,
                 ),
+                selectedAssignedToId: _selectedAssignedToId,
+                users: widget.users,
+                onAssignedToChanged: (value) => setState(() => _selectedAssignedToId = value),
+                isRefreshingToken: isRefreshingToken,
               ),
               const SizedBox(height: 16),
-              if (attachments.isNotEmpty)
-                MaintenanceAttachmentsCard(
-                  attachments: attachments,
-                  getAttachmentUrl: _getAttachmentUrl,
-                  fetchImageData: _fetchImageData,
-                  openAttachment: _openAttachment,
-                  getUserName: _getUserName,
-                ),
+              MaintenanceDetailsWidgets.buildAttachmentSection(
+                context,
+                attachments: attachments,
+                getAttachmentUrl: _getAttachmentUrl,
+                fetchImageData: _fetchImageData,
+                openAttachment: _openAttachment,
+                getUserName: _getUserName,
+              ),
               const SizedBox(height: 16),
-              MaintenanceAddAttachmentButton(
-                isRefreshingToken: isRefreshingToken,
-                onPressed: () => _uploadAttachment(widget.request!['id'].toString()),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ElevatedButton.icon(
+                  onPressed: isRefreshingToken ? null : () => _uploadAttachment(widget.request!['id'].toString()),
+                  icon: const Icon(Icons.attach_file),
+                  label: const Text('Add Attachment'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
             ],

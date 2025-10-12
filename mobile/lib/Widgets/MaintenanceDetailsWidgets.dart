@@ -1,488 +1,674 @@
-// lib/Screens/MaintenanceDetailsScreen.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:developer' as developer;
-import 'package:file_picker/file_picker.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'dart:typed_data';
-import '../Config/api.dart';
-import '../Services/auth_service.dart';
-import 'package:jwt_decode/jwt_decode.dart';
-import '../Widgets/MaintenanceDetailsWidgets.dart';
 
-class MaintenanceDetailsScreen extends StatefulWidget {
-  final String accessToken;
-  final String refreshToken;
-  final String userRole;
-  final List<dynamic> users;
-  final List<dynamic> equipment;
-  final List<Map<String, String>> statusOptions;
-  final Map<String, dynamic>? request;
-  final VoidCallback onSave;
-  final String? currentUserId;
-
-  const MaintenanceDetailsScreen({
-    super.key,
-    required this.accessToken,
-    required this.refreshToken,
-    required this.userRole,
-    required this.users,
-    required this.equipment,
-    required this.statusOptions,
-    this.request,
-    required this.onSave,
-    this.currentUserId,
-  });
-
-  @override
-  State<MaintenanceDetailsScreen> createState() => _MaintenanceDetailsScreenState();
-}
-
-class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
-  final TextEditingController _responseController = TextEditingController();
-  String? _selectedAssignedToId;
-  int _currentCommentPage = 1;
-  final int _commentsPerPage = 5;
-  bool isRefreshingToken = false;
-  bool isLoadingDetails = true;
-  String? _currentUserId;
-  String? _verifiedUserRole;
-  Map<String, dynamic> _requestData = {};
-
-  @override
-  void initState() {
-    super.initState();
-    AuthService().setTokens(widget.accessToken, widget.refreshToken);
-    developer.log('User Role in MaintenanceDetailsScreen: ${widget.userRole}', name: 'MaintenanceDetailsScreen');
-    try {
-      Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
-      developer.log('Token Payload: $payload', name: 'MaintenanceDetailsScreen');
-      developer.log('Token Role: ${payload['role']}', name: 'MaintenanceDetailsScreen');
-      setState(() {
-        _verifiedUserRole = payload['role']?.toString();
-        _currentUserId = widget.currentUserId ?? payload['user_id']?.toString();
-      });
-    } catch (e) {
-      developer.log('Error decoding token: $e', name: 'MaintenanceDetailsScreen');
-      setState(() {
-        _verifiedUserRole = null;
-        _currentUserId = widget.currentUserId;
-      });
-    }
-    _requestData = Map.from(widget.request ?? {});
-    if (widget.request == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showAddEditMaintenanceDialog();
-      });
-    } else {
-      _refreshDetails();
-    }
-  }
-
-  Future<void> _refreshDetails() async {
-    if (widget.request == null) return;
-    setState(() {
-      isLoadingDetails = true;
-    });
-    try {
-      if (!(await AuthService().ensureValidToken())) {
-        throw Exception('Session expired. Please log in again.');
-      }
-      final headers = AuthService().getAuthHeaders();
-      final response = await http.get(
-        Uri.parse(ApiConfig.maintenanceRequestDetail(widget.request!['id'].toString())),
-        headers: headers,
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _requestData = json.decode(response.body);
-        });
-      } else if (response.statusCode == 401) {
-        if (await _refreshToken()) {
-          return _refreshDetails();
-        } else {
-          throw Exception('Session expired. Please log in again.');
-        }
-      } else {
-        throw Exception('Failed to load request details: ${response.statusCode}');
-      }
-    } catch (e) {
-      developer.log('Error refreshing details: $e', name: 'MaintenanceDetailsScreen');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading details: $e'), backgroundColor: Colors.red),
-      );
-    } finally {
-      setState(() {
-        isLoadingDetails = false;
-      });
-    }
-  }
-
-  Future<bool> _refreshToken() async {
-    setState(() {
-      isRefreshingToken = true;
-    });
-    try {
-      final success = await AuthService().refresh();
-      if (success) {
-        developer.log('Token refreshed successfully', name: 'MaintenanceDetailsScreen.Auth');
-        return true;
-      }
-      developer.log('Token refresh failed', name: 'MaintenanceDetailsScreen.Auth');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to refresh session. Please log in again.'), backgroundColor: Colors.red),
-      );
-      return false;
-    } catch (e, stackTrace) {
-      developer.log('Token refresh error: $e', name: 'MaintenanceDetailsScreen.Auth');
-      developer.log('Stack trace: $stackTrace', name: 'MaintenanceDetailsScreen.Auth');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error refreshing session: $e'), backgroundColor: Colors.red),
-      );
-      return false;
-    } finally {
-      setState(() {
-        isRefreshingToken = false;
-      });
-    }
-  }
-
-  String _getAttachmentUrl(String? filePath) {
-    if (filePath == null || filePath.isEmpty) {
-      return '';
-    }
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      return filePath;
-    }
-    return ApiConfig.getMediaUrl(filePath);
-  }
-
-  Future<Uint8List?> _fetchImageData(String url) async {
-    try {
-      if (!(await AuthService().ensureValidToken())) {
-        throw Exception('Session expired. Please log in again.');
-      }
-      final headers = AuthService().getAuthHeaders();
-      final mediaUrl = _getAttachmentUrl(url);
-      final uri = Uri.parse(mediaUrl);
-      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        return response.bodyBytes;
-      } else if (response.statusCode == 401) {
-        if (await _refreshToken()) {
-          return await _fetchImageData(url);
-        }
-      }
-      return null;
-    } catch (e) {
-      developer.log('Error fetching image data: $e', name: 'MaintenanceDetailsScreen.Image');
-      return null;
-    }
-  }
-
-  Future<void> _openAttachment(String url, String fileName) async {
-    try {
-      if (!(await AuthService().ensureValidToken())) {
-        throw Exception('Session expired. Please log in again.');
-      }
-      final headers = AuthService().getAuthHeaders();
-      final mediaUrl = _getAttachmentUrl(url);
-      final uri = Uri.parse(mediaUrl);
-      developer.log('Opening attachment: $mediaUrl', name: 'MaintenanceDetailsScreen.Attachment');
-
-      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final tempDir = await getTemporaryDirectory();
-        final filePath = '${tempDir.path}/$fileName';
-        final file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
-
-        final result = await OpenFilex.open(filePath);
-        if (result.message.isNotEmpty && result.message != 'done') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Cannot open $fileName: ${result.message}'), backgroundColor: Colors.red),
-          );
-        }
-      } else if (response.statusCode == 401) {
-        if (await _refreshToken()) {
-          return _openAttachment(url, fileName);
-        } else {
-          throw Exception('Session expired. Please log in again.');
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to download $fileName: ${response.statusCode}'), backgroundColor: Colors.red),
-        );
-      }
-    } catch (e) {
-      developer.log('Error opening attachment: $e', name: 'MaintenanceDetailsScreen.Attachment');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error opening $fileName: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  Future<void> _deleteMaintenanceRequest(String requestId, String issue) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Maintenance Request'),
-          content: Text('Are you sure you want to delete this request?\n\n"${issue.length > 100 ? '${issue.substring(0, 100)}...' : issue}"'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+class MaintenanceDetailsWidgets {
+  static Widget buildDialogHeader(BuildContext context, {required String title, required IconData icon}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
+          ),
+          IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close)),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildDialogFooter(
+      BuildContext context, {required VoidCallback onAction, String actionText = 'Create', Widget? extraAction}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          if (extraAction != null) ...[
+            const SizedBox(width: 8),
+            extraAction,
+          ],
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: onAction,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(actionText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildDetailRow(BuildContext context, String label, String value, IconData icon, [Color? color]) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color ?? Theme.of(context).colorScheme.primary, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: color ?? Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget buildCommentCard(BuildContext context, Map<String, String> comment) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${comment['user'] ?? 'Unknown'} (${comment['role'] ?? 'Unknown'})',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
+              Text(
+                comment['timestamp'] ?? 'No timestamp',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            comment['text'] ?? 'No comment text',
+            style: TextStyle(color: Colors.grey[800], fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildCommentPagination(BuildContext context, int currentPage, int totalPages, VoidCallback onPrevious, VoidCallback onNext) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: currentPage > 1 ? onPrevious : null,
+          ),
+          Text(
+            'Page $currentPage of $totalPages',
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: currentPage < totalPages ? onNext : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildCommentSection(BuildContext context, {
+    required List<Map<String, String>> comments,
+    required int currentPage,
+    required int totalPages,
+    required VoidCallback onPreviousPage,
+    required VoidCallback onNextPage,
+  }) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Comments', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            if (comments.isEmpty)
+              Text(
+                'No comments yet',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            if (comments.isNotEmpty)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: comments.length,
+                itemBuilder: (context, index) => buildCommentCard(context, comments[index]),
+              ),
+            if (totalPages > 1)
+              buildCommentPagination(context, currentPage, totalPages, onPreviousPage, onNextPage),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget buildCommentInputSection(BuildContext context, {
+    required TextEditingController responseController,
+    required bool canComment,
+    required String effectiveRole,
+    required VoidCallback onAddComment,
+    required String? selectedAssignedToId,
+    required List<dynamic> users,
+    required ValueChanged<String?> onAssignedToChanged,
+    required bool isRefreshingToken,
+  }) {
+    if (!canComment) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.yellow[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.yellow[700]!),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.lock, color: Colors.yellow[700]),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Commenting is restricted to Admins, Superadmins, or owners/assigned Employees/Clients. Your role: $effectiveRole',
+                  style: TextStyle(color: Colors.yellow[900], fontSize: 14, fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+      ),
+      surfaceTintColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Add Comment', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            TextField(
+              controller: responseController,
+              decoration: InputDecoration(
+                labelText: 'Comment',
+                hintText: 'Enter your comment...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.comment),
+                filled: true,
+                fillColor: Colors.grey[50],
+                errorText: responseController.text.isEmpty && responseController.text.trim().isEmpty
+                    ? 'Comment cannot be empty'
+                    : null,
+              ),
+              maxLines: 3,
+              textInputAction: TextInputAction.newline,
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Tooltip(
+                message: 'Post your comment',
+                child: ElevatedButton.icon(
+                  onPressed: responseController.text.isEmpty || isRefreshingToken
+                      ? null
+                      : onAddComment,
+                  icon: const Icon(Icons.send, size: 20),
+                  label: const Text('Add Comment'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+            if (effectiveRole == 'admin' || effectiveRole == 'superadmin') ...[
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedAssignedToId,
+                decoration: InputDecoration(
+                  labelText: 'Assign To (Optional)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.person_add),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                ),
+                isExpanded: true,
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child: Text('None', overflow: TextOverflow.ellipsis),
+                  ),
+                  ...users
+                      .where((user) => user['role'] == 'employee' || user['role'] == 'admin')
+                      .map((user) => DropdownMenuItem<String>(
+                    value: user['id'].toString(),
+                    child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
+                  )),
+                ],
+                onChanged: onAssignedToChanged,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget buildAttachmentSection(BuildContext context, {
+    required List<dynamic> attachments,
+    required String Function(String?) getAttachmentUrl,
+    required Future<Uint8List?> Function(String) fetchImageData,
+    required void Function(String, String) openAttachment,
+    required String Function(String?) getUserName,
+  }) {
+    if (attachments.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Attachments', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            ...attachments.map((attachment) {
+              final mediaUrl = getAttachmentUrl(attachment['file']);
+              final isImage = attachment['file_type'].startsWith('image');
+
+              return isImage
+                  ? FutureBuilder<Uint8List?>(
+                future: fetchImageData(attachment['file']),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  if (snapshot.hasError || snapshot.data == null) {
+                    return ListTile(
+                      leading: const Icon(Icons.error, color: Colors.red),
+                      title: Text(
+                        attachment['file_name'],
+                        style: const TextStyle(fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        'Failed to load image',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                      onTap: () => openAttachment(attachment['file'], attachment['file_name']),
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () => openAttachment(attachment['file'], attachment['file_name']),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            snapshot.data!,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return ListTile(
+                                leading: const Icon(Icons.error, color: Colors.red),
+                                title: Text(
+                                  attachment['file_name'],
+                                  style: const TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(
+                                  'Failed to load image',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 8),
+                        child: Text(
+                          'Uploaded by ${getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              )
+                  : ListTile(
+                leading: Icon(
+                  attachment['file_type'].startsWith('image') ? Icons.image : Icons.picture_as_pdf,
+                  color: Colors.blue,
+                ),
+                title: Text(
+                  attachment['file_name'],
+                  style: const TextStyle(fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  'Uploaded by ${getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+                onTap: () => openAttachment(attachment['file'], attachment['file_name']),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget buildRequestDetailsCard(BuildContext context, {
+    required Map<String, dynamic> requestData,
+    required String Function(String?) getEquipmentName,
+    required String Function(String?) getUserName,
+    required String Function(String?) getStatusLabel,
+    required Color Function(String) getStatusColor,
+  }) {
+    final statusColor = getStatusColor(requestData['status'] ?? '');
+
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Request Details', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            buildDetailRow(context, 'Issue', requestData['issue'] ?? 'No description', Icons.description),
+            const SizedBox(height: 12),
+            buildDetailRow(context, 'Status', getStatusLabel(requestData['status']), Icons.assignment, statusColor),
+            const SizedBox(height: 12),
+            buildDetailRow(context, 'Requested By', getUserName(requestData['user']?.toString()), Icons.person),
+            const SizedBox(height: 12),
+            buildDetailRow(
+              context,
+              'Scheduled Date',
+              requestData['scheduled_date'] != null
+                  ? '${DateTime.parse(requestData['scheduled_date']).day}/${DateTime.parse(requestData['scheduled_date']).month}/${DateTime.parse(requestData['scheduled_date']).year}'
+                  : 'Not scheduled',
+              Icons.calendar_today,
+            ),
+            if (requestData['resolved_at'] != null) ...[
+              const SizedBox(height: 12),
+              buildDetailRow(
+                context,
+                'Resolved At',
+                '${DateTime.parse(requestData['resolved_at']).day}/${DateTime.parse(requestData['resolved_at']).month}/${DateTime.parse(requestData['resolved_at']).year} ${DateTime.parse(requestData['resolved_at']).hour.toString().padLeft(2, '0')}:${DateTime.parse(requestData['resolved_at']).minute.toString().padLeft(2, '0')}',
+                Icons.check_circle,
+                Colors.green,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget buildAddEditMaintenanceDialog(BuildContext context, {
+    required bool isEditing,
+    required Map<String, dynamic> requestData,
+    required List<dynamic> users,
+    required List<dynamic> equipment,
+    required List<Map<String, String>> statusOptions,
+    required String userRole,
+    required String? currentUserId,
+    required TextEditingController issueController,
+    required String selectedUserId,
+    required String selectedEquipmentId,
+    required String selectedStatus,
+    required DateTime selectedDate,
+    required DateTime? resolvedDate,
+    required ValueChanged<String> onUserIdChanged,
+    required ValueChanged<String> onEquipmentIdChanged,
+    required ValueChanged<String> onStatusChanged,
+    required ValueChanged<DateTime> onDateChanged,
+    required ValueChanged<DateTime?> onResolvedDateChanged,
+    required VoidCallback onSave,
+  }) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85, maxWidth: 500),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildDialogHeader(
+              context,
+              title: isEditing ? 'Edit Maintenance Request' : 'New Maintenance Request',
+              icon: isEditing ? Icons.edit : Icons.add,
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (userRole == 'admin' || userRole == 'superadmin' || isEditing) ...[
+                      DropdownButtonFormField<String>(
+                        value: selectedUserId.isEmpty ? null : selectedUserId,
+                        decoration: InputDecoration(
+                          labelText: 'User *',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.person),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        isExpanded: true,
+                        items: users.map((user) => DropdownMenuItem<String>(
+                          value: user['id'].toString(),
+                          child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
+                        )).toList(),
+                        onChanged: userRole == 'client' ? null : (value) => onUserIdChanged(value ?? ''),
+                        disabledHint: Text(userRole == 'client' ? 'You (Client)' : 'Select user'),
+                      ),
+                    ] else ...[
+                      Text(
+                        'Requested by: You (${userRole})',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: selectedEquipmentId.isEmpty ? null : selectedEquipmentId,
+                      decoration: InputDecoration(
+                        labelText: 'Equipment *',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(Icons.devices),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      isExpanded: true,
+                      items: equipment.map((eq) => DropdownMenuItem<String>(
+                        value: eq['id'].toString(),
+                        child: Text('${eq['name']} (${eq['type']})', overflow: TextOverflow.ellipsis),
+                      )).toList(),
+                      onChanged: (value) => onEquipmentIdChanged(value ?? ''),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: issueController,
+                      decoration: InputDecoration(
+                        labelText: 'Issue Description *',
+                        hintText: 'Describe the maintenance issue...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: const Icon(Icons.description),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                      maxLines: 3,
+                      textInputAction: TextInputAction.newline,
+                    ),
+                    const SizedBox(height: 16),
+                    if (userRole == 'admin' || userRole == 'superadmin') ...[
+                      DropdownButtonFormField<String>(
+                        value: selectedStatus,
+                        decoration: InputDecoration(
+                          labelText: 'Status',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.assignment),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        isExpanded: true,
+                        items: statusOptions.map((option) => DropdownMenuItem<String>(
+                          value: option['value'],
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(color: _getStatusColor(option['value']!), shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(option['label']!),
+                            ],
+                          ),
+                        )).toList(),
+                        onChanged: (value) => onStatusChanged(value ?? 'pending'),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) onDateChanged(picked);
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Scheduled Date *',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.calendar_today),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                        child: Text(selectedDate != null
+                            ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
+                            : 'Select date'),
+                      ),
+                    ),
+                    if ((userRole == 'admin' || userRole == 'superadmin') && (selectedStatus == 'resolved' || resolvedDate != null)) ...[
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: resolvedDate ?? DateTime.now(),
+                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(const Duration(days: 1)),
+                          );
+                          if (picked != null) {
+                            final timePicked = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.fromDateTime(resolvedDate ?? DateTime.now()),
+                            );
+                            if (timePicked != null) {
+                              onResolvedDateChanged(DateTime(
+                                picked.year,
+                                picked.month,
+                                picked.day,
+                                timePicked.hour,
+                                timePicked.minute,
+                              ));
+                            }
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Resolved At ${selectedStatus == 'resolved' ? '*' : ''}',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            prefixIcon: const Icon(Icons.calendar_today),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            suffixIcon: resolvedDate != null
+                                ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => onResolvedDateChanged(null),
+                            )
+                                : null,
+                          ),
+                          child: Text(resolvedDate != null
+                              ? '${resolvedDate!.day}/${resolvedDate!.month}/${resolvedDate!.year} ${resolvedDate!.hour.toString().padLeft(2, '0')}:${resolvedDate!.minute.toString().padLeft(2, '0')}'
+                              : 'Select date and time'),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Text('* Required fields', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  ],
+                ),
+              ),
+            ),
+            buildDialogFooter(
+              context,
+              onAction: onSave,
+              actionText: isEditing ? 'Update' : 'Create',
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
-
-    if (confirmed == true) {
-      try {
-        if (!(await AuthService().ensureValidToken())) {
-          throw Exception('Session expired. Please log in again.');
-        }
-        final url = ApiConfig.maintenanceRequestDetail(requestId);
-        final headers = AuthService().getAuthHeaders();
-
-        final response = await http.delete(Uri.parse(url), headers: headers).timeout(const Duration(seconds: 10));
-
-        if (response.statusCode == 204) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Request deleted successfully'), backgroundColor: Colors.green),
-          );
-          widget.onSave();
-          Navigator.of(context).pop();
-        } else if (response.statusCode == 401) {
-          if (await _refreshToken()) {
-            return _deleteMaintenanceRequest(requestId, issue);
-          } else {
-            throw Exception('Session expired. Please log in again.');
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: ${response.statusCode}'), backgroundColor: Colors.red),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting request: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
   }
 
-  Future<void> _uploadAttachment(String requestId) async {
-    try {
-      if (!(await AuthService().ensureValidToken())) {
-        throw Exception('Session expired. Please log in again.');
-      }
-      final headers = AuthService().getAuthHeaders();
-
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-      );
-
-      if (result != null && result.files.single.path != null) {
-        final file = result.files.single;
-        final request = http.MultipartRequest('POST', Uri.parse(ApiConfig.maintenanceRequestUploadAttachment(requestId)));
-        request.headers.addAll(headers);
-        request.files.add(await http.MultipartFile.fromPath('file', file.path!));
-        request.fields['file_name'] = file.name;
-
-        final response = await request.send().timeout(const Duration(seconds: 10));
-        if (response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Attachment uploaded successfully'), backgroundColor: Colors.green),
-          );
-          _refreshDetails();
-        } else if (response.statusCode == 401) {
-          if (await _refreshToken()) {
-            return _uploadAttachment(requestId);
-          } else {
-            throw Exception('Session expired. Please log in again.');
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload: ${response.statusCode}'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error uploading attachment: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  Future<void> _respondToMaintenanceRequest(String requestId, String responseText, String? assignedToId) async {
-    try {
-      if (!(await AuthService().ensureValidToken())) {
-        throw Exception('Session expired. Please log in again.');
-      }
-      final headers = AuthService().getAuthHeaders();
-      final body = <String, dynamic>{'response': responseText};
-      if (assignedToId != null && assignedToId.isNotEmpty) {
-        body['assigned_to'] = assignedToId;
-      }
-
-      final response = await http.post(
-        Uri.parse(ApiConfig.maintenanceRequestRespond(requestId)),
-        headers: headers,
-        body: json.encode(body),
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Comment added successfully'), backgroundColor: Colors.green),
-        );
-        _responseController.clear();
-        setState(() {
-          _selectedAssignedToId = null;
-          _currentCommentPage = 1;
-        });
-        _refreshDetails();
-        widget.onSave();
-      } else if (response.statusCode == 401) {
-        if (await _refreshToken()) {
-          return _respondToMaintenanceRequest(requestId, responseText, assignedToId);
-        } else {
-          throw Exception('Session expired. Please log in again.');
-        }
-      } else {
-        final errorData = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add comment: ${errorData['error'] ?? 'Status ${response.statusCode}'}'), backgroundColor: Colors.red),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding comment: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  Future<void> _saveMaintenanceRequest({
-    String? requestId,
-    required String userId,
-    required String equipmentId,
-    required String issue,
-    required String status,
-    required DateTime scheduledDate,
-    DateTime? resolvedAt,
-    required bool isEditing,
-  }) async {
-    if (issue.isEmpty || equipmentId.isEmpty || userId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in required fields (User, Equipment, Issue)'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    if (status == 'resolved' && resolvedAt == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Resolved requests require a resolved date'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    try {
-      if (!(await AuthService().ensureValidToken())) {
-        throw Exception('Session expired. Please log in again.');
-      }
-      final headers = AuthService().getAuthHeaders();
-      final requestBody = <String, dynamic>{
-        'user': userId,
-        'equipment': equipmentId,
-        'issue': issue,
-        'status': status,
-        'scheduled_date': '${scheduledDate.year}-${scheduledDate.month.toString().padLeft(2, '0')}-${scheduledDate.day.toString().padLeft(2, '0')}',
-      };
-
-      if (resolvedAt != null) {
-        requestBody['resolved_at'] = resolvedAt.toIso8601String();
-      }
-
-      final url = isEditing ? ApiConfig.maintenanceRequestDetail(requestId!) : ApiConfig.maintenanceRequest;
-
-      final response = isEditing
-          ? await http.put(Uri.parse(url), headers: headers, body: json.encode(requestBody))
-          : await http.post(Uri.parse(url), headers: headers, body: json.encode(requestBody));
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isEditing ? 'Request updated successfully' : 'Request created successfully'), backgroundColor: Colors.green),
-        );
-        widget.onSave();
-        Navigator.of(context).pop();
-        if (!isEditing) {
-          Navigator.of(context).pop();
-        }
-      } else if (response.statusCode == 401) {
-        if (await _refreshToken()) {
-          return _saveMaintenanceRequest(
-            requestId: requestId,
-            userId: userId,
-            equipmentId: equipmentId,
-            issue: issue,
-            status: status,
-            scheduledDate: scheduledDate,
-            resolvedAt: resolvedAt,
-            isEditing: isEditing,
-          );
-        } else {
-          throw Exception('Session expired. Please log in again.');
-        }
-      } else {
-        final errorData = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to ${isEditing ? 'update' : 'create'} request: ${errorData['error'] ?? response.statusCode}'), backgroundColor: Colors.red),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error ${isEditing ? 'updating' : 'creating'} request: $e'), backgroundColor: Colors.red),
-      );
-    }
-  }
-
-  List<Map<String, String>> _parseComments(String? comments) {
-    if (comments == null || comments.trim().isEmpty) return [];
-    final commentList = comments.split('\n').where((line) => line.trim().isNotEmpty).toList();
-    return commentList.map((comment) {
-      final match = RegExp(r'\[(.*?)\]\s*(.*?)\s*\((.*?)\):\s*(.*)').firstMatch(comment);
-      return {
-        'timestamp': match?.group(1) ?? '',
-        'user': match?.group(2) ?? '',
-        'role': match?.group(3) ?? '',
-        'text': match?.group(4) ?? comment,
-      };
-    }).toList();
-  }
-
-  String _getEquipmentName(String? equipmentId) {
-    final eq = widget.equipment.firstWhere((e) => e['id'].toString() == equipmentId?.toString(), orElse: () => {});
-    return eq['name'] ?? 'Unknown Equipment';
-  }
-
-  String _getUserName(String? userId) {
-    final user = widget.users.firstWhere((u) => u['id'].toString() == userId?.toString(), orElse: () => {});
-    return user['username'] ?? 'Unknown User';
-  }
-
-  Color _getStatusColor(String status) {
+  static Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
         return Colors.orange;
@@ -493,138 +679,5 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       default:
         return Colors.grey;
     }
-  }
-
-  String _getStatusLabel(String? status) {
-    final option = widget.statusOptions.firstWhere(
-          (option) => option['value'] == status,
-      orElse: () => {'value': status ?? '', 'label': status ?? 'Unknown'},
-    );
-    return option['label']!;
-  }
-
-  List<Map<String, String>> get paginatedComments {
-    final comments = _parseComments(_requestData['comments']);
-    final startIndex = (_currentCommentPage - 1) * _commentsPerPage;
-    final endIndex = startIndex + _commentsPerPage;
-    return comments.sublist(startIndex, endIndex.clamp(0, comments.length));
-  }
-
-  int get totalCommentPages {
-    final comments = _parseComments(_requestData['comments']);
-    return (comments.length / _commentsPerPage).ceil();
-  }
-
-  void _showAddEditMaintenanceDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => MaintenanceAddEditDialog(
-        isEditing: widget.request != null,
-        users: widget.users,
-        equipment: widget.equipment,
-        statusOptions: widget.statusOptions,
-        userRole: widget.userRole,
-        currentUserId: _currentUserId,
-        requestData: _requestData,
-        onSave: _saveMaintenanceRequest,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.request == null || isLoadingDetails) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final attachments = _requestData['attachments'] as List<dynamic>? ?? [];
-    final effectiveRole = _verifiedUserRole ?? widget.userRole;
-    final canComment = effectiveRole == 'admin' ||
-        effectiveRole == 'superadmin' ||
-        ((effectiveRole == 'employee' || effectiveRole == 'client') &&
-            (_currentUserId != null &&
-                (_requestData['user'] != null && _currentUserId == _requestData['user']?.toString() ||
-                    _requestData['assigned_to'] != null && _currentUserId == _requestData['assigned_to']?.toString())));
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_getEquipmentName(_requestData['equipment']?.toString())),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: _showAddEditMaintenanceDialog,
-            tooltip: 'Edit Request',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteMaintenanceRequest(widget.request!['id'].toString(), _requestData['issue'] ?? ''),
-            tooltip: 'Delete Request',
-          ),
-        ],
-      ),
-      body: isRefreshingToken
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-        onRefresh: _refreshDetails,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MaintenanceRequestDetailsCard(
-                requestData: _requestData,
-                getStatusLabel: _getStatusLabel,
-                getStatusColor: _getStatusColor,
-                getUserName: _getUserName,
-                getEquipmentName: _getEquipmentName,
-              ),
-              const SizedBox(height: 16),
-              MaintenanceCommentsCard(
-                paginatedComments: paginatedComments,
-                totalCommentPages: totalCommentPages,
-                currentCommentPage: _currentCommentPage,
-                onPrevious: _currentCommentPage > 1 ? () => setState(() => _currentCommentPage--) : null,
-                onNext: _currentCommentPage < totalCommentPages ? () => setState(() => _currentCommentPage++) : null,
-              ),
-              const SizedBox(height: 32),
-              const MaintenanceDivider(),
-              const SizedBox(height: 16),
-              MaintenanceCommentInput(
-                canComment: canComment,
-                responseController: _responseController,
-                selectedAssignedToId: _selectedAssignedToId,
-                onAssignedToChanged: (value) => setState(() => _selectedAssignedToId = value),
-                users: widget.users,
-                effectiveRole: effectiveRole,
-                isRefreshingToken: isRefreshingToken,
-                onAddComment: () => _respondToMaintenanceRequest(
-                  widget.request!['id'].toString(),
-                  _responseController.text,
-                  _selectedAssignedToId,
-                ),
-              ),
-              const SizedBox(height: 16),
-              MaintenanceAttachmentsCard(
-                attachments: attachments,
-                getAttachmentUrl: _getAttachmentUrl,
-                fetchImageData: _fetchImageData,
-                openAttachment: _openAttachment,
-                getUserName: _getUserName,
-              ),
-              const SizedBox(height: 16),
-              MaintenanceAddAttachmentButton(
-                isRefreshingToken: isRefreshingToken,
-                onPressed: () => _uploadAttachment(widget.request!['id'].toString()),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

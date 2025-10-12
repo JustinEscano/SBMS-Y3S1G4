@@ -10,13 +10,7 @@ import '../Screens/NotificationsScreen.dart';
 import '../Screens/ChatScreen.dart';
 import '../Screens/EnergyAnalyticsScreen.dart';
 import '../Widgets/bottom_navbar.dart';
-import '../Widgets/welcome_card.dart';
-import '../Widgets/system_card.dart';
-import '../Widgets/overview_card.dart';
-import '../Widgets/action_card.dart';
-import '../Widgets/sensor_card.dart';
-import '../Widgets/management_tile.dart';
-import '../Widgets/system_details_dialog.dart';
+import '../Widgets/DashboardScreenWidgets.dart';
 import '../providers/dashboard_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -143,7 +137,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showSystemDetails(String systemType, DashboardProvider provider) {
     showDialog(
       context: context,
-      builder: (context) => SystemDetailsDialog(
+      builder: (context) => DashboardScreenWidgets.buildSystemDetailsDialog(
+        context: context,
         systemType: systemType,
         hvacData: provider.hvacData,
         lightingData: provider.lightingData,
@@ -185,74 +180,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                builder: (context) => Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Icon(Icons.settings, color: Colors.blue[700]),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Management Center',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      ManagementTile(
-                        icon: Icons.room,
-                        title: 'Room Management',
-                        subtitle: 'Add, edit, and manage building rooms',
-                        color: Colors.blue,
-                        onTap: () {
-                          Navigator.pop(context);
-                          _navigateToRoomManagement();
-                        },
-                      ),
-                      ManagementTile(
-                        icon: Icons.devices,
-                        title: 'Equipment Management',
-                        subtitle: 'Add, edit, and manage equipment',
-                        color: Colors.green,
-                        onTap: () {
-                          Navigator.pop(context);
-                          _navigateToEquipmentManagement();
-                        },
-                      ),
-                      ManagementTile(
-                        icon: Icons.build,
-                        title: 'Maintenance Management',
-                        subtitle: 'Create and manage maintenance requests',
-                        color: Colors.indigo,
-                        onTap: () {
-                          Navigator.pop(context);
-                          _navigateToMaintenanceManagement();
-                        },
-                      ),
-                      ManagementTile(
-                        icon: Icons.qr_code_scanner,
-                        title: 'QR Code Scanner',
-                        subtitle: 'Scan equipment QR codes for quick access',
-                        color: Colors.deepPurple,
-                        onTap: () {
-                          Navigator.pop(context);
-                          _navigateToQRScanner();
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
+                builder: (context) => DashboardScreenWidgets.buildManagementCenterBottomSheet(
+                  onRoomManagement: () {
+                    Navigator.pop(context);
+                    _navigateToRoomManagement();
+                  },
+                  onEquipmentManagement: () {
+                    Navigator.pop(context);
+                    _navigateToEquipmentManagement();
+                  },
+                  onMaintenanceManagement: () {
+                    Navigator.pop(context);
+                    _navigateToMaintenanceManagement();
+                  },
+                  onQRScanner: () {
+                    Navigator.pop(context);
+                    _navigateToQRScanner();
+                  },
                 ),
               );
             },
@@ -265,31 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 tooltip: 'Notifications',
                 onPressed: _navigateToNotifications,
               ),
-              if (provider.unreadNotificationCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${provider.unreadNotificationCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
+              DashboardScreenWidgets.buildNotificationBadge(provider.unreadNotificationCount),
             ],
           ),
           IconButton(
@@ -314,27 +234,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (provider.errorMessage.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          provider.errorMessage,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              const WelcomeCard(),
+                DashboardScreenWidgets.buildErrorBanner(provider.errorMessage),
+              DashboardScreenWidgets.buildWelcomeCard(),
               const SizedBox(height: 20),
               const Text(
                 'Building Systems',
@@ -344,7 +245,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: SystemCard(
+                    child: DashboardScreenWidgets.buildSystemCard(
                       title: 'Energy',
                       value: '${provider.energyData['avgPower']?.toStringAsFixed(1) ?? '0'} W',
                       subtitle: 'Avg Power',
@@ -356,7 +257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: SystemCard(
+                    child: DashboardScreenWidgets.buildSystemCard(
                       title: 'HVAC',
                       value: '${provider.hvacData['activeZones'] ?? 0}/${provider.hvacData['totalZones'] ?? 0}',
                       subtitle: 'Active Zones',
@@ -372,7 +273,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: SystemCard(
+                    child: DashboardScreenWidgets.buildSystemCard(
                       title: 'Lighting',
                       value: '${provider.lightingData['detectedLights'] ?? 0}/${provider.lightingData['totalDevices'] ?? 0}',
                       subtitle: 'Lights Detected',
@@ -384,7 +285,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: SystemCard(
+                    child: DashboardScreenWidgets.buildSystemCard(
                       title: 'Security',
                       value: '${provider.securityData['activeDevices'] ?? 0}',
                       subtitle: 'Active Devices',
@@ -400,7 +301,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: SystemCard(
+                    child: DashboardScreenWidgets.buildSystemCard(
                       title: 'Maintenance',
                       value: '${provider.maintenanceRequests.length}',
                       subtitle: 'Total Requests',
@@ -425,7 +326,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: OverviewCard(
+                    child: DashboardScreenWidgets.buildOverviewCard(
                       title: 'Rooms',
                       value: provider.rooms.length.toString(),
                       icon: Icons.room,
@@ -435,7 +336,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: OverviewCard(
+                    child: DashboardScreenWidgets.buildOverviewCard(
                       title: 'Equipment',
                       value: provider.equipment.length.toString(),
                       icon: Icons.devices,
@@ -449,7 +350,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: OverviewCard(
+                    child: DashboardScreenWidgets.buildOverviewCard(
                       title: 'ESP32 Devices',
                       value: esp32Count.toString(),
                       icon: Icons.memory,
@@ -458,7 +359,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: OverviewCard(
+                    child: DashboardScreenWidgets.buildOverviewCard(
                       title: 'Online',
                       value: onlineEquipment.toString(),
                       icon: Icons.online_prediction,
@@ -476,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: ActionCard(
+                    child: DashboardScreenWidgets.buildActionCard(
                       title: 'QR Scanner',
                       icon: Icons.qr_code_scanner,
                       color: Colors.deepPurple,
@@ -485,7 +386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ActionCard(
+                    child: DashboardScreenWidgets.buildActionCard(
                       title: 'ORB Chat',
                       icon: Icons.chat,
                       color: Colors.blue,
@@ -494,7 +395,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ActionCard(
+                    child: DashboardScreenWidgets.buildActionCard(
                       title: 'Maintenance',
                       icon: Icons.build,
                       color: Colors.indigo,
@@ -505,74 +406,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 24),
               if (provider.latestSensorData.isNotEmpty) ...[
-                Row(
-                  children: [
-                    const Icon(Icons.sensors, color: Colors.orange),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Live ESP32 Sensor Data',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[100],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'LIVE',
-                        style: TextStyle(
-                          color: Colors.orange[700],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                DashboardScreenWidgets.buildLiveSensorDataHeader(),
                 const SizedBox(height: 12),
-                ...provider.latestSensorData.map((sensorData) => SensorCard(sensorData: sensorData)).toList(),
+                ...provider.latestSensorData.map((sensorData) => DashboardScreenWidgets.buildSensorCard(sensorData)).toList(),
                 const SizedBox(height: 24),
               ],
               if (provider.rooms.isEmpty && provider.equipment.isEmpty && provider.sensorLogs.isEmpty && provider.latestSensorData.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.info_outline, size: 64, color: Colors.grey),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Welcome to Smart Building!',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Get started by adding rooms and equipment to your building.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _navigateToRoomManagement,
-                              icon: const Icon(Icons.room),
-                              label: const Text('Add Rooms'),
-                            ),
-                            const SizedBox(width: 16),
-                            ElevatedButton.icon(
-                              onPressed: _navigateToEquipmentManagement,
-                              icon: const Icon(Icons.devices),
-                              label: const Text('Add Equipment'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                DashboardScreenWidgets.buildEmptyState(
+                  onAddRooms: _navigateToRoomManagement,
+                  onAddEquipment: _navigateToEquipmentManagement,
                 ),
             ],
           ),

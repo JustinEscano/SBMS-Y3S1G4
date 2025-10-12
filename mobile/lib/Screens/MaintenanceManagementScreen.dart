@@ -58,8 +58,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     _loadData();
   }
 
-  // ==================== API & DATA LOGIC ====================
-
   Future<bool> _refreshToken() async {
     setState(() {
       isRefreshingToken = true;
@@ -187,8 +185,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     }
   }
 
-  // ==================== HELPER METHODS ====================
-
   List<dynamic> get filteredRequests {
     return maintenanceRequests.where((request) => _filterStatus == 'all' || request['status'] == _filterStatus).toList();
   }
@@ -214,6 +210,27 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     return user?['username'] ?? 'Unknown User';
   }
 
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'in_progress':
+        return Colors.blue;
+      case 'resolved':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusLabel(String? status) {
+    final option = MAINTENANCE_STATUS_OPTIONS.firstWhere(
+          (option) => option['value'] == status,
+      orElse: () => {'value': status ?? '', 'label': status ?? 'Unknown'},
+    );
+    return option['label']!;
+  }
+
   void _showAddEditMaintenanceDialog({Map<String, dynamic>? request}) {
     Navigator.push(
       context,
@@ -234,25 +251,21 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   }
 
   void _showFilterDialog() {
-    String tempFilterStatus = _filterStatus;
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return MaintenanceFilterDialog(
-          currentFilter: tempFilterStatus,
+        return MaintenanceScreenWidgets.buildFilterDialog(
+          context,
+          currentFilterStatus: _filterStatus,
           statusOptions: MAINTENANCE_STATUS_OPTIONS,
-          onFilterChanged: (newFilter) {
-            tempFilterStatus = newFilter;
-          },
-          onApply: () {
+          onFilterChanged: (value) {
             setState(() {
-              _filterStatus = tempFilterStatus;
+              _filterStatus = value;
               _currentPage = 1;
             });
             Navigator.of(context).pop();
           },
-          onClear: () {
+          onClearFilter: () {
             setState(() {
               _filterStatus = 'all';
               _currentPage = 1;
@@ -264,8 +277,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     );
   }
 
-  // ==================== BUILD METHOD ====================
-
   @override
   Widget build(BuildContext context) {
     final filtered = filteredRequests;
@@ -275,24 +286,35 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     final resolvedCount = maintenanceRequests.where((r) => r['status'] == 'resolved').length;
 
     return Scaffold(
-      appBar: MaintenanceAppBar(
-        onFilterPressed: _showFilterDialog,
-        onRefreshPressed: isRefreshingToken ? null : _loadData,
+      appBar: AppBar(
+        title: const Text('Maintenance Requests'),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+            tooltip: 'Filter',
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: isRefreshingToken ? null : _loadData,
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body: Column(
         children: [
-          MaintenanceSummaryCards(
-            pendingCount: pendingCount,
-            inProgressCount: inProgressCount,
-            resolvedCount: resolvedCount,
-          ),
+          MaintenanceScreenWidgets.buildSummaryCards(context, pendingCount, inProgressCount, resolvedCount),
           if (_errorMessage.isNotEmpty)
-            MaintenanceErrorBanner(errorMessage: _errorMessage),
+            MaintenanceScreenWidgets.buildErrorBanner(context, _errorMessage),
           if (_filterStatus != 'all')
-            MaintenanceFilterChip(
+            MaintenanceScreenWidgets.buildFilterChip(
+              context,
               filterStatus: _filterStatus,
-              statusOptions: MAINTENANCE_STATUS_OPTIONS,
-              onClear: () => setState(() {
+              getStatusLabel: _getStatusLabel,
+              getStatusColor: _getStatusColor,
+              onRemoveFilter: () => setState(() {
                 _filterStatus = 'all';
                 _currentPage = 1;
               }),
@@ -301,44 +323,34 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
             child: isLoading || isRefreshingToken
                 ? const Center(child: CircularProgressIndicator())
                 : filtered.isEmpty
-                ? MaintenanceEmptyState(
+                ? MaintenanceScreenWidgets.buildEmptyState(
+              context,
               hasRequests: maintenanceRequests.isNotEmpty,
-              canCreate: users.isNotEmpty && equipment.isNotEmpty,
-              onCreatePressed: () => _showAddEditMaintenanceDialog(),
+              canCreateRequest: users.isNotEmpty && equipment.isNotEmpty,
+              onCreateRequest: () => _showAddEditMaintenanceDialog(),
             )
-                : Column(
-              children: [
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: _loadData,
-                    child: MaintenanceRequestList(
-                      requests: paginated,
-                      equipment: equipment,
-                      users: users,
-                      statusOptions: MAINTENANCE_STATUS_OPTIONS,
-                      onRequestTap: (request) => _showAddEditMaintenanceDialog(request: request),
-                    ),
-                  ),
-                ),
-                if (totalPages > 1)
-                  MaintenancePagination(
-                    currentPage: _currentPage,
-                    totalPages: totalPages,
-                    onPreviousPage: _currentPage > 1 ? () => setState(() => _currentPage--) : null,
-                    onNextPage: _currentPage < totalPages ? () => setState(() => _currentPage++) : null,
-                  ),
-              ],
+                : MaintenanceScreenWidgets.buildMaintenanceRequestListWithPagination(
+              context,
+              requests: paginated.cast<Map<String, dynamic>>(),
+              currentPage: _currentPage,
+              totalPages: totalPages,
+              getEquipmentName: _getEquipmentName,
+              getUserName: _getUserName,
+              getStatusLabel: _getStatusLabel,
+              getStatusColor: _getStatusColor,
+              onRequestTap: (request) => _showAddEditMaintenanceDialog(request: request),
+              onPreviousPage: () => setState(() => _currentPage--),
+              onNextPage: () => setState(() => _currentPage++),
             ),
           ),
         ],
       ),
-      floatingActionButton: (widget.userRole == 'admin' ||
-          widget.userRole == 'superadmin' ||
-          widget.userRole == 'client' ||
-          widget.userRole == 'employee')
-          ? MaintenanceFloatingActionButton(
-        enabled: users.isNotEmpty && equipment.isNotEmpty,
-        onPressed: () => _showAddEditMaintenanceDialog(),
+      floatingActionButton: (widget.userRole == 'admin' || widget.userRole == 'superadmin' || widget.userRole == 'client' || widget.userRole == 'employee')
+          ? FloatingActionButton(
+        onPressed: users.isEmpty || equipment.isEmpty ? null : () => _showAddEditMaintenanceDialog(),
+        tooltip: 'Create Maintenance Request',
+        child: const Icon(Icons.add),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       )
           : null,
     );

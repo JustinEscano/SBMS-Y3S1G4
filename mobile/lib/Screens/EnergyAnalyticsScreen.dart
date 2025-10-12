@@ -26,6 +26,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   List<dynamic> rooms = [];
   List<dynamic> equipment = [];
   List<dynamic> latestSensorData = [];
+  List<dynamic> hvacSensorData = []; // New: Historical HVAC sensor data
   String? selectedRoomId;
   String? selectedComponentId;
   String selectedScope = 'room';
@@ -38,6 +39,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   Map<String, dynamic> hvacData = {};
   Map<String, List<dynamic>> _cachedSensorLogs = {};
   Map<String, Map<String, dynamic>> _cachedBillingData = {};
+  Map<String, List<dynamic>> _cachedHvacData = {}; // New: Cache for HVAC data
   DateTime? _lastCacheTime;
   String totalCost = '0.00';
   String effectiveRate = '0.00';
@@ -159,7 +161,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   DateTime _getStartTime(DateTime now) {
     switch (timeFrame) {
       case 'daily':
-        return DateTime(now.year, now.month, now.day);
+      // For daily, get yesterday's data (since today's data might not be complete)
+        return now.subtract(Duration(days: 1)).copyWith(
+          hour: 0,
+          minute: 0,
+          second: 0,
+          millisecond: 0,
+          microsecond: 0,
+        );
       case 'weekly':
         return now.subtract(Duration(days: 7)).copyWith(
           hour: 0,
@@ -200,12 +209,67 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
+  // New method: Fetch HVAC sensor data for different time periods
+  Future<void> _loadHvacSensorData(DateTime startTime, DateTime endTime) async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+
+      // Build sensor log URL for HVAC data (DHT22 sensors)
+      String hvacSensorUrl = ApiConfig.sensorLog;
+      List<String> hvacParams = [
+        'timeframe=$timeFrame',
+        'period_start=${startTime.toIso8601String()}Z',
+        'period_end=${endTime.toIso8601String()}Z',
+        'limit=10000',
+        'component_type=dht22', // Only fetch DHT22 (temperature/humidity) data
+        if (selectedRoomId != null) 'room_id=$selectedRoomId',
+        if (selectedComponentId != null) 'component_id=$selectedComponentId',
+      ];
+      hvacSensorUrl += '?' + hvacParams.join('&');
+
+      print('HVAC Sensor Request URL: $hvacSensorUrl');
+
+      final hvacResponse = await http.get(Uri.parse(hvacSensorUrl), headers: headers).timeout(const Duration(seconds: 15));
+
+      print('HVAC Sensor Response Status: ${hvacResponse.statusCode}');
+      print('HVAC Sensor Response Body: ${hvacResponse.body}');
+
+      if (hvacResponse.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _loadHvacSensorData(startTime, endTime);
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else if (hvacResponse.statusCode != 200) {
+        throw Exception('Failed to load HVAC sensor data: ${hvacResponse.statusCode} - ${hvacResponse.reasonPhrase}');
+      }
+
+      final hvacData = json.decode(hvacResponse.body);
+      print('HVAC Sensor Data Response: $hvacData');
+
+      setState(() {
+        hvacSensorData = hvacData is List ? hvacData : [];
+        _cachedHvacData['$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame'] = hvacSensorData;
+      });
+
+    } catch (e) {
+      print('Error loading HVAC sensor data: $e');
+      setState(() {
+        hvacSensorData = [];
+      });
+    }
+  }
+
   Future<void> loadEnergyData() async {
     setState(() {
       isLoading = true;
       errorMessage = '';
       _cachedSensorLogs.clear();
       _cachedBillingData.clear();
+      _cachedHvacData.clear(); // Clear HVAC cache
       totalCost = '0.00';
       effectiveRate = '0.00';
       hvacData = {};
@@ -222,6 +286,13 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       DateTime now = DateTime.now();
       DateTime startTimeCalc = _getStartTime(now);
       DateTime endTimeCalc = _getEndTime(startTimeCalc);
+
+      print('=== DATE RANGE DEBUG ===');
+      print('Current time: $now');
+      print('Start time: $startTimeCalc');
+      print('End time: $endTimeCalc');
+      print('Timeframe: $timeFrame');
+      print('========================');
 
       String billingUrl = ApiConfig.calculateEnergyCost;
       List<String> params = [
@@ -247,6 +318,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         if (selectedComponentId != null) 'component_id=$selectedComponentId',
       ];
       sensorLogUrl += '?' + sensorParams.join('&');
+
+      // Load HVAC sensor data in parallel
+      await Future.wait([
+        http.get(Uri.parse(sensorLogUrl), headers: headers),
+        Future.value(billingResponse),
+        http.get(Uri.parse(ApiConfig.latestSensorData), headers: headers),
+        _loadHvacSensorData(startTimeCalc, endTimeCalc), // Load HVAC data
+      ]).timeout(const Duration(seconds: 15));
 
       final responses = await Future.wait([
         http.get(Uri.parse(sensorLogUrl), headers: headers),
@@ -342,8 +421,16 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     int activeZones = 0;
     int totalZones = 0;
 
-    if (latestSensorData.isNotEmpty) {
-      final filteredSensors = latestSensorData.where((sensor) {
+    // Use historical HVAC data if available, otherwise fall back to latest data
+    List<dynamic> dataSource = hvacSensorData.isNotEmpty ? hvacSensorData : latestSensorData;
+
+    if (dataSource.isNotEmpty) {
+      final filteredSensors = dataSource.where((sensor) {
+        // For historical data, check if it has temperature/humidity
+        if (hvacSensorData.isNotEmpty) {
+          return sensor['temperature'] != null && sensor['humidity'] != null;
+        }
+        // For latest data, use existing logic
         if (sensor['temperature'] == null || sensor['humidity'] == null) return false;
         if (selectedScope == 'building') return true;
         if (selectedScope == 'all_rooms' && sensor['room_id'] != null) return true;
@@ -381,6 +468,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         'activeZones': activeZones,
         'totalZones': totalZones,
         'status': activeZones > 0 ? 'operational' : 'offline',
+        'dataPoints': hvacSensorData.length, // Add data point count for debugging
       };
     });
   }
@@ -539,6 +627,113 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     return spots;
   }
 
+  // New method: Generate HVAC trend data for charts
+  List<FlSpot> _generateTemperatureSpots() {
+    final now = DateTime.now();
+    final startTime = _getStartTime(now);
+    final binSize = _binSizes[timeFrame]!;
+    final binSizeMs = binSize.inMilliseconds;
+    final startMs = startTime.millisecondsSinceEpoch;
+    final endMs = now.millisecondsSinceEpoch;
+
+    final filteredLogs = hvacSensorData.where((log) {
+      if (log['recorded_at'] == null || log['temperature'] == null) return false;
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        return !recordedAt.isBefore(startTime) && !recordedAt.isAfter(now);
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    final totalBins = ((endMs - startMs) / binSizeMs).ceil();
+    final Map<int, List<double>> bins = {};
+    for (int i = 0; i < totalBins; i++) {
+      final binKey = startMs + (i * binSizeMs);
+      bins[binKey] = [];
+    }
+
+    for (var log in filteredLogs) {
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        final timestampMs = recordedAt.millisecondsSinceEpoch;
+        final relativeMs = timestampMs - startMs;
+        final binIndex = (relativeMs / binSizeMs).floor();
+        final binKey = startMs + (binIndex * binSizeMs);
+        if (bins.containsKey(binKey)) {
+          final temperature = (log['temperature'] as num?)?.toDouble() ?? 0.0;
+          bins[binKey]!.add(temperature);
+        }
+      } catch (e) {
+        // Skip invalid entries
+      }
+    }
+
+    final List<FlSpot> spots = [];
+    bins.forEach((binKey, values) {
+      final avgTemp = values.isNotEmpty ? values.reduce((a, b) => a + b) / values.length : 0.0;
+      final binMidMs = binKey + (binSizeMs / 2);
+      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble();
+      spots.add(FlSpot(xValue, avgTemp));
+    });
+
+    spots.sort((a, b) => a.x.compareTo(b.x));
+    return spots;
+  }
+
+  List<FlSpot> _generateHumiditySpots() {
+    final now = DateTime.now();
+    final startTime = _getStartTime(now);
+    final binSize = _binSizes[timeFrame]!;
+    final binSizeMs = binSize.inMilliseconds;
+    final startMs = startTime.millisecondsSinceEpoch;
+    final endMs = now.millisecondsSinceEpoch;
+
+    final filteredLogs = hvacSensorData.where((log) {
+      if (log['recorded_at'] == null || log['humidity'] == null) return false;
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        return !recordedAt.isBefore(startTime) && !recordedAt.isAfter(now);
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    final totalBins = ((endMs - startMs) / binSizeMs).ceil();
+    final Map<int, List<double>> bins = {};
+    for (int i = 0; i < totalBins; i++) {
+      final binKey = startMs + (i * binSizeMs);
+      bins[binKey] = [];
+    }
+
+    for (var log in filteredLogs) {
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        final timestampMs = recordedAt.millisecondsSinceEpoch;
+        final relativeMs = timestampMs - startMs;
+        final binIndex = (relativeMs / binSizeMs).floor();
+        final binKey = startMs + (binIndex * binSizeMs);
+        if (bins.containsKey(binKey)) {
+          final humidity = (log['humidity'] as num?)?.toDouble() ?? 0.0;
+          bins[binKey]!.add(humidity);
+        }
+      } catch (e) {
+        // Skip invalid entries
+      }
+    }
+
+    final List<FlSpot> spots = [];
+    bins.forEach((binKey, values) {
+      final avgHumidity = values.isNotEmpty ? values.reduce((a, b) => a + b) / values.length : 0.0;
+      final binMidMs = binKey + (binSizeMs / 2);
+      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble();
+      spots.add(FlSpot(xValue, avgHumidity));
+    });
+
+    spots.sort((a, b) => a.x.compareTo(b.x));
+    return spots;
+  }
+
   void _changeTimeFrame(String newTimeFrame) {
     if (timeFrame != newTimeFrame) {
       setState(() {
@@ -567,9 +762,15 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-  double _getMaxY(List<FlSpot> spots, {bool isEnergy = false}) {
-    if (spots.isEmpty) return isEnergy ? 0.01 : 100.0;
+  double _getMaxY(List<FlSpot> spots, {bool isEnergy = false, bool isTemperature = false, bool isHumidity = false}) {
+    if (spots.isEmpty) {
+      if (isTemperature) return 50.0; // Default max temperature
+      if (isHumidity) return 100.0; // Default max humidity
+      return isEnergy ? 0.01 : 100.0;
+    }
     final maxY = spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b);
+    if (isTemperature) return (maxY * 1.2).ceilToDouble();
+    if (isHumidity) return (maxY * 1.2).ceilToDouble();
     return isEnergy ? (maxY < 0.01 ? 0.01 : (maxY * 1.2)) : (maxY * 1.2).ceilToDouble();
   }
 
@@ -679,6 +880,8 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     final startTime = _getStartTime(now);
     final powerSpots = _generatePowerSpots();
     final energySpots = _generateEnergySpots();
+    final temperatureSpots = _generateTemperatureSpots(); // New: Temperature trend
+    final humiditySpots = _generateHumiditySpots(); // New: Humidity trend
     String chartSuffix = '';
     if (timeFrame == 'daily') {
       chartSuffix = ' (Last 24 Hours)';
@@ -1042,6 +1245,190 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              // New: Temperature Trend Chart
+              Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_getScopeTitle()} Temperature Trend$chartSuffix',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 200,
+                        child: LineChart(
+                          LineChartData(
+                            gridData: FlGridData(show: true),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 40,
+                                  getTitlesWidget: (value, meta) {
+                                    return Text(
+                                      '${value.toStringAsFixed(1)}°C',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    );
+                                  },
+                                ),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 30,
+                                  interval: interval,
+                                  getTitlesWidget: (value, meta) {
+                                    if (!_shouldShowLabel(value, timeFrame)) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        _formatTimeAxis(value, timeFrame, startTime),
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            ),
+                            borderData: FlBorderData(show: true),
+                            lineBarsData: [
+                              LineChartBarData(
+                                spots: temperatureSpots,
+                                isCurved: true,
+                                color: Colors.red,
+                                barWidth: 2,
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  color: Colors.red.withOpacity(0.2),
+                                ),
+                                dotData: FlDotData(show: true),
+                              ),
+                            ],
+                            lineTouchData: LineTouchData(
+                              enabled: true,
+                              touchTooltipData: LineTouchTooltipData(
+                                getTooltipItems: (touchedSpots) {
+                                  return touchedSpots.map((spot) {
+                                    return LineTooltipItem(
+                                      '${spot.y.toStringAsFixed(1)}°C\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
+                                      const TextStyle(color: Colors.white),
+                                    );
+                                  }).toList();
+                                },
+                              ),
+                            ),
+                            minX: 0,
+                            maxX: maxX,
+                            minY: 0,
+                            maxY: _getMaxY(temperatureSpots, isTemperature: true),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // New: Humidity Trend Chart
+              Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_getScopeTitle()} Humidity Trend$chartSuffix',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 200,
+                        child: LineChart(
+                          LineChartData(
+                            gridData: FlGridData(show: true),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 40,
+                                  getTitlesWidget: (value, meta) {
+                                    return Text(
+                                      '${value.toStringAsFixed(1)}%',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    );
+                                  },
+                                ),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 30,
+                                  interval: interval,
+                                  getTitlesWidget: (value, meta) {
+                                    if (!_shouldShowLabel(value, timeFrame)) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        _formatTimeAxis(value, timeFrame, startTime),
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            ),
+                            borderData: FlBorderData(show: true),
+                            lineBarsData: [
+                              LineChartBarData(
+                                spots: humiditySpots,
+                                isCurved: true,
+                                color: Colors.blue,
+                                barWidth: 2,
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  color: Colors.blue.withOpacity(0.2),
+                                ),
+                                dotData: FlDotData(show: true),
+                              ),
+                            ],
+                            lineTouchData: LineTouchData(
+                              enabled: true,
+                              touchTooltipData: LineTouchTooltipData(
+                                getTooltipItems: (touchedSpots) {
+                                  return touchedSpots.map((spot) {
+                                    return LineTooltipItem(
+                                      '${spot.y.toStringAsFixed(1)}%\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
+                                      const TextStyle(color: Colors.white),
+                                    );
+                                  }).toList();
+                                },
+                              ),
+                            ),
+                            minX: 0,
+                            maxX: maxX,
+                            minY: 0,
+                            maxY: _getMaxY(humiditySpots, isHumidity: true),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Card(
                 elevation: 2,
                 child: Padding(
@@ -1097,6 +1484,9 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                       _buildStatRow('Average Humidity', '${hvacData['avgHumidity']?.toStringAsFixed(1) ?? '0.0'}%'),
                       _buildStatRow('Active Zones', '${hvacData['activeZones'] ?? 0}/${hvacData['totalZones'] ?? 0}'),
                       _buildStatRow('System Status', hvacData['status']?.toString().toUpperCase() ?? 'OFFLINE'),
+                      if (hvacData['dataPoints'] != null) ...[
+                        _buildStatRow('Data Points', '${hvacData['dataPoints']} readings'),
+                      ],
                     ],
                   ),
                 ),
