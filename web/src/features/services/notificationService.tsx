@@ -66,6 +66,17 @@ export const notificationService = {
     }
   },
 
+  // Mark a notification as unread
+  markAsUnread: async (id: string): Promise<Notification> => {
+    try {
+      const res = await axiosInstance.patch<Notification>(`${BASE_URL}${id}/`, { read: false });
+      return res.data;
+    } catch (error: any) {
+      console.error(`Error marking notification ${id} as unread:`, error.response?.data || error);
+      throw error;
+    }
+  },
+
   // Mark all notifications as read (frontend fallback)
   markAllAsRead: async (): Promise<void> => {
     try {

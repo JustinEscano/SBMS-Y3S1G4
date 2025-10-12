@@ -39,6 +39,17 @@ export const useNotifications = (userId?: string, pollInterval = 30000) => {
     }
   }, []);
 
+  const markAsUnread = useCallback(async (id: string) => {
+  try {
+    await notificationService.markAsUnread(id);
+    setNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, read: false } : n))
+    );
+  } catch (err: any) {
+    console.error(`Failed to mark notification ${id} as unread:`, err);
+  }
+}, []);
+
   const markAllAsRead = useCallback(async () => {
     try {
       const unread = notifications.filter(n => !n.read);
@@ -63,6 +74,7 @@ export const useNotifications = (userId?: string, pollInterval = 30000) => {
     error,
     fetchNotifications,
     markAsRead,
+    markAsUnread,
     markAllAsRead,
   };
 };
