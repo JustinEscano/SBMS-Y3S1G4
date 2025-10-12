@@ -72,7 +72,7 @@ const LLMChatPage: React.FC = () => {
     return "general";
   };
 
-  // Function to determine user role based on query content
+  // Function to determine user role based on query type
   const determineUserRole = (queryType: QueryType): UserRole => {
     switch (queryType) {
       case "maintenance":
@@ -239,6 +239,16 @@ const LLMChatPage: React.FC = () => {
     ];
   };
 
+  // Format greeting items with consistent emojis
+  const greetingItems = [
+    { emoji: "📊", text: "Energy consumption and trends" },
+    { emoji: "🏢", text: "Room utilization and occupancy" },
+    { emoji: "🔧", text: "Maintenance suggestions" },
+    { emoji: "⚠️", text: "Anomaly detection" },
+    { emoji: "📈", text: "Weekly summaries and KPIs" },
+    { emoji: "🌡️", text: "Current building status" }
+  ];
+
   return (
     <PageLayout initialSection={{ parent: "LLM" }}>
       <div className="orb-chat-container">
@@ -255,30 +265,32 @@ const LLMChatPage: React.FC = () => {
         {messages.length === 0 ? (
           <>
             <div className="orb-greeting">
-              <h2>Hello, I am Orb!</h2>
+              <h2>Hello, I am Orb! 👋</h2>
               <p>I can help you analyze your building's sensor data and energy consumption.</p>
               <p>Ask me questions about:</p>
               <ul>
-                <li>📊 Energy consumption and trends</li>
-                <li>🏢 Room utilization and occupancy</li>
-                <li>🔧 Maintenance suggestions</li>
-                <li>⚠️ Anomaly detection</li>
-                <li>📈 Weekly summaries and KPIs</li>
-                <li>🌡️ Current building status</li>
+                {greetingItems.map((item, index) => (
+                  <li key={index}>
+                    <span className="orb-emoji">{item.emoji}</span>
+                    {item.text}
+                  </li>
+                ))}
               </ul>
             </div>
             <div className="orb-suggestions">
-              <h3>Try asking:</h3>
-              {getSuggestions().map((text, index) => (
-                <button
-                  key={index}
-                  className="orb-suggestion-button"
-                  onClick={() => handleSuggestionClick(text)}
-                  disabled={isLoading}
-                >
-                  {text}
-                </button>
-              ))}
+              <h3>💡 Try asking:</h3>
+              <div className="orb-suggestion-buttons">
+                {getSuggestions().map((text, index) => (
+                  <button
+                    key={index}
+                    className="orb-suggestion-button"
+                    onClick={() => handleSuggestionClick(text)}
+                    disabled={isLoading}
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
             </div>
           </>
         ) : (
@@ -286,6 +298,14 @@ const LLMChatPage: React.FC = () => {
             {messages.map((message: ChatMessage) => (
               <div key={message.id} className={`orb-message orb-message-${message.type}`}>
                 <div className="orb-message-content">
+                  {/* Logo only for assistant responses (not loading) */}
+                  {message.type === "assistant" && !message.isLoading && (
+                    <img
+                      src="/logo.png"
+                      alt="Orb Assistant Logo"
+                      className="orb-message-logo"
+                    />
+                  )}
                   {message.isLoading ? (
                     <div className="orb-loading">
                       <div className="orb-loading-dots">
@@ -293,18 +313,14 @@ const LLMChatPage: React.FC = () => {
                         <span></span>
                         <span></span>
                       </div>
+                      <span className="orb-loading-text">Thinking...</span>
                     </div>
                   ) : (
-                    <pre style={{ 
-                      whiteSpace: 'pre-wrap', 
-                      fontFamily: 'inherit',
-                      margin: 0,
-                      padding: 0
-                    }}>{message.content}</pre>
+                    <pre className="orb-response-text">{message.content}</pre>
                   )}
                 </div>
                 <div className="orb-message-time">
-                  {message.timestamp.toLocaleTimeString()}
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             ))}
@@ -315,7 +331,7 @@ const LLMChatPage: React.FC = () => {
         {messages.length > 0 && (
           <div className="orb-chat-actions">
             <button onClick={clearChat} className="orb-clear-button">
-              Clear Chat
+              🗑️ Clear Chat
             </button>
           </div>
         )}
@@ -326,7 +342,7 @@ const LLMChatPage: React.FC = () => {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Ask Orb about your building data..."
+            placeholder="💭 Ask Orb about your building data..."
             className="orb-input"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -340,6 +356,7 @@ const LLMChatPage: React.FC = () => {
               title="Check LLM Health"
               className="orb-icon-button"
               onClick={checkLLMHealth}
+              disabled={isLoading}
             >
               🔍
             </button>
@@ -347,6 +364,7 @@ const LLMChatPage: React.FC = () => {
               title="Clear Chat"
               className="orb-icon-button"
               onClick={clearChat}
+              disabled={isLoading}
             >
               🗑️
             </button>
@@ -358,7 +376,17 @@ const LLMChatPage: React.FC = () => {
               onClick={() => handleSendMessage()}
               disabled={isLoading || !inputValue.trim()}
             >
-              {isLoading ? "⏳" : "➤"}
+              {isLoading ? (
+                <>
+                  <span className="orb-send-loading">⏳</span>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <span className="orb-send-icon">➤</span>
+                  Send
+                </>
+              )}
             </button>
           </div>
         </div>
