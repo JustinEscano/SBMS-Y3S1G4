@@ -1,0 +1,841 @@
+2025-10-12 21:42:13,567 - __main__ - INFO - Using prompt type: base_enhancement
+2025-10-12 21:42:13,567 - __main__ - INFO - Using document template: standard
+2025-10-12 21:42:13,698 - database_adapter - INFO - Successfully connected to PostgreSQL database
+2025-10-12 21:42:13,699 - __main__ - INFO - PostgreSQL database adapter initialized successfully
+2025-10-12 21:42:13,710 - __main__ - INFO - Loaded 172 existing document hashes
+2025-10-12 21:42:13,717 - __main__ - INFO - Loading sensor data from PostgreSQL
+2025-10-12 21:42:13,852 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:42:13,855 - __main__ - INFO - Loaded 5 unique occupied room records from PostgreSQL
+2025-10-12 21:42:13,855 - __main__ - INFO - Loading maintenance data from PostgreSQL
+2025-10-12 21:42:13,905 - database_adapter - INFO - Retrieved 10 maintenance requests using Django ORM
+2025-10-12 21:42:13,905 - __main__ - INFO - Loaded 10 maintenance requests from PostgreSQL
+2025-10-12 21:42:13,906 - __main__ - INFO - No new sensor records to log to MongoDB (all duplicates)
+2025-10-12 21:42:13,907 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:13,907 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:13,908 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:13,908 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:13,908 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:13,908 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:13,908 - __main__ - INFO - Loading existing vector store
+2025-10-12 21:42:14,725 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-10-12 21:42:14,839 - __main__ - INFO - No new documents to add to vector store
+2025-10-12 21:42:15,342 - __main__ - INFO - QA chain initialized successfully
+2025-10-12 21:42:15,342 - __main__ - INFO - Analyzer initialized successfully
+2025-10-12 21:42:15,342 - __main__ - INFO - Processing ask request for query: 'How many rooms are in the system?' with user_id: None, username: None
+2025-10-12 21:42:16,224 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:16,224 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:16,225 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:16,225 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:16,226 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:16,226 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:16,226 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:16,226 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:16,226 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:16,226 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:16,226 - __main__ - INFO - Processing deterministic query: 'how many rooms are in the system?'
+2025-10-12 21:42:16,549 - __main__ - INFO - Used deterministic handler for query: 'How many rooms are in the system?'
+2025-10-12 21:42:16,549 - __main__ - INFO - Processing ask request for query: 'What's the most used room?' with user_id: None, username: None
+2025-10-12 21:42:17,293 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:17,293 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:17,294 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:17,295 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:17,295 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:17,295 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:17,295 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:17,295 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:17,296 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:17,296 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:17,296 - __main__ - INFO - Processing deterministic query: 'what's the most used room?'
+2025-10-12 21:42:17,541 - __main__ - INFO - Used deterministic handler for query: 'What's the most used room?'
+2025-10-12 21:42:17,541 - __main__ - INFO - Processing ask request for query: 'Show me the highest temperature recorded' with user_id: None, username: None
+2025-10-12 21:42:18,248 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:18,248 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:18,250 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:18,250 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:18,250 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:18,250 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:18,250 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:18,250 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:18,251 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:18,251 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:18,251 - __main__ - INFO - Processing deterministic query: 'show me the highest temperature recorded'
+2025-10-12 21:42:18,255 - __main__ - INFO - Matched mixed query: 'Show me the highest temperature recorded'
+2025-10-12 21:42:18,589 - __main__ - INFO - Used deterministic handler for query: 'Show me the highest temperature recorded'
+2025-10-12 21:42:18,589 - __main__ - INFO - Processing ask request for query: 'How many maintenance requests are pending?' with user_id: None, username: None
+2025-10-12 21:42:19,310 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:19,310 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:19,311 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:19,311 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:19,312 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:19,312 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:19,312 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:19,312 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:19,312 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:19,312 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:19,312 - __main__ - INFO - Processing deterministic query: 'how many maintenance requests are pending?'
+2025-10-12 21:42:19,312 - __main__ - INFO - Matched maintenance query: 'How many maintenance requests are pending?'
+2025-10-12 21:42:19,576 - __main__ - INFO - Used deterministic handler for query: 'How many maintenance requests are pending?'
+2025-10-12 21:42:19,576 - __main__ - INFO - Processing ask request for query: 'What's the average energy consumption?' with user_id: None, username: None
+2025-10-12 21:42:20,279 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:20,279 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:20,281 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:20,281 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:20,281 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:20,281 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:20,281 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:20,281 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:20,281 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:20,281 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:20,282 - __main__ - INFO - Processing deterministic query: 'what's the average energy consumption?'
+2025-10-12 21:42:20,286 - __main__ - INFO - Matched mixed query: 'What's the average energy consumption?'
+2025-10-12 21:42:20,561 - __main__ - INFO - Used deterministic handler for query: 'What's the average energy consumption?'
+2025-10-12 21:42:20,561 - __main__ - INFO - Processing ask request for query: 'Generate weekly summary' with user_id: None, username: None
+2025-10-12 21:42:21,291 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:21,291 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:21,292 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:21,293 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:21,293 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:21,293 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:21,293 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:21,293 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:21,293 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:21,293 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:21,294 - __main__ - INFO - Processing deterministic query: 'generate weekly summary'
+2025-10-12 21:42:21,294 - __main__ - INFO - Attempting to generate weekly summary for query: 'Generate weekly summary'
+2025-10-12 21:42:21,296 - __main__ - INFO - Weekly summary generated: Weekly Summary Report:
+• Total Energy: 60.70 kWh (8.67 kWh/day)
+• Total Occupancy: 5 people (0.7 peo...
+2025-10-12 21:42:21,608 - __main__ - INFO - Used deterministic handler for query: 'Generate weekly summary'
+2025-10-12 21:42:21,608 - __main__ - INFO - Processing ask request for query: 'Show me energy trends' with user_id: None, username: None
+2025-10-12 21:42:22,269 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:22,270 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:22,271 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:22,271 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:22,271 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:22,272 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:22,272 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:22,272 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:22,272 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:22,272 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:22,272 - __main__ - INFO - Processing deterministic query: 'show me energy trends'
+2025-10-12 21:42:22,272 - __main__ - INFO - Matched energy trend query: 'Show me energy trends'
+2025-10-12 21:42:22,549 - __main__ - INFO - Used deterministic handler for query: 'Show me energy trends'
+2025-10-12 21:42:22,550 - __main__ - INFO - Processing ask request for query: 'What are the key performance indicators?' with user_id: None, username: None
+2025-10-12 21:42:23,291 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:23,292 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:23,293 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:23,293 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:23,294 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:23,294 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:23,294 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:23,294 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:23,294 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:23,294 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:23,294 - __main__ - INFO - Processing deterministic query: 'what are the key performance indicators?'
+2025-10-12 21:42:23,294 - __main__ - INFO - Matched KPI query: 'What are the key performance indicators?'
+2025-10-12 21:42:23,628 - __main__ - INFO - Used deterministic handler for query: 'What are the key performance indicators?'
+2025-10-12 21:42:23,629 - __main__ - INFO - Processing ask request for query: 'What's happening in Conference room A right now?' with user_id: None, username: None
+2025-10-12 21:42:24,350 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:24,350 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:24,352 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:24,352 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:24,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:24,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:24,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:24,353 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:24,353 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:24,353 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:24,353 - __main__ - INFO - Processing deterministic query: 'what's happening in conference room a right now?'
+2025-10-12 21:42:24,676 - __main__ - INFO - Used deterministic handler for query: 'What's happening in Conference room A right now?'
+2025-10-12 21:42:24,677 - __main__ - INFO - Processing ask request for query: 'Which room has the highest occupancy?' with user_id: None, username: None
+2025-10-12 21:42:25,327 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:25,327 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:25,329 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:25,329 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:25,329 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:25,330 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:25,330 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:25,330 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:25,330 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:25,330 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:25,330 - __main__ - INFO - Processing deterministic query: 'which room has the highest occupancy?'
+2025-10-12 21:42:25,648 - __main__ - INFO - Used deterministic handler for query: 'Which room has the highest occupancy?'
+2025-10-12 21:42:25,649 - __main__ - INFO - Processing ask request for query: 'Temperature in conference room A' with user_id: None, username: None
+2025-10-12 21:42:26,335 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:26,336 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:26,337 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:26,337 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:26,338 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:26,338 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:26,338 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:26,338 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:26,338 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:26,338 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:26,338 - __main__ - INFO - Processing deterministic query: 'temperature in conference room a'
+2025-10-12 21:42:26,560 - __main__ - INFO - Used deterministic handler for query: 'Temperature in conference room A'
+2025-10-12 21:42:26,560 - __main__ - INFO - Processing ask request for query: 'Show me data for Conference Room A' with user_id: None, username: None
+2025-10-12 21:42:27,212 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:42:27,212 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:27,213 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:27,214 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:27,214 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:27,214 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:27,214 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:42:27,214 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:42:27,214 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:42:27,215 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:42:27,215 - __main__ - INFO - Processing deterministic query: 'show me data for conference room a'
+2025-10-12 21:42:27,556 - __main__ - INFO - Used deterministic handler for query: 'Show me data for Conference Room A'
+2025-10-12 21:44:48,790 - __main__ - INFO - Using prompt type: base_enhancement
+2025-10-12 21:44:48,790 - __main__ - INFO - Using document template: standard
+2025-10-12 21:44:48,942 - database_adapter - INFO - Successfully connected to PostgreSQL database
+2025-10-12 21:44:48,942 - __main__ - INFO - PostgreSQL database adapter initialized successfully
+2025-10-12 21:44:48,954 - __main__ - INFO - Loaded 172 existing document hashes
+2025-10-12 21:44:48,988 - __main__ - INFO - Loading sensor data from PostgreSQL
+2025-10-12 21:44:49,117 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:44:49,120 - __main__ - INFO - Loaded 5 unique occupied room records from PostgreSQL
+2025-10-12 21:44:49,120 - __main__ - INFO - Loading maintenance data from PostgreSQL
+2025-10-12 21:44:49,128 - database_adapter - INFO - Retrieved 10 maintenance requests using Django ORM
+2025-10-12 21:44:49,129 - __main__ - INFO - Loaded 10 maintenance requests from PostgreSQL
+2025-10-12 21:44:49,130 - __main__ - INFO - No new sensor records to log to MongoDB (all duplicates)
+2025-10-12 21:44:49,131 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:49,131 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:49,132 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:49,132 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:49,132 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:49,132 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:49,132 - __main__ - INFO - Loading existing vector store
+2025-10-12 21:44:49,966 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-10-12 21:44:50,080 - __main__ - INFO - No new documents to add to vector store
+2025-10-12 21:44:50,558 - __main__ - INFO - QA chain initialized successfully
+2025-10-12 21:44:50,558 - __main__ - INFO - Analyzer initialized successfully
+2025-10-12 21:44:50,559 - __main__ - INFO - Processing ask request for query: 'How many rooms are in the system?' with user_id: None, username: None
+2025-10-12 21:44:51,411 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:51,412 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:51,413 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:51,414 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:51,414 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:51,414 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:51,414 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:51,414 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:51,414 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:51,414 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:51,415 - __main__ - INFO - Processing deterministic query: 'how many rooms are in the system?'
+2025-10-12 21:44:51,421 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:44:51,718 - __main__ - INFO - Used deterministic handler for query: 'How many rooms are in the system?'
+2025-10-12 21:44:51,718 - __main__ - INFO - Processing ask request for query: 'What's the most used room?' with user_id: None, username: None
+2025-10-12 21:44:52,397 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:52,397 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:52,399 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:52,399 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:52,400 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:52,400 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:52,400 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:52,400 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:52,400 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:52,400 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:52,401 - __main__ - INFO - Processing deterministic query: 'what's the most used room?'
+2025-10-12 21:44:52,406 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:44:52,695 - __main__ - INFO - Used deterministic handler for query: 'What's the most used room?'
+2025-10-12 21:44:52,696 - __main__ - INFO - Processing ask request for query: 'Show me the highest temperature recorded' with user_id: None, username: None
+2025-10-12 21:44:53,364 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:53,364 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:53,366 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:53,366 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:53,366 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:53,367 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:53,367 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:53,367 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:53,367 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:53,367 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:53,367 - __main__ - INFO - Processing deterministic query: 'show me the highest temperature recorded'
+2025-10-12 21:44:53,368 - __main__ - INFO - Matched mixed query: 'Show me the highest temperature recorded'
+2025-10-12 21:44:53,679 - __main__ - INFO - Used deterministic handler for query: 'Show me the highest temperature recorded'
+2025-10-12 21:44:53,679 - __main__ - INFO - Processing ask request for query: 'How many maintenance requests are pending?' with user_id: None, username: None
+2025-10-12 21:44:54,349 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:54,350 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:54,351 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:54,351 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:54,351 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:54,352 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:54,352 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:54,352 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:54,352 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:54,352 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:54,352 - __main__ - INFO - Processing deterministic query: 'how many maintenance requests are pending?'
+2025-10-12 21:44:54,352 - __main__ - INFO - Matched maintenance query: 'How many maintenance requests are pending?'
+2025-10-12 21:44:54,661 - __main__ - INFO - Used deterministic handler for query: 'How many maintenance requests are pending?'
+2025-10-12 21:44:54,661 - __main__ - INFO - Processing ask request for query: 'What's the average energy consumption?' with user_id: None, username: None
+2025-10-12 21:44:55,358 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:55,358 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:55,360 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:55,360 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:55,360 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:55,360 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:55,360 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:55,361 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:55,361 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:55,361 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:55,361 - __main__ - INFO - Processing deterministic query: 'what's the average energy consumption?'
+2025-10-12 21:44:55,362 - __main__ - INFO - Matched mixed query: 'What's the average energy consumption?'
+2025-10-12 21:44:55,639 - __main__ - INFO - Used deterministic handler for query: 'What's the average energy consumption?'
+2025-10-12 21:44:55,639 - __main__ - INFO - Processing ask request for query: 'Generate weekly summary' with user_id: None, username: None
+2025-10-12 21:44:56,324 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:56,324 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:56,326 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:56,326 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:56,326 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:56,326 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:56,326 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:56,327 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:56,327 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:56,327 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:56,327 - __main__ - INFO - Processing deterministic query: 'generate weekly summary'
+2025-10-12 21:44:56,327 - __main__ - INFO - Attempting to generate weekly summary for query: 'Generate weekly summary'
+2025-10-12 21:44:56,329 - __main__ - INFO - Weekly summary generated: Weekly Summary Report:
+• Total Energy: 60.70 kWh (8.67 kWh/day)
+• Total Occupancy: 5 people (0.7 peo...
+2025-10-12 21:44:56,658 - __main__ - INFO - Used deterministic handler for query: 'Generate weekly summary'
+2025-10-12 21:44:56,658 - __main__ - INFO - Processing ask request for query: 'Show me energy trends' with user_id: None, username: None
+2025-10-12 21:44:57,288 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:57,288 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:57,290 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:57,290 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:57,290 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:57,290 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:57,291 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:57,291 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:57,291 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:57,291 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:57,291 - __main__ - INFO - Processing deterministic query: 'show me energy trends'
+2025-10-12 21:44:57,291 - __main__ - INFO - Matched energy trend query: 'Show me energy trends'
+2025-10-12 21:44:57,602 - __main__ - INFO - Used deterministic handler for query: 'Show me energy trends'
+2025-10-12 21:44:57,602 - __main__ - INFO - Processing ask request for query: 'What are the key performance indicators?' with user_id: None, username: None
+2025-10-12 21:44:58,224 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:58,224 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:58,225 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:58,226 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:58,226 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:58,226 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:58,226 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:58,226 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:58,226 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:58,226 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:58,226 - __main__ - INFO - Processing deterministic query: 'what are the key performance indicators?'
+2025-10-12 21:44:58,226 - __main__ - INFO - Matched KPI query: 'What are the key performance indicators?'
+2025-10-12 21:44:58,497 - __main__ - INFO - Used deterministic handler for query: 'What are the key performance indicators?'
+2025-10-12 21:44:58,497 - __main__ - INFO - Processing ask request for query: 'What's happening in Conference room A right now?' with user_id: None, username: None
+2025-10-12 21:44:59,186 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:44:59,186 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:59,188 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:59,188 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:59,188 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:59,188 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:59,188 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:44:59,188 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:44:59,189 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:44:59,189 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:44:59,189 - __main__ - INFO - Processing deterministic query: 'what's happening in conference room a right now?'
+2025-10-12 21:44:59,194 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:44:59,198 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:44:59,535 - __main__ - INFO - Used deterministic handler for query: 'What's happening in Conference room A right now?'
+2025-10-12 21:44:59,535 - __main__ - INFO - Processing ask request for query: 'Which room has the highest occupancy?' with user_id: None, username: None
+2025-10-12 21:45:00,173 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:45:00,173 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:45:00,175 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:00,175 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:00,175 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:00,175 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:00,175 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:00,175 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:45:00,176 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:45:00,176 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:45:00,176 - __main__ - INFO - Processing deterministic query: 'which room has the highest occupancy?'
+2025-10-12 21:45:00,181 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:45:00,636 - __main__ - INFO - Used deterministic handler for query: 'Which room has the highest occupancy?'
+2025-10-12 21:45:00,636 - __main__ - INFO - Processing ask request for query: 'Temperature in conference room A' with user_id: None, username: None
+2025-10-12 21:45:01,317 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:45:01,317 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:45:01,319 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:01,319 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:01,319 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:01,319 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:01,319 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:01,320 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:45:01,320 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:45:01,320 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:45:01,320 - __main__ - INFO - Processing deterministic query: 'temperature in conference room a'
+2025-10-12 21:45:01,325 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:45:01,326 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:45:01,656 - __main__ - INFO - Used deterministic handler for query: 'Temperature in conference room A'
+2025-10-12 21:45:01,656 - __main__ - INFO - Processing ask request for query: 'Show me data for Conference Room A' with user_id: None, username: None
+2025-10-12 21:45:02,351 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:45:02,351 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:45:02,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:02,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:02,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:02,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:02,353 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:45:02,353 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:45:02,353 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:45:02,353 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:45:02,353 - __main__ - INFO - Processing deterministic query: 'show me data for conference room a'
+2025-10-12 21:45:02,359 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:45:02,360 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:45:02,360 - room_specific_handlers - ERROR - Error generating predictions for Conference Room A: 'AdvancedLLMHandlers' object has no attribute '_calculate_trend'
+2025-10-12 21:45:02,360 - advanced_llm_handlers - INFO - Initial DataFrame shape: (2, 19)
+2025-10-12 21:45:02,360 - advanced_llm_handlers - WARNING - Missing column 'current', filling with default value 0.0
+2025-10-12 21:45:02,361 - advanced_llm_handlers - WARNING - Missing column 'energy', filling with default value 0.0
+2025-10-12 21:45:02,361 - advanced_llm_handlers - WARNING - Missing column 'power', filling with default value 0.0
+2025-10-12 21:45:02,361 - advanced_llm_handlers - WARNING - Missing column 'voltage', filling with default value 0.0
+2025-10-12 21:45:02,361 - advanced_llm_handlers - WARNING - Missing column 'reset_flag', filling with default value False
+2025-10-12 21:45:02,362 - advanced_llm_handlers - WARNING - Missing column 'component_type', filling with default value Unknown
+2025-10-12 21:45:02,370 - advanced_llm_handlers - INFO - DataFrame shape after deduplication: (2, 25)
+2025-10-12 21:45:02,372 - advanced_llm_handlers - WARNING - High percentage of zero values in numeric columns: 55.6% - Possible test data or sensor issues
+2025-10-12 21:45:02,377 - __main__ - ERROR - Error in comprehensive room handlers: single positional indexer is out-of-bounds
+2025-10-12 21:45:02,377 - __main__ - WARNING - No deterministic match for query: 'show me data for conference room a'; falling back to LLM
+2025-10-12 21:45:03,582 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-10-12 21:45:04,124 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-12 21:45:04,461 - __main__ - INFO - Query: 'Show me data for Conference Room A' - Response generated using LLM
+2025-10-12 21:46:37,019 - __main__ - INFO - Using prompt type: base_enhancement
+2025-10-12 21:46:37,020 - __main__ - INFO - Using document template: standard
+2025-10-12 21:46:37,056 - database_adapter - INFO - Successfully connected to PostgreSQL database
+2025-10-12 21:46:37,056 - __main__ - INFO - PostgreSQL database adapter initialized successfully
+2025-10-12 21:46:37,070 - __main__ - INFO - Loaded 172 existing document hashes
+2025-10-12 21:46:37,105 - __main__ - INFO - Available rooms detected: Conference Room A, Office Room B, Lab Room C, Break Room D, Conference Room E
+2025-10-12 21:46:37,105 - __main__ - INFO - Loading sensor data from PostgreSQL
+2025-10-12 21:46:37,237 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:46:37,241 - __main__ - INFO - Loaded 5 unique occupied room records from PostgreSQL
+2025-10-12 21:46:37,241 - __main__ - INFO - Loading maintenance data from PostgreSQL
+2025-10-12 21:46:37,250 - database_adapter - INFO - Retrieved 10 maintenance requests using Django ORM
+2025-10-12 21:46:37,250 - __main__ - INFO - Loaded 10 maintenance requests from PostgreSQL
+2025-10-12 21:46:37,251 - __main__ - INFO - No new sensor records to log to MongoDB (all duplicates)
+2025-10-12 21:46:37,252 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:37,252 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:37,252 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:37,253 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:37,253 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:37,253 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:37,253 - __main__ - INFO - Loading existing vector store
+2025-10-12 21:46:38,111 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-10-12 21:46:38,235 - __main__ - INFO - No new documents to add to vector store
+2025-10-12 21:46:38,773 - __main__ - INFO - QA chain initialized successfully
+2025-10-12 21:46:38,773 - __main__ - INFO - Analyzer initialized successfully
+2025-10-12 21:46:38,774 - __main__ - INFO - Processing ask request for query: 'How many rooms are in the system?' with user_id: None, username: None
+2025-10-12 21:46:39,605 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:39,605 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:39,607 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:39,607 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:39,608 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:39,608 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:39,608 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:39,608 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:39,608 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:39,608 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:39,608 - __main__ - INFO - Processing deterministic query: 'how many rooms are in the system?'
+2025-10-12 21:46:39,608 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'How many rooms are in the system?'
+2025-10-12 21:46:39,614 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:46:39,964 - __main__ - INFO - Used deterministic handler for query: 'How many rooms are in the system?'
+2025-10-12 21:46:39,965 - __main__ - INFO - Processing ask request for query: 'What's the most used room?' with user_id: None, username: None
+2025-10-12 21:46:40,694 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:40,694 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:40,696 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:40,696 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:40,697 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:40,697 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:40,697 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:40,697 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:40,697 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:40,697 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:40,698 - __main__ - INFO - Processing deterministic query: 'what's the most used room?'
+2025-10-12 21:46:40,698 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'What's the most used room?'
+2025-10-12 21:46:40,702 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:46:40,981 - __main__ - INFO - Used deterministic handler for query: 'What's the most used room?'
+2025-10-12 21:46:40,981 - __main__ - INFO - Processing ask request for query: 'Show me the highest temperature recorded' with user_id: None, username: None
+2025-10-12 21:46:41,664 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:41,664 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:41,665 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:41,666 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:41,666 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:41,666 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:41,666 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:41,667 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:41,667 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:41,667 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:41,667 - __main__ - INFO - Processing deterministic query: 'show me the highest temperature recorded'
+2025-10-12 21:46:41,669 - __main__ - INFO - Matched mixed query: 'Show me the highest temperature recorded'
+2025-10-12 21:46:42,037 - __main__ - INFO - Used deterministic handler for query: 'Show me the highest temperature recorded'
+2025-10-12 21:46:42,038 - __main__ - INFO - Processing ask request for query: 'How many maintenance requests are pending?' with user_id: None, username: None
+2025-10-12 21:46:42,769 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:42,769 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:42,771 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:42,771 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:42,771 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:42,771 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:42,772 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:42,772 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:42,772 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:42,772 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:42,772 - __main__ - INFO - Processing deterministic query: 'how many maintenance requests are pending?'
+2025-10-12 21:46:42,772 - __main__ - INFO - Matched maintenance query: 'How many maintenance requests are pending?'
+2025-10-12 21:46:43,089 - __main__ - INFO - Used deterministic handler for query: 'How many maintenance requests are pending?'
+2025-10-12 21:46:43,090 - __main__ - INFO - Processing ask request for query: 'What's the average energy consumption?' with user_id: None, username: None
+2025-10-12 21:46:43,784 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:43,784 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:43,786 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:43,786 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:43,786 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:43,787 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:43,787 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:43,787 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:43,787 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:43,788 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:43,788 - __main__ - INFO - Processing deterministic query: 'what's the average energy consumption?'
+2025-10-12 21:46:43,789 - __main__ - INFO - Matched mixed query: 'What's the average energy consumption?'
+2025-10-12 21:46:44,110 - __main__ - INFO - Used deterministic handler for query: 'What's the average energy consumption?'
+2025-10-12 21:46:44,111 - __main__ - INFO - Processing ask request for query: 'Generate weekly summary' with user_id: None, username: None
+2025-10-12 21:46:44,832 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:44,832 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:44,834 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:44,834 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:44,835 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:44,835 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:44,835 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:44,835 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:44,835 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:44,835 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:44,836 - __main__ - INFO - Processing deterministic query: 'generate weekly summary'
+2025-10-12 21:46:44,836 - __main__ - INFO - Attempting to generate weekly summary for query: 'Generate weekly summary'
+2025-10-12 21:46:44,837 - __main__ - INFO - Weekly summary generated: Weekly Summary Report:
+• Total Energy: 60.70 kWh (8.67 kWh/day)
+• Total Occupancy: 5 people (0.7 peo...
+2025-10-12 21:46:45,156 - __main__ - INFO - Used deterministic handler for query: 'Generate weekly summary'
+2025-10-12 21:46:45,156 - __main__ - INFO - Processing ask request for query: 'Show me energy trends' with user_id: None, username: None
+2025-10-12 21:46:45,793 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:45,794 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:45,796 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:45,797 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:45,797 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:45,798 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:45,798 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:45,798 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:45,798 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:45,798 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:45,798 - __main__ - INFO - Processing deterministic query: 'show me energy trends'
+2025-10-12 21:46:45,798 - __main__ - INFO - Matched energy trend query: 'Show me energy trends'
+2025-10-12 21:46:46,135 - __main__ - INFO - Used deterministic handler for query: 'Show me energy trends'
+2025-10-12 21:46:46,135 - __main__ - INFO - Processing ask request for query: 'What are the key performance indicators?' with user_id: None, username: None
+2025-10-12 21:46:46,898 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:46,898 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:46,900 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:46,901 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:46,901 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:46,901 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:46,901 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:46,901 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:46,901 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:46,901 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:46,901 - __main__ - INFO - Processing deterministic query: 'what are the key performance indicators?'
+2025-10-12 21:46:46,901 - __main__ - INFO - Matched KPI query: 'What are the key performance indicators?'
+2025-10-12 21:46:47,222 - __main__ - INFO - Used deterministic handler for query: 'What are the key performance indicators?'
+2025-10-12 21:46:47,222 - __main__ - INFO - Processing ask request for query: 'What's happening in Conference room A right now?' with user_id: None, username: None
+2025-10-12 21:46:47,935 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:47,935 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:47,937 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:47,937 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:47,937 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:47,938 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:47,938 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:47,938 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:47,938 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:47,938 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:47,938 - __main__ - INFO - Processing deterministic query: 'what's happening in conference room a right now?'
+2025-10-12 21:46:47,939 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'What's happening in Conference room A right now?'
+2025-10-12 21:46:47,944 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:46:47,945 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:46:48,219 - __main__ - INFO - Used deterministic handler for query: 'What's happening in Conference room A right now?'
+2025-10-12 21:46:48,219 - __main__ - INFO - Processing ask request for query: 'Which room has the highest occupancy?' with user_id: None, username: None
+2025-10-12 21:46:48,947 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:48,948 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:48,949 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:48,950 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:48,950 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:48,950 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:48,950 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:48,950 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:48,950 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:48,951 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:48,951 - __main__ - INFO - Processing deterministic query: 'which room has the highest occupancy?'
+2025-10-12 21:46:48,951 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'Which room has the highest occupancy?'
+2025-10-12 21:46:48,955 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:46:49,304 - __main__ - INFO - Used deterministic handler for query: 'Which room has the highest occupancy?'
+2025-10-12 21:46:49,304 - __main__ - INFO - Processing ask request for query: 'Temperature in conference room A' with user_id: None, username: None
+2025-10-12 21:46:50,016 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:50,016 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:50,018 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:50,018 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:50,019 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:50,019 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:50,019 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:50,019 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:50,019 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:50,019 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:50,019 - __main__ - INFO - Processing deterministic query: 'temperature in conference room a'
+2025-10-12 21:46:50,020 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'Temperature in conference room A'
+2025-10-12 21:46:50,025 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:46:50,026 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:46:50,354 - __main__ - INFO - Used deterministic handler for query: 'Temperature in conference room A'
+2025-10-12 21:46:50,354 - __main__ - INFO - Processing ask request for query: 'Show me data for Conference Room A' with user_id: None, username: None
+2025-10-12 21:46:51,110 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:46:51,110 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:51,111 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:51,111 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:51,112 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:51,112 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:51,112 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:46:51,112 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:46:51,112 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:46:51,112 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:46:51,112 - __main__ - INFO - Processing deterministic query: 'show me data for conference room a'
+2025-10-12 21:46:51,112 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'Show me data for Conference Room A'
+2025-10-12 21:46:51,118 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:46:51,118 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:46:51,119 - room_specific_handlers - ERROR - Error generating predictions for Conference Room A: 'AdvancedLLMHandlers' object has no attribute '_calculate_trend'
+2025-10-12 21:46:51,119 - advanced_llm_handlers - INFO - Initial DataFrame shape: (2, 19)
+2025-10-12 21:46:51,119 - advanced_llm_handlers - WARNING - Missing column 'current', filling with default value 0.0
+2025-10-12 21:46:51,119 - advanced_llm_handlers - WARNING - Missing column 'energy', filling with default value 0.0
+2025-10-12 21:46:51,120 - advanced_llm_handlers - WARNING - Missing column 'power', filling with default value 0.0
+2025-10-12 21:46:51,120 - advanced_llm_handlers - WARNING - Missing column 'voltage', filling with default value 0.0
+2025-10-12 21:46:51,120 - advanced_llm_handlers - WARNING - Missing column 'reset_flag', filling with default value False
+2025-10-12 21:46:51,120 - advanced_llm_handlers - WARNING - Missing column 'component_type', filling with default value Unknown
+2025-10-12 21:46:51,124 - advanced_llm_handlers - INFO - DataFrame shape after deduplication: (2, 25)
+2025-10-12 21:46:51,126 - advanced_llm_handlers - WARNING - High percentage of zero values in numeric columns: 55.6% - Possible test data or sensor issues
+2025-10-12 21:46:51,130 - __main__ - ERROR - Error in comprehensive room handlers: single positional indexer is out-of-bounds
+2025-10-12 21:46:51,131 - __main__ - WARNING - No deterministic match for query: 'show me data for conference room a'; falling back to LLM
+2025-10-12 21:46:51,420 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-10-12 21:46:51,810 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-12 21:46:54,239 - __main__ - INFO - Query: 'Show me data for Conference Room A' - Response generated using LLM
+2025-10-12 21:47:19,043 - __main__ - INFO - Using prompt type: base_enhancement
+2025-10-12 21:47:19,043 - __main__ - INFO - Using document template: standard
+2025-10-12 21:47:19,101 - database_adapter - INFO - Successfully connected to PostgreSQL database
+2025-10-12 21:47:19,101 - __main__ - INFO - PostgreSQL database adapter initialized successfully
+2025-10-12 21:47:19,113 - __main__ - INFO - Loaded 172 existing document hashes
+2025-10-12 21:47:19,113 - __main__ - INFO - Comprehensive RoomSpecificHandlers initialized successfully
+2025-10-12 21:47:19,147 - __main__ - INFO - Available rooms detected: Conference Room A, Office Room B, Lab Room C, Break Room D, Conference Room E
+2025-10-12 21:47:19,147 - __main__ - INFO - Loading sensor data from PostgreSQL
+2025-10-12 21:47:19,271 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:47:19,273 - __main__ - INFO - Loaded 5 unique occupied room records from PostgreSQL
+2025-10-12 21:47:19,273 - __main__ - INFO - Loading maintenance data from PostgreSQL
+2025-10-12 21:47:19,281 - database_adapter - INFO - Retrieved 10 maintenance requests using Django ORM
+2025-10-12 21:47:19,281 - __main__ - INFO - Loaded 10 maintenance requests from PostgreSQL
+2025-10-12 21:47:19,282 - __main__ - INFO - No new sensor records to log to MongoDB (all duplicates)
+2025-10-12 21:47:19,284 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:19,284 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:19,284 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:19,284 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:19,284 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:19,284 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:19,285 - __main__ - INFO - Loading existing vector store
+2025-10-12 21:47:20,091 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-10-12 21:47:20,210 - __main__ - INFO - No new documents to add to vector store
+2025-10-12 21:47:20,715 - __main__ - INFO - QA chain initialized successfully
+2025-10-12 21:47:20,715 - __main__ - INFO - Analyzer initialized successfully
+2025-10-12 21:47:20,715 - __main__ - INFO - Processing ask request for query: 'How many rooms are in the system?' with user_id: None, username: None
+2025-10-12 21:47:21,457 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:21,457 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:21,459 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:21,459 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:21,459 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:21,460 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:21,460 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:21,460 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:21,460 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:21,460 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:21,460 - __main__ - INFO - Processing deterministic query: 'how many rooms are in the system?'
+2025-10-12 21:47:21,460 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'How many rooms are in the system?'
+2025-10-12 21:47:21,465 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:47:21,469 - __main__ - INFO - Room handlers successfully processed: 'How many rooms are in the system?'
+2025-10-12 21:47:21,777 - __main__ - INFO - Used deterministic handler for query: 'How many rooms are in the system?'
+2025-10-12 21:47:21,777 - __main__ - INFO - Processing ask request for query: 'What's the most used room?' with user_id: None, username: None
+2025-10-12 21:47:22,450 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:22,450 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:22,452 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:22,452 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:22,452 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:22,452 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:22,453 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:22,453 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:22,453 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:22,453 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:22,453 - __main__ - INFO - Processing deterministic query: 'what's the most used room?'
+2025-10-12 21:47:22,453 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'What's the most used room?'
+2025-10-12 21:47:22,457 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:47:22,474 - __main__ - INFO - Room handlers successfully processed: 'What's the most used room?'
+2025-10-12 21:47:22,783 - __main__ - INFO - Used deterministic handler for query: 'What's the most used room?'
+2025-10-12 21:47:22,784 - __main__ - INFO - Processing ask request for query: 'Show me the highest temperature recorded' with user_id: None, username: None
+2025-10-12 21:47:23,400 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:23,400 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:23,402 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:23,402 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:23,402 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:23,402 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:23,402 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:23,402 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:23,402 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:23,403 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:23,403 - __main__ - INFO - Processing deterministic query: 'show me the highest temperature recorded'
+2025-10-12 21:47:23,404 - __main__ - INFO - Matched mixed query: 'Show me the highest temperature recorded'
+2025-10-12 21:47:23,723 - __main__ - INFO - Used deterministic handler for query: 'Show me the highest temperature recorded'
+2025-10-12 21:47:23,723 - __main__ - INFO - Processing ask request for query: 'How many maintenance requests are pending?' with user_id: None, username: None
+2025-10-12 21:47:24,407 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:24,407 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:24,409 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:24,409 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:24,409 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:24,409 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:24,409 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:24,409 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:24,410 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:24,410 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:24,410 - __main__ - INFO - Processing deterministic query: 'how many maintenance requests are pending?'
+2025-10-12 21:47:24,410 - __main__ - INFO - Matched maintenance query: 'How many maintenance requests are pending?'
+2025-10-12 21:47:24,729 - __main__ - INFO - Used deterministic handler for query: 'How many maintenance requests are pending?'
+2025-10-12 21:47:24,729 - __main__ - INFO - Processing ask request for query: 'What's the average energy consumption?' with user_id: None, username: None
+2025-10-12 21:47:25,391 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:25,391 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:25,393 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:25,393 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:25,393 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:25,393 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:25,394 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:25,394 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:25,394 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:25,394 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:25,394 - __main__ - INFO - Processing deterministic query: 'what's the average energy consumption?'
+2025-10-12 21:47:25,395 - __main__ - INFO - Matched mixed query: 'What's the average energy consumption?'
+2025-10-12 21:47:25,688 - __main__ - INFO - Used deterministic handler for query: 'What's the average energy consumption?'
+2025-10-12 21:47:25,688 - __main__ - INFO - Processing ask request for query: 'Generate weekly summary' with user_id: None, username: None
+2025-10-12 21:47:26,365 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:26,365 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:26,367 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:26,367 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:26,367 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:26,368 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:26,368 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:26,368 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:26,368 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:26,368 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:26,368 - __main__ - INFO - Processing deterministic query: 'generate weekly summary'
+2025-10-12 21:47:26,368 - __main__ - INFO - Attempting to generate weekly summary for query: 'Generate weekly summary'
+2025-10-12 21:47:26,370 - __main__ - INFO - Weekly summary generated: Weekly Summary Report:
+• Total Energy: 60.70 kWh (8.67 kWh/day)
+• Total Occupancy: 5 people (0.7 peo...
+2025-10-12 21:47:26,632 - __main__ - INFO - Used deterministic handler for query: 'Generate weekly summary'
+2025-10-12 21:47:26,632 - __main__ - INFO - Processing ask request for query: 'Show me energy trends' with user_id: None, username: None
+2025-10-12 21:47:27,326 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:27,327 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:27,328 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:27,328 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:27,329 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:27,329 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:27,329 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:27,329 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:27,329 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:27,329 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:27,329 - __main__ - INFO - Processing deterministic query: 'show me energy trends'
+2025-10-12 21:47:27,329 - __main__ - INFO - Matched energy trend query: 'Show me energy trends'
+2025-10-12 21:47:27,643 - __main__ - INFO - Used deterministic handler for query: 'Show me energy trends'
+2025-10-12 21:47:27,644 - __main__ - INFO - Processing ask request for query: 'What are the key performance indicators?' with user_id: None, username: None
+2025-10-12 21:47:28,349 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:28,349 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:28,350 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:28,351 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:28,351 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:28,351 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:28,351 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:28,351 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:28,352 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:28,352 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:28,352 - __main__ - INFO - Processing deterministic query: 'what are the key performance indicators?'
+2025-10-12 21:47:28,352 - __main__ - INFO - Matched KPI query: 'What are the key performance indicators?'
+2025-10-12 21:47:28,619 - __main__ - INFO - Used deterministic handler for query: 'What are the key performance indicators?'
+2025-10-12 21:47:28,619 - __main__ - INFO - Processing ask request for query: 'What's happening in Conference room A right now?' with user_id: None, username: None
+2025-10-12 21:47:29,261 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:29,261 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:29,263 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:29,263 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:29,263 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:29,263 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:29,264 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:29,264 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:29,264 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:29,264 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:29,264 - __main__ - INFO - Processing deterministic query: 'what's happening in conference room a right now?'
+2025-10-12 21:47:29,264 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'What's happening in Conference room A right now?'
+2025-10-12 21:47:29,269 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:47:29,270 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:47:29,270 - __main__ - INFO - Room handlers successfully processed: 'What's happening in Conference room A right now?'
+2025-10-12 21:47:29,537 - __main__ - INFO - Used deterministic handler for query: 'What's happening in Conference room A right now?'
+2025-10-12 21:47:29,537 - __main__ - INFO - Processing ask request for query: 'Which room has the highest occupancy?' with user_id: None, username: None
+2025-10-12 21:47:30,231 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:30,232 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:30,233 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:30,233 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:30,233 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:30,234 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:30,234 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:30,234 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:30,234 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:30,234 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:30,234 - __main__ - INFO - Processing deterministic query: 'which room has the highest occupancy?'
+2025-10-12 21:47:30,234 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'Which room has the highest occupancy?'
+2025-10-12 21:47:30,238 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:47:30,253 - __main__ - INFO - Room handlers successfully processed: 'Which room has the highest occupancy?'
+2025-10-12 21:47:30,571 - __main__ - INFO - Used deterministic handler for query: 'Which room has the highest occupancy?'
+2025-10-12 21:47:30,572 - __main__ - INFO - Processing ask request for query: 'Temperature in conference room A' with user_id: None, username: None
+2025-10-12 21:47:31,270 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:31,270 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:31,272 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:31,272 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:31,272 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:31,272 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:31,273 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:31,273 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:31,273 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:31,273 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:31,273 - __main__ - INFO - Processing deterministic query: 'temperature in conference room a'
+2025-10-12 21:47:31,273 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'Temperature in conference room A'
+2025-10-12 21:47:31,278 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:47:31,280 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:47:31,280 - __main__ - INFO - Room handlers successfully processed: 'Temperature in conference room A'
+2025-10-12 21:47:31,602 - __main__ - INFO - Used deterministic handler for query: 'Temperature in conference room A'
+2025-10-12 21:47:31,603 - __main__ - INFO - Processing ask request for query: 'Show me data for Conference Room A' with user_id: None, username: None
+2025-10-12 21:47:32,263 - __main__ - INFO - MongoDB connection established successfully
+2025-10-12 21:47:32,263 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:32,265 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:32,265 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:32,266 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:32,266 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:32,266 - __main__ - ERROR - Error creating maintenance document: NaTType does not support strftime
+2025-10-12 21:47:32,266 - __main__ - INFO - Created 0 new documents
+2025-10-12 21:47:32,266 - __main__ - INFO - No new documents to add to vector store - using existing knowledge
+2025-10-12 21:47:32,267 - __main__ - INFO - Using cached DataFrame
+2025-10-12 21:47:32,267 - __main__ - INFO - Processing deterministic query: 'show me data for conference room a'
+2025-10-12 21:47:32,267 - __main__ - INFO -  Delegating to comprehensive room handlers for: 'Show me data for Conference Room A'
+2025-10-12 21:47:32,272 - database_adapter - INFO - Retrieved 10 sensor records from database
+2025-10-12 21:47:32,274 - room_specific_handlers - INFO - Found 2 records for room 'Conference Room A'
+2025-10-12 21:47:32,275 - room_specific_handlers - ERROR - Error generating predictions for Conference Room A: 'AdvancedLLMHandlers' object has no attribute '_calculate_trend'
+2025-10-12 21:47:32,275 - advanced_llm_handlers - INFO - Initial DataFrame shape: (2, 19)
+2025-10-12 21:47:32,275 - advanced_llm_handlers - WARNING - Missing column 'current', filling with default value 0.0
+2025-10-12 21:47:32,275 - advanced_llm_handlers - WARNING - Missing column 'energy', filling with default value 0.0
+2025-10-12 21:47:32,275 - advanced_llm_handlers - WARNING - Missing column 'power', filling with default value 0.0
+2025-10-12 21:47:32,276 - advanced_llm_handlers - WARNING - Missing column 'voltage', filling with default value 0.0
+2025-10-12 21:47:32,276 - advanced_llm_handlers - WARNING - Missing column 'reset_flag', filling with default value False
+2025-10-12 21:47:32,276 - advanced_llm_handlers - WARNING - Missing column 'component_type', filling with default value Unknown
+2025-10-12 21:47:32,279 - advanced_llm_handlers - INFO - DataFrame shape after deduplication: (2, 25)
+2025-10-12 21:47:32,282 - advanced_llm_handlers - WARNING - High percentage of zero values in numeric columns: 55.6% - Possible test data or sensor issues
+2025-10-12 21:47:32,286 - __main__ - ERROR - Error in comprehensive room handlers: single positional indexer is out-of-bounds
+2025-10-12 21:47:32,286 - __main__ - WARNING - No deterministic match for query: 'show me data for conference room a'; falling back to LLM
+2025-10-12 21:47:32,624 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 200 OK"
+2025-10-12 21:47:33,028 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-10-12 21:47:34,692 - __main__ - INFO - Query: 'Show me data for Conference Room A' - Response generated using LLM
