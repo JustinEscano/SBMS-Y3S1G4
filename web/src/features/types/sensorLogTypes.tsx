@@ -14,12 +14,13 @@ export interface SensorData {
   humidity?: number;
 
   // Lighting
-  light_level?: number;
+  light_level?: boolean;
   energy_usage?: number;
 
   // Security
-  motion_detected?: boolean;
+  motion_detect?: boolean;
   camera_status?: string;
+  component_name?: string;
 }
 
 export interface ESP32Response {
