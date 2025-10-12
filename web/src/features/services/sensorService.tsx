@@ -68,15 +68,8 @@ export const sensorService = {
   },
 
   fetchAllLogs: async (componentId: string): Promise<SensorData[]> => {
-    try {
-      console.log(`🔍 [SensorService] Fetching all logs for component: ${componentId}`);
-      const { data } = await axiosInstance.get<SensorData[]>(`/api/sensorlog/`, {
-        params: { component: componentId }, // or 'equipment' depending on your filter
-      });
-      return data || []; // Return full logs array, empty if none
-    } catch (error) {
-      console.error(`❌ [SensorService] Failed to fetch all logs for component ${componentId}:`, error);
-      return [];
-    }
+  // Assuming your API endpoint supports ?device_id= or /:id
+    const { data } = await axiosInstance.get<SensorData[]>(`/api/sensorlog/?component_id=${componentId}`);  // Or `/api/sensor-logs/${componentId}`
+    return data;  // Backend should filter: SELECT * FROM sensor_logs WHERE device_id = $1
   },
 };

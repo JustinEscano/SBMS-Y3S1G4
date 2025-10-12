@@ -623,3 +623,12 @@ table tbody td {
 .hvac-card p strong {
   color: #f8fafc; /* make labels slightly brighter */
 }
+
+.dropdown-default {
+  padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background: var(--header-bg);
+    color: var(--off-white)
+}
