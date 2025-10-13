@@ -21,7 +21,7 @@ class RoleBasedPermission(BasePermission):
         model = getattr(getattr(view, "queryset", None), "model", None)
         model_name = model.__name__.lower() if model else None
 
-        # Employee: Full access to maintenance/alert/notification; read-only elsewhere
+        # Employee: Full access to maintenance/alert/notification/maintenanceattachment; read-only elsewhere
         if role == "employee":
             if model_name in ["maintenancerequest", "alert", "notification", "maintenanceattachment"]:
                 return True
@@ -57,9 +57,12 @@ class RoleBasedPermission(BasePermission):
         if role in ["superadmin", "admin"]:
             return True
 
-        # Employee: Full access to maintenance/alerts/notifications
+        # Employee: Full access to maintenance/alerts/notifications/maintenanceattachments
         if role == "employee":
             if isinstance(obj, (MaintenanceRequest, Alert, Notification, MaintenanceAttachment)):
+                # For MaintenanceRequest, allow if assigned_to or for respond/upload_attachment
+                if isinstance(obj, MaintenanceRequest):
+                    return obj.assigned_to == db_user
                 return True
             return False
 
@@ -70,10 +73,15 @@ class RoleBasedPermission(BasePermission):
                 # obj is the MaintenanceRequest instance
                 return obj.user == db_user
 
+            # Handle respond action (on MaintenanceRequestViewSet)
+            if hasattr(view, 'action') and view.action == 'respond':
+                # obj is the MaintenanceRequest instance
+                return obj.user == db_user
+
             # Standard ownership check
             if hasattr(obj, 'user'):
                 return obj.user == db_user
-            elif hasattr(obj, 'equipment') and hasattr(obj.equipment, 'room') and request.user == db_user:  # Fallback for equipment-related
+            elif hasattr(obj, 'equipment') and hasattr(obj.equipment, 'room') and request.user == db_user:
                 return True
 
         return False

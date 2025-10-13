@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../Config/api.dart';
 import '../Services/auth_service.dart';
+import '../Widgets/RoomManagementWidgets.dart';
 
 class RoomManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -114,20 +115,11 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Room'),
-          content: Text('Are you sure you want to delete "$roomName"?\n\nThis will also delete all equipment assigned to this room.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
-            ),
-          ],
+        return RoomManagementWidgets.buildDeleteConfirmationDialog(
+          roomName: roomName,
+          onConfirm: () {
+            Navigator.of(context).pop(true);
+          },
         );
       },
     );
@@ -179,142 +171,28 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
 
   void _showAddEditRoomDialog({Map<String, dynamic>? room}) {
     final isEditing = room != null;
-    final nameController = TextEditingController(text: room?['name'] ?? '');
-    final floorController = TextEditingController(text: room?['floor']?.toString() ?? '');
-    final capacityController = TextEditingController(text: room?['capacity']?.toString() ?? '');
-
-    String selectedType = room?['type'] ?? 'office';
-
-    if (!ROOM_TYPE_OPTIONS.any((option) => option['value'] == selectedType)) {
-      selectedType = 'office';
-    }
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(isEditing ? 'Edit Room' : 'Add New Room'),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Room Name *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.room),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: floorController,
-                        decoration: const InputDecoration(
-                          labelText: 'Floor *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.layers),
-                          hintText: 'e.g., 1, 2, 3',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: capacityController,
-                        decoration: const InputDecoration(
-                          labelText: 'Capacity *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.people),
-                          hintText: 'Number of people',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: selectedType,
-                        decoration: const InputDecoration(
-                          labelText: 'Room Type *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
-                        ),
-                        items: ROOM_TYPE_OPTIONS.map((option) => DropdownMenuItem<String>(
-                          value: option['value'],
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 250),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  option['label']!,
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  option['description']!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        )).toList(),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedType = value ?? 'office';
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '* Required fields',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _saveRoom(
-                      roomId: room?['id'],
-                      name: nameController.text,
-                      floor: floorController.text,
-                      capacity: capacityController.text,
-                      type: selectedType,
-                      isEditing: isEditing,
-                    );
-                  },
-                  child: Text(isEditing ? 'Update' : 'Add'),
-                ),
-              ],
-            );
-          },
+        return RoomManagementWidgets.buildAddEditRoomDialog(
+          isEditing: isEditing,
+          room: room,
+          roomTypeOptions: ROOM_TYPE_OPTIONS,
+          onSave: _saveRoom,
         );
       },
     );
   }
 
-  Future<void> _saveRoom({
-    String? roomId,
-    required String name,
-    required String floor,
-    required String capacity,
-    required String type,
-    required bool isEditing,
-  }) async {
+  Future<void> _saveRoom(
+      String? roomId,
+      String name,
+      String floor,
+      String capacity,
+      String type,
+      bool isEditing,
+      ) async {
     if (name.isEmpty || floor.isEmpty || capacity.isEmpty || type.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -371,16 +249,17 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.of(context).pop(); // Close dialog
         _loadRooms();
       } else if (response.statusCode == 401) {
         if (await _refreshToken()) {
           return _saveRoom(
-            roomId: roomId,
-            name: name,
-            floor: floor,
-            capacity: capacity,
-            type: type,
-            isEditing: isEditing,
+            roomId,
+            name,
+            floor,
+            capacity,
+            type,
+            isEditing,
           );
         } else {
           throw Exception('Session expired. Please log in again.');
@@ -435,185 +314,28 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
       ),
       body: Column(
         children: [
-          Container(
-            height: 120,
-            margin: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.room, color: Colors.blue[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${rooms.length}',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const Text('Total Rooms', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.layers, color: Colors.green[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$floorCount',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const Text('Floors', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people, color: Colors.orange[700], size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$totalCapacity',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const Text('Total Capacity', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          RoomManagementWidgets.buildSummaryCards(
+            roomCount: rooms.length,
+            floorCount: floorCount,
+            totalCapacity: totalCapacity,
           ),
           if (_errorMessage.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            RoomManagementWidgets.buildErrorBanner(_errorMessage),
           Expanded(
             child: isLoading || isRefreshingToken
                 ? const Center(child: CircularProgressIndicator())
                 : rooms.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.room_outlined, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No Rooms Found',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('Add your first room to get started'),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: isRefreshingToken ? null : () => _showAddEditRoomDialog(),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Room'),
-                  ),
-                ],
-              ),
+                ? RoomManagementWidgets.buildEmptyState(
+              onAddRoom: () => _showAddEditRoomDialog(),
+              isRefreshingToken: isRefreshingToken,
             )
                 : RefreshIndicator(
               onRefresh: _loadRooms,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: rooms.length,
-                itemBuilder: (context, index) {
-                  final room = rooms[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue[100],
-                        child: Text(
-                          room['floor']?.toString() ?? '?',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        room['name'] ?? 'Unknown Room',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Floor ${room['floor']} • ${_getRoomTypeLabel(room['type'])}'),
-                          Text('Capacity: ${room['capacity']} people'),
-                        ],
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _showAddEditRoomDialog(room: room);
-                          } else if (value == 'delete') {
-                            _deleteRoom(room['id'], room['name']);
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => [
-                          const PopupMenuItem<String>(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit, size: 20),
-                                SizedBox(width: 8),
-                                Text('Edit'),
-                              ],
-                            ),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, size: 20, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('Delete', style: TextStyle(color: Colors.red)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      isThreeLine: true,
-                    ),
-                  );
-                },
+              child: RoomManagementWidgets.buildRoomList(
+                rooms: rooms,
+                onDeleteRoom: _deleteRoom,
+                onEditRoom: (room) => _showAddEditRoomDialog(room: room),
+                getRoomTypeLabel: _getRoomTypeLabel,
               ),
             ),
           ),
