@@ -387,8 +387,7 @@ def esp32_sensor_data(request):
                         'reading_count': log_count,
                         'anomaly_count': anomaly_count,
                         'total_cost': total_cost,
-                        'currency': currency,
-                        'effective_rate': effective_rate
+                        'currency': currency
                     }
                 )
                 logger.info(f"Updated/Created EnergySummary {energy_summary.id} with total_cost {total_cost} {currency}, effective_rate {effective_rate}")

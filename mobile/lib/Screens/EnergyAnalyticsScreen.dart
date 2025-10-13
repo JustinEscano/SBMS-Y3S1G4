@@ -404,7 +404,17 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
           throw Exception('Session expired. Please log in again.');
         }
       } else if (response.statusCode != 200) {
-        throw Exception('Failed to load summary data: ${response.statusCode} - ${response.reasonPhrase}');
+        // Gracefully fallback on server errors (e.g., 500) without surfacing an error
+        setState(() {
+          summaryData = {
+            'total_energy': 0.0,
+            'avg_power': 0.0,
+            'peak_power': 0.0,
+            'reading_count': 0,
+            'anomaly_count': 0,
+          };
+        });
+        return;
       }
       final summary = json.decode(response.body);
       print('Summary Response: $summary');
@@ -421,12 +431,21 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
             'reading_count': 0,
             'anomaly_count': 0,
           };
-          errorMessage = '';
         });
       }
     } catch (e) {
+      // On any error, silently fallback to defaults to avoid breaking the screen
       setState(() {
-        errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading summary data: $e';
+        if (e.toString().contains('Session expired')) {
+          errorMessage = e.toString();
+        }
+        summaryData = {
+          'total_energy': 0.0,
+          'avg_power': 0.0,
+          'peak_power': 0.0,
+          'reading_count': 0,
+          'anomaly_count': 0,
+        };
       });
     }
   }

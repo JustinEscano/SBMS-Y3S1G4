@@ -10,9 +10,9 @@ const char* ssid = "SKYWORTH-FA13";
 const char* password = "281892655";
 
 // Django API endpoints - UPDATED TO NEW IP
-const char* serverURL = "http://192.168.0.27:8000/api/esp32/sensor-data/";
-const char* healthURL = "http://192.168.0.27:8000/api/esp32/health/";
-const char* heartbeatURL = "http://192.168.0.27:8000/api/esp32/heartbeat/";
+const char* serverURL = "http://192.168.0.28:8000/api/esp32/sensor-data/";
+const char* healthURL = "http://192.168.0.28:8000/api/esp32/health/";
+const char* heartbeatURL = "http://192.168.0.28:8000/api/esp32/heartbeat/";
 
 // Device configuration - MUST MATCH Django equipment device_id
 const char* deviceID = "ESP32_001";
