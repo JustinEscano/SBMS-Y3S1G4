@@ -8,6 +8,14 @@ class ApiConfig {
       : 'http://192.168.0.28:8000/api';
   static String get baseUrl => _environment == 'prod' ? _prodBaseUrl : _devBaseUrl;
 
+  // LLM Direct Server (bypass Django API)
+  static String get _llmDevBaseUrl => Platform.isAndroid
+      ? 'http://192.168.0.28:5000'  // Adjust IP if needed (e.g., 10.0.2.2 for Android emulator)
+      : 'http://localhost:5000';
+  static String get llmBaseUrl => _environment == 'prod' ? 'https://your-llm-domain.com' : _llmDevBaseUrl;
+  static String get llmQueryDirect => '$llmBaseUrl/llmquery';
+  static String get llmHealthDirect => '$llmBaseUrl/health';
+
   // Construct media URLs correctly
   static String getMediaUrl(String relativePath) {
     return '${baseUrl.replaceAll('/api', '')}/media/$relativePath';
@@ -73,7 +81,7 @@ class ApiConfig {
   static String get users => '$baseUrl/users/';
   static String get profile => '$baseUrl/users/profile/';
 
-  // Chat and LLM Endpoints
+  // Chat and LLM Endpoints (legacy; direct used now)
   static String get llmQuery => '$baseUrl/llm/query/';
   static String get llmHealth => '$baseUrl/llm/health/';
 }
