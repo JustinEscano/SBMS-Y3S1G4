@@ -19,12 +19,20 @@ export const userService = {
     return res.data;
   },
 
-  update: async (id: string, roomData: Partial<User>): Promise<User> => {
-    const res = await axiosInstance.put<User>(`${USER_API}${id}/`, roomData);
+  update: async (id: string, userData: Partial<User>): Promise<User> => {
+    const res = await axiosInstance.patch<User>(`${USER_API}${id}/`, userData); // Changed to patch
     return res.data;
   },
 
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${USER_API}${id}/`);
+  },
+
+  changePassword: async (id: string, passwordData: { current_password: string; new_password: string }) => {
+    const res = await axiosInstance.patch<User>(`${USER_API}${id}/`, {
+      current_password: passwordData.current_password,
+      password: passwordData.new_password,
+    });
+    return res.data;
   },
 };

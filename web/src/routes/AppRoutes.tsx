@@ -10,6 +10,9 @@ import MaintenancePage from "../features/pages/MaintenancePage";
 import NotificationPage from "../features/pages/NotificationPage";
 import LLMChatPage from "../features/pages/LLMChatPage";
 import AboutPage from "../features/pages/AboutPage";
+import PolicyPage from "../features/pages/PolicyPage";
+import SettingsPage from "../features/pages/SettingsPage";
+import HelpSupportPage from "../features/pages/SupportPage";
 import { PAGE_TYPES } from "../features/constants/constant";
 import ProfilePage from "../features/pages/ProfilePage";
 
@@ -76,6 +79,9 @@ const AppRoutes = () => {
       <Route path="/llm" element={<ProtectedRoute><LLMChatPage /></ProtectedRoute>} />
       <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage handleLogout={handleLogout} /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/policy" element={<ProtectedRoute><PolicyPage /></ProtectedRoute>} />
+      <Route path="/help-support" element={<ProtectedRoute><HelpSupportPage /></ProtectedRoute>} />
     </Routes>
   );
 };
