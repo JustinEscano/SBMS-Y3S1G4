@@ -976,10 +976,17 @@ class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = [RoleBasedPermission]
 
     def get_queryset(self):
+        queryset = self.queryset
         user = self.request.user
-        if hasattr(user, 'role') and user.role == 'client':
-            return self.queryset.filter(user=user)
-        return self.queryset
+        user_id = self.request.query_params.get('user')
+
+        # Allow ?user=<id> for admin/superadmin
+        if user_id and hasattr(user, 'role') and user.role in ['admin', 'superadmin']:
+            queryset = queryset.filter(user_id=user_id)
+        elif hasattr(user, 'role') and user.role == 'client':
+            queryset = queryset.filter(user=user)
+
+        return queryset
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def mark_all_read(self, request):

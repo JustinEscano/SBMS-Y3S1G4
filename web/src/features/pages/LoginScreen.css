@@ -228,3 +228,31 @@ body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* forgot password only */
+
+.reset-subtitle {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+/* Success message */
+.success-message {
+  color: #4caf50;
+  font-size: 0.9rem;
+  margin: 5px;
+  text-align: left;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Secondary button style (e.g., for Back/Change Email) */
+.login-button.secondary {
+  background-color: #6c757d;
+  margin-bottom: 10px;
+}
+
+.login-button.secondary:hover {
+  background-color: #5a6268;
+}

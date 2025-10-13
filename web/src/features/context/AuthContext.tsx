@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { registerLogout } from "../services/logoutUser";
 
 interface User {
+  id: string;
   username: string;
   role: string;
   // Add other fields from your User type if needed, e.g., email: string;
@@ -27,7 +28,10 @@ const AuthContext = createContext<AuthContextType>({
 const decodeJWT = (token: string): User | null => {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
+    const id = payload.sub || payload.user_id;
+    if (!id) return null;
     return {
+      id,
       username: payload.username || payload.sub || "Unknown",
       role: payload.role || "user",
       // Add more: email: payload.email, etc.
@@ -54,9 +58,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [token]);
 
-  const login = (newToken: string) => {
+  const login = (newToken: string, refresh?: string) => {
     setToken(newToken);
     localStorage.setItem("access_token", newToken);
+    if (refresh) {
+      localStorage.setItem("refresh_token", refresh); // ✅ Save refresh token too
+    }
   };
 
   const logout = () => {

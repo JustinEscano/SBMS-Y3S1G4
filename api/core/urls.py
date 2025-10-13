@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenVerifyView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from core.views.auth_views import RegisterView, CustomTokenObtainPairView
 from core.views.model_viewsets import (
     UserViewSet, RoomViewSet, EquipmentViewSet, SensorLogViewSet, HeartbeatLogViewSet, AlertViewSet,
@@ -8,6 +8,7 @@ from core.views.model_viewsets import (
     AuthTokenViewSet, MaintenanceAttachmentViewSet, ComponentViewSet, EnergySummaryViewSet,
     PredictiveAlertViewSet, BillingRateViewSet
 )
+from core.views.miscellaneous import PasswordViewSet, OTPPasswordViewSet
 from core.views.esp32_views import esp32_sensor_data, esp32_health_check, latest_sensor_data, esp32_heartbeat, equipment_field_options
 from core.views.dashboard_views import dashboard_summary, room_realtime
 from core.views.anomaly_views import check_anomalies, predict_maintenance
@@ -29,6 +30,9 @@ router.register(r'maintenanceattachment', MaintenanceAttachmentViewSet)
 router.register(r'energysummary', EnergySummaryViewSet)
 router.register(r'predictivealert', PredictiveAlertViewSet)
 router.register(r'billingrate', BillingRateViewSet)
+router.register(r'password', PasswordViewSet, basename='password')
+router.register(r'otp-password', OTPPasswordViewSet, basename='otp-password')
+
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -36,7 +40,7 @@ urlpatterns = [
     
     # JWT Authentication endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenObtainPairView.as_view(), name='token_refresh'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
     # Dashboard endpoints

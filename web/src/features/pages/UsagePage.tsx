@@ -194,7 +194,7 @@ const UsagePage: React.FC = () => {
           const sortedData = data.sort((a, b) => new Date(a.period_start).getTime() - new Date(b.period_start).getTime());
           console.log('📊 Sorted periods:', sortedData.map(p => ({ start: p.period_start, label: formatPeriodLabel(p) })));
           setAvailablePeriods(sortedData);
-          setSelectedPeriodIndex(0); // Default to latest period
+          setSelectedPeriodIndex(null); // Default to latest period
           console.log('✅ Set index to latest after fetch');
         } else {
           console.log('⚠️ No periods data returned');
@@ -470,6 +470,24 @@ const UsagePage: React.FC = () => {
             </select>
           </div>
 
+          {/* Summary Cards for Selected Period */}
+          {selectedPeriodIndex !== null && analytics.length > 0 && (
+            <div className="summary-grid">
+              <div className="summary-card">
+                <p>Total Energy</p>
+                <p>{analytics[0].total_energy.toFixed(3)} kWh</p>
+              </div>
+              <div className="summary-card">
+                <p>Average Power</p>
+                <p>{analytics[0].avg_power.toFixed(2)} kW</p>
+              </div>
+              <div className="summary-card">
+                <p>Bill</p>
+                <p>{analytics[0].total_cost.toFixed(3)} {analytics[0].currency || 'USD'}</p>
+              </div>
+            </div>
+          )}
+
           {/* Equipment Chart */}
           {equipmentChartData ? (
             <div className="usage-chart-container">
@@ -506,6 +524,9 @@ const UsagePage: React.FC = () => {
           ) : selectedComponent ? (
             <p className="text-gray-400 mb-6">No component data for selected period</p>
           ) : null}
+
+          <br></br>
+          <br></br>
 
           {/* HVAC Logs */}
           {selectedComponent && (

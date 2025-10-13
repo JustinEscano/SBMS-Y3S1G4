@@ -33,5 +33,20 @@ export const loginUser = async (
     access,
     refresh,
     userId: decoded.user_id,
-  };
+  };  
+};
+
+export const requestOTPPasswordReset = async (email: string) => {
+  const res = await axiosInstance.post('/api/otp-password/request/', { email });
+  return res.data;
+};
+
+export const verifyOTPPasswordReset = async (email: string, otp: string, password: string) => {
+  const res = await axiosInstance.patch('/api/otp-password/verify/', { email, otp, password });
+  return res.data;
+};
+
+export const verifyOTP = async (email: string, otp: string) => {
+  const res = await axiosInstance.post('/api/otp-password/verify-otp/', { email, otp });
+  return res.data;
 };

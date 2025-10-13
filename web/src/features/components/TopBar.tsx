@@ -1,32 +1,16 @@
+// TopBar.tsx - Refactored to use useUser hook
 import React, { useEffect, useRef, useState } from "react";
 import "./TopBar.css";
 import { useNavigate } from "react-router-dom";
 import ModalLogout from "./ModalLogout";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../context/AuthContext"; // Adjust path
+import { useUser } from "../hooks/useUser"; // Adjust path
 
 type TopBarProps = {
   collapsed: boolean;
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
   handleLogout: () => void;
-};
-
-type TokenPayload = {
-  user_id: string;
-  username?: string;
-  email?: string;
-  role?: string;
-  role_display?: string;
-  exp: number;
-  token_type: string;
-};
-
-type User = {
-  id: string;
-  username?: string;
-  email?: string;
-  role?: string;
-  role_display?: string;
 };
 
 const TopBar: React.FC<TopBarProps> = ({
@@ -38,7 +22,8 @@ const TopBar: React.FC<TopBarProps> = ({
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { token } = useAuth();
+  const { user, loading } = useUser(token); // Use hook for latest user data
 
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -46,26 +31,6 @@ const TopBar: React.FC<TopBarProps> = ({
     setLogoutModalOpen(false);
     handleLogout();
   };
-
-  useEffect(() => {
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      const decoded = jwtDecode<TokenPayload>(token);
-
-      // we only *guarantee* user_id, but keep other fields if your backend puts them
-      setUser({
-        id: decoded.user_id,
-        username: decoded.username ?? undefined,
-        email: decoded.email ?? undefined,
-        role: decoded.role ?? undefined,
-        role_display: decoded.role_display ?? decoded.role ?? "Client",
-      });
-    } catch (err) {
-      console.error("Failed to decode JWT:", err);
-    }
-  }, []);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -84,6 +49,8 @@ const TopBar: React.FC<TopBarProps> = ({
     };
   }, []);
 
+  const getInitial = (name: string) => name.charAt(0).toUpperCase();
+
   return (
     <header className={`topbar ${collapsed ? "collapsed" : ""}`}>
       <div className="topbar-left">
@@ -97,10 +64,10 @@ const TopBar: React.FC<TopBarProps> = ({
             onClick={() => setDropdownOpen(!dropdownOpen)}
           >
             <div className="avatar-circle">
-              {user?.username?.charAt(0).toUpperCase() ?? "?"}
+              {loading ? "?" : getInitial(user?.username || "Guest")}
             </div>
             <span className="topbar-user">
-              {user?.role_display ?? "Guest"} ▾
+              {loading ? "Loading..." : (user?.username ?? "Guest")} ▾
             </span>
           </div>
 
@@ -108,30 +75,17 @@ const TopBar: React.FC<TopBarProps> = ({
             <div className="dropdown-menu">
               <div className="dropdown-header">
                 <div className="avatar-large">
-                  {user?.username?.charAt(0).toUpperCase() ?? "?"}
+                  {loading ? "?" : getInitial(user?.username || "Guest")}
                 </div>
                 <div>
-                  <h4>{user?.username ?? "Guest"}</h4>
+                  <h4>{loading ? "Loading..." : (user?.username ?? "Guest")}</h4>
                   <small>ID: {user?.id ?? "N/A"}</small>
                 </div>
               </div>
 
               <div className="dropdown-links">
                 <button onClick={() => navigate("/profile")}>My Profile</button>
-                <button onClick={() => alert("Go to settings")}>
-                  Settings
-                </button>
-                <label className="switch">
-                  <input
-                    type="checkbox"
-                    checked={darkMode}
-                    onChange={() => setDarkMode(!darkMode)}
-                  />
-                  <span className="slider"></span>
-                  <span className="switch-label">
-                    {darkMode ? "Dark Mode" : "Light Mode"}
-                  </span>
-                </label>
+                <button onClick={() => navigate("/settings")}>Settings</button>
               </div>
 
               <div className="dropdown-footer">
