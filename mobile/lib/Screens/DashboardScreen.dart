@@ -109,24 +109,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final authService = Provider.of<AuthService>(context, listen: false);
     switch (value) {
       case 'analytics':
-        _navigateToScreen(EnergyAnalyticsScreen(
-          accessToken: widget.accessToken,
-          refreshToken: authService.refreshToken ?? '',
-        ));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EnergyAnalyticsScreen(
+              accessToken: widget.accessToken,
+              refreshToken: authService.refreshToken ?? '',
+            ),
+          ),
+        );
         break;
       case 'maintenance_requests':
         _navigateToMaintenanceManagement();
         break;
-      case 'notifications':
-        _navigateToNotifications();
-        break;
-      case 'about':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('About feature coming soon!')),
-        );
-        break;
       case 'orb_chat':
-        _navigateToChatScreen();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              accessToken: widget.accessToken,
+              refreshToken: authService.refreshToken ?? '',
+            ),
+          ),
+        );
         break;
       case 'dashboard':
       default:

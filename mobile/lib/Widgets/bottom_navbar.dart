@@ -15,7 +15,7 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   final List<Map<String, dynamic>> _navItems = [
     {
@@ -30,7 +30,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     },
     {
       'value': 'maintenance_requests',
-      'label': 'Maintenance Requests',
+      'label': 'Maintenance',
       'icon': Icons.build,
     },
     {
@@ -43,6 +43,18 @@ class _BottomNavBarState extends State<BottomNavBar> {
   @override
   void initState() {
     super.initState();
+    _updateSelectedIndex();
+  }
+
+  @override
+  void didUpdateWidget(BottomNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentScreen != widget.currentScreen) {
+      _updateSelectedIndex();
+    }
+  }
+
+  void _updateSelectedIndex() {
     _selectedIndex = _navItems.indexWhere((item) => item['value'] == widget.currentScreen);
     if (_selectedIndex == -1) _selectedIndex = 0;
   }
@@ -53,13 +65,17 @@ class _BottomNavBarState extends State<BottomNavBar> {
       type: BottomNavigationBarType.fixed,
       currentIndex: _selectedIndex,
       onTap: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-        widget.onMenuSelection(_navItems[index]['value']);
+        if (_selectedIndex != index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+          widget.onMenuSelection(_navItems[index]['value']);
+        }
       },
       selectedItemColor: Theme.of(context).primaryColor,
-      unselectedItemColor: Colors.grey,
+      unselectedItemColor: Colors.grey[600],
+      selectedFontSize: 12,
+      unselectedFontSize: 12,
       items: _navItems.map((item) {
         return BottomNavigationBarItem(
           icon: Icon(item['icon']),

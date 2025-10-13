@@ -296,18 +296,33 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     try {
-      // Find the maintenance request in the equipment list or fetch it
-      final maintenanceRequest = equipment.firstWhere(
-            (eq) => eq['id'] == maintenanceRequestId,
-        orElse: () => null,
-      );
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
 
-      if (maintenanceRequest == null) {
+      // Fetch the maintenance request by ID
+      final response = await http.get(
+        Uri.parse('${ApiConfig.maintenanceRequest}/$maintenanceRequestId/'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _navigateToMaintenanceRequest(maintenanceRequestId);
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else if (response.statusCode == 404) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Maintenance request not found')),
         );
         return;
+      } else if (response.statusCode != 200) {
+        throw Exception('Failed to load maintenance request: ${response.statusCode}');
       }
+
+      final maintenanceRequest = json.decode(response.body);
 
       // Navigate to maintenance details screen
       await Navigator.push(
@@ -359,15 +374,62 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // Helper method to check if notification has maintenance request
   bool _hasMaintenanceRequest(Map<String, dynamic> notification) {
     final type = notification['type']?.toString() ?? '';
-    return type.contains('maintenance') &&
-        (notification['maintenance_request_id'] != null ||
-            notification['metadata']?['maintenance_request_id'] != null);
+    final message = notification['message']?.toString() ?? '';
+    final hasMaintenance = type.contains('maintenance') ||
+        message.contains('request #') ||
+        message.contains('Maintenance Request') ||
+        message.contains('maintenance request');
+
+    // Debug logging
+    print('Notification Debug:');
+    print('  Type: $type');
+    print('  Message: $message');
+    print('  Has Maintenance: $hasMaintenance');
+
+    return hasMaintenance;
   }
 
-  // Helper method to get maintenance request ID
+  // Helper method to get maintenance request ID from message
   String? _getMaintenanceRequestId(Map<String, dynamic> notification) {
-    return notification['maintenance_request_id']?.toString() ??
-        notification['metadata']?['maintenance_request_id']?.toString();
+    final message = notification['message']?.toString() ?? '';
+
+    // Try different patterns to extract maintenance request ID
+    // Pattern 1: request #123 (simple number)
+    RegExp regex1 = RegExp(r'request #(\d+)');
+    var match1 = regex1.firstMatch(message);
+    if (match1 != null) {
+      print('Maintenance Request ID Debug (Pattern 1 - number):');
+      print('  Message: $message');
+      print('  Extracted ID: ${match1.group(1)}');
+      return match1.group(1);
+    }
+
+    // Pattern 2: request #uuid (UUID format)
+    RegExp regex2 = RegExp(r'request #([a-f0-9-]{36})');
+    var match2 = regex2.firstMatch(message);
+    if (match2 != null) {
+      print('Maintenance Request ID Debug (Pattern 2 - UUID):');
+      print('  Message: $message');
+      print('  Extracted ID: ${match2.group(1)}');
+      return match2.group(1);
+    }
+
+    // Pattern 3: just look for any UUID in the message
+    RegExp regex3 = RegExp(r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})');
+    var match3 = regex3.firstMatch(message);
+    if (match3 != null) {
+      print('Maintenance Request ID Debug (Pattern 3 - any UUID):');
+      print('  Message: $message');
+      print('  Extracted ID: ${match3.group(1)}');
+      return match3.group(1);
+    }
+
+    // Debug logging
+    print('Maintenance Request ID Debug (No match):');
+    print('  Message: $message');
+    print('  No ID found');
+
+    return null;
   }
 
   @override
@@ -503,32 +565,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ],
                 ),
                 onTap: () async {
+                  // Mark as read if unread
                   if (!notification['read']) {
                     await _markNotificationRead(notification['id']);
                   }
 
-                  if (hasMaintenance) {
-                    // Navigate directly to maintenance request
-                    await _navigateToMaintenanceRequest(_getMaintenanceRequestId(notification));
-                  } else {
-                    // Show notification details
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NotificationDetailsScreen(
-                          notification: notification,
-                          accessToken: widget.accessToken,
-                          refreshToken: widget.refreshToken,
-                          users: users,
-                          equipment: equipment,
-                          statusOptions: statusOptions,
-                          onNavigateToMaintenance: _navigateToMaintenanceRequest,
-                        ),
+                  // Always show notification details first
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationDetailsScreen(
+                        notification: notification,
+                        accessToken: widget.accessToken,
+                        refreshToken: widget.refreshToken,
+                        users: users,
+                        equipment: equipment,
+                        statusOptions: statusOptions,
+                        onNavigateToMaintenance: _navigateToMaintenanceRequest,
                       ),
-                    );
-                    if (result == true) {
-                      await _loadNotifications();
-                    }
+                    ),
+                  );
+                  if (result == true) {
+                    await _loadNotifications();
                   }
                 },
               ),
@@ -715,15 +773,62 @@ class NotificationDetailsScreen extends StatelessWidget {
   // Helper method to check if notification has maintenance request
   bool _hasMaintenanceRequest() {
     final type = notification['type']?.toString() ?? '';
-    return type.contains('maintenance') &&
-        (notification['maintenance_request_id'] != null ||
-            notification['metadata']?['maintenance_request_id'] != null);
+    final message = notification['message']?.toString() ?? '';
+    final hasMaintenance = type.contains('maintenance') ||
+        message.contains('request #') ||
+        message.contains('Maintenance Request') ||
+        message.contains('maintenance request');
+
+    // Debug logging
+    print('NotificationDetailsScreen Debug:');
+    print('  Type: $type');
+    print('  Message: $message');
+    print('  Has Maintenance: $hasMaintenance');
+
+    return hasMaintenance;
   }
 
-  // Helper method to get maintenance request ID
+  // Helper method to get maintenance request ID from message
   String? _getMaintenanceRequestId() {
-    return notification['maintenance_request_id']?.toString() ??
-        notification['metadata']?['maintenance_request_id']?.toString();
+    final message = notification['message']?.toString() ?? '';
+
+    // Try different patterns to extract maintenance request ID
+    // Pattern 1: request #123 (simple number)
+    RegExp regex1 = RegExp(r'request #(\d+)');
+    var match1 = regex1.firstMatch(message);
+    if (match1 != null) {
+      print('NotificationDetailsScreen Maintenance Request ID Debug (Pattern 1 - number):');
+      print('  Message: $message');
+      print('  Extracted ID: ${match1.group(1)}');
+      return match1.group(1);
+    }
+
+    // Pattern 2: request #uuid (UUID format)
+    RegExp regex2 = RegExp(r'request #([a-f0-9-]{36})');
+    var match2 = regex2.firstMatch(message);
+    if (match2 != null) {
+      print('NotificationDetailsScreen Maintenance Request ID Debug (Pattern 2 - UUID):');
+      print('  Message: $message');
+      print('  Extracted ID: ${match2.group(1)}');
+      return match2.group(1);
+    }
+
+    // Pattern 3: just look for any UUID in the message
+    RegExp regex3 = RegExp(r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})');
+    var match3 = regex3.firstMatch(message);
+    if (match3 != null) {
+      print('NotificationDetailsScreen Maintenance Request ID Debug (Pattern 3 - any UUID):');
+      print('  Message: $message');
+      print('  Extracted ID: ${match3.group(1)}');
+      return match3.group(1);
+    }
+
+    // Debug logging
+    print('NotificationDetailsScreen Maintenance Request ID Debug (No match):');
+    print('  Message: $message');
+    print('  No ID found');
+
+    return null;
   }
 
   @override
@@ -857,7 +962,9 @@ class NotificationDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'This notification is related to a maintenance request. You can view the full details and respond to it.',
+                      maintenanceRequestId != null
+                          ? 'This notification is related to a maintenance request. You can view the full details and respond to it.'
+                          : 'This notification is related to a maintenance request, but the specific request ID could not be extracted. You can view recent maintenance requests.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.blue[600],
@@ -868,11 +975,24 @@ class NotificationDetailsScreen extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () async {
-                          await onNavigateToMaintenance(maintenanceRequestId);
-                          Navigator.pop(context);
+                          if (maintenanceRequestId != null) {
+                            await onNavigateToMaintenance(maintenanceRequestId);
+                            Navigator.pop(context);
+                          } else {
+                            // Navigate to maintenance management screen
+                            Navigator.pop(context);
+                            // You can add navigation to maintenance management screen here
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Navigate to maintenance management to find the specific request'),
+                              ),
+                            );
+                          }
                         },
                         icon: const Icon(Icons.arrow_forward),
-                        label: const Text('View Maintenance Request'),
+                        label: Text(maintenanceRequestId != null
+                            ? 'View Maintenance Request'
+                            : 'View Maintenance Requests'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[700],
                           foregroundColor: Colors.white,
@@ -891,6 +1011,16 @@ class NotificationDetailsScreen extends StatelessWidget {
                           fontSize: 12,
                           color: Colors.grey[600],
                           fontFamily: 'monospace',
+                        ),
+                      ),
+                    ] else ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Note: Could not extract specific request ID from notification message',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange[600],
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ],

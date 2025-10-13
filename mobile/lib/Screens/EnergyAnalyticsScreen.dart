@@ -5,7 +5,10 @@ import 'package:fl_chart/fl_chart.dart';
 import '../Config/api.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
 import '../Widgets/bottom_navbar.dart';
-import '../Services/auth_service.dart'; // Import AuthService
+import '../Widgets/AnalyticsWidgets.dart';
+import '../Services/auth_service.dart';
+import 'DashboardScreen.dart';
+import 'ChatScreen.dart';// Import AuthService
 
 class EnergyAnalyticsScreen extends StatefulWidget {
   final String accessToken;
@@ -821,18 +824,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-  Widget _buildStatRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w400)),
-        ],
-      ),
-    );
-  }
 
   Future<void> _navigateToMaintenanceManagement() async {
     String userRole = 'Client';
@@ -916,116 +907,18 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (errorMessage.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(errorMessage, style: const TextStyle(color: Colors.red))),
-                    ],
-                  ),
-                ),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.analytics, color: Colors.teal[700], size: 28),
-                          const SizedBox(width: 12),
-                          Text(
-                            '${_getScopeTitle()} Energy Overview',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Analyze energy consumption and cost trends over $timeFrame intervals',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                AnalyticsWidgets.buildErrorBanner(errorMessage),
+              AnalyticsWidgets.buildOverviewCard(_getScopeTitle(), timeFrame),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ChoiceChip(
-                    label: const Text('Daily'),
-                    selected: timeFrame == 'daily',
-                    onSelected: (selected) => _changeTimeFrame('daily'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('Weekly'),
-                    selected: timeFrame == 'weekly',
-                    onSelected: (selected) => _changeTimeFrame('weekly'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('Monthly'),
-                    selected: timeFrame == 'monthly',
-                    onSelected: (selected) => _changeTimeFrame('monthly'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                ],
-              ),
+              AnalyticsWidgets.buildTimeFrameSelector(timeFrame, _changeTimeFrame),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ChoiceChip(
-                    label: const Text('Building'),
-                    selected: selectedScope == 'building',
-                    onSelected: (selected) => _changeScope('building'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('All Rooms'),
-                    selected: selectedScope == 'all_rooms',
-                    onSelected: (selected) => _changeScope('all_rooms'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('Room'),
-                    selected: selectedScope == 'room',
-                    onSelected: (selected) => _changeScope('room'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                ],
-              ),
+              AnalyticsWidgets.buildScopeSelector(selectedScope, (newScope) => _changeScope(newScope)),
               if (selectedScope == 'room') ...[
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Select Room',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedRoomId,
-                  items: rooms.map<DropdownMenuItem<String>>((room) {
-                    return DropdownMenuItem<String>(
-                      value: room['id'],
-                      child: Text(room['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
+                AnalyticsWidgets.buildRoomSelector(
+                  selectedRoomId: selectedRoomId,
+                  rooms: rooms,
+                  onRoomChanged: (value) {
                     if (value != null) {
                       setState(() {
                         selectedRoomId = value;
@@ -1040,456 +933,81 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Select Equipment',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedComponentId,
-                  items: equipment
-                      .where((eq) => eq['room'] == selectedRoomId)
-                      .map<DropdownMenuItem<String>>((eq) {
-                    return DropdownMenuItem<String>(
-                      value: eq['component_id'],
-                      child: Text(eq['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
+                AnalyticsWidgets.buildEquipmentSelector(
+                  selectedComponentId: selectedComponentId,
+                  equipment: equipment,
+                  selectedRoomId: selectedRoomId,
+                  onEquipmentChanged: (value) {
                     if (value != null) {
                       _changeScope('room', newComponentId: value);
                     }
                   },
-                  hint: const Text('All Equipment in Room'),
                 ),
               ],
               const SizedBox(height: 20),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Power Consumption Trend$chartSuffix',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(show: true),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${value.toStringAsFixed(1)} W',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 30,
-                                  interval: interval,
-                                  getTitlesWidget: (value, meta) {
-                                    if (!_shouldShowLabel(value, timeFrame)) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        _formatTimeAxis(value, timeFrame, startTime),
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: true),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: powerSpots,
-                                isCurved: true,
-                                color: Colors.teal,
-                                barWidth: 2,
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Colors.teal.withOpacity(0.2),
-                                ),
-                                dotData: FlDotData(show: true),
-                              ),
-                            ],
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              touchTooltipData: LineTouchTooltipData(
-                                getTooltipItems: (touchedSpots) {
-                                  return touchedSpots.map((spot) {
-                                    return LineTooltipItem(
-                                      '${spot.y.toStringAsFixed(2)} W\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
-                                      const TextStyle(color: Colors.white),
-                                    );
-                                  }).toList();
-                                },
-                              ),
-                            ),
-                            minX: 0,
-                            maxX: maxX,
-                            minY: 0,
-                            maxY: _getMaxY(powerSpots),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildPowerChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                powerSpots: powerSpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(powerSpots),
               ),
               const SizedBox(height: 16),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Energy Consumption Trend$chartSuffix',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(show: true),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${value.toStringAsFixed(3)} kWh',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 30,
-                                  interval: interval,
-                                  getTitlesWidget: (value, meta) {
-                                    if (!_shouldShowLabel(value, timeFrame)) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        _formatTimeAxis(value, timeFrame, startTime),
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: true),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: energySpots,
-                                isCurved: true,
-                                color: Colors.green,
-                                barWidth: 2,
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Colors.green.withOpacity(0.2),
-                                ),
-                                dotData: FlDotData(show: true),
-                              ),
-                            ],
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              touchTooltipData: LineTouchTooltipData(
-                                getTooltipItems: (touchedSpots) {
-                                  return touchedSpots.map((spot) {
-                                    return LineTooltipItem(
-                                      '${spot.y.toStringAsFixed(3)} kWh\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
-                                      const TextStyle(color: Colors.white),
-                                    );
-                                  }).toList();
-                                },
-                              ),
-                            ),
-                            minX: 0,
-                            maxX: maxX,
-                            minY: 0,
-                            maxY: _getMaxY(energySpots, isEnergy: true),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildEnergyChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                energySpots: energySpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(energySpots, isEnergy: true),
               ),
               const SizedBox(height: 16),
-              // New: Temperature Trend Chart
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Temperature Trend$chartSuffix',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(show: true),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${value.toStringAsFixed(1)}°C',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 30,
-                                  interval: interval,
-                                  getTitlesWidget: (value, meta) {
-                                    if (!_shouldShowLabel(value, timeFrame)) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        _formatTimeAxis(value, timeFrame, startTime),
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: true),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: temperatureSpots,
-                                isCurved: true,
-                                color: Colors.red,
-                                barWidth: 2,
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Colors.red.withOpacity(0.2),
-                                ),
-                                dotData: FlDotData(show: true),
-                              ),
-                            ],
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              touchTooltipData: LineTouchTooltipData(
-                                getTooltipItems: (touchedSpots) {
-                                  return touchedSpots.map((spot) {
-                                    return LineTooltipItem(
-                                      '${spot.y.toStringAsFixed(1)}°C\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
-                                      const TextStyle(color: Colors.white),
-                                    );
-                                  }).toList();
-                                },
-                              ),
-                            ),
-                            minX: 0,
-                            maxX: maxX,
-                            minY: 0,
-                            maxY: _getMaxY(temperatureSpots, isTemperature: true),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildTemperatureChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                temperatureSpots: temperatureSpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(temperatureSpots, isTemperature: true),
               ),
               const SizedBox(height: 16),
-              // New: Humidity Trend Chart
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Humidity Trend$chartSuffix',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(show: true),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${value.toStringAsFixed(1)}%',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 30,
-                                  interval: interval,
-                                  getTitlesWidget: (value, meta) {
-                                    if (!_shouldShowLabel(value, timeFrame)) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        _formatTimeAxis(value, timeFrame, startTime),
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: true),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: humiditySpots,
-                                isCurved: true,
-                                color: Colors.blue,
-                                barWidth: 2,
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Colors.blue.withOpacity(0.2),
-                                ),
-                                dotData: FlDotData(show: true),
-                              ),
-                            ],
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              touchTooltipData: LineTouchTooltipData(
-                                getTooltipItems: (touchedSpots) {
-                                  return touchedSpots.map((spot) {
-                                    return LineTooltipItem(
-                                      '${spot.y.toStringAsFixed(1)}%\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
-                                      const TextStyle(color: Colors.white),
-                                    );
-                                  }).toList();
-                                },
-                              ),
-                            ),
-                            minX: 0,
-                            maxX: maxX,
-                            minY: 0,
-                            maxY: _getMaxY(humiditySpots, isHumidity: true),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildHumidityChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                humiditySpots: humiditySpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(humiditySpots, isHumidity: true),
               ),
               const SizedBox(height: 16),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Energy and Cost Statistics',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatRow('Total Energy', '${summaryData['total_energy']?.toStringAsFixed(3) ?? '0.000'} kWh'),
-                      _buildStatRow('Average Power', '${summaryData['avg_power']?.toStringAsFixed(1) ?? '0.0'} W'),
-                      _buildStatRow('Peak Power', '${summaryData['peak_power']?.toStringAsFixed(1) ?? '0.0'} W'),
-                      _buildStatRow('Reading Count', '${summaryData['reading_count'] ?? '0'}'),
-                      _buildStatRow('Anomaly Count', '${summaryData['anomaly_count'] ?? '0'}'),
-                      const Divider(),
-                      _buildStatRow('Total Cost', '$totalCost ${billingData['currency'] ?? 'PHP'}'),
-                      _buildStatRow('Effective Rate', '$effectiveRate ${billingData['currency'] ?? 'PHP'}/kWh'),
-                      if (billingData['details']?.isNotEmpty == true) ...[
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Cost Breakdown by Component',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        ...billingData['details'].map<Widget>((detail) {
-                          return _buildStatRow(
-                            detail['component_type'] ?? 'Unknown Component',
-                            '${detail['cost']?.toStringAsFixed(2) ?? '0.00'} ${detail['currency'] ?? 'PHP'} (${detail['total_energy']?.toStringAsFixed(3) ?? '0.000'} kWh)',
-                          );
-                        }).toList(),
-                      ],
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildStatisticsCard(
+                scopeTitle: _getScopeTitle(),
+                summaryData: summaryData,
+                totalCost: totalCost,
+                effectiveRate: effectiveRate,
+                billingData: billingData,
               ),
               const SizedBox(height: 16),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} HVAC Status',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatRow('Average Temperature', '${hvacData['avgTemperature']?.toStringAsFixed(1) ?? '0.0'}°C'),
-                      _buildStatRow('Average Humidity', '${hvacData['avgHumidity']?.toStringAsFixed(1) ?? '0.0'}%'),
-                      _buildStatRow('Active Zones', '${hvacData['activeZones'] ?? 0}/${hvacData['totalZones'] ?? 0}'),
-                      _buildStatRow('System Status', hvacData['status']?.toString().toUpperCase() ?? 'OFFLINE'),
-                      if (hvacData['dataPoints'] != null) ...[
-                        _buildStatRow('Data Points', '${hvacData['dataPoints']} readings'),
-                      ],
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildHvacStatusCard(
+                scopeTitle: _getScopeTitle(),
+                hvacData: hvacData,
               ),
             ],
           ),
@@ -1499,26 +1017,31 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         onMenuSelection: (value) {
           switch (value) {
             case 'dashboard':
-              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DashboardScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                  ),
+                ),
+              );
               break;
             case 'maintenance_requests':
               _navigateToMaintenanceManagement();
               break;
             case 'orb_chat':
-              Navigator.pushNamed(
+              Navigator.pushReplacement(
                 context,
-                '/chat',
-                arguments: {
-                  'accessToken': AuthService().accessToken ?? widget.accessToken,
-                  'refreshToken': AuthService().refreshToken ?? widget.refreshToken,
-                },
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                  ),
+                ),
               );
               break;
-            case 'notifications':
-            case 'about':
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${value.replaceAll('_', ' ').toUpperCase()} feature coming soon!')),
-              );
+            case 'analytics':
+            // Already on analytics screen
               break;
             default:
               break;

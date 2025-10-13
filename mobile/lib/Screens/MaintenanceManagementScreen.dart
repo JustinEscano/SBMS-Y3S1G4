@@ -7,6 +7,10 @@ import '../Config/api.dart';
 import '../Services/auth_service.dart';
 import 'MaintenanceDetailsScreen.dart';
 import '../Widgets/MaintenanceScreenWidgets.dart';
+import '../Widgets/bottom_navbar.dart';
+import 'DashboardScreen.dart';
+import 'EnergyAnalyticsScreen.dart';
+import 'ChatScreen.dart';
 
 class MaintenanceManagementScreen extends StatefulWidget {
   final String accessToken;
@@ -353,6 +357,50 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         backgroundColor: Theme.of(context).colorScheme.primary,
       )
           : null,
+      bottomNavigationBar: BottomNavBar(
+        onMenuSelection: (value) {
+          switch (value) {
+            case 'dashboard':
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DashboardScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                  ),
+                ),
+              );
+              break;
+            case 'analytics':
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EnergyAnalyticsScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                  ),
+                ),
+              );
+              break;
+            case 'maintenance_requests':
+            // Already on maintenance requests screen
+              break;
+            case 'orb_chat':
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                  ),
+                ),
+              );
+              break;
+            default:
+              break;
+          }
+        },
+        currentScreen: 'maintenance_requests',
+      ),
     );
   }
 }

@@ -5,6 +5,10 @@ import '../Services/auth_service.dart'; // Add AuthService import
 import '../Models/chat_message.dart';
 import '../Providers/chat_provider.dart';
 import '../Config/api.dart';
+import '../Widgets/bottom_navbar.dart';
+import 'DashboardScreen.dart';
+import 'EnergyAnalyticsScreen.dart';
+import 'MaintenanceManagementScreen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String accessToken;
@@ -406,6 +410,51 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomNavBar(
+        onMenuSelection: (value) {
+          switch (value) {
+            case 'dashboard':
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DashboardScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                  ),
+                ),
+              );
+              break;
+            case 'analytics':
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EnergyAnalyticsScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                  ),
+                ),
+              );
+              break;
+            case 'maintenance_requests':
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MaintenanceManagementScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                    userRole: 'client', // You might want to get this from user data
+                  ),
+                ),
+              );
+              break;
+            case 'orb_chat':
+            // Already on chat screen
+              break;
+            default:
+              break;
+          }
+        },
+        currentScreen: 'orb_chat',
       ),
     );
   }
