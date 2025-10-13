@@ -8,7 +8,7 @@ import '../Widgets/bottom_navbar.dart';
 import '../Widgets/AnalyticsWidgets.dart';
 import '../Services/auth_service.dart';
 import 'DashboardScreen.dart';
-import 'ChatScreen.dart';// Import AuthService
+import 'ChatScreen.dart';
 
 class EnergyAnalyticsScreen extends StatefulWidget {
   final String accessToken;
@@ -29,7 +29,8 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   List<dynamic> rooms = [];
   List<dynamic> equipment = [];
   List<dynamic> latestSensorData = [];
-  List<dynamic> hvacSensorData = []; // New: Historical HVAC sensor data
+  List<dynamic> hvacSensorData = [];
+  List<dynamic> securitySensorData = []; // New: Historical security sensor data
   String? selectedRoomId;
   String? selectedComponentId;
   String selectedScope = 'room';
@@ -40,9 +41,11 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   Map<String, dynamic> summaryData = {};
   Map<String, dynamic> billingData = {};
   Map<String, dynamic> hvacData = {};
+  Map<String, dynamic> securityData = {}; // New: Security data
   Map<String, List<dynamic>> _cachedSensorLogs = {};
   Map<String, Map<String, dynamic>> _cachedBillingData = {};
-  Map<String, List<dynamic>> _cachedHvacData = {}; // New: Cache for HVAC data
+  Map<String, List<dynamic>> _cachedHvacData = {};
+  Map<String, List<dynamic>> _cachedSecurityData = {}; // New: Cache for security data
   DateTime? _lastCacheTime;
   String totalCost = '0.00';
   String effectiveRate = '0.00';
@@ -62,7 +65,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize AuthService with tokens
     AuthService().setTokens(widget.accessToken, widget.refreshToken);
     _loadRooms();
     _loadEquipment();
@@ -164,7 +166,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   DateTime _getStartTime(DateTime now) {
     switch (timeFrame) {
       case 'daily':
-      // For daily, get yesterday's data (since today's data might not be complete)
         return now.subtract(Duration(days: 1)).copyWith(
           hour: 0,
           minute: 0,
@@ -212,34 +213,27 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-  // New method: Fetch HVAC sensor data for different time periods
   Future<void> _loadHvacSensorData(DateTime startTime, DateTime endTime) async {
     try {
       if (!(await AuthService().ensureValidToken())) {
         throw Exception('Session expired. Please log in again.');
       }
       final headers = AuthService().getAuthHeaders();
-
-      // Build sensor log URL for HVAC data (DHT22 sensors)
       String hvacSensorUrl = ApiConfig.sensorLog;
       List<String> hvacParams = [
         'timeframe=$timeFrame',
         'period_start=${startTime.toIso8601String()}Z',
         'period_end=${endTime.toIso8601String()}Z',
         'limit=10000',
-        'component_type=dht22', // Only fetch DHT22 (temperature/humidity) data
+        'component_type=dht22',
         if (selectedRoomId != null) 'room_id=$selectedRoomId',
         if (selectedComponentId != null) 'component_id=$selectedComponentId',
       ];
       hvacSensorUrl += '?' + hvacParams.join('&');
-
       print('HVAC Sensor Request URL: $hvacSensorUrl');
-
       final hvacResponse = await http.get(Uri.parse(hvacSensorUrl), headers: headers).timeout(const Duration(seconds: 15));
-
       print('HVAC Sensor Response Status: ${hvacResponse.statusCode}');
       print('HVAC Sensor Response Body: ${hvacResponse.body}');
-
       if (hvacResponse.statusCode == 401) {
         if (await _refreshToken()) {
           return _loadHvacSensorData(startTime, endTime);
@@ -249,19 +243,60 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       } else if (hvacResponse.statusCode != 200) {
         throw Exception('Failed to load HVAC sensor data: ${hvacResponse.statusCode} - ${hvacResponse.reasonPhrase}');
       }
-
       final hvacData = json.decode(hvacResponse.body);
       print('HVAC Sensor Data Response: $hvacData');
-
       setState(() {
         hvacSensorData = hvacData is List ? hvacData : [];
         _cachedHvacData['$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame'] = hvacSensorData;
       });
-
     } catch (e) {
       print('Error loading HVAC sensor data: $e');
       setState(() {
         hvacSensorData = [];
+      });
+    }
+  }
+
+  Future<void> _loadSecuritySensorData(DateTime startTime, DateTime endTime) async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+      String securitySensorUrl = ApiConfig.sensorLog;
+      List<String> securityParams = [
+        'timeframe=$timeFrame',
+        'period_start=${startTime.toIso8601String()}Z',
+        'period_end=${endTime.toIso8601String()}Z',
+        'limit=10000',
+        'component_type=security',
+        if (selectedRoomId != null) 'room_id=$selectedRoomId',
+        if (selectedComponentId != null) 'component_id=$selectedComponentId',
+      ];
+      securitySensorUrl += '?' + securityParams.join('&');
+      print('Security Sensor Request URL: $securitySensorUrl');
+      final securityResponse = await http.get(Uri.parse(securitySensorUrl), headers: headers).timeout(const Duration(seconds: 15));
+      print('Security Sensor Response Status: ${securityResponse.statusCode}');
+      print('Security Sensor Response Body: ${securityResponse.body}');
+      if (securityResponse.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _loadSecuritySensorData(startTime, endTime);
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else if (securityResponse.statusCode != 200) {
+        throw Exception('Failed to load security sensor data: ${securityResponse.statusCode} - ${securityResponse.reasonPhrase}');
+      }
+      final securityData = json.decode(securityResponse.body);
+      print('Security Sensor Data Response: $securityData');
+      setState(() {
+        securitySensorData = securityData is List ? securityData : [];
+        _cachedSecurityData['$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame'] = securitySensorData;
+      });
+    } catch (e) {
+      print('Error loading security sensor data: $e');
+      setState(() {
+        securitySensorData = [];
       });
     }
   }
@@ -272,10 +307,12 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       errorMessage = '';
       _cachedSensorLogs.clear();
       _cachedBillingData.clear();
-      _cachedHvacData.clear(); // Clear HVAC cache
+      _cachedHvacData.clear();
+      _cachedSecurityData.clear();
       totalCost = '0.00';
       effectiveRate = '0.00';
       hvacData = {};
+      securityData = {};
     });
 
     final cacheKey = '$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame';
@@ -285,7 +322,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         throw Exception('Session expired. Please log in again.');
       }
       final headers = AuthService().getAuthHeaders();
-
       DateTime now = DateTime.now();
       DateTime startTimeCalc = _getStartTime(now);
       DateTime endTimeCalc = _getEndTime(startTimeCalc);
@@ -322,12 +358,12 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       ];
       sensorLogUrl += '?' + sensorParams.join('&');
 
-      // Load HVAC sensor data in parallel
       await Future.wait([
         http.get(Uri.parse(sensorLogUrl), headers: headers),
         Future.value(billingResponse),
         http.get(Uri.parse(ApiConfig.latestSensorData), headers: headers),
-        _loadHvacSensorData(startTimeCalc, endTimeCalc), // Load HVAC data
+        _loadHvacSensorData(startTimeCalc, endTimeCalc),
+        _loadSecuritySensorData(startTimeCalc, endTimeCalc),
       ]).timeout(const Duration(seconds: 15));
 
       final responses = await Future.wait([
@@ -397,6 +433,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       });
 
       _generateHVACData();
+      _generateSecurityData();
       await _loadSummaryData(startTimeCalc);
     } catch (e) {
       setState(() {
@@ -408,6 +445,12 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
           'avgHumidity': 0.0,
           'activeZones': 0,
           'totalZones': 0,
+          'status': 'offline',
+        };
+        securityData = {
+          'activeDevices': 0,
+          'totalDevices': 0,
+          'alertCount': 0,
           'status': 'offline',
         };
       });
@@ -424,16 +467,13 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     int activeZones = 0;
     int totalZones = 0;
 
-    // Use historical HVAC data if available, otherwise fall back to latest data
     List<dynamic> dataSource = hvacSensorData.isNotEmpty ? hvacSensorData : latestSensorData;
 
     if (dataSource.isNotEmpty) {
       final filteredSensors = dataSource.where((sensor) {
-        // For historical data, check if it has temperature/humidity
         if (hvacSensorData.isNotEmpty) {
           return sensor['temperature'] != null && sensor['humidity'] != null;
         }
-        // For latest data, use existing logic
         if (sensor['temperature'] == null || sensor['humidity'] == null) return false;
         if (selectedScope == 'building') return true;
         if (selectedScope == 'all_rooms' && sensor['room_id'] != null) return true;
@@ -471,7 +511,48 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         'activeZones': activeZones,
         'totalZones': totalZones,
         'status': activeZones > 0 ? 'operational' : 'offline',
-        'dataPoints': hvacSensorData.length, // Add data point count for debugging
+        'dataPoints': hvacSensorData.length,
+      };
+    });
+  }
+
+  void _generateSecurityData() {
+    int activeDevices = 0;
+    int totalDevices = 0;
+    int alertCount = 0;
+
+    List<dynamic> dataSource = securitySensorData.isNotEmpty ? securitySensorData : latestSensorData;
+
+    if (dataSource.isNotEmpty) {
+      final filteredSensors = dataSource.where((sensor) {
+        if (securitySensorData.isNotEmpty) {
+          return sensor['status'] != null && sensor['alerts'] != null;
+        }
+        if (sensor['status'] == null) return false;
+        if (selectedScope == 'building') return true;
+        if (selectedScope == 'all_rooms' && sensor['room_id'] != null) return true;
+        if (selectedScope == 'room' && sensor['room_id'] == selectedRoomId) {
+          if (selectedComponentId == null || sensor['device_id'] == selectedComponentId) {
+            return true;
+          }
+        }
+        return false;
+      }).toList();
+
+      for (var sensor in filteredSensors) {
+        totalDevices++;
+        if (sensor['status'] == 'online') activeDevices++;
+        alertCount += (sensor['alerts'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    setState(() {
+      securityData = {
+        'activeDevices': activeDevices,
+        'totalDevices': totalDevices,
+        'alertCount': alertCount,
+        'status': activeDevices > 0 ? 'secure' : 'offline',
+        'dataPoints': securitySensorData.length,
       };
     });
   }
@@ -630,7 +711,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     return spots;
   }
 
-  // New method: Generate HVAC trend data for charts
   List<FlSpot> _generateTemperatureSpots() {
     final now = DateTime.now();
     final startTime = _getStartTime(now);
@@ -737,6 +817,59 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     return spots;
   }
 
+  List<FlSpot> _generateSecurityAlertSpots() {
+    final now = DateTime.now();
+    final startTime = _getStartTime(now);
+    final binSize = _binSizes[timeFrame]!;
+    final binSizeMs = binSize.inMilliseconds;
+    final startMs = startTime.millisecondsSinceEpoch;
+    final endMs = now.millisecondsSinceEpoch;
+
+    final filteredLogs = securitySensorData.where((log) {
+      if (log['recorded_at'] == null || log['alerts'] == null) return false;
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        return !recordedAt.isBefore(startTime) && !recordedAt.isAfter(now);
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    final totalBins = ((endMs - startMs) / binSizeMs).ceil();
+    final Map<int, List<double>> bins = {};
+    for (int i = 0; i < totalBins; i++) {
+      final binKey = startMs + (i * binSizeMs);
+      bins[binKey] = [];
+    }
+
+    for (var log in filteredLogs) {
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        final timestampMs = recordedAt.millisecondsSinceEpoch;
+        final relativeMs = timestampMs - startMs;
+        final binIndex = (relativeMs / binSizeMs).floor();
+        final binKey = startMs + (binIndex * binSizeMs);
+        if (bins.containsKey(binKey)) {
+          final alerts = (log['alerts'] as num?)?.toDouble() ?? 0.0;
+          bins[binKey]!.add(alerts);
+        }
+      } catch (e) {
+        // Skip invalid entries
+      }
+    }
+
+    final List<FlSpot> spots = [];
+    bins.forEach((binKey, values) {
+      final totalAlerts = values.isNotEmpty ? values.reduce((a, b) => a + b) : 0.0;
+      final binMidMs = binKey + (binSizeMs / 2);
+      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble();
+      spots.add(FlSpot(xValue, totalAlerts));
+    });
+
+    spots.sort((a, b) => a.x.compareTo(b.x));
+    return spots;
+  }
+
   void _changeTimeFrame(String newTimeFrame) {
     if (timeFrame != newTimeFrame) {
       setState(() {
@@ -765,15 +898,17 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-  double _getMaxY(List<FlSpot> spots, {bool isEnergy = false, bool isTemperature = false, bool isHumidity = false}) {
+  double _getMaxY(List<FlSpot> spots, {bool isEnergy = false, bool isTemperature = false, bool isHumidity = false, bool isSecurity = false}) {
     if (spots.isEmpty) {
-      if (isTemperature) return 50.0; // Default max temperature
-      if (isHumidity) return 100.0; // Default max humidity
+      if (isTemperature) return 50.0;
+      if (isHumidity) return 100.0;
+      if (isSecurity) return 10.0; // Default max for security alerts
       return isEnergy ? 0.01 : 100.0;
     }
     final maxY = spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b);
     if (isTemperature) return (maxY * 1.2).ceilToDouble();
     if (isHumidity) return (maxY * 1.2).ceilToDouble();
+    if (isSecurity) return (maxY * 1.2).ceilToDouble();
     return isEnergy ? (maxY < 0.01 ? 0.01 : (maxY * 1.2)) : (maxY * 1.2).ceilToDouble();
   }
 
@@ -824,7 +959,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-
   Future<void> _navigateToMaintenanceManagement() async {
     String userRole = 'Client';
     try {
@@ -841,7 +975,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         }
       } else if (response.statusCode == 401) {
         if (await _refreshToken()) {
-          return _navigateToMaintenanceManagement(); // Retry with new token
+          return _navigateToMaintenanceManagement();
         }
       }
     } catch (e) {
@@ -871,8 +1005,9 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     final startTime = _getStartTime(now);
     final powerSpots = _generatePowerSpots();
     final energySpots = _generateEnergySpots();
-    final temperatureSpots = _generateTemperatureSpots(); // New: Temperature trend
-    final humiditySpots = _generateHumiditySpots(); // New: Humidity trend
+    final temperatureSpots = _generateTemperatureSpots();
+    final humiditySpots = _generateHumiditySpots();
+    final securityAlertSpots = _generateSecurityAlertSpots();
     String chartSuffix = '';
     if (timeFrame == 'daily') {
       chartSuffix = ' (Last 24 Hours)';
@@ -997,6 +1132,19 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                 maxY: _getMaxY(humiditySpots, isHumidity: true),
               ),
               const SizedBox(height: 16),
+              AnalyticsWidgets.buildSecurityChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                securityAlertSpots: securityAlertSpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(securityAlertSpots, isSecurity: true),
+              ),
+              const SizedBox(height: 16),
               AnalyticsWidgets.buildStatisticsCard(
                 scopeTitle: _getScopeTitle(),
                 summaryData: summaryData,
@@ -1008,6 +1156,11 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
               AnalyticsWidgets.buildHvacStatusCard(
                 scopeTitle: _getScopeTitle(),
                 hvacData: hvacData,
+              ),
+              const SizedBox(height: 16),
+              AnalyticsWidgets.buildSecurityStatusCard(
+                scopeTitle: _getScopeTitle(),
+                securityData: securityData,
               ),
             ],
           ),
@@ -1041,7 +1194,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
               );
               break;
             case 'analytics':
-            // Already on analytics screen
               break;
             default:
               break;

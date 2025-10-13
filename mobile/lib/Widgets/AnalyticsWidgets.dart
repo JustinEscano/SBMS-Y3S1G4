@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class AnalyticsWidgets {
-  // Error Banner Widget
   static Widget buildErrorBanner(String errorMessage) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -21,7 +20,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Overview Card Widget
   static Widget buildOverviewCard(String scopeTitle, String timeFrame) {
     return Card(
       elevation: 2,
@@ -35,14 +33,14 @@ class AnalyticsWidgets {
                 Icon(Icons.analytics, color: Colors.teal[700], size: 28),
                 const SizedBox(width: 12),
                 Text(
-                  '$scopeTitle Energy Overview',
+                  '$scopeTitle Analytics Overview',
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              'Analyze energy consumption and cost trends over $timeFrame intervals',
+              'Analyze energy, HVAC, and security trends over $timeFrame intervals',
               style: TextStyle(color: Colors.grey[600]),
             ),
           ],
@@ -51,7 +49,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Time Frame Selection Widget
   static Widget buildTimeFrameSelector(String currentTimeFrame, Function(String) onTimeFrameChanged) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -81,7 +78,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Scope Selection Widget
   static Widget buildScopeSelector(String currentScope, Function(String) onScopeChanged) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -111,7 +107,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Room Selection Dropdown Widget
   static Widget buildRoomSelector({
     required String? selectedRoomId,
     required List<dynamic> rooms,
@@ -133,7 +128,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Equipment Selection Dropdown Widget
   static Widget buildEquipmentSelector({
     required String? selectedComponentId,
     required List<dynamic> equipment,
@@ -159,7 +153,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Power Consumption Chart Widget
   static Widget buildPowerChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -264,7 +257,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Energy Consumption Chart Widget
   static Widget buildEnergyChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -369,7 +361,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Temperature Trend Chart Widget
   static Widget buildTemperatureChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -474,7 +465,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // Humidity Trend Chart Widget
   static Widget buildHumidityChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -579,7 +569,110 @@ class AnalyticsWidgets {
     );
   }
 
-  // Statistics Card Widget
+  static Widget buildSecurityChart({
+    required String scopeTitle,
+    required String chartSuffix,
+    required List<FlSpot> securityAlertSpots,
+    required String timeFrame,
+    required DateTime startTime,
+    required double maxX,
+    required double? interval,
+    required Function(double, String, DateTime) formatTimeAxis,
+    required Function(double, String) shouldShowLabel,
+    required double maxY,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$scopeTitle Security Alerts Trend$chartSuffix',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(show: true),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 40,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            value.toInt().toString(),
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        interval: interval,
+                        getTitlesWidget: (value, meta) {
+                          if (!shouldShowLabel(value, timeFrame)) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              formatTimeAxis(value, timeFrame, startTime),
+                              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: true),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: securityAlertSpots,
+                      isCurved: true,
+                      color: Colors.red,
+                      barWidth: 2,
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: Colors.red.withOpacity(0.2),
+                      ),
+                      dotData: FlDotData(show: true),
+                    ),
+                  ],
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          return LineTooltipItem(
+                            '${spot.y.toInt()} Alerts\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
+                            const TextStyle(color: Colors.white),
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
+                  minX: 0,
+                  maxX: maxX,
+                  minY: 0,
+                  maxY: maxY,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   static Widget buildStatisticsCard({
     required String scopeTitle,
     required Map<String, dynamic> summaryData,
@@ -595,7 +688,7 @@ class AnalyticsWidgets {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$scopeTitle Energy and Cost Statistics',
+              '$scopeTitle Energy Statistics',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -627,7 +720,6 @@ class AnalyticsWidgets {
     );
   }
 
-  // HVAC Status Card Widget
   static Widget buildHvacStatusCard({
     required String scopeTitle,
     required Map<String, dynamic> hvacData,
@@ -657,15 +749,48 @@ class AnalyticsWidgets {
     );
   }
 
-  // Helper method for building stat rows
+  static Widget buildSecurityStatusCard({
+    required String scopeTitle,
+    required Map<String, dynamic> securityData,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$scopeTitle Security Status',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            _buildStatRow('Active Devices', '${securityData['activeDevices'] ?? 0}/${securityData['totalDevices'] ?? 0}'),
+            _buildStatRow('Alert Count', '${securityData['alertCount'] ?? 0}'),
+            _buildStatRow('System Status', securityData['status']?.toString().toUpperCase() ?? 'OFFLINE'),
+            if (securityData['dataPoints'] != null) ...[
+              _buildStatRow('Data Points', '${securityData['dataPoints']} readings'),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   static Widget _buildStatRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w400)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          Text(
+            value,
+            style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+          ),
         ],
       ),
     );
