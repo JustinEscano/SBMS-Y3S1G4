@@ -1,10 +1,10 @@
-// TopBar.tsx - Refactored to use useUser hook
 import React, { useEffect, useRef, useState } from "react";
 import "./TopBar.css";
 import { useNavigate } from "react-router-dom";
 import ModalLogout from "./ModalLogout";
-import { useAuth } from "../context/AuthContext"; // Adjust path
-import { useUser } from "../hooks/useUser"; // Adjust path
+import { useAuth } from "../context/AuthContext";
+import { useUser } from "../hooks/useUser";
+import { userService } from "../services/userService";
 
 type TopBarProps = {
   collapsed: boolean;
@@ -15,41 +15,83 @@ type TopBarProps = {
 
 const TopBar: React.FC<TopBarProps> = ({
   collapsed,
-  darkMode,
-  setDarkMode,
   handleLogout,
 }) => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const { token } = useAuth();
-  const { user, loading } = useUser(token); // Use hook for latest user data
+  const { user, loading, clearUser } = useUser(token);
+  const [profilePic, setProfilePic] = useState<string | File | undefined>(undefined);
 
   const menuRef = useRef<HTMLDivElement>(null);
+  const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
+  // ✅ Convert different picture formats into usable src
+  const getAvatarSrc = (profilePic?: string | File | null) => {
+    if (!profilePic) return undefined;
+
+    if (typeof profilePic === "string") {
+      const trimmed = profilePic.trim();
+      if (!trimmed) return undefined;
+      return trimmed.startsWith("http") ? trimmed : `${BACKEND_URL}${trimmed}`;
+    }
+
+    try {
+      return URL.createObjectURL(profilePic);
+    } catch (err) {
+      console.error("Failed to create object URL for profile file", err);
+      return undefined;
+    }
+  };
+
+  // ✅ Fetch user profile picture
+  useEffect(() => {
+    const fetchProfilePic = async () => {
+      if (token) {
+        try {
+          const profileResponse = await userService.getProfile();
+          setProfilePic(profileResponse.profile?.profile_picture || undefined);
+        } catch (err) {
+          console.error("Failed to fetch profile picture:", err);
+          setProfilePic(undefined);
+        }
+      }
+    };
+    fetchProfilePic();
+  }, [token]);
 
   const handleConfirmLogout = () => {
+    clearUser();
     setLogoutModalOpen(false);
     handleLogout();
   };
 
   useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
     };
-    const onEsc = (e: KeyboardEvent) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setDropdownOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onEsc);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
     return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onEsc);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
     };
   }, []);
 
   const getInitial = (name: string) => name.charAt(0).toUpperCase();
+
+  const avatarContent = () => {
+    if (loading) return <div className="avatar-circle">?</div>;
+    const src = getAvatarSrc(profilePic || user?.profile_picture);
+    if (src) return <img src={src} alt="Profile" className="avatar-circle" />;
+    return <div className="avatar-circle">{getInitial(user?.username ?? "G")}</div>;
+  };
 
   return (
     <header className={`topbar ${collapsed ? "collapsed" : ""}`}>
@@ -61,25 +103,21 @@ const TopBar: React.FC<TopBarProps> = ({
         <div className="profile-dropdown" ref={menuRef}>
           <div
             className="profile-button"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => setDropdownOpen((prev) => !prev)}
           >
-            <div className="avatar-circle">
-              {loading ? "?" : getInitial(user?.username || "Guest")}
-            </div>
+            {avatarContent()}
             <span className="topbar-user">
-              {loading ? "Loading..." : (user?.username ?? "Guest")} ▾
+              {loading ? "Loading..." : user?.username ?? "Guest"} ▾
             </span>
           </div>
 
           {dropdownOpen && (
             <div className="dropdown-menu">
               <div className="dropdown-header">
-                <div className="avatar-large">
-                  {loading ? "?" : getInitial(user?.username || "Guest")}
-                </div>
+                {avatarContent()}
                 <div>
-                  <h4>{loading ? "Loading..." : (user?.username ?? "Guest")}</h4>
-                  <small>ID: {user?.id ?? "N/A"}</small>
+                  <h4>{user?.username ?? "Guest"}</h4>
+                  <small>{user?.email ?? "No email"}</small>
                 </div>
               </div>
 

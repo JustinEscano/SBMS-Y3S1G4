@@ -401,3 +401,40 @@
     justify-content: center;
   }
 }
+
+.comments-log {
+  max-height: 250px; /* adjust as needed */
+  overflow-y: auto;  /* enables vertical scroll */
+  padding: 10px;
+  background-color: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #888 #f1f1f1; /* Firefox */
+  color: #1a202c;
+}
+
+/* Optional: custom scroll bar for WebKit browsers */
+.comments-log::-webkit-scrollbar {
+  width: 8px;
+}
+
+.comments-log::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+.comments-log::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 8px;
+}
+
+.comments-log::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+.comment-entry {
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+}

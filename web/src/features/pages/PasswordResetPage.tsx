@@ -1,7 +1,6 @@
 // PasswordResetPage.tsx - Fixed TypeScript errors: Cast verifyOTP response to OTPResponse and use it to suppress unused warning
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { requestOTPPasswordReset, verifyOTP, verifyOTPPasswordReset } from '../services/authService.tsx'; // Add verifyOTP import
 import { Link } from 'react-router-dom';
 import '../pages/LoginScreen.css'; // Reuse the same CSS
@@ -34,7 +33,6 @@ function PasswordResetScreen() {
   const [stars, setStars] = useState<Star[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth(); // If auto-login after reset
 
   // Generate stars randomly on mount (reuse from LoginScreen)
   useEffect(() => {
@@ -119,10 +117,7 @@ function PasswordResetScreen() {
       // Now reset with verified OTP and new password
       const response = await verifyOTPPasswordReset(email, otp, newPassword) as ResetResponse;
       setSuccess('Password reset successfully! You can now log in.');
-      // Clear OTP after success
       setOtp('');
-      // Optional: Auto-login if response includes tokens
-        // Redirect to login after delay
       setTimeout(() => navigate('/login'), 2000)
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to reset password. Please try again.');

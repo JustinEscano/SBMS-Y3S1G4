@@ -65,7 +65,6 @@
   overflow: hidden;
   display: -webkit-box; /* ✅ required for line clamp */
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1; /* ✅ number of lines before ellipsis */
   text-overflow: ellipsis;
 }
 
@@ -84,7 +83,6 @@
   overflow: hidden;
   display: -webkit-box; /* ✅ required for line clamp */
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3; /* ✅ number of lines before ellipsis */
   text-overflow: ellipsis;
   height: 65px;
 }
