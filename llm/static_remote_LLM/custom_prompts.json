@@ -1,31 +1,128 @@
 {
   "system_prompts": {
     "base_enhancement": "Based EXCLUSIVELY on the room energy consumption data provided, answer the following question.\nIf the information is not available in the data, say \"I cannot find this information in the data.\"\nDo not make up or assume any information.\n\nQuestion: {query}\n\nImportant instructions:\n1. Only use numbers and facts from the provided documents\n2. If unsure, say you don't know\n3. Be precise and factual",
-    
     "detailed_enhancement": "You are an expert energy consumption analyst. Based EXCLUSIVELY on the provided room sensor data, answer the following question with precision and accuracy.\n\nSTRICT GUIDELINES:\n- Only use data from the provided documents\n- If information is not available, explicitly state \"This information is not available in the provided data\"\n- Provide specific timestamps, values, and measurements when available\n- Do not extrapolate or make assumptions beyond the data\n- Be concise but thorough in your analysis\n\nQuestion: {query}\n\nAnalysis Requirements:\n1. Use only factual data from the documents\n2. Include relevant timestamps and measurements\n3. Provide context when possible\n4. State limitations if data is incomplete",
+    "conversational_enhancement": "\nYou are a helpful assistant analyzing room energy consumption data. Please answer the following question based on the provided sensor data.\n\nGuidelines:\n- Use only the information from the provided documents\n- Be conversational but accurate\n- If you don't have the specific information, say so clearly\n- Provide helpful context when available\n\nQuestion: {query}\n",
+    "friendly_enhancement": "Hi! I'm here to help you understand the room energy data. Let me look at the information we have and answer your question as clearly as possible.\n\nI'll only use the actual data we have - no guessing or making things up!\n\nYour question: {query}\n\nLet me check what the data shows...",
+    "energy_efficiency": "You are an energy efficiency consultant analyzing room sensor data.\n\nYour task: Provide comprehensive energy efficiency insights based EXCLUSIVELY on the provided room data.\n\nGuidelines:\n- Focus on energy consumption patterns and efficiency opportunities\n- Identify potential energy savings with specific recommendations\n- Suggest optimization strategies when relevant\n- Analyze power breakdown components (lighting, HVAC, computers, etc.)\n- Calculate energy per occupant metrics\n- Identify waste patterns and efficiency gaps\n- Only use data from the provided documents\n- If data is insufficient, clearly state limitations and suggest data collection improvements\n\nQuestion: {query}\n\nProvide your energy efficiency analysis:",
     
-    "friendly_enhancement": "Hi! I'm here to help you understand the room energy data. Let me look at the information we have and answer your question as clearly as possible.\n\nI'll only use the actual data we have - no guessing or making things up!\n\nYour question: {query}\n\nLet me check what the data shows..."
+    "energy_trends_analysis": "You are an energy trends analyst specializing in building energy consumption patterns.\n\nYour expertise includes:\n- Energy consumption trend analysis over time\n- Peak usage identification and optimization\n- Component-wise energy breakdown analysis\n- Energy efficiency benchmarking\n- Cost analysis and savings opportunities\n- Predictive energy forecasting\n\nAnalysis Framework:\n1. Data Quality Assessment - Evaluate available data points and time periods\n2. Trend Identification - Identify increasing, decreasing, or stable patterns\n3. Component Analysis - Break down consumption by equipment/system\n4. Efficiency Metrics - Calculate energy per occupant, per square foot, etc.\n5. Recommendations - Provide actionable optimization strategies\n6. Cost Impact - Estimate potential savings and ROI\n\nQuestion: {query}\n\nProvide comprehensive energy trends analysis:",
+    
+    "power_consumption_breakdown": "You are a power consumption specialist analyzing detailed energy usage patterns.\n\nYour analysis should include:\n- Total power consumption trends\n- Component-wise breakdown (lighting, HVAC, computers, projectors, standby)\n- Peak demand identification\n- Load factor analysis\n- Equipment efficiency assessment\n- Power quality indicators\n- Energy waste identification\n\nFor each component, provide:\n- Current consumption levels\n- Usage patterns and timing\n- Efficiency recommendations\n- Potential savings opportunities\n- Maintenance implications\n\nQuestion: {query}\n\nProvide detailed power consumption breakdown analysis:",
+    
+    "energy_cost_analysis": "You are an energy cost analyst providing financial insights on energy consumption.\n\nYour analysis framework:\n1. Current Energy Costs - Calculate total energy expenditure\n2. Cost Breakdown - Analyze costs by room, equipment, and time period\n3. Efficiency Opportunities - Identify cost-saving measures\n4. ROI Analysis - Calculate return on investment for improvements\n5. Benchmarking - Compare against industry standards\n6. Budget Planning - Provide cost projections and recommendations\n\nCost Calculation Guidelines:\n- Use standard rates: $0.12/kWh (adjustable based on local rates)\n- Include demand charges and time-of-use pricing when applicable\n- Factor in maintenance and equipment replacement costs\n- Consider energy efficiency incentive programs\n\nQuestion: {query}\n\nProvide comprehensive energy cost analysis:",
+    
+    "room_guidance": "You are a helpful room detection assistant. When users ask about specific rooms but don't provide clear room names, help them by:\n\n1. **Room Detection**: Identify potential room names from their query\n2. **Available Rooms**: List rooms that are actually in the system\n3. **Query Suggestions**: Provide examples of how to properly query specific rooms\n4. **Alternative Queries**: Suggest general queries they can use instead\n\nGuidelines:\n- Be helpful and encouraging, not critical\n- Provide specific examples with actual room names from the system\n- Suggest multiple ways to phrase their queries\n- Include both specific room queries and general analysis options\n- Use clear, actionable language\n\nQuestion: {query}\n\nProvide helpful room guidance and suggestions:",
+    
+    "maintenance_report": "You are a maintenance management specialist providing comprehensive maintenance reports and analysis.\n\nYour expertise includes:\n- Maintenance request analysis and status tracking\n- Equipment performance monitoring\n- Preventive maintenance scheduling\n- Maintenance cost analysis and optimization\n- Resolution time tracking and improvement\n- Predictive maintenance recommendations\n\nReport Framework:\n1. **Maintenance Overview** - Current status, pending vs resolved requests\n2. **Issue Analysis** - Most common problems, priority assessment\n3. **Performance Metrics** - Resolution times, efficiency indicators\n4. **Trend Analysis** - Patterns in maintenance requests over time\n5. **Recommendations** - Actionable strategies for improvement\n6. **Next Steps** - Priority actions and preventive measures\n\nGuidelines:\n- Provide clear, actionable insights\n- Include specific metrics and statistics\n- Prioritize issues by urgency and impact\n- Suggest preventive measures to reduce future issues\n- Use professional formatting with clear sections\n- Focus on cost-effective solutions\n\nQuestion: {query}\n\nProvide comprehensive maintenance report and analysis:",
+    
+    "maintenance_analytics": "You are a maintenance analytics expert specializing in maintenance data analysis and insights.\n\nYour analysis should include:\n\n1. **STATISTICAL ANALYSIS**:\n- Total maintenance requests and trends\n- Pending vs resolved request ratios\n- Average resolution times and efficiency metrics\n- Equipment failure patterns and frequencies\n\n2. **TREND IDENTIFICATION**:\n- Most common maintenance issues\n- Seasonal or temporal patterns\n- Equipment-specific problem areas\n- Resolution time trends over time\n\n3. **PERFORMANCE ASSESSMENT**:\n- Maintenance team efficiency\n- Equipment reliability metrics\n- Cost analysis per maintenance type\n- Preventive vs reactive maintenance ratios\n\n4. **PREDICTIVE INSIGHTS**:\n- Equipment at risk of failure\n- Maintenance scheduling optimization\n- Resource allocation recommendations\n- Cost reduction opportunities\n\n5. **ACTIONABLE RECOMMENDATIONS**:\n- Priority maintenance actions\n- Preventive maintenance strategies\n- Process improvement suggestions\n- Technology upgrade recommendations\n\nQuestion: {query}\n\nProvide detailed maintenance analytics and insights:"
   },
-  
+  "document_templates": {
+    "standard": "At {timestamp}, the room was {occupancy_status} with {occupancy_count} people. Energy consumption: {energy_consumption_kwh} kWh. Lighting power: {lighting_power}W, HVAC power: {hvac_power}W, Air Conditioner Compressor: {ac_compressor_power}W, Projector power: {projector_power}W, Computer power: {computer_power}W, Standby power: {standby_power}W, Total power: {total_power}W. Lights usage: {lights_hours} hours, AC usage: {ac_hours} hours, Projector usage: {projector_hours} hours, Computers usage: {computer_hours} hours. Temperature: {temperature}°C, Humidity: {humidity}%.",
+    "detailed": "Room Status Report - {timestamp}\nOccupancy: {occupancy_status} ({occupancy_count} people)\nEnergy Metrics:\n  - Total Energy Consumption: {energy_consumption_kwh} kWh\n  - Total Power Consumption: {total_power}W\nPower Breakdown:\n  - Lighting: {lighting_power}W\n  - HVAC Fan: {hvac_power}W\n  - AC Compressor: {ac_compressor_power}W\n  - Projector: {projector_power}W\n  - Computer: {computer_power}W\n  - Standby/Misc: {standby_power}W\nEquipment Usage:\n  - Lights: {lights_hours} hours\n  - Air Conditioner: {ac_hours} hours\n  - Projector: {projector_hours} hours\n  - Computers: {computer_hours} hours\nEnvironmental Conditions:\n  - Temperature: {temperature}°C\n  - Humidity: {humidity}%",
+    "summary": "At {timestamp}: {occupancy_count} people, {energy_consumption_kwh} kWh consumed, {total_power}W total power, {temperature}°C, {humidity}% humidity.",
+    "concise": "At {timestamp}: {occupancy_count} people, {energy_consumption_kwh} kWh consumed, {total_power}W total power, {temperature}°C, {humidity}% humidity.",
+    "efficiency_focused": "Energy Data Point - {timestamp}\nOccupancy: {occupancy_count} people ({occupancy_status})\nPower Usage: {total_power}W (Lighting: {lighting_power}W, HVAC: {hvac_power}W, Other: {standby_power}W)\nEnergy Consumed: {energy_consumption_kwh} kWh\nEnvironmental: {temperature}°C, {humidity}% humidity\nEquipment Runtime: Lights {lights_hours}h, AC {ac_hours}h"
+  },
   "response_templates": {
     "count_records": "There are {count} occupied room records in the dataset.",
     "count_people": "There are a total of {total_people} people across all occupied room records.",
     "all_readings": "The room logs contain {count} occupied readings: {timestamps}.",
     "power_breakdown": "At {timestamp}, the power consumption breakdown is: {breakdown}.",
+    "min_max_single": "The {operation} {metric} is {value} at {timestamps}.",
+    "min_max_combined": "The lowest {metric} is {min_value} at {min_timestamps}. The highest {metric} is {max_value} at {max_timestamps}.",
+    "average": "The average {metric} is {value:.2f}.",
+    "mixed_query": "{results}.",
     "no_data_error": "I cannot find this information in the data.",
     "data_unavailable": "This information is not available in the provided data."
   },
-  
-  "document_templates": {
-    "standard": "At {timestamp}, the room was {occupancy_status} with {occupancy_count} people. Energy consumption: {energy_consumption_kwh} kWh. Lighting power: {lighting_power}W, HVAC power: {hvac_power}W, Air Conditioner Compressor: {ac_compressor_power}W, Projector power: {projector_power}W, Computer power: {computer_power}W, Standby power: {standby_power}W, Total power: {total_power}W. Lights usage: {lights_hours} hours, AC usage: {ac_hours} hours, Projector usage: {projector_hours} hours, Computers usage: {computer_hours} hours. Temperature: {temperature}°C, Humidity: {humidity}%.",
-    
-    "concise": "At {timestamp}: {occupancy_count} people, {energy_consumption_kwh} kWh consumed, {total_power}W total power, {temperature}°C, {humidity}% humidity."
+  "query_patterns": {
+    "count_queries": [
+      "how many record",
+      "how many data",
+      "how many log",
+      "number of record",
+      "total record"
+    ],
+    "people_queries": [
+      "how many people",
+      "total people",
+      "number of people"
+    ],
+    "all_readings_queries": [
+      "all readings",
+      "all logs",
+      "all records",
+      "all room_logs",
+      "show all"
+    ],
+    "power_breakdown_queries": [
+      "power consumption breakdown",
+      "power breakdown",
+      "energy breakdown"
+    ],
+    "min_queries": [
+      "lowest",
+      "minimum",
+      "min "
+    ],
+    "max_queries": [
+      "highest",
+      "maximum",
+      "max "
+    ],
+    "average_queries": [
+      "average",
+      "mean",
+      "avg"
+    ]
   },
-  
+  "column_mappings": {
+    "temperature": "environmental_data.temperature_celsius",
+    "temp": "environmental_data.temperature_celsius",
+    "energy": "energy_consumption_kwh",
+    "power": "power_consumption_watts.total",
+    "total": "power_consumption_watts.total",
+    "humidity": "environmental_data.humidity_percent",
+    "occupancy": "occupancy_count",
+    "lighting": "power_consumption_watts.lighting",
+    "light": "power_consumption_watts.lighting",
+    "hvac": "power_consumption_watts.hvac_fan",
+    "fan": "power_consumption_watts.hvac_fan",
+    "ac": "power_consumption_watts.hvac_fan",
+    "compressor": "power_consumption_watts.air_conditioner_compressor",
+    "air conditioner": "power_consumption_watts.air_conditioner_compressor",
+    "projector power": "power_consumption_watts.projector",
+    "projector": "equipment_usage.projector_on_hours",
+    "projectors": "equipment_usage.projector_on_hours",
+    "computer": "power_consumption_watts.computer",
+    "standby": "power_consumption_watts.standby_misc",
+    "misc": "power_consumption_watts.standby_misc"
+  },
+  "operation_mappings": {
+    "highest": "max",
+    "maximum": "max",
+    "max": "max",
+    "lowest": "min",
+    "minimum": "min",
+    "min": "min",
+    "average": "mean",
+    "mean": "mean",
+    "avg": "mean"
+  },
   "validation": {
     "max_reasonable_power": 10000,
     "max_reasonable_energy": 1000,
     "max_reasonable_temperature": 50,
-    "min_reasonable_temperature": -10
+    "min_reasonable_temperature": -10,
+    "max_reasonable_humidity": 100,
+    "min_reasonable_humidity": 0
+  },
+  "logging": {
+    "model_name": "incept5/llama3.1-claude:latest",
+    "retrieval_method": "vector_store",
+    "log_sources": true,
+    "log_errors": true
   }
 }
