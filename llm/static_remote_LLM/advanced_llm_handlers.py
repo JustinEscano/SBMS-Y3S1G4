@@ -77,6 +77,60 @@ class AdvancedLLMHandlers:
         self.db_adapter = database_adapter
         if self.db_adapter is None:
             logger.warning("No DatabaseAdapter provided - using default cost per kWh and no room-specific billing rates")
+        else:
+            # Build a cache of room name -> id for quick billing lookups
+            try:
+                self._room_name_to_id = {}
+                rooms = self.db_adapter.get_rooms_list()
+                for r in rooms:
+                    name = r.get('name')
+                    rid = r.get('id')
+                    if name and rid:
+                        self._room_name_to_id[name] = rid
+            except Exception as e:
+                logger.warning(f"Unable to cache rooms for billing lookup: {e}")
+                self._room_name_to_id = {}
+
+        # Simple memo cache for (room_id, day) -> php_rate
+        self._billing_rate_cache = {}
+
+    def _get_php_rate_for_time(self, room_name: str, timestamp: Any) -> float:
+        """Return PHP rate per kWh for a room at timestamp, with fallbacks."""
+        # Default fallback: convert configured USD to PHP
+        default_php = self.insights_config.get("default_cost_per_kwh", 0.15) * 56
+        if self.db_adapter is None or timestamp is None:
+            return default_php
+
+        try:
+            ts = pd.to_datetime(timestamp, errors='coerce')
+            if pd.isna(ts):
+                return default_php
+            day_key = ts.strftime('%Y-%m-%d')
+            room_id = self._room_name_to_id.get(room_name)
+            cache_key = (room_id or 'GLOBAL', day_key)
+            if cache_key in self._billing_rate_cache:
+                return self._billing_rate_cache[cache_key]
+
+            # Prefer room-specific, else global (room NULL)
+            rates_df = self.db_adapter.get_billing_rates_dataframe(room_id=room_id, active_at=ts)
+            if rates_df is None or rates_df.empty:
+                rates_df = self.db_adapter.get_billing_rates_dataframe(room_id=None, active_at=ts)
+
+            if rates_df is not None and not rates_df.empty:
+                # Use latest created rate
+                row = rates_df.iloc[0]
+                currency = (row.get('currency') or 'PHP').upper()
+                rate = float(row.get('rate_per_kwh') or 0)
+                php_rate = rate if currency == 'PHP' else rate * 56
+                if php_rate <= 0:
+                    php_rate = default_php
+                self._billing_rate_cache[cache_key] = php_rate
+                return php_rate
+
+            return default_php
+        except Exception as e:
+            logger.warning(f"Billing rate lookup failed, using default: {e}")
+            return default_php
     
     def _safe_timestamp_conversion(self, timestamp_value) -> str:
         """Safely convert timestamp to string, handling NaT and None values."""
@@ -379,8 +433,13 @@ class AdvancedLLMHandlers:
             return anomalies
         
         # Convert cost to Philippine Pesos (approximately 1 USD = 56 PHP)
-        cost_per_kwh_usd = self.insights_config.get("default_cost_per_kwh", 0.15)
-        cost_per_kwh_php = cost_per_kwh_usd * 56
+        # Determine billing rate (PHP) once per group using first valid timestamp
+        first_ts = None
+        if 'timestamp' in df.columns:
+            valid_ts = df['timestamp'].dropna()
+            if len(valid_ts) > 0:
+                first_ts = valid_ts.iloc[0]
+        cost_per_kwh_php = self._get_php_rate_for_time(room, first_ts)
         
         for idx, row in df.iterrows():
             energy = row["energy_consumption_kwh"]
