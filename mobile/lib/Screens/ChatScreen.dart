@@ -36,6 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
     AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
     _llmService = LLMService(); // Updated to use AuthService-managed tokens
     _loadConversationHistory();
+    _checkLLMHealth(); // Optional: Add health check
   }
 
   Future<bool> _refreshToken() async {
@@ -133,6 +134,17 @@ class _ChatScreenState extends State<ChatScreen> {
         conversationId: chatProvider.currentConversationId,
       ));
       _scrollToBottom();
+    }
+  }
+
+  Future<void> _checkLLMHealth() async {
+    try {
+      final health = await _llmService.getHealth();
+      // You can add UI update here if needed, e.g., show status
+      print('LLM Health: ${health['status']}');
+    } catch (e) {
+      Provider.of<ChatProvider>(context, listen: false)
+          .setError('LLM Health check failed: $e');
     }
   }
 
