@@ -173,7 +173,7 @@ class DashboardScreenWidgets {
     );
   }
 
-  // Sensor Card Widget
+  // Sensor Card Widget (removed light_detection display)
   static Widget buildSensorCard(Map<String, dynamic> sensorData) {
     return Card(
       elevation: 3,
@@ -304,20 +304,13 @@ class DashboardScreenWidgets {
               children: [
                 Expanded(
                   child: _buildSensorValue(
-                    'Light Detection',
-                    sensorData['light_detection'] == true ? 'Detected' : 'Not Detected',
-                    Icons.light_mode,
-                    sensorData['light_detection'] == true ? Colors.amber : Colors.grey,
-                  ),
-                ),
-                Expanded(
-                  child: _buildSensorValue(
                     'Motion',
                     sensorData['motion_detected'] == true ? 'Detected' : 'Not Detected',
                     Icons.motion_photos_on,
                     sensorData['motion_detected'] == true ? Colors.orange : Colors.grey,
                   ),
                 ),
+                const Expanded(child: SizedBox()),
               ],
             ),
             const SizedBox(height: 8),
@@ -369,7 +362,6 @@ class DashboardScreenWidgets {
     required BuildContext context,
     required String systemType,
     required Map<String, dynamic> hvacData,
-    required Map<String, dynamic> lightingData,
     required Map<String, dynamic> securityData,
     required Map<String, dynamic> energyData,
     required List<dynamic> maintenanceRequests,
@@ -382,7 +374,6 @@ class DashboardScreenWidgets {
         child: _buildSystemDetailsContent(
           systemType: systemType,
           hvacData: hvacData,
-          lightingData: lightingData,
           securityData: securityData,
           energyData: energyData,
           maintenanceRequests: maintenanceRequests,
@@ -506,7 +497,6 @@ class DashboardScreenWidgets {
     required VoidCallback onRoomManagement,
     required VoidCallback onEquipmentManagement,
     required VoidCallback onMaintenanceManagement,
-    required VoidCallback onQRScanner,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -553,13 +543,6 @@ class DashboardScreenWidgets {
             subtitle: 'Create and manage maintenance requests',
             color: Colors.indigo,
             onTap: onMaintenanceManagement,
-          ),
-          buildManagementTile(
-            icon: Icons.qr_code_scanner,
-            title: 'QR Code Scanner',
-            subtitle: 'Scan equipment QR codes for quick access',
-            color: Colors.deepPurple,
-            onTap: onQRScanner,
           ),
           const SizedBox(height: 10),
         ],
@@ -619,7 +602,6 @@ class DashboardScreenWidgets {
   static Widget _buildSystemDetailsContent({
     required String systemType,
     required Map<String, dynamic> hvacData,
-    required Map<String, dynamic> lightingData,
     required Map<String, dynamic> securityData,
     required Map<String, dynamic> energyData,
     required List<dynamic> maintenanceRequests,
@@ -636,17 +618,6 @@ class DashboardScreenWidgets {
             _buildDetailRow('Active Zones', '${hvacData['activeZones']}/${hvacData['totalZones']}'),
             _buildDetailRow('Energy Efficiency', '${hvacData['energyEfficiency']}%'),
             _buildDetailRow('System Status', hvacData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
-          ],
-        );
-      case 'Lighting':
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildDetailRow('Total Devices', '${lightingData['totalDevices']}'),
-            _buildDetailRow('Lights Detected', '${lightingData['detectedLights']}/${lightingData['totalDevices']}'),
-            _buildDetailRow('Energy Saving', '${lightingData['energySaving']}%'),
-            _buildDetailRow('System Status', lightingData['status']?.toString().toUpperCase() ?? 'UNKNOWN'),
           ],
         );
       case 'Security':

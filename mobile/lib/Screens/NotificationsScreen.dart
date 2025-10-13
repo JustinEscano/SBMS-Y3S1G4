@@ -286,7 +286,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  // New method: Navigate to maintenance request
+  // Navigate to maintenance request
   Future<void> _navigateToMaintenanceRequest(String? maintenanceRequestId) async {
     if (maintenanceRequestId == null || maintenanceRequestId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -303,7 +303,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
       // Fetch the maintenance request by ID
       final response = await http.get(
-        Uri.parse('${ApiConfig.maintenanceRequest}/$maintenanceRequestId/'),
+        Uri.parse('${ApiConfig.maintenanceRequest}$maintenanceRequestId/'),
         headers: headers,
       ).timeout(const Duration(seconds: 10));
 
@@ -458,8 +458,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.notifications_none,
-                  size: 64, color: Colors.grey),
+              Icon(Icons.notifications_none, size: 64, color: Colors.grey),
               SizedBox(height: 16),
               Text(
                 'No notifications found',
@@ -476,15 +475,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
-                  onPressed: isLoadingMore
-                      ? null
-                      : () => _loadNotifications(loadMore: true),
+                  onPressed: isLoadingMore ? null : () => _loadNotifications(loadMore: true),
                   child: isLoadingMore
                       ? const SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
                       : const Text('Load More'),
                 ),
@@ -494,9 +490,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             final hasMaintenance = _hasMaintenanceRequest(notification);
 
             return Card(
-              color: notification['read']
-                  ? Colors.grey[100]
-                  : Colors.white,
+              color: notification['read'] ? Colors.grey[100] : Colors.white,
               elevation: notification['read'] ? 1 : 3,
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
@@ -507,9 +501,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 title: Text(
                   notification['title'] ?? 'No Title',
                   style: TextStyle(
-                    fontWeight: notification['read']
-                        ? FontWeight.normal
-                        : FontWeight.bold,
+                    fontWeight: notification['read'] ? FontWeight.normal : FontWeight.bold,
                   ),
                 ),
                 subtitle: Column(
@@ -523,8 +515,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Received: ${_formatDateTime(notification['created_at'])}',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     if (hasMaintenance) ...[
                       const SizedBox(height: 4),
@@ -551,16 +542,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   children: [
                     if (!notification['read'])
                       IconButton(
-                        icon: const Icon(Icons.mark_email_read,
-                            color: Colors.blue),
-                        onPressed: () =>
-                            _markNotificationRead(notification['id']),
+                        icon: const Icon(Icons.mark_email_read, color: Colors.blue),
+                        onPressed: () => _markNotificationRead(notification['id']),
                       ),
                     IconButton(
-                      icon: const Icon(Icons.delete,
-                          color: Colors.red),
-                      onPressed: () =>
-                          _deleteNotification(notification['id']),
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _deleteNotification(notification['id']),
                     ),
                   ],
                 ),
@@ -928,7 +915,7 @@ class NotificationDetailsScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
 
-            // New: Maintenance Request Navigation Section
+            // Maintenance Request Navigation Section
             if (hasMaintenance) ...[
               const SizedBox(height: 24),
               Container(

@@ -5,7 +5,6 @@ import '../Screens/ProfileScreen.dart';
 import '../Screens/RoomManagementScreen.dart';
 import '../Screens/EquipmentManagementScreen.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
-import '../Screens/QRScannerScreen.dart';
 import '../Screens/NotificationsScreen.dart';
 import '../Screens/ChatScreen.dart';
 import '../Screens/EnergyAnalyticsScreen.dart';
@@ -81,14 +80,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
-  void _navigateToQRScanner() {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    _navigateToScreen(QRScannerScreen(
-      accessToken: widget.accessToken,
-      refreshToken: authService.refreshToken ?? '',
-    ));
-  }
-
   void _navigateToNotifications() {
     final authService = Provider.of<AuthService>(context, listen: false);
     _navigateToScreen(NotificationsScreen(
@@ -146,15 +137,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         context: context,
         systemType: systemType,
         hvacData: provider.hvacData,
-        lightingData: provider.lightingData,
         securityData: provider.securityData,
         energyData: provider.energyData,
         maintenanceRequests: provider.maintenanceRequests,
         equipment: provider.equipment,
         onManage: () {
           Navigator.of(context).pop();
+          final authService = Provider.of<AuthService>(context, listen: false);
+
           if (systemType == 'Maintenance') {
             _navigateToMaintenanceManagement();
+          } else if (systemType == 'Energy' || systemType == 'HVAC' || systemType == 'Security') {
+            _navigateToScreen(EnergyAnalyticsScreen(
+              accessToken: widget.accessToken,
+              refreshToken: authService.refreshToken ?? '',
+            ));
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('$systemType management coming soon!')),
@@ -174,6 +171,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Smart Building Dashboard'),
         actions: [
@@ -197,10 +195,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onMaintenanceManagement: () {
                     Navigator.pop(context);
                     _navigateToMaintenanceManagement();
-                  },
-                  onQRScanner: () {
-                    Navigator.pop(context);
-                    _navigateToQRScanner();
                   },
                 ),
               );
@@ -279,18 +273,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Expanded(
                     child: DashboardScreenWidgets.buildSystemCard(
-                      title: 'Lighting',
-                      value: '${provider.lightingData['detectedLights'] ?? 0}/${provider.lightingData['totalDevices'] ?? 0}',
-                      subtitle: 'Lights Detected',
-                      icon: Icons.lightbulb,
-                      color: Colors.amber,
-                      status: provider.lightingData['status'] ?? 'normal',
-                      onTap: () => _showSystemDetails('Lighting', provider),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DashboardScreenWidgets.buildSystemCard(
                       title: 'Security',
                       value: '${provider.securityData['activeDevices'] ?? 0}',
                       subtitle: 'Active Devices',
@@ -300,11 +282,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () => _showSystemDetails('Security', provider),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
+                  const SizedBox(width: 16),
                   Expanded(
                     child: DashboardScreenWidgets.buildSystemCard(
                       title: 'Maintenance',
@@ -318,8 +296,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onTap: () => _showSystemDetails('Maintenance', provider),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  const Expanded(child: SizedBox()),
                 ],
               ),
               const SizedBox(height: 24),
@@ -383,15 +359,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Expanded(
                     child: DashboardScreenWidgets.buildActionCard(
-                      title: 'QR Scanner',
-                      icon: Icons.qr_code_scanner,
-                      color: Colors.deepPurple,
-                      onTap: _navigateToQRScanner,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DashboardScreenWidgets.buildActionCard(
                       title: 'ORB Chat',
                       icon: Icons.chat,
                       color: Colors.blue,
@@ -424,11 +391,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToQRScanner,
-        tooltip: 'QR Code Scanner',
-        child: const Icon(Icons.qr_code_scanner),
       ),
       bottomNavigationBar: BottomNavBar(
         onMenuSelection: _handleMenuSelection,
