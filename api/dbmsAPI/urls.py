@@ -16,16 +16,17 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from core.views import CustomTokenObtainPairView
-from rest_framework_simplejwt.views import TokenRefreshView
 from django.urls import path, include
-from core.views import home  
+from core.views.auth_views import CustomTokenObtainPairView, home
+from rest_framework_simplejwt.views import TokenRefreshView
 from django.views.decorators.csrf import csrf_exempt
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
-    path('', home),  
+    path('', home),
     path('admin/', admin.site.urls),
-    path('api/', include('core.urls')),  
+    path('api/', include('core.urls')),
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

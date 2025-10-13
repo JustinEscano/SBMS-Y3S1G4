@@ -5,7 +5,10 @@ import 'package:fl_chart/fl_chart.dart';
 import '../Config/api.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
 import '../Widgets/bottom_navbar.dart';
-import '../Services/auth_service.dart'; // Import AuthService
+import '../Widgets/AnalyticsWidgets.dart';
+import '../Services/auth_service.dart';
+import 'DashboardScreen.dart';
+import 'ChatScreen.dart';// Import AuthService
 
 class EnergyAnalyticsScreen extends StatefulWidget {
   final String accessToken;
@@ -26,6 +29,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   List<dynamic> rooms = [];
   List<dynamic> equipment = [];
   List<dynamic> latestSensorData = [];
+  List<dynamic> hvacSensorData = []; // New: Historical HVAC sensor data
   String? selectedRoomId;
   String? selectedComponentId;
   String selectedScope = 'room';
@@ -38,6 +42,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   Map<String, dynamic> hvacData = {};
   Map<String, List<dynamic>> _cachedSensorLogs = {};
   Map<String, Map<String, dynamic>> _cachedBillingData = {};
+  Map<String, List<dynamic>> _cachedHvacData = {}; // New: Cache for HVAC data
   DateTime? _lastCacheTime;
   String totalCost = '0.00';
   String effectiveRate = '0.00';
@@ -159,7 +164,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   DateTime _getStartTime(DateTime now) {
     switch (timeFrame) {
       case 'daily':
-        return DateTime(now.year, now.month, now.day);
+      // For daily, get yesterday's data (since today's data might not be complete)
+        return now.subtract(Duration(days: 1)).copyWith(
+          hour: 0,
+          minute: 0,
+          second: 0,
+          millisecond: 0,
+          microsecond: 0,
+        );
       case 'weekly':
         return now.subtract(Duration(days: 7)).copyWith(
           hour: 0,
@@ -200,12 +212,67 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
+  // New method: Fetch HVAC sensor data for different time periods
+  Future<void> _loadHvacSensorData(DateTime startTime, DateTime endTime) async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+
+      // Build sensor log URL for HVAC data (DHT22 sensors)
+      String hvacSensorUrl = ApiConfig.sensorLog;
+      List<String> hvacParams = [
+        'timeframe=$timeFrame',
+        'period_start=${startTime.toIso8601String()}Z',
+        'period_end=${endTime.toIso8601String()}Z',
+        'limit=10000',
+        'component_type=dht22', // Only fetch DHT22 (temperature/humidity) data
+        if (selectedRoomId != null) 'room_id=$selectedRoomId',
+        if (selectedComponentId != null) 'component_id=$selectedComponentId',
+      ];
+      hvacSensorUrl += '?' + hvacParams.join('&');
+
+      print('HVAC Sensor Request URL: $hvacSensorUrl');
+
+      final hvacResponse = await http.get(Uri.parse(hvacSensorUrl), headers: headers).timeout(const Duration(seconds: 15));
+
+      print('HVAC Sensor Response Status: ${hvacResponse.statusCode}');
+      print('HVAC Sensor Response Body: ${hvacResponse.body}');
+
+      if (hvacResponse.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _loadHvacSensorData(startTime, endTime);
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else if (hvacResponse.statusCode != 200) {
+        throw Exception('Failed to load HVAC sensor data: ${hvacResponse.statusCode} - ${hvacResponse.reasonPhrase}');
+      }
+
+      final hvacData = json.decode(hvacResponse.body);
+      print('HVAC Sensor Data Response: $hvacData');
+
+      setState(() {
+        hvacSensorData = hvacData is List ? hvacData : [];
+        _cachedHvacData['$selectedScope-$selectedRoomId-$selectedComponentId-$timeFrame'] = hvacSensorData;
+      });
+
+    } catch (e) {
+      print('Error loading HVAC sensor data: $e');
+      setState(() {
+        hvacSensorData = [];
+      });
+    }
+  }
+
   Future<void> loadEnergyData() async {
     setState(() {
       isLoading = true;
       errorMessage = '';
       _cachedSensorLogs.clear();
       _cachedBillingData.clear();
+      _cachedHvacData.clear(); // Clear HVAC cache
       totalCost = '0.00';
       effectiveRate = '0.00';
       hvacData = {};
@@ -222,6 +289,13 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       DateTime now = DateTime.now();
       DateTime startTimeCalc = _getStartTime(now);
       DateTime endTimeCalc = _getEndTime(startTimeCalc);
+
+      print('=== DATE RANGE DEBUG ===');
+      print('Current time: $now');
+      print('Start time: $startTimeCalc');
+      print('End time: $endTimeCalc');
+      print('Timeframe: $timeFrame');
+      print('========================');
 
       String billingUrl = ApiConfig.calculateEnergyCost;
       List<String> params = [
@@ -247,6 +321,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         if (selectedComponentId != null) 'component_id=$selectedComponentId',
       ];
       sensorLogUrl += '?' + sensorParams.join('&');
+
+      // Load HVAC sensor data in parallel
+      await Future.wait([
+        http.get(Uri.parse(sensorLogUrl), headers: headers),
+        Future.value(billingResponse),
+        http.get(Uri.parse(ApiConfig.latestSensorData), headers: headers),
+        _loadHvacSensorData(startTimeCalc, endTimeCalc), // Load HVAC data
+      ]).timeout(const Duration(seconds: 15));
 
       final responses = await Future.wait([
         http.get(Uri.parse(sensorLogUrl), headers: headers),
@@ -342,8 +424,16 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     int activeZones = 0;
     int totalZones = 0;
 
-    if (latestSensorData.isNotEmpty) {
-      final filteredSensors = latestSensorData.where((sensor) {
+    // Use historical HVAC data if available, otherwise fall back to latest data
+    List<dynamic> dataSource = hvacSensorData.isNotEmpty ? hvacSensorData : latestSensorData;
+
+    if (dataSource.isNotEmpty) {
+      final filteredSensors = dataSource.where((sensor) {
+        // For historical data, check if it has temperature/humidity
+        if (hvacSensorData.isNotEmpty) {
+          return sensor['temperature'] != null && sensor['humidity'] != null;
+        }
+        // For latest data, use existing logic
         if (sensor['temperature'] == null || sensor['humidity'] == null) return false;
         if (selectedScope == 'building') return true;
         if (selectedScope == 'all_rooms' && sensor['room_id'] != null) return true;
@@ -381,6 +471,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         'activeZones': activeZones,
         'totalZones': totalZones,
         'status': activeZones > 0 ? 'operational' : 'offline',
+        'dataPoints': hvacSensorData.length, // Add data point count for debugging
       };
     });
   }
@@ -539,6 +630,113 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     return spots;
   }
 
+  // New method: Generate HVAC trend data for charts
+  List<FlSpot> _generateTemperatureSpots() {
+    final now = DateTime.now();
+    final startTime = _getStartTime(now);
+    final binSize = _binSizes[timeFrame]!;
+    final binSizeMs = binSize.inMilliseconds;
+    final startMs = startTime.millisecondsSinceEpoch;
+    final endMs = now.millisecondsSinceEpoch;
+
+    final filteredLogs = hvacSensorData.where((log) {
+      if (log['recorded_at'] == null || log['temperature'] == null) return false;
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        return !recordedAt.isBefore(startTime) && !recordedAt.isAfter(now);
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    final totalBins = ((endMs - startMs) / binSizeMs).ceil();
+    final Map<int, List<double>> bins = {};
+    for (int i = 0; i < totalBins; i++) {
+      final binKey = startMs + (i * binSizeMs);
+      bins[binKey] = [];
+    }
+
+    for (var log in filteredLogs) {
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        final timestampMs = recordedAt.millisecondsSinceEpoch;
+        final relativeMs = timestampMs - startMs;
+        final binIndex = (relativeMs / binSizeMs).floor();
+        final binKey = startMs + (binIndex * binSizeMs);
+        if (bins.containsKey(binKey)) {
+          final temperature = (log['temperature'] as num?)?.toDouble() ?? 0.0;
+          bins[binKey]!.add(temperature);
+        }
+      } catch (e) {
+        // Skip invalid entries
+      }
+    }
+
+    final List<FlSpot> spots = [];
+    bins.forEach((binKey, values) {
+      final avgTemp = values.isNotEmpty ? values.reduce((a, b) => a + b) / values.length : 0.0;
+      final binMidMs = binKey + (binSizeMs / 2);
+      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble();
+      spots.add(FlSpot(xValue, avgTemp));
+    });
+
+    spots.sort((a, b) => a.x.compareTo(b.x));
+    return spots;
+  }
+
+  List<FlSpot> _generateHumiditySpots() {
+    final now = DateTime.now();
+    final startTime = _getStartTime(now);
+    final binSize = _binSizes[timeFrame]!;
+    final binSizeMs = binSize.inMilliseconds;
+    final startMs = startTime.millisecondsSinceEpoch;
+    final endMs = now.millisecondsSinceEpoch;
+
+    final filteredLogs = hvacSensorData.where((log) {
+      if (log['recorded_at'] == null || log['humidity'] == null) return false;
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        return !recordedAt.isBefore(startTime) && !recordedAt.isAfter(now);
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    final totalBins = ((endMs - startMs) / binSizeMs).ceil();
+    final Map<int, List<double>> bins = {};
+    for (int i = 0; i < totalBins; i++) {
+      final binKey = startMs + (i * binSizeMs);
+      bins[binKey] = [];
+    }
+
+    for (var log in filteredLogs) {
+      try {
+        final recordedAt = DateTime.parse(log['recorded_at']);
+        final timestampMs = recordedAt.millisecondsSinceEpoch;
+        final relativeMs = timestampMs - startMs;
+        final binIndex = (relativeMs / binSizeMs).floor();
+        final binKey = startMs + (binIndex * binSizeMs);
+        if (bins.containsKey(binKey)) {
+          final humidity = (log['humidity'] as num?)?.toDouble() ?? 0.0;
+          bins[binKey]!.add(humidity);
+        }
+      } catch (e) {
+        // Skip invalid entries
+      }
+    }
+
+    final List<FlSpot> spots = [];
+    bins.forEach((binKey, values) {
+      final avgHumidity = values.isNotEmpty ? values.reduce((a, b) => a + b) / values.length : 0.0;
+      final binMidMs = binKey + (binSizeMs / 2);
+      final xValue = (binMidMs - startMs) / (1000 * 60 * 60).toDouble();
+      spots.add(FlSpot(xValue, avgHumidity));
+    });
+
+    spots.sort((a, b) => a.x.compareTo(b.x));
+    return spots;
+  }
+
   void _changeTimeFrame(String newTimeFrame) {
     if (timeFrame != newTimeFrame) {
       setState(() {
@@ -567,9 +765,15 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-  double _getMaxY(List<FlSpot> spots, {bool isEnergy = false}) {
-    if (spots.isEmpty) return isEnergy ? 0.01 : 100.0;
+  double _getMaxY(List<FlSpot> spots, {bool isEnergy = false, bool isTemperature = false, bool isHumidity = false}) {
+    if (spots.isEmpty) {
+      if (isTemperature) return 50.0; // Default max temperature
+      if (isHumidity) return 100.0; // Default max humidity
+      return isEnergy ? 0.01 : 100.0;
+    }
     final maxY = spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b);
+    if (isTemperature) return (maxY * 1.2).ceilToDouble();
+    if (isHumidity) return (maxY * 1.2).ceilToDouble();
     return isEnergy ? (maxY < 0.01 ? 0.01 : (maxY * 1.2)) : (maxY * 1.2).ceilToDouble();
   }
 
@@ -620,18 +824,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
 
-  Widget _buildStatRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w400)),
-        ],
-      ),
-    );
-  }
 
   Future<void> _navigateToMaintenanceManagement() async {
     String userRole = 'Client';
@@ -679,6 +871,8 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     final startTime = _getStartTime(now);
     final powerSpots = _generatePowerSpots();
     final energySpots = _generateEnergySpots();
+    final temperatureSpots = _generateTemperatureSpots(); // New: Temperature trend
+    final humiditySpots = _generateHumiditySpots(); // New: Humidity trend
     String chartSuffix = '';
     if (timeFrame == 'daily') {
       chartSuffix = ' (Last 24 Hours)';
@@ -713,116 +907,18 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (errorMessage.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(errorMessage, style: const TextStyle(color: Colors.red))),
-                    ],
-                  ),
-                ),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.analytics, color: Colors.teal[700], size: 28),
-                          const SizedBox(width: 12),
-                          Text(
-                            '${_getScopeTitle()} Energy Overview',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Analyze energy consumption and cost trends over $timeFrame intervals',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                AnalyticsWidgets.buildErrorBanner(errorMessage),
+              AnalyticsWidgets.buildOverviewCard(_getScopeTitle(), timeFrame),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ChoiceChip(
-                    label: const Text('Daily'),
-                    selected: timeFrame == 'daily',
-                    onSelected: (selected) => _changeTimeFrame('daily'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('Weekly'),
-                    selected: timeFrame == 'weekly',
-                    onSelected: (selected) => _changeTimeFrame('weekly'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('Monthly'),
-                    selected: timeFrame == 'monthly',
-                    onSelected: (selected) => _changeTimeFrame('monthly'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                ],
-              ),
+              AnalyticsWidgets.buildTimeFrameSelector(timeFrame, _changeTimeFrame),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ChoiceChip(
-                    label: const Text('Building'),
-                    selected: selectedScope == 'building',
-                    onSelected: (selected) => _changeScope('building'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('All Rooms'),
-                    selected: selectedScope == 'all_rooms',
-                    onSelected: (selected) => _changeScope('all_rooms'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  ChoiceChip(
-                    label: const Text('Room'),
-                    selected: selectedScope == 'room',
-                    onSelected: (selected) => _changeScope('room'),
-                    selectedColor: Colors.teal[100],
-                    backgroundColor: Colors.grey[200],
-                  ),
-                ],
-              ),
+              AnalyticsWidgets.buildScopeSelector(selectedScope, (newScope) => _changeScope(newScope)),
               if (selectedScope == 'room') ...[
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Select Room',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedRoomId,
-                  items: rooms.map<DropdownMenuItem<String>>((room) {
-                    return DropdownMenuItem<String>(
-                      value: room['id'],
-                      child: Text(room['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
+                AnalyticsWidgets.buildRoomSelector(
+                  selectedRoomId: selectedRoomId,
+                  rooms: rooms,
+                  onRoomChanged: (value) {
                     if (value != null) {
                       setState(() {
                         selectedRoomId = value;
@@ -837,269 +933,81 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Select Equipment',
-                    border: OutlineInputBorder(),
-                  ),
-                  value: selectedComponentId,
-                  items: equipment
-                      .where((eq) => eq['room'] == selectedRoomId)
-                      .map<DropdownMenuItem<String>>((eq) {
-                    return DropdownMenuItem<String>(
-                      value: eq['component_id'],
-                      child: Text(eq['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
+                AnalyticsWidgets.buildEquipmentSelector(
+                  selectedComponentId: selectedComponentId,
+                  equipment: equipment,
+                  selectedRoomId: selectedRoomId,
+                  onEquipmentChanged: (value) {
                     if (value != null) {
                       _changeScope('room', newComponentId: value);
                     }
                   },
-                  hint: const Text('All Equipment in Room'),
                 ),
               ],
               const SizedBox(height: 20),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Power Consumption Trend$chartSuffix',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(show: true),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${value.toStringAsFixed(1)} W',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 30,
-                                  interval: interval,
-                                  getTitlesWidget: (value, meta) {
-                                    if (!_shouldShowLabel(value, timeFrame)) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        _formatTimeAxis(value, timeFrame, startTime),
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: true),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: powerSpots,
-                                isCurved: true,
-                                color: Colors.teal,
-                                barWidth: 2,
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Colors.teal.withOpacity(0.2),
-                                ),
-                                dotData: FlDotData(show: true),
-                              ),
-                            ],
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              touchTooltipData: LineTouchTooltipData(
-                                getTooltipItems: (touchedSpots) {
-                                  return touchedSpots.map((spot) {
-                                    return LineTooltipItem(
-                                      '${spot.y.toStringAsFixed(2)} W\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
-                                      const TextStyle(color: Colors.white),
-                                    );
-                                  }).toList();
-                                },
-                              ),
-                            ),
-                            minX: 0,
-                            maxX: maxX,
-                            minY: 0,
-                            maxY: _getMaxY(powerSpots),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildPowerChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                powerSpots: powerSpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(powerSpots),
               ),
               const SizedBox(height: 16),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Energy Consumption Trend$chartSuffix',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 200,
-                        child: LineChart(
-                          LineChartData(
-                            gridData: FlGridData(show: true),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
-                                      '${value.toStringAsFixed(3)} kWh',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 30,
-                                  interval: interval,
-                                  getTitlesWidget: (value, meta) {
-                                    if (!_shouldShowLabel(value, timeFrame)) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        _formatTimeAxis(value, timeFrame, startTime),
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            ),
-                            borderData: FlBorderData(show: true),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: energySpots,
-                                isCurved: true,
-                                color: Colors.green,
-                                barWidth: 2,
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Colors.green.withOpacity(0.2),
-                                ),
-                                dotData: FlDotData(show: true),
-                              ),
-                            ],
-                            lineTouchData: LineTouchData(
-                              enabled: true,
-                              touchTooltipData: LineTouchTooltipData(
-                                getTooltipItems: (touchedSpots) {
-                                  return touchedSpots.map((spot) {
-                                    return LineTooltipItem(
-                                      '${spot.y.toStringAsFixed(3)} kWh\n${_formatTimeAxis(spot.x, timeFrame, startTime)}',
-                                      const TextStyle(color: Colors.white),
-                                    );
-                                  }).toList();
-                                },
-                              ),
-                            ),
-                            minX: 0,
-                            maxX: maxX,
-                            minY: 0,
-                            maxY: _getMaxY(energySpots, isEnergy: true),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildEnergyChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                energySpots: energySpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(energySpots, isEnergy: true),
               ),
               const SizedBox(height: 16),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} Energy and Cost Statistics',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatRow('Total Energy', '${summaryData['total_energy']?.toStringAsFixed(3) ?? '0.000'} kWh'),
-                      _buildStatRow('Average Power', '${summaryData['avg_power']?.toStringAsFixed(1) ?? '0.0'} W'),
-                      _buildStatRow('Peak Power', '${summaryData['peak_power']?.toStringAsFixed(1) ?? '0.0'} W'),
-                      _buildStatRow('Reading Count', '${summaryData['reading_count'] ?? '0'}'),
-                      _buildStatRow('Anomaly Count', '${summaryData['anomaly_count'] ?? '0'}'),
-                      const Divider(),
-                      _buildStatRow('Total Cost', '$totalCost ${billingData['currency'] ?? 'PHP'}'),
-                      _buildStatRow('Effective Rate', '$effectiveRate ${billingData['currency'] ?? 'PHP'}/kWh'),
-                      if (billingData['details']?.isNotEmpty == true) ...[
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Cost Breakdown by Component',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        ...billingData['details'].map<Widget>((detail) {
-                          return _buildStatRow(
-                            detail['component_type'] ?? 'Unknown Component',
-                            '${detail['cost']?.toStringAsFixed(2) ?? '0.00'} ${detail['currency'] ?? 'PHP'} (${detail['total_energy']?.toStringAsFixed(3) ?? '0.000'} kWh)',
-                          );
-                        }).toList(),
-                      ],
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildTemperatureChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                temperatureSpots: temperatureSpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(temperatureSpots, isTemperature: true),
               ),
               const SizedBox(height: 16),
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_getScopeTitle()} HVAC Status',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildStatRow('Average Temperature', '${hvacData['avgTemperature']?.toStringAsFixed(1) ?? '0.0'}°C'),
-                      _buildStatRow('Average Humidity', '${hvacData['avgHumidity']?.toStringAsFixed(1) ?? '0.0'}%'),
-                      _buildStatRow('Active Zones', '${hvacData['activeZones'] ?? 0}/${hvacData['totalZones'] ?? 0}'),
-                      _buildStatRow('System Status', hvacData['status']?.toString().toUpperCase() ?? 'OFFLINE'),
-                    ],
-                  ),
-                ),
+              AnalyticsWidgets.buildHumidityChart(
+                scopeTitle: _getScopeTitle(),
+                chartSuffix: chartSuffix,
+                humiditySpots: humiditySpots,
+                timeFrame: timeFrame,
+                startTime: startTime,
+                maxX: maxX,
+                interval: interval,
+                formatTimeAxis: _formatTimeAxis,
+                shouldShowLabel: _shouldShowLabel,
+                maxY: _getMaxY(humiditySpots, isHumidity: true),
+              ),
+              const SizedBox(height: 16),
+              AnalyticsWidgets.buildStatisticsCard(
+                scopeTitle: _getScopeTitle(),
+                summaryData: summaryData,
+                totalCost: totalCost,
+                effectiveRate: effectiveRate,
+                billingData: billingData,
+              ),
+              const SizedBox(height: 16),
+              AnalyticsWidgets.buildHvacStatusCard(
+                scopeTitle: _getScopeTitle(),
+                hvacData: hvacData,
               ),
             ],
           ),
@@ -1109,26 +1017,31 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         onMenuSelection: (value) {
           switch (value) {
             case 'dashboard':
-              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DashboardScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                  ),
+                ),
+              );
               break;
             case 'maintenance_requests':
               _navigateToMaintenanceManagement();
               break;
             case 'orb_chat':
-              Navigator.pushNamed(
+              Navigator.pushReplacement(
                 context,
-                '/chat',
-                arguments: {
-                  'accessToken': AuthService().accessToken ?? widget.accessToken,
-                  'refreshToken': AuthService().refreshToken ?? widget.refreshToken,
-                },
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    accessToken: AuthService().accessToken ?? widget.accessToken,
+                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                  ),
+                ),
               );
               break;
-            case 'notifications':
-            case 'about':
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${value.replaceAll('_', ' ').toUpperCase()} feature coming soon!')),
-              );
+            case 'analytics':
+            // Already on analytics screen
               break;
             default:
               break;

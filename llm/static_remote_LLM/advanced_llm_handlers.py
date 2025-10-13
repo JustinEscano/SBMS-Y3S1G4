@@ -56,60 +56,11 @@ class AdvancedLLMHandlers:
         self.maintenance_rules = prompts_config.get_all_prompts().get("maintenance_rules", {})
         self.insights_config = prompts_config.get_all_prompts().get("insights_config", {})
     
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Preprocess the DataFrame: Remove duplicates and handle missing columns"""
-        if df.empty:
-            logger.warning("Empty DataFrame provided for preprocessing")
-            return df
-        
-        # Log initial shape
-        logger.info(f"Initial DataFrame shape: {df.shape}")
-        
-        # Handle missing columns with defaults
-        required_columns = {
-            "timestamp": pd.NaT,
-            "occupancy_count": 0,
-            "energy_consumption_kwh": 0.0,
-            "power_consumption_watts.total": 0.0,
-            "environmental_data.temperature_celsius": 0.0,
-            "environmental_data.humidity_percent": 0.0,
-            "equipment_usage.lights_on_hours": 0.0,
-            "equipment_usage.air_conditioner_on_hours": 0.0,
-            "equipment_usage.projector_on_hours": 0.0,
-            "equipment_usage.computer_on_hours": 0.0
-        }
-        for col, default in required_columns.items():
-            if col not in df.columns:
-                logger.warning(f"Missing column '{col}', filling with default value {default}")
-                df[col] = default
-        
-        # Convert timestamp to datetime if not already
-        if 'timestamp' in df.columns:
-            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-        
-        # Remove duplicates based on key columns
-        key_columns = ["timestamp", "occupancy_count", "energy_consumption_kwh"]
-        df = df.drop_duplicates(subset=[col for col in key_columns if col in df.columns])
-        
-        # Log after deduplication
-        logger.info(f"DataFrame shape after deduplication: {df.shape}")
-        
-        # Check for zeroed data
-        numeric_cols = [col for col in df.columns if col.startswith(("power_consumption_watts", "energy_consumption_kwh", "environmental_data", "equipment_usage"))]
-        zero_percentage = (df[numeric_cols] == 0).mean().mean() * 100
-        if zero_percentage > 50:
-            logger.warning(f"High percentage of zero values in numeric columns: {zero_percentage:.1f}% - Possible test data or sensor issues")
-        
-        return df
-    
     def detect_anomalies(self, df: pd.DataFrame) -> List[AnomalyDetection]:
         """Detect anomalies in the sensor data"""
-        df = self.preprocess_data(df)
-        
         anomalies = []
         
         if df.empty:
-            logger.warning("No data available for anomaly detection")
             return anomalies
         
         # Power consumption anomalies
@@ -128,7 +79,6 @@ class AdvancedLLMHandlers:
         runtime_anomalies = self._detect_runtime_anomalies(df)
         anomalies.extend(runtime_anomalies)
         
-        logger.info(f"Detected {len(anomalies)} anomalies")
         return anomalies
     
     def _detect_power_anomalies(self, df: pd.DataFrame) -> List[AnomalyDetection]:
@@ -137,20 +87,15 @@ class AdvancedLLMHandlers:
         threshold = self.maintenance_rules.get("power_anomaly_threshold", 1.5)
         
         if "power_consumption_watts.total" not in df.columns:
-            logger.warning("Missing 'power_consumption_watts.total' for power anomaly detection")
             return anomalies
         
         power_data = df["power_consumption_watts.total"]
         mean_power = power_data.mean()
         std_power = power_data.std()
         
-        if std_power == 0:
-            logger.warning("No variation in power data - skipping anomaly detection")
-            return anomalies
-        
         for idx, row in df.iterrows():
             power = row["power_consumption_watts.total"]
-            z_score = abs((power - mean_power) / std_power)
+            z_score = abs((power - mean_power) / std_power) if std_power > 0 else 0
             
             if z_score > threshold:
                 severity = "High" if z_score > 2.5 else "Medium"
@@ -173,7 +118,6 @@ class AdvancedLLMHandlers:
         temp_range = self.maintenance_rules.get("temperature_anomaly_range", [18, 28])
         
         if "environmental_data.temperature_celsius" not in df.columns:
-            logger.warning("Missing 'environmental_data.temperature_celsius' for temperature anomaly detection")
             return anomalies
         
         for idx, row in df.iterrows():
@@ -200,7 +144,6 @@ class AdvancedLLMHandlers:
         humidity_range = self.maintenance_rules.get("humidity_anomaly_range", [30, 70])
         
         if "environmental_data.humidity_percent" not in df.columns:
-            logger.warning("Missing 'environmental_data.humidity_percent' for humidity anomaly detection")
             return anomalies
         
         for idx, row in df.iterrows():
@@ -235,7 +178,6 @@ class AdvancedLLMHandlers:
         
         for col in runtime_columns:
             if col not in df.columns:
-                logger.warning(f"Missing '{col}' for runtime anomaly detection")
                 continue
                 
             equipment_name = col.split('.')[-1].replace('_on_hours', '').replace('_', ' ').title()
@@ -272,7 +214,6 @@ class AdvancedLLMHandlers:
         trend_suggestions = self._analyze_trends_for_maintenance(df)
         suggestions.extend(trend_suggestions)
         
-        logger.info(f"Generated {len(suggestions)} maintenance suggestions")
         return suggestions
     
     def _anomaly_to_maintenance_suggestion(self, anomaly: AnomalyDetection) -> Optional[MaintenanceAlert]:
@@ -339,7 +280,6 @@ class AdvancedLLMHandlers:
         suggestions = []
         
         if len(df) < 3:  # Need minimum data for trend analysis
-            logger.warning("Insufficient data for trend analysis")
             return suggestions
         
         # Analyze power consumption trends
@@ -355,22 +295,6 @@ class AdvancedLLMHandlers:
                     action="Investigate equipment efficiency degradation",
                     cost_estimate="$300-1000",
                     risk_level="Increased operational costs"
-                ))
-        
-        # Analyze temperature trends
-        if "environmental_data.temperature_celsius" in df.columns:
-            temp_trend = self._calculate_trend(df["environmental_data.temperature_celsius"])
-            if abs(temp_trend["slope"]) > 0.5:  # Significant temperature change
-                direction = "increasing" if temp_trend["slope"] > 0 else "decreasing"
-                suggestions.append(MaintenanceAlert(
-                    equipment="HVAC System",
-                    issue=f"Temperature trending {direction}: {abs(temp_trend['slope']):.1f}°C/day",
-                    urgency="high" if abs(temp_trend["slope"]) > 1.0 else "medium",
-                    confidence=temp_trend["confidence"],
-                    timeline="Within 48 hours",
-                    action="Check HVAC performance and calibration",
-                    cost_estimate="$200-600",
-                    risk_level="System inefficiency or failure"
                 ))
         
         return suggestions
@@ -392,11 +316,9 @@ class AdvancedLLMHandlers:
     
     def generate_energy_insights(self, df: pd.DataFrame) -> List[EnergyInsight]:
         """Generate energy efficiency insights"""
-        df = self.preprocess_data(df)
         insights = []
         
         if df.empty:
-            logger.warning("Empty DataFrame for energy insights")
             return insights
         
         # Energy consumption analysis
@@ -436,15 +358,11 @@ class AdvancedLLMHandlers:
                     recommendation="Implement occupancy-based lighting and HVAC controls"
                 ))
         
-        logger.info(f"Generated {len(insights)} energy insights")
         return insights
     
     def handle_most_used_room_query(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Handle 'most used room' type queries"""
-        df = self.preprocess_data(df)
-        
         if df.empty:
-            logger.warning("Empty DataFrame for most used room query")
             return {"error": "No data available for room analysis"}
         
         # Since we're analyzing single room data, provide occupancy analysis
@@ -481,10 +399,7 @@ class AdvancedLLMHandlers:
     
     def handle_energy_trends_query(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Handle energy trends analysis queries"""
-        df = self.preprocess_data(df)
-        
         if df.empty or "energy_consumption_kwh" not in df.columns:
-            logger.warning("No energy data available for trend analysis")
             return {"error": "No energy data available for trend analysis"}
         
         energy_data = df["energy_consumption_kwh"]
@@ -529,41 +444,9 @@ class AdvancedLLMHandlers:
             }
         }
     
-    def handle_kpi_query(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Handle key performance indicators query"""
-        df = self.preprocess_data(df)
-        
-        if df.empty:
-            logger.warning("Empty DataFrame for KPI query")
-            return {"error": "No data available for KPI analysis"}
-        
-        # Calculate KPIs
-        total_energy = df["energy_consumption_kwh"].sum() if "energy_consumption_kwh" in df.columns else 0
-        avg_occupancy = df["occupancy_count"].mean() if "occupancy_count" in df.columns else 0
-        energy_per_person = total_energy / avg_occupancy if avg_occupancy > 0 else 0
-        cost_per_kwh = self.insights_config.get("cost_per_kwh", 0.12)
-        total_cost = total_energy * cost_per_kwh
-        
-        anomalies = self.detect_anomalies(df)
-        
-        kpis = {
-            "energy_efficiency": energy_per_person,
-            "total_energy_cost": total_cost,
-            "anomaly_count": len(anomalies),
-            "avg_occupancy": avg_occupancy
-        }
-        
-        return {
-            "answer": f"Key Performance Indicators: Energy Efficiency: {energy_per_person:.2f} kWh/person, Total Cost: ${total_cost:.2f}, Anomalies: {len(anomalies)}, Avg Occupancy: {avg_occupancy:.1f} people.",
-            "metrics": kpis
-        }
-    
     def generate_weekly_summary(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Generate automated weekly summary"""
-        df = self.preprocess_data(df)
-        
         if df.empty:
-            logger.warning("Empty DataFrame for weekly summary")
             return {"error": "No data available for weekly summary"}
         
         # Basic metrics
@@ -634,8 +517,6 @@ class AdvancedLLMHandlers:
     
     def handle_context_aware_query(self, query: str, df: pd.DataFrame) -> Dict[str, Any]:
         """Handle context-aware queries that consider current conditions and trends"""
-        df = self.preprocess_data(df)
-        
         current_time = datetime.now()
         
         # Analyze current context
@@ -711,6 +592,23 @@ class AdvancedLLMHandlers:
                 return f"{duration.days} days, {duration.seconds // 3600} hours"
             else:
                 return f"{duration.seconds // 3600} hours"
-        except Exception as e:
-            logger.warning(f"Error calculating data timespan: {e}")
+        except:
             return "Unknown timespan"
+    
+    def _get_context_recommendations(self, context: Dict, anomalies: List) -> List[str]:
+        """Generate context-aware recommendations"""
+        recommendations = []
+        
+        if context["time_of_day"] < 6 or context["time_of_day"] > 22:
+            recommendations.append("Consider implementing after-hours energy reduction protocols")
+        
+        if context.get("current_temperature", 22) > 25:
+            recommendations.append("Monitor cooling system efficiency and consider temperature setpoint adjustment")
+        
+        if len(anomalies) > 0:
+            recommendations.append("Investigate detected anomalies for potential maintenance needs")
+        
+        if context["day_of_week"] >= 5:  # Weekend
+            recommendations.append("Weekend operations detected - verify necessary systems only")
+        
+        return recommendations
