@@ -348,12 +348,12 @@ html, body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Floating input bar */
 .orb-input-floating {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto; /* Explicitly reset */
+  transform: translateX(-50%);
   background: linear-gradient(180deg, rgba(42, 42, 42, 0.95) 0%, #2a2a2a 100%);
   backdrop-filter: blur(10px);
   border-top: 1px solid #444;
@@ -361,9 +361,11 @@ html, body {
   padding: 1.5rem 2rem;
   z-index: 1000;
   max-width: 800px;
-  margin: auto;
+  width: 100%;
   box-sizing: border-box;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+  margin: 0 auto; /* Helps with box-model centering fallback */
+  bottom: env(safe-area-inset-bottom); /* Optional: Adjust for mobile safe areas if needed */
 }
 
 /* First row: input field */
