@@ -1,8 +1,3 @@
-"""
-Prompts Configuration Module
-Centralized location for all LLM prompts and templates
-"""
-
 from typing import Dict, Any
 import json
 import os
@@ -70,7 +65,7 @@ Guidelines:
 - Use only the information from the provided documents
 - Be conversational but accurate
 - If you don't have the specific information, say so clearly
-- Provide helpful context when available
+- Provide helpful context when possible
 
 Question: {query}
 """

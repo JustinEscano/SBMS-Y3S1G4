@@ -14,7 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbmsAPI.settings')
 django.setup()
 
 # Now import Django models
-from core.models import SensorLog, Equipment, Room
+from core.models import SensorLog, Equipment, Room, MaintenanceRequest
 
 logger = logging.getLogger(__name__)
 
@@ -56,14 +56,14 @@ class DatabaseAdapter:
                 CASE WHEN sl.motion_detected THEN 'occupied' ELSE 'unoccupied' END as occupancy_status,
                 CASE WHEN sl.motion_detected THEN 1 ELSE 0 END as occupancy_count,
                 sl.energy_usage as energy_consumption_kwh,
-                sl.light_level * 10 as "power_consumption_watts.lighting",
+                CASE WHEN sl.light_detected THEN 10 ELSE 0 END as "power_consumption_watts.lighting",
                 sl.energy_usage * 0.3 as "power_consumption_watts.hvac_fan",
                 sl.energy_usage * 0.2 as "power_consumption_watts.air_conditioner_compressor",
                 0 as "power_consumption_watts.projector",
                 0 as "power_consumption_watts.computer",
                 sl.energy_usage * 0.1 as "power_consumption_watts.standby_misc",
                 sl.energy_usage as "power_consumption_watts.total",
-                CASE WHEN sl.light_level > 50 THEN 8 ELSE 0 END as "equipment_usage.lights_on_hours",
+                CASE WHEN sl.light_detected THEN 8 ELSE 0 END as "equipment_usage.lights_on_hours",
                 CASE WHEN sl.temperature > 25 THEN 6 ELSE 0 END as "equipment_usage.air_conditioner_on_hours",
                 0 as "equipment_usage.projector_on_hours",
                 0 as "equipment_usage.computer_on_hours",
@@ -121,6 +121,81 @@ class DatabaseAdapter:
         except Exception as e:
             logger.error(f"Error retrieving sensor data: {e}")
             raise
+
+    def get_maintenance_requests_as_dataframe(self, limit=None):
+        """Get maintenance requests from core_maintenancerequest table"""
+        try:
+            # Use the correct column names from your table structure
+            query = """
+            SELECT 
+                id, 
+                issue as issue_description, 
+                status, 
+                scheduled_date as requested_date, 
+                resolved_at as resolved_date, 
+                created_at, 
+                equipment_id,
+                user_id as requested_by_id, 
+                assigned_to_id, 
+                comments as notes
+            FROM core_maintenancerequest
+            ORDER BY created_at DESC
+            """
+            
+            if limit:
+                query += f" LIMIT {limit}"
+            
+            df = pd.read_sql_query(query, self.connection)
+            
+            # Convert date columns to datetime
+            date_columns = ['requested_date', 'resolved_date', 'created_at']
+            for col in date_columns:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col], errors='coerce')
+            
+            logger.info(f"Retrieved {len(df)} maintenance requests from database")
+            logger.info(f"Maintenance data columns: {list(df.columns)}")
+            if not df.empty:
+                logger.info(f"Sample maintenance data: {df[['issue_description', 'status', 'requested_date']].head(2).to_dict('records')}")
+            
+            return df
+        except Exception as e:
+            logger.error(f"Error fetching maintenance requests: {e}")
+            return None
+
+    def get_maintenance_requests_using_django(self, limit=None):
+        """Alternative method using Django ORM to get maintenance requests"""
+        try:
+            maintenance_requests = MaintenanceRequest.objects.select_related(
+                'equipment', 'user', 'assigned_to'
+            ).all().order_by('-created_at')
+            
+            if limit:
+                maintenance_requests = maintenance_requests[:limit]
+            
+            data = []
+            for mr in maintenance_requests:
+                data.append({
+                    'id': str(mr.id),
+                    'issue_description': mr.issue,
+                    'status': mr.status,
+                    'requested_date': mr.scheduled_date,
+                    'resolved_date': mr.resolved_at,
+                    'created_at': mr.created_at,
+                    'equipment_id': str(mr.equipment_id) if mr.equipment_id else None,
+                    'requested_by_id': str(mr.user_id) if mr.user_id else None,
+                    'assigned_to_id': str(mr.assigned_to_id) if mr.assigned_to_id else None,
+                    'notes': mr.comments,
+                    'equipment_name': mr.equipment.name if mr.equipment else 'No Equipment'
+                })
+            
+            df = pd.DataFrame(data)
+            logger.info(f"Retrieved {len(df)} maintenance requests using Django ORM")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error fetching maintenance requests with Django: {e}")
+            return None
     
     def get_room_logs_json_format(self, limit=None, start_date=None, end_date=None):
         """
@@ -241,7 +316,7 @@ class DatabaseAdapter:
                     'room': reading.equipment.room.name if reading.equipment.room else 'No Room',
                     'temperature': reading.temperature,
                     'humidity': reading.humidity,
-                    'light_level': reading.light_level,
+                    'light_detected': reading.light_detected,
                     'motion_detected': reading.motion_detected,
                     'energy_usage': reading.energy_usage,
                     'recorded_at': reading.recorded_at.isoformat()
