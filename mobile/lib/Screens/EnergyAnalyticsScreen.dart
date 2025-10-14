@@ -3,12 +3,14 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../Config/api.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
-import '../Screens/NotificationsScreen.dart'; // Added import
+import '../Screens/NotificationsScreen.dart';
 import '../Widgets/bottom_navbar.dart';
 import '../Widgets/AnalyticsWidgets.dart';
 import '../Services/auth_service.dart';
+import '../providers/dashboard_provider.dart';
 import 'DashboardScreen.dart';
 import 'ChatScreen.dart';
 
@@ -51,6 +53,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   DateTime? _lastCacheTime;
   String totalCost = '0.00';
   String effectiveRate = '0.00';
+  bool hasUnreadNotifications = false;
 
   final Map<String, Duration> _periodDurations = {
     'daily': Duration(hours: 24),
@@ -71,6 +74,9 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     _loadRooms();
     _loadEquipment();
     loadEnergyData();
+    // Initialize notifications via DashboardProvider
+    final provider = Provider.of<DashboardProvider>(context, listen: false);
+    provider.loadData(context: context);
   }
 
   Future<void> _loadRooms() async {
@@ -1007,7 +1013,6 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     });
   }
 
-  // Added navigation to NotificationsScreen
   Route _createSlideRoute(Widget page) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -1036,13 +1041,15 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         ),
       ),
     ).then((_) {
-      // Refresh data when returning, if needed
-      loadEnergyData();
+      // Refresh notifications after returning from NotificationsScreen
+      final provider = Provider.of<DashboardProvider>(context, listen: false);
+      provider.loadData(context: context);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<DashboardProvider>(context);
     final now = DateTime.now();
     final startTime = _getStartTime(now);
     final powerSpots = _generatePowerSpots();
@@ -1077,7 +1084,13 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
+            icon: ImageIcon(
+              AssetImage(provider.unreadNotificationCount > 0
+                  ? 'assets/icons/Notif ping.png'
+                  : 'assets/icons/Notif default.png'),
+              size: 24,
+              color: Colors.white70,
+            ),
             onPressed: isRefreshingToken ? null : _navigateToNotifications,
             tooltip: 'View Notifications',
           ),
@@ -1086,7 +1099,13 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       body: isLoading || isRefreshingToken
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
           : RefreshIndicator(
-        onRefresh: loadEnergyData,
+        onRefresh: () {
+          final provider = Provider.of<DashboardProvider>(context, listen: false);
+          return Future.wait([
+            loadEnergyData(),
+            provider.loadData(context: context),
+          ]).then((_) => null);
+        },
         color: const Color(0xFF184BFB),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),

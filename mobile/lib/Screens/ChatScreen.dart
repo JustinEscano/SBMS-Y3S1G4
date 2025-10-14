@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../Services/llm_service.dart';
-import '../Services/auth_service.dart'; // Add AuthService import
+import '../Services/auth_service.dart';
 import '../Models/chat_message.dart';
 import '../Providers/chat_provider.dart';
 import '../Config/api.dart';
@@ -9,6 +11,7 @@ import '../Widgets/bottom_navbar.dart';
 import 'DashboardScreen.dart';
 import 'EnergyAnalyticsScreen.dart';
 import 'MaintenanceManagementScreen.dart';
+import 'dart:developer' as developer;
 
 class ChatScreen extends StatefulWidget {
   final String accessToken;
@@ -29,14 +32,50 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   late LLMService _llmService;
   bool isRefreshingToken = false;
+  bool hasInteracted = false;
+  Map<String, dynamic>? _profileData;
+
+  final List<String> suggestions = [
+    "What's the most used room?",
+    "Any energy consumption trends?",
+    "Show me weekly summary",
+    "Check for maintenance issues",
+    "Detect anomalies",
+    "Analyze energy usage patterns",
+  ];
 
   @override
   void initState() {
     super.initState();
-    AuthService().setTokens(widget.accessToken, widget.refreshToken); // Initialize AuthService
-    _llmService = LLMService(); // Updated to use AuthService-managed tokens
+    AuthService().setTokens(widget.accessToken, widget.refreshToken);
+    _llmService = LLMService();
     _loadConversationHistory();
-    _checkLLMHealth(); // Optional: Add health check
+    _checkLLMHealth();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final profileData = await authService.apiService.fetchProfile();
+      if (mounted) {
+        setState(() {
+          _profileData = profileData;
+        });
+      }
+    } catch (e) {
+      developer.log('Error fetching profile: $e', name: 'ChatScreen.Profile');
+    }
+  }
+
+  String _getProfilePictureUrl(String? picturePath) {
+    if (picturePath == null || picturePath.isEmpty) {
+      return '';
+    }
+    if (picturePath.startsWith('http://') || picturePath.startsWith('https://')) {
+      return picturePath;
+    }
+    return ApiConfig.getMediaUrl(picturePath);
   }
 
   Future<bool> _refreshToken() async {
@@ -46,7 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final success = await AuthService().refresh();
       if (success) {
-        _llmService = LLMService(); // Reinitialize LLMService with new tokens
+        _llmService = LLMService();
         return true;
       }
       Provider.of<ChatProvider>(context, listen: false)
@@ -73,6 +112,9 @@ class _ChatScreenState extends State<ChatScreen> {
         final recentConversation = conversations.first;
         Provider.of<ChatProvider>(context, listen: false)
             .setConversationId(recentConversation['id']);
+        setState(() {
+          hasInteracted = true;
+        });
       }
     } catch (e) {
       Provider.of<ChatProvider>(context, listen: false)
@@ -80,9 +122,12 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _sendMessage() async {
-    final message = _messageController.text.trim();
+  Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
+
+    setState(() {
+      hasInteracted = true;
+    });
 
     final chatProvider = Provider.of<ChatProvider>(context, listen: false);
 
@@ -140,7 +185,6 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _checkLLMHealth() async {
     try {
       final health = await _llmService.getHealth();
-      // You can add UI update here if needed, e.g., show status
       print('LLM Health: ${health['status']}');
     } catch (e) {
       Provider.of<ChatProvider>(context, listen: false)
@@ -162,39 +206,50 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _clearConversation() {
     Provider.of<ChatProvider>(context, listen: false).clearConversation();
+    setState(() {
+      hasInteracted = false;
+    });
   }
 
   Widget _buildMessageBubble(ChatMessage message) {
+    ImageProvider? profileImage;
+    bool hasImage = false;
+    String profilePictureUrl = _getProfilePictureUrl(_profileData?['profile']['profile_picture']);
+    if (profilePictureUrl.isNotEmpty) {
+      profileImage = NetworkImage(profilePictureUrl);
+      hasImage = true;
+    }
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+        message.type == 'user' ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (message.type == 'assistant')
             Container(
               margin: const EdgeInsets.only(right: 8),
               child: CircleAvatar(
-                backgroundColor: Colors.blue,
-                child: Text(
-                  'AI',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                backgroundColor: Colors.transparent,
+                child: Image.asset(
+                  'assets/icons/Orb Hovered.png',
+                  width: 32,
+                  height: 32,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
-          Expanded(
+          Flexible(
             child: Column(
-              crossAxisAlignment: message.type == 'user' ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: message.type == 'user'
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: message.type == 'user'
-                        ? Theme.of(context).primaryColor.withOpacity(0.1)
-                        : Colors.grey[100],
+                    color: const Color(0xFF121822),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -202,27 +257,28 @@ class _ChatScreenState extends State<ChatScreen> {
                     children: [
                       Text(
                         message.content,
-                        style: TextStyle(
-                          color: message.type == 'user' ? Theme.of(context).primaryColor : Colors.black87,
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFFFFFFFF),
+                          fontSize: 14,
                         ),
                       ),
                       if (message.sources != null && message.sources!.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text(
                           'Sources:',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey[600],
+                            color: const Color(0xFF676767),
                           ),
                         ),
                         ...message.sources!.take(3).map((source) => Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             source.pageContent,
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 10,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF676767),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -231,9 +287,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         if (message.sources!.length > 3)
                           Text(
                             '...and ${message.sources!.length - 3} more sources',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 10,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF676767),
                             ),
                           ),
                       ],
@@ -243,9 +299,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(height: 4),
                 Text(
                   _formatTime(message.timestamp),
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 10,
-                    color: Colors.grey[600],
+                    color: const Color(0xFF676767),
                   ),
                 ),
               ],
@@ -255,12 +311,25 @@ class _ChatScreenState extends State<ChatScreen> {
             Container(
               margin: const EdgeInsets.only(left: 8),
               child: CircleAvatar(
-                backgroundColor: Colors.green,
-                child: Icon(
+                backgroundColor: const Color(0xFF121822),
+                backgroundImage: profileImage,
+                child: !hasImage
+                    ? const Icon(
                   Icons.person,
                   color: Colors.white,
-                  size: 16,
-                ),
+                  size: 20,
+                )
+                    : null,
+                onBackgroundImageError: hasImage
+                    ? (error, stackTrace) {
+                  developer.log(
+                    'Error loading profile picture: $error',
+                    name: 'ChatScreen.Image',
+                    error: error,
+                    stackTrace: stackTrace,
+                  );
+                }
+                    : null,
               ),
             ),
         ],
@@ -272,17 +341,56 @@ class _ChatScreenState extends State<ChatScreen> {
     return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
   }
 
+  Widget _buildSuggestions() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: suggestions.map((suggestion) {
+        return ActionChip(
+          label: Text(
+            suggestion,
+            style: GoogleFonts.inter(
+              color: const Color(0xFFFFFFFF),
+              fontSize: 12,
+            ),
+          ),
+          backgroundColor: const Color(0xFF121822),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          onPressed: () {
+            _sendMessage(suggestion);
+          },
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: const Text('ORB Chat'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: const Color(0xFF000000),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          hasInteracted ? 'Orb Control by Orbit' : 'ORB Chat',
+          style: GoogleFonts.urbanist(
+            color: const Color(0xFFFFFFFF),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete, color: Colors.white),
             onPressed: isRefreshingToken ? null : _clearConversation,
             tooltip: 'Clear Conversation',
           ),
@@ -293,19 +401,22 @@ class _ChatScreenState extends State<ChatScreen> {
           if (chatProvider.errorMessage.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(8),
-              color: Colors.red[100],
+              color: const Color(0xFF121822),
               child: Row(
                 children: [
-                  Icon(Icons.error, color: Colors.red[700]),
+                  const Icon(Icons.error, color: Colors.red),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       chatProvider.errorMessage,
-                      style: TextStyle(color: Colors.red[700]),
+                      style: GoogleFonts.inter(
+                        color: Colors.red,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () {
                       chatProvider.clearError();
                     },
@@ -315,7 +426,33 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           Expanded(
             child: isRefreshingToken
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
+                : chatProvider.messages.isEmpty && !hasInteracted
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Hello, I am Orb!',
+                    style: GoogleFonts.urbanist(
+                      color: const Color(0xFFFFFFFF),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'How can I help you?',
+                    style: GoogleFonts.urbanist(
+                      color: const Color(0xFFFFFFFF),
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSuggestions(),
+                ],
+              ),
+            )
                 : ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
@@ -325,50 +462,49 @@ class _ChatScreenState extends State<ChatScreen> {
                   return _buildMessageBubble(chatProvider.messages[index]);
                 } else {
                   return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           margin: const EdgeInsets.only(right: 8),
                           child: CircleAvatar(
-                            backgroundColor: Colors.blue,
-                            child: Text(
-                              'AI',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            backgroundColor: Colors.transparent,
+                            child: Image.asset(
+                              'assets/icons/Orb Hovered.png',
+                              width: 32,
+                              height: 32,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
-                        Expanded(
+                        Flexible(
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.grey[100],
+                              color: const Color(0xFF121822),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).primaryColor,
+                                      Color(0xFF184BFB),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
                                   'Thinking...',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF676767),
                                     fontStyle: FontStyle.italic,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
@@ -384,39 +520,60 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
-                ),
-              ],
+            decoration: const BoxDecoration(
+              color: Color(0xFF232627),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFFFFFFFF),
+                      fontSize: 14,
+                    ),
                     decoration: InputDecoration(
-                      hintText: 'Type your message...',
+                      hintText: 'Ask Orb...',
+                      hintStyle: GoogleFonts.inter(
+                        color: const Color(0xFF676767),
+                        fontSize: 14,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF232627),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF676767),
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF676767),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF676767),
+                          width: 1,
+                        ),
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    onSubmitted: (_) => isRefreshingToken ? null : _sendMessage(),
+                    onSubmitted: (_) => isRefreshingToken ? null : _sendMessage(_messageController.text.trim()),
                     maxLines: null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.send,
-                    color: Theme.of(context).primaryColor,
+                    color: Color(0xFF1B436F),
                   ),
-                  onPressed: isRefreshingToken ? null : _sendMessage,
+                  onPressed: isRefreshingToken ? null : () => _sendMessage(_messageController.text.trim()),
                 ),
               ],
             ),
@@ -454,13 +611,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   builder: (context) => MaintenanceManagementScreen(
                     accessToken: AuthService().accessToken ?? widget.accessToken,
                     refreshToken: AuthService().refreshToken ?? widget.refreshToken,
-                    userRole: 'client', // You might want to get this from user data
+                    userRole: 'client',
                   ),
                 ),
               );
               break;
             case 'orb_chat':
-            // Already on chat screen
               break;
             default:
               break;
