@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../Config/api.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
 import '../Widgets/bottom_navbar.dart';
@@ -30,7 +31,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   List<dynamic> equipment = [];
   List<dynamic> latestSensorData = [];
   List<dynamic> hvacSensorData = [];
-  List<dynamic> securitySensorData = []; // New: Historical security sensor data
+  List<dynamic> securitySensorData = [];
   String? selectedRoomId;
   String? selectedComponentId;
   String selectedScope = 'room';
@@ -41,11 +42,11 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   Map<String, dynamic> summaryData = {};
   Map<String, dynamic> billingData = {};
   Map<String, dynamic> hvacData = {};
-  Map<String, dynamic> securityData = {}; // New: Security data
+  Map<String, dynamic> securityData = {};
   Map<String, List<dynamic>> _cachedSensorLogs = {};
   Map<String, Map<String, dynamic>> _cachedBillingData = {};
   Map<String, List<dynamic>> _cachedHvacData = {};
-  Map<String, List<dynamic>> _cachedSecurityData = {}; // New: Cache for security data
+  Map<String, List<dynamic>> _cachedSecurityData = {};
   DateTime? _lastCacheTime;
   String totalCost = '0.00';
   String effectiveRate = '0.00';
@@ -902,14 +903,20 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     if (spots.isEmpty) {
       if (isTemperature) return 50.0;
       if (isHumidity) return 100.0;
-      if (isSecurity) return 10.0; // Default max for security alerts
-      return isEnergy ? 0.01 : 100.0;
+      if (isSecurity) return 10.0;
+      return isEnergy ? 0.1 : 100.0; // Increased default for energy to avoid small values
     }
     final maxY = spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b);
+    if (maxY == 0) {
+      if (isTemperature) return 50.0;
+      if (isHumidity) return 100.0;
+      if (isSecurity) return 10.0;
+      return isEnergy ? 0.1 : 100.0; // Ensure non-zero default
+    }
     if (isTemperature) return (maxY * 1.2).ceilToDouble();
     if (isHumidity) return (maxY * 1.2).ceilToDouble();
     if (isSecurity) return (maxY * 1.2).ceilToDouble();
-    return isEnergy ? (maxY < 0.01 ? 0.01 : (maxY * 1.2)) : (maxY * 1.2).ceilToDouble();
+    return isEnergy ? (maxY < 0.1 ? 0.1 : (maxY * 1.2)) : (maxY * 1.2).ceilToDouble();
   }
 
   double? _getInterval(String timeFrame) {
@@ -1021,21 +1028,31 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     final interval = _getInterval(timeFrame);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000), // Black background
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('Energy Analytics - ${_getScopeTitle()}'),
+        backgroundColor: const Color(0xFF1F1E23),
+        title: Text(
+          '${_getScopeTitle()}',
+          style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white), // Set default back button to white
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: isRefreshingToken ? null : loadEnergyData,
             tooltip: 'Refresh Data',
           ),
         ],
       ),
       body: isLoading || isRefreshingToken
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
           : RefreshIndicator(
         onRefresh: loadEnergyData,
+        color: const Color(0xFF184BFB),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -1043,43 +1060,35 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
             children: [
               if (errorMessage.isNotEmpty)
                 AnalyticsWidgets.buildErrorBanner(errorMessage),
-              AnalyticsWidgets.buildOverviewCard(_getScopeTitle(), timeFrame),
-              const SizedBox(height: 20),
-              AnalyticsWidgets.buildTimeFrameSelector(timeFrame, _changeTimeFrame),
-              const SizedBox(height: 20),
-              AnalyticsWidgets.buildScopeSelector(selectedScope, (newScope) => _changeScope(newScope)),
-              if (selectedScope == 'room') ...[
-                const SizedBox(height: 16),
-                AnalyticsWidgets.buildRoomSelector(
-                  selectedRoomId: selectedRoomId,
-                  rooms: rooms,
-                  onRoomChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedRoomId = value;
-                        final matchingEquipment = equipment.firstWhere(
-                              (eq) => eq['room'] == value,
-                          orElse: () => {},
-                        );
-                        selectedComponentId = matchingEquipment.isNotEmpty ? matchingEquipment['component_id'] : null;
-                      });
-                      loadEnergyData();
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                AnalyticsWidgets.buildEquipmentSelector(
-                  selectedComponentId: selectedComponentId,
-                  equipment: equipment,
-                  selectedRoomId: selectedRoomId,
-                  onEquipmentChanged: (value) {
-                    if (value != null) {
-                      _changeScope('room', newComponentId: value);
-                    }
-                  },
-                ),
-              ],
-              const SizedBox(height: 20),
+              AnalyticsWidgets.buildFilterSelector(
+                currentTimeFrame: timeFrame,
+                onTimeFrameChanged: _changeTimeFrame,
+                currentScope: selectedScope,
+                onScopeChanged: (newScope) => _changeScope(newScope),
+                selectedRoomId: selectedRoomId,
+                rooms: rooms,
+                onRoomChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedRoomId = value;
+                      final matchingEquipment = equipment.firstWhere(
+                            (eq) => eq['room'] == value,
+                        orElse: () => {},
+                      );
+                      selectedComponentId = matchingEquipment.isNotEmpty ? matchingEquipment['component_id'] : null;
+                    });
+                    loadEnergyData();
+                  }
+                },
+                selectedComponentId: selectedComponentId,
+                equipment: equipment,
+                onEquipmentChanged: (value) {
+                  if (value != null) {
+                    _changeScope('room', newComponentId: value);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
               AnalyticsWidgets.buildPowerChart(
                 scopeTitle: _getScopeTitle(),
                 chartSuffix: chartSuffix,

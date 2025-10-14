@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../Config/api.dart';
 import '../Services/auth_service.dart';
+import '../Widgets/NotificationWidgets.dart';
 import 'MaintenanceDetailsScreen.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -112,7 +113,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         });
       }
     } catch (e) {
-      // Set default status options if API fails
       setState(() {
         statusOptions = [
           {'value': 'pending', 'label': 'Pending'},
@@ -286,7 +286,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  // Navigate to maintenance request
   Future<void> _navigateToMaintenanceRequest(String? maintenanceRequestId) async {
     if (maintenanceRequestId == null || maintenanceRequestId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -301,7 +300,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
       final headers = AuthService().getAuthHeaders();
 
-      // Fetch the maintenance request by ID
       final response = await http.get(
         Uri.parse('${ApiConfig.maintenanceRequest}$maintenanceRequestId/'),
         headers: headers,
@@ -324,20 +322,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
       final maintenanceRequest = json.decode(response.body);
 
-      // Navigate to maintenance details screen
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => MaintenanceDetailsScreen(
             accessToken: widget.accessToken,
             refreshToken: widget.refreshToken,
-            userRole: 'client', // You might want to get this from user data
+            userRole: 'client',
             users: users,
             equipment: equipment,
             statusOptions: statusOptions,
             request: maintenanceRequest,
             onSave: () {
-              // Refresh notifications when maintenance request is updated
               _loadNotifications();
             },
           ),
@@ -371,7 +367,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  // Helper method to check if notification has maintenance request
   bool _hasMaintenanceRequest(Map<String, dynamic> notification) {
     final type = notification['type']?.toString() ?? '';
     final message = notification['message']?.toString() ?? '';
@@ -380,7 +375,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         message.contains('Maintenance Request') ||
         message.contains('maintenance request');
 
-    // Debug logging
     print('Notification Debug:');
     print('  Type: $type');
     print('  Message: $message');
@@ -389,12 +383,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return hasMaintenance;
   }
 
-  // Helper method to get maintenance request ID from message
   String? _getMaintenanceRequestId(Map<String, dynamic> notification) {
     final message = notification['message']?.toString() ?? '';
 
-    // Try different patterns to extract maintenance request ID
-    // Pattern 1: request #123 (simple number)
     RegExp regex1 = RegExp(r'request #(\d+)');
     var match1 = regex1.firstMatch(message);
     if (match1 != null) {
@@ -404,7 +395,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return match1.group(1);
     }
 
-    // Pattern 2: request #uuid (UUID format)
     RegExp regex2 = RegExp(r'request #([a-f0-9-]{36})');
     var match2 = regex2.firstMatch(message);
     if (match2 != null) {
@@ -414,7 +404,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return match2.group(1);
     }
 
-    // Pattern 3: just look for any UUID in the message
     RegExp regex3 = RegExp(r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})');
     var match3 = regex3.firstMatch(message);
     if (match3 != null) {
@@ -424,164 +413,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return match3.group(1);
     }
 
-    // Debug logging
     print('Maintenance Request ID Debug (No match):');
     print('  Message: $message');
     print('  No ID found');
 
     return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Notifications'),
-        actions: [
-          if (notifications.any((n) => n['read'] == false))
-            TextButton(
-              onPressed: _markAllRead,
-              child: const Text(
-                'Mark All Read',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-        onRefresh: () => _loadNotifications(),
-        child: notifications.isEmpty
-            ? const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'No notifications found',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            ],
-          ),
-        )
-            : ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: notifications.length + (hasMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (hasMore && index == notifications.length) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: ElevatedButton(
-                  onPressed: isLoadingMore ? null : () => _loadNotifications(loadMore: true),
-                  child: isLoadingMore
-                      ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                      : const Text('Load More'),
-                ),
-              );
-            }
-            final notification = notifications[index];
-            final hasMaintenance = _hasMaintenanceRequest(notification);
-
-            return Card(
-              color: notification['read'] ? Colors.grey[100] : Colors.white,
-              elevation: notification['read'] ? 1 : 3,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                leading: Icon(
-                  _getNotificationIcon(notification['type']),
-                  color: _getNotificationColor(notification['type']),
-                ),
-                title: Text(
-                  notification['title'] ?? 'No Title',
-                  style: TextStyle(
-                    fontWeight: notification['read'] ? FontWeight.normal : FontWeight.bold,
-                  ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      notification['message'] ?? 'No Message',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Received: ${_formatDateTime(notification['created_at'])}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    if (hasMaintenance) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'View Maintenance Request',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (!notification['read'])
-                      IconButton(
-                        icon: const Icon(Icons.mark_email_read, color: Colors.blue),
-                        onPressed: () => _markNotificationRead(notification['id']),
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteNotification(notification['id']),
-                    ),
-                  ],
-                ),
-                onTap: () async {
-                  // Mark as read if unread
-                  if (!notification['read']) {
-                    await _markNotificationRead(notification['id']);
-                  }
-
-                  // Always show notification details first
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotificationDetailsScreen(
-                        notification: notification,
-                        accessToken: widget.accessToken,
-                        refreshToken: widget.refreshToken,
-                        users: users,
-                        equipment: equipment,
-                        statusOptions: statusOptions,
-                        onNavigateToMaintenance: _navigateToMaintenanceRequest,
-                      ),
-                    ),
-                  );
-                  if (result == true) {
-                    await _loadNotifications();
-                  }
-                },
-              ),
-            );
-          },
-        ),
-      ),
-    );
   }
 
   IconData _getNotificationIcon(String? type) {
@@ -612,6 +448,86 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       default:
         return Colors.grey;
     }
+  }
+
+  String _getNotificationTypeLabel(String? type) {
+    switch (type) {
+      case 'maintenance_created':
+        return 'Maintenance Created';
+      case 'maintenance_updated':
+        return 'Maintenance Updated';
+      case 'maintenance_assigned':
+        return 'Maintenance Assigned';
+      case 'maintenance_responded':
+        return 'Maintenance Responded';
+      case 'maintenance_attachment':
+        return 'Maintenance Attachment';
+      case 'predictive_alert':
+        return 'System Alert';
+      default:
+        return 'Notification';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Notifications'),
+        actions: [
+          if (notifications.any((n) => n['read'] == false))
+            TextButton(
+              onPressed: _markAllRead,
+              child: const Text(
+                'Mark All Read',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+        ],
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+        onRefresh: () => _loadNotifications(),
+        child: notifications.isEmpty
+            ? NotificationWidgets.buildEmptyState()
+            : NotificationWidgets.buildNotificationList(
+          notifications: notifications,
+          hasMore: hasMore,
+          isLoadingMore: isLoadingMore,
+          onLoadMore: _loadNotifications,
+          onMarkRead: _markNotificationRead,
+          onDelete: _deleteNotification,
+          onTapNotification: (notification) async {
+            if (!notification['read']) {
+              await _markNotificationRead(notification['id']);
+            }
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NotificationDetailsScreen(
+                  notification: notification,
+                  accessToken: widget.accessToken,
+                  refreshToken: widget.refreshToken,
+                  users: users,
+                  equipment: equipment,
+                  statusOptions: statusOptions,
+                  onNavigateToMaintenance: _navigateToMaintenanceRequest,
+                ),
+              ),
+            );
+            if (result == true) {
+              await _loadNotifications();
+            }
+          },
+          formatDateTime: _formatDateTime,
+          hasMaintenanceRequest: _hasMaintenanceRequest,
+          getNotificationIcon: _getNotificationIcon,
+          getNotificationColor: _getNotificationColor,
+        ),
+      ),
+    );
   }
 }
 
@@ -690,7 +606,7 @@ class NotificationDetailsScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Notification deleted')),
       );
-      Navigator.pop(context, true); // Return true to indicate deletion
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -702,7 +618,7 @@ class NotificationDetailsScreen extends StatelessWidget {
     if (dateTimeString == null) return 'Unknown';
     try {
       final dateTime = DateTime.parse(dateTimeString);
-      return '${dateTime.toLocal()}'.split('.')[0]; // Format as desired
+      return '${dateTime.toLocal()}'.split('.')[0];
     } catch (e) {
       return 'Unknown';
     }
@@ -757,7 +673,6 @@ class NotificationDetailsScreen extends StatelessWidget {
     }
   }
 
-  // Helper method to check if notification has maintenance request
   bool _hasMaintenanceRequest() {
     final type = notification['type']?.toString() ?? '';
     final message = notification['message']?.toString() ?? '';
@@ -766,7 +681,6 @@ class NotificationDetailsScreen extends StatelessWidget {
         message.contains('Maintenance Request') ||
         message.contains('maintenance request');
 
-    // Debug logging
     print('NotificationDetailsScreen Debug:');
     print('  Type: $type');
     print('  Message: $message');
@@ -775,12 +689,9 @@ class NotificationDetailsScreen extends StatelessWidget {
     return hasMaintenance;
   }
 
-  // Helper method to get maintenance request ID from message
   String? _getMaintenanceRequestId() {
     final message = notification['message']?.toString() ?? '';
 
-    // Try different patterns to extract maintenance request ID
-    // Pattern 1: request #123 (simple number)
     RegExp regex1 = RegExp(r'request #(\d+)');
     var match1 = regex1.firstMatch(message);
     if (match1 != null) {
@@ -790,7 +701,6 @@ class NotificationDetailsScreen extends StatelessWidget {
       return match1.group(1);
     }
 
-    // Pattern 2: request #uuid (UUID format)
     RegExp regex2 = RegExp(r'request #([a-f0-9-]{36})');
     var match2 = regex2.firstMatch(message);
     if (match2 != null) {
@@ -800,7 +710,6 @@ class NotificationDetailsScreen extends StatelessWidget {
       return match2.group(1);
     }
 
-    // Pattern 3: just look for any UUID in the message
     RegExp regex3 = RegExp(r'([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})');
     var match3 = regex3.firstMatch(message);
     if (match3 != null) {
@@ -810,7 +719,6 @@ class NotificationDetailsScreen extends StatelessWidget {
       return match3.group(1);
     }
 
-    // Debug logging
     print('NotificationDetailsScreen Maintenance Request ID Debug (No match):');
     print('  Message: $message');
     print('  No ID found');
@@ -839,184 +747,20 @@ class NotificationDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  _getNotificationIcon(notification['type']),
-                  color: _getNotificationColor(notification['type']),
-                  size: 32,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    notification['title'] ?? 'No Title',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                if (!notification['read'])
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'Unread',
-                      style: TextStyle(
-                        color: Colors.orange,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _getNotificationColor(notification['type']).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _getNotificationTypeLabel(notification['type']),
-                style: TextStyle(
-                  color: _getNotificationColor(notification['type']),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Message:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              notification['message'] ?? 'No Message',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Received: ${_formatDateTime(notification['created_at'])}',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-
-            // Maintenance Request Navigation Section
-            if (hasMaintenance) ...[
-              const SizedBox(height: 24),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.build,
-                          color: Colors.blue[700],
-                          size: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Related Maintenance Request',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[700],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      maintenanceRequestId != null
-                          ? 'This notification is related to a maintenance request. You can view the full details and respond to it.'
-                          : 'This notification is related to a maintenance request, but the specific request ID could not be extracted. You can view recent maintenance requests.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue[600],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          if (maintenanceRequestId != null) {
-                            await onNavigateToMaintenance(maintenanceRequestId);
-                            Navigator.pop(context);
-                          } else {
-                            // Navigate to maintenance management screen
-                            Navigator.pop(context);
-                            // You can add navigation to maintenance management screen here
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Navigate to maintenance management to find the specific request'),
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.arrow_forward),
-                        label: Text(maintenanceRequestId != null
-                            ? 'View Maintenance Request'
-                            : 'View Maintenance Requests'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[700],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (maintenanceRequestId != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Request ID: $maintenanceRequestId',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ] else ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Note: Could not extract specific request ID from notification message',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange[600],
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
+      body: NotificationWidgets.buildNotificationDetails(
+        notification: notification,
+        onMarkRead: _markNotificationRead,
+        onDelete: _deleteNotification,
+        onNavigateToMaintenance: (id) async {
+          await onNavigateToMaintenance(id);
+          Navigator.pop(context);
+        },
+        maintenanceRequestId: maintenanceRequestId,
+        hasMaintenance: hasMaintenance,
+        formatDateTime: _formatDateTime,
+        getNotificationIcon: _getNotificationIcon,
+        getNotificationColor: _getNotificationColor,
+        getNotificationTypeLabel: _getNotificationTypeLabel,
       ),
     );
   }
