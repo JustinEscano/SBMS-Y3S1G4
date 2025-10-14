@@ -25,11 +25,21 @@ dependencies:
   open_filex: ^4.3.2
   path_provider: ^2.1.1
 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0 # Updated to latest
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icons/Home Default.png
+    - assets/icons/Home Hovered.png
+    - assets/icons/Orb Default.png
+    - assets/icons/Orb Hovered.png
+    - assets/icons/Report Default.png
+    - assets/icons/Report Hovered.png
+    - assets/icons/Usage Default.png
+    - assets/icons/Usage Hovered.png
+    - assets/icons/Notif default.png
+    - assets/icons/Notif ping.png

@@ -208,7 +208,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFF1F1E23), // Updated background color
+        backgroundColor: const Color(0xFF1F1E23),
         title: Row(
           children: [
             GestureDetector(
@@ -247,15 +247,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications, color: Colors.white),
-                tooltip: 'Notifications',
-                onPressed: _navigateToNotifications,
-              ),
-              DashboardScreenWidgets.buildNotificationBadge(provider.unreadNotificationCount),
-            ],
+          IconButton(
+            icon: ImageIcon(
+              AssetImage(provider.unreadNotificationCount > 0
+                  ? 'assets/icons/Notif ping.png'
+                  : 'assets/icons/Notif default.png'),
+              size: 24,
+              color: Colors.white70,
+            ),
+            tooltip: 'Notifications',
+            onPressed: _navigateToNotifications,
           ),
         ],
       ),

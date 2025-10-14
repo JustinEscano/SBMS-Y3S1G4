@@ -50,7 +50,7 @@ class AnalyticsWidgets {
         Card(
           color: const Color(0xFF1F1E23), // Darker gray for filter section
           elevation: 3,
-          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 14), // Slightly wider card
+          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -89,71 +89,120 @@ class AnalyticsWidgets {
                 if (currentScope == 'room') ...[
                   const SizedBox(height: 16),
                   // Room Selector
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Select Room',
-                      labelStyle: GoogleFonts.urbanist(color: Colors.white70),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    value: selectedRoomId,
-                    items: rooms.map<DropdownMenuItem<String>>((room) {
-                      return DropdownMenuItem<String>(
-                        value: room['id'],
-                        child: Text(
-                          room['name'],
-                          style: GoogleFonts.urbanist(
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: onRoomChanged,
-                    dropdownColor: const Color(0xFF1E1E1E),
-                  ),
-                  if (selectedRoomId != null) ...[
-                    const SizedBox(height: 12),
-                    // Equipment Selector
-                    DropdownButtonFormField<String>(
+                      ],
+                    ),
+                    child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
-                        labelText: 'Select Equipment',
-                        labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                        labelText: 'Select Room',
+                        labelStyle: GoogleFonts.urbanist(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
                         ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2), width: 1.5),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
-                      value: selectedComponentId,
-                      items: equipment
-                          .where((eq) => eq['room'] == selectedRoomId)
-                          .map<DropdownMenuItem<String>>((eq) {
+                      value: selectedRoomId,
+                      items: rooms.map<DropdownMenuItem<String>>((room) {
                         return DropdownMenuItem<String>(
-                          value: eq['component_id'],
+                          value: room['id'],
                           child: Text(
-                            eq['name'],
+                            room['name'],
                             style: GoogleFonts.urbanist(
                               fontSize: 16,
                               color: Colors.white,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         );
                       }).toList(),
-                      onChanged: onEquipmentChanged,
-                      hint: Text(
-                        'All Equipment in Room',
-                        style: GoogleFonts.urbanist(
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
-                      ),
+                      onChanged: onRoomChanged,
                       dropdownColor: const Color(0xFF1E1E1E),
+                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 28),
+                      style: GoogleFonts.urbanist(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                  if (selectedRoomId != null) ...[
+                    const SizedBox(height: 12),
+                    // Equipment Selector
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: 'Select Equipment',
+                          labelStyle: GoogleFonts.urbanist(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.1),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2), width: 1.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                        value: selectedComponentId,
+                        items: equipment
+                            .where((eq) => eq['room'] == selectedRoomId)
+                            .map<DropdownMenuItem<String>>((eq) {
+                          return DropdownMenuItem<String>(
+                            value: eq['component_id'],
+                            child: Text(
+                              eq['name'],
+                              style: GoogleFonts.urbanist(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: onEquipmentChanged,
+                        hint: Text(
+                          'All Equipment in Room',
+                          style: GoogleFonts.urbanist(
+                            fontSize: 16,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        dropdownColor: const Color(0xFF1E1E1E),
+                        icon: const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 28),
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 16),
+                      ),
                     ),
                   ],
                 ],
@@ -161,22 +210,24 @@ class AnalyticsWidgets {
             ),
           ),
         ),
-        // Time Frame Selector (outside and below the card)
+        // Time Frame Selector (centered)
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Wrap(
-            spacing: 10,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildFilterChip(
                 label: 'Daily',
                 isSelected: currentTimeFrame == 'daily',
                 onSelected: () => onTimeFrameChanged('daily'),
               ),
+              const SizedBox(width: 10),
               _buildFilterChip(
                 label: 'Weekly',
                 isSelected: currentTimeFrame == 'weekly',
                 onSelected: () => onTimeFrameChanged('weekly'),
               ),
+              const SizedBox(width: 10),
               _buildFilterChip(
                 label: 'Monthly',
                 isSelected: currentTimeFrame == 'monthly',
@@ -209,10 +260,11 @@ class AnalyticsWidgets {
       selectedColor: const Color(0xFF184BFB), // Vibrant blue for selected
       backgroundColor: const Color(0xFF1E1E1E), // Dark gray for unselected
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Colors.white.withOpacity(0.2)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      checkmarkColor: Colors.white, // White checkmark for selected chip
     );
   }
 
