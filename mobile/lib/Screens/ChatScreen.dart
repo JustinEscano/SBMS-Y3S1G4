@@ -250,7 +250,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xFF121822),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +357,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           backgroundColor: const Color(0xFF121822),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
           ),
           onPressed: () {
             _sendMessage(suggestion);
@@ -483,7 +483,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: const Color(0xFF121822),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -521,7 +521,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: Color(0xFF232627),
+              color: Color(0xFF000000),
             ),
             child: Row(
               children: [
@@ -541,21 +541,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       filled: true,
                       fillColor: const Color(0xFF232627),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(
                           color: Color(0xFF676767),
                           width: 1,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(
                           color: Color(0xFF676767),
                           width: 1,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(
                           color: Color(0xFF676767),
                           width: 1,
@@ -571,7 +571,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 IconButton(
                   icon: const Icon(
                     Icons.send,
-                    color: Color(0xFF1B436F),
+                    color: Color(0xFF4D6BFE),
                   ),
                   onPressed: isRefreshingToken ? null : () => _sendMessage(_messageController.text.trim()),
                 ),
