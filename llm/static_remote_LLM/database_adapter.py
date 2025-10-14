@@ -183,30 +183,53 @@ class DatabaseAdapter:
             logger.error(f"Error fetching alerts data: {e}")
             return pd.DataFrame()
 
-    def get_maintenance_requests_as_dataframe(self, limit=None):
-        """Get maintenance requests from core_maintenancerequest table"""
+    def get_maintenance_requests_as_dataframe(self, limit=None, status_filter=None):
+        """Get maintenance requests from core_maintenancerequest table with user information"""
         try:
-            # Use the correct column names from your table structure
+            # Join with user and equipment tables to get complete information
             query = """
             SELECT 
-                id, 
-                issue as issue_description, 
-                status, 
-                scheduled_date as requested_date, 
-                resolved_at as resolved_date, 
-                created_at, 
-                equipment_id,
-                user_id as requested_by_id, 
-                assigned_to_id, 
-                comments as notes
-            FROM core_maintenancerequest
-            ORDER BY created_at DESC
+                mr.id, 
+                mr.issue as issue_description, 
+                mr.status, 
+                mr.scheduled_date as requested_date, 
+                mr.resolved_at as resolved_date, 
+                mr.created_at, 
+                mr.equipment_id,
+                mr.user_id as requested_by_id,
+                u.username as requested_by_username,
+                u.email as requested_by_email,
+                u.role as requested_by_role,
+                mr.assigned_to_id,
+                au.username as assigned_to_username,
+                au.email as assigned_to_email,
+                mr.comments as notes,
+                e.name as equipment_name,
+                e.type as equipment_type,
+                e.status as equipment_status,
+                r.name as room_name,
+                r.floor as room_floor,
+                r.type as room_type
+            FROM core_maintenancerequest mr
+            LEFT JOIN core_user u ON mr.user_id = u.id
+            LEFT JOIN core_user au ON mr.assigned_to_id = au.id
+            LEFT JOIN core_equipment e ON mr.equipment_id = e.id
+            LEFT JOIN core_room r ON e.room_id = r.id
+            WHERE 1=1
             """
             
-            if limit:
-                query += f" LIMIT {limit}"
+            params = []
+            if status_filter:
+                query += " AND mr.status = %s"
+                params.append(status_filter)
             
-            df = pd.read_sql_query(query, self.connection)
+            query += " ORDER BY mr.created_at DESC"
+            
+            if limit:
+                query += " LIMIT %s"
+                params.append(limit)
+            
+            df = pd.read_sql_query(query, self.connection, params=params if params else None)
             
             # Convert date columns to datetime
             date_columns = ['requested_date', 'resolved_date', 'created_at']
@@ -217,12 +240,13 @@ class DatabaseAdapter:
             logger.info(f"Retrieved {len(df)} maintenance requests from database")
             logger.info(f"Maintenance data columns: {list(df.columns)}")
             if not df.empty:
-                logger.info(f"Sample maintenance data: {df[['issue_description', 'status', 'requested_date']].head(2).to_dict('records')}")
+                logger.info(f"Sample maintenance data: {df[['issue_description', 'status', 'requested_by_username', 'room_name']].head(2).to_dict('records')}")
+                logger.info(f"Status distribution: {df['status'].value_counts().to_dict()}")
             
             return df
         except Exception as e:
             logger.error(f"Error fetching maintenance requests: {e}")
-            return None
+            return pd.DataFrame()
 
     def get_maintenance_requests_using_django(self, limit=None):
         """Alternative method using Django ORM to get maintenance requests"""

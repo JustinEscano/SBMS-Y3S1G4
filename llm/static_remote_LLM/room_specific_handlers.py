@@ -24,18 +24,67 @@ class RoomSpecificHandlers:
         self.advanced_handlers = AdvancedLLMHandlers(prompts_config, self.db_adapter)
         self._available_rooms_cache = None
         self._room_mappings_cache = None
+        self._last_room_refresh = None
+        self.ROOM_CACHE_TTL = 60  # 1 minute TTL for room cache (more frequent refreshes)
+        self._room_count = 0  # Track number of rooms in cache
+        
+        # Initialize with an empty room list to prevent None errors
+        self._available_rooms_cache = []
+        self._build_room_mappings()
+        
+    def refresh_room_cache(self):
+        """Force refresh the room cache and return the updated room list"""
+        try:
+            old_count = self._room_count
+            rooms = self.get_available_rooms(refresh=True)
+            new_count = len(rooms)
+            
+            if new_count > old_count:
+                logger.info(f"Room cache refreshed. Found {new_count} rooms ({new_count - old_count} new)")
+            elif new_count < old_count:
+                logger.warning(f"Room cache refreshed. Found {new_count} rooms ({old_count - new_count} removed)")
+            
+            return rooms
+            
+        except Exception as e:
+            logger.error(f"Error refreshing room cache: {e}")
+            return self._available_rooms_cache or []
     
     def get_available_rooms(self, refresh: bool = False) -> List[Dict[str, Any]]:
-        """Get list of all available rooms with caching"""
-        if self._available_rooms_cache is None or refresh:
+        """Get list of all available rooms with caching and automatic refresh"""
+        current_time = datetime.now()
+        needs_refresh = (
+            refresh or 
+            self._available_rooms_cache is None or 
+            self._last_room_refresh is None or
+            (current_time - self._last_room_refresh).total_seconds() > self.ROOM_CACHE_TTL
+        )
+        
+        if needs_refresh:
             try:
-                self._available_rooms_cache = self.db_adapter.get_rooms_list()
-                # Build room mappings for fuzzy matching
-                self._build_room_mappings()
+                new_rooms = self.db_adapter.get_rooms_list()
+                old_count = len(self._available_rooms_cache) if self._available_rooms_cache else 0
+                
+                # Only update if we got valid data
+                if new_rooms is not None:
+                    self._available_rooms_cache = new_rooms
+                    self._last_room_refresh = current_time
+                    self._room_count = len(new_rooms)
+                    
+                    # Log if room count changed
+                    if old_count != self._room_count:
+                        logger.info(f"Room cache updated: {old_count} -> {self._room_count} rooms")
+                    
+                    # Rebuild room mappings
+                    self._build_room_mappings()
+                    
             except Exception as e:
-                logger.error(f"Error getting rooms list: {e}")
-                self._available_rooms_cache = []
-        return self._available_rooms_cache
+                logger.error(f"Error refreshing rooms list: {e}")
+                # Only clear cache if we can't connect to the database
+                if self._available_rooms_cache is None:
+                    self._available_rooms_cache = []
+        
+        return self._available_rooms_cache or []
     
     def _build_room_mappings(self):
         """Build various mappings for room name matching"""
