@@ -50,7 +50,9 @@ const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle, handleLogout }) 
   const userId = localStorage.getItem("user_id");
   const { notifications } = useNotifications(userId || undefined);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = Array.isArray(notifications)
+  ? notifications.filter(n => !n.read).length
+  : 0;
 
   const handleConfirmLogout = () => {
     setLogoutModalOpen(false);

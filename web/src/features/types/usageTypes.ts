@@ -10,3 +10,16 @@ export interface RoomAnalyticsItem {
   total_cost: number;
   currency?: string;
 }
+
+export interface TrendDataPoint {
+  periodStart: string;
+  period_end: string;
+  period_type: string;
+  totalEnergy: number;
+  avgPower: number;
+  peakPower: number;
+  reading_count: number;
+  anomaly_count: number;
+  total_cost: number;
+  currency?: string;
+}

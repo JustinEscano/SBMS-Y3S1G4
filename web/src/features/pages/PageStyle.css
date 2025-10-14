@@ -632,3 +632,44 @@ table tbody td {
     background: var(--header-bg);
     color: var(--off-white)
 }
+
+/* Add to PageStyle.css for summary cards */
+.summary-card {
+  padding: 1rem;
+  background-color: #1f2937; /* bg-gray-800 */
+  border-radius: 0.5rem;
+  border: 1px solid #374151; /* border-gray-700 */
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.summary-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.summary-card p:first-child {
+  color: #9ca3af; /* text-gray-400 */
+  font-size: 0.875rem; /* text-sm */
+  margin-bottom: 0.25rem;
+}
+
+.summary-card p:last-child {
+  color: #ffffff; /* text-white */
+  font-weight: bold;
+  font-size: 1.125rem; /* text-lg */
+  margin: 0;
+}
+
+/* Grid container for cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  margin-top: 20px;
+}
+
+@media (min-width: 768px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
