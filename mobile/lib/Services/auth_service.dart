@@ -51,6 +51,8 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
+    await prefs.remove(_emailKey);
+    print('Tokens cleared successfully.');
   }
 
   Future<bool> loadStoredTokens() async {
@@ -59,13 +61,18 @@ class AuthService {
     _refreshToken = prefs.getString(_refreshTokenKey);
     if (_accessToken != null && _refreshToken != null) {
       print('Loaded stored tokens. Access expiry: ${Jwt.parseJwt(_accessToken!)['exp']}');
+      return true;
     }
-    return _accessToken != null && _refreshToken != null;
+    print('No stored tokens found.');
+    return false;
   }
 
   Map<String, String> getAuthHeaders({bool useRefresh = false}) {
     final token = useRefresh ? _refreshToken : _accessToken;
-    if (token == null) return {'Content-Type': 'application/json'};
+    if (token == null) {
+      print('No token available for headers.');
+      return {'Content-Type': 'application/json'};
+    }
     return {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
@@ -73,11 +80,13 @@ class AuthService {
     };
   }
 
-  // Restored verifyToken using expiry check instead of API call
   Future<bool> verifyToken() async {
     if (_accessToken == null) {
-      await loadStoredTokens();
-      if (_accessToken == null) return false;
+      final loaded = await loadStoredTokens();
+      if (!loaded) {
+        print('No tokens loaded during verifyToken.');
+        return false;
+      }
     }
     return !_isTokenExpired(_accessToken!);
   }
@@ -86,11 +95,16 @@ class AuthService {
     try {
       final decoded = Jwt.parseJwt(token);
       final exp = decoded['exp'] as int?;
-      if (exp == null) return true;
+      if (exp == null) {
+        print('Token has no expiry field.');
+        return true;
+      }
       final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
       final now = DateTime.now();
-      final buffer = const Duration(minutes: 1);
-      return now.add(buffer).isAfter(expiryDate);
+      final buffer = const Duration(minutes: 5); // Increased buffer to avoid premature refresh
+      final isExpired = now.add(buffer).isAfter(expiryDate);
+      print('Token expiry check: isExpired=$isExpired, expiry=$expiryDate, now=$now');
+      return isExpired;
     } catch (e) {
       print('Error parsing token expiry: $e');
       return true;
@@ -99,7 +113,7 @@ class AuthService {
 
   Future<bool> refresh({int retryCount = 0}) async {
     if (_refreshToken == null) {
-      print('No refresh token available');
+      print('No refresh token available.');
       return false;
     }
 
@@ -115,7 +129,7 @@ class AuthService {
         Uri.parse(ApiConfig.refreshToken),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refresh': _refreshToken}),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 15)); // Increased timeout
 
       print('Refresh response status: ${response.statusCode}');
       print('Refresh response body: ${response.body}');
@@ -146,7 +160,8 @@ class AuthService {
         return false;
       } else if (response.statusCode == 401) {
         print('Unauthorized refresh (401). Retrying...');
-        return await refresh(retryCount: retryCount + 1);
+        _refreshRetryCount = retryCount + 1;
+        return await refresh(retryCount: _refreshRetryCount);
       } else {
         print('Unexpected refresh status: ${response.statusCode}. Body: ${response.body}');
         return false;
@@ -157,6 +172,7 @@ class AuthService {
         print('Retrying refresh...');
         return await refresh(retryCount: retryCount + 1);
       } else {
+        print('Max retries reached. Logging out.');
         await logout();
         return false;
       }
@@ -166,7 +182,10 @@ class AuthService {
   Future<bool> ensureValidToken() async {
     if (_accessToken == null) {
       final loaded = await loadStoredTokens();
-      if (!loaded) return false;
+      if (!loaded) {
+        print('No tokens available to ensure valid token.');
+        return false;
+      }
     }
 
     if (!_isTokenExpired(_accessToken!)) {
@@ -186,6 +205,7 @@ class AuthService {
 
   Future<String?> getCurrentUserId() async {
     if (!(await ensureValidToken())) {
+      print('Cannot get user ID: Invalid or expired token.');
       throw Exception('Invalid or expired token');
     }
     try {
@@ -194,6 +214,7 @@ class AuthService {
         Uri.parse(ApiConfig.userInfo),
         headers: headers,
       ).timeout(const Duration(seconds: 5));
+      print('User ID fetch response: ${response.statusCode}');
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         return userData['id']?.toString();

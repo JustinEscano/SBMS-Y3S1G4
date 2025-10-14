@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../Services/auth_service.dart';
 import '../Screens/ProfileScreen.dart';
 import '../Screens/RoomManagementScreen.dart';
@@ -11,6 +12,8 @@ import '../Screens/EnergyAnalyticsScreen.dart';
 import '../Widgets/bottom_navbar.dart';
 import '../Widgets/DashboardScreenWidgets.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/constants.dart';
+import 'dart:developer' as developer;
 
 class DashboardScreen extends StatefulWidget {
   final String accessToken;
@@ -21,18 +24,47 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  Map<String, dynamic>? _profileData;
+
   @override
   void initState() {
     super.initState();
     final provider = Provider.of<DashboardProvider>(context, listen: false);
     provider.loadData(context: context);
     provider.startAutoRefresh();
+    _fetchProfile();
   }
 
   @override
   void dispose() {
     Provider.of<DashboardProvider>(context, listen: false).dispose();
     super.dispose();
+  }
+
+  // Fetch profile data for profile picture
+  Future<void> _fetchProfile() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final profileData = await authService.apiService.fetchProfile();
+      if (mounted) {
+        setState(() {
+          _profileData = profileData;
+        });
+      }
+    } catch (e) {
+      developer.log('Error fetching profile: $e', name: 'DashboardScreen.Profile');
+    }
+  }
+
+  // Helper method to determine the correct profile picture URL
+  String _getProfilePictureUrl(String? picturePath) {
+    if (picturePath == null || picturePath.isEmpty) {
+      return '';
+    }
+    if (picturePath.startsWith('http://') || picturePath.startsWith('https://')) {
+      return picturePath;
+    }
+    return ApiConfig.getMediaUrl(picturePath);
   }
 
   void _navigateToScreen(Widget screen) {
@@ -100,15 +132,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final authService = Provider.of<AuthService>(context, listen: false);
     switch (value) {
       case 'analytics':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EnergyAnalyticsScreen(
-              accessToken: widget.accessToken,
-              refreshToken: authService.refreshToken ?? '',
-            ),
-          ),
-        );
+        _navigateToScreen(EnergyAnalyticsScreen(
+          accessToken: widget.accessToken,
+          refreshToken: authService.refreshToken ?? '',
+        ));
         break;
       case 'maintenance_requests':
         _navigateToMaintenanceManagement();
@@ -169,57 +196,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final esp32Count = provider.equipment.where((e) => e['type']?.toLowerCase() == 'esp32').length;
     final totalCapacity = provider.rooms.fold<int>(0, (sum, room) => sum + (room['capacity'] as int? ?? 0));
 
+    // Determine profile picture
+    ImageProvider? profileImage;
+    bool hasImage = false;
+    String profilePictureUrl = _getProfilePictureUrl(_profileData?['profile']['profile_picture']);
+    if (profilePictureUrl.isNotEmpty) {
+      profileImage = NetworkImage(profilePictureUrl);
+      hasImage = true;
+    }
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Smart Building Dashboard'),
+        backgroundColor: const Color(0xFF1F1E23), // Updated background color
+        title: Row(
+          children: [
+            GestureDetector(
+              onTap: _navigateToProfile,
+              child: CircleAvatar(
+                radius: 20,
+                backgroundImage: profileImage,
+                backgroundColor: Colors.grey[200],
+                child: !hasImage
+                    ? Icon(Icons.person, size: 24, color: Colors.grey[600])
+                    : null,
+                onBackgroundImageError: hasImage
+                    ? (error, stackTrace) {
+                  developer.log(
+                    'Error loading profile picture: $error',
+                    name: 'DashboardScreen.Image',
+                    error: error,
+                    stackTrace: stackTrace,
+                  );
+                }
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _profileData?['username'] ?? 'User',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) => DashboardScreenWidgets.buildManagementCenterBottomSheet(
-                  onRoomManagement: () {
-                    Navigator.pop(context);
-                    _navigateToRoomManagement();
-                  },
-                  onEquipmentManagement: () {
-                    Navigator.pop(context);
-                    _navigateToEquipmentManagement();
-                  },
-                  onMaintenanceManagement: () {
-                    Navigator.pop(context);
-                    _navigateToMaintenanceManagement();
-                  },
-                ),
-              );
-            },
-            tooltip: 'Management Center',
-          ),
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications),
+                icon: const Icon(Icons.notifications, color: Colors.white),
                 tooltip: 'Notifications',
                 onPressed: _navigateToNotifications,
               ),
               DashboardScreenWidgets.buildNotificationBadge(provider.unreadNotificationCount),
             ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => provider.loadData(context: context),
-            tooltip: 'Refresh Data',
-          ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            tooltip: 'Profile',
-            onPressed: _navigateToProfile,
           ),
         ],
       ),
