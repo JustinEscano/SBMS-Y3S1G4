@@ -6450,3 +6450,1476 @@ OTP sent to escanojustin678@gmail.com for user edi wowz
 Password reset via OTP for user edi wowz (ID: 2101f290-a379-4829-92c9-f9a541a6a4ec)
 OTP sent to escanojustin678@gmail.com for user edi wowz
 Password reset via OTP for user edi wowz (ID: 2101f290-a379-4829-92c9-f9a541a6a4ec)
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-14T00:00:00.000Z'], 'period_end': ['2025-10-14T00:00:00.000Z']}>
+Initial query count: 4
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 4
+All matching EnergySummaries: []
+No billing rate found for room Server Room A on 2025-09-26 00:00:00+00:00
+Calculated total_cost=0.33999999999999997, total_energy=0.03399999999999999, effective_rate=10.000000000000002, currency=PHP for 4 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Returning 4 sensor readings
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['weekly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-10-07T00:00:00.000Z'], 'period_end': ['2025-10-14T00:00:00.000Z']}>
+Initial query count: 2
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 2
+All matching EnergySummaries: []
+Calculated total_cost=0.09999999999999992, total_energy=0.009999999999999992, effective_rate=10.0, currency=PHP for 2 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['monthly'], 'room_id': ['52801213-d525-4b90-804f-fe98bdbba929'], 'period_start': ['2025-09-14T00:00:00.000Z'], 'period_end': ['2025-10-14T00:00:00.000Z']}>
+Initial query count: 4
+After room_id filter (52801213-d525-4b90-804f-fe98bdbba929): 4
+All matching EnergySummaries: []
+No billing rate found for room Server Room A on 2025-09-26 00:00:00+00:00
+Calculated total_cost=0.33999999999999997, total_energy=0.03399999999999999, effective_rate=10.000000000000002, currency=PHP for 4 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+All matching EnergySummaries: []
+Initial query count: 1
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Latest sensor data requested
+Returning 4 sensor readings
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['73d9804c-f81a-404d-a92f-b8c1b7438c68'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+After room_id filter (73d9804c-f81a-404d-a92f-b8c1b7438c68): 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=73d9804c-f81a-404d-a92f-b8c1b7438c68, equipment_id=None, component_id=None, period_start=2025-10-13T00:00:00+00:00, period_end=2025-10-14T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-13T00:00:00.000Z'], 'period_end': ['2025-10-13T23:59:59.000Z']}>
+Initial query count: 1
+All matching EnergySummaries: []
+Calculated total_cost=0.08999999999999994, total_energy=0.008999999999999994, effective_rate=10.0, currency=PHP for 1 summaries
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
