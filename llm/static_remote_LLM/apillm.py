@@ -42,15 +42,23 @@ except ImportError as e:
     class AdvancedLLMHandlers:
         pass
 
-# Enhanced logging configuration
+# Setup logging with UTF-8 encoding
+log_file = 'apillm_enhanced.log'
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('apillm_enhanced.log'),
-        logging.StreamHandler()
-    ]
+        logging.FileHandler(log_file, encoding='utf-8'),
+        logging.StreamHandler(stream=sys.stdout)
+    ],
+    force=True
 )
+
+# Configure console handler to use UTF-8
+for handler in logging.root.handlers:
+    if isinstance(handler, logging.StreamHandler):
+        handler.stream.reconfigure(encoding='utf-8', errors='replace')
+
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
