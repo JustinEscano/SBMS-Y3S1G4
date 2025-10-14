@@ -320,48 +320,152 @@ class AdvancedLLMHandlers:
         self.logger = logging.getLogger(__name__)
     
     def handle_kpi_query(self, df):
-        """Handle Key Performance Indicators queries"""
+        """Handle Key Performance Indicators with insights and recommendations"""
         try:
             if df.empty:
                 return {"error": "No data available for KPI analysis"}
             
-            kpis = {}
+            answer_lines = ["📊 **Building Performance Dashboard**\n"]
             
-            # Energy KPIs
+            # Energy Analysis
             if 'energy_consumption_kwh' in df.columns:
-                kpis['total_energy'] = df['energy_consumption_kwh'].sum()
-                kpis['avg_energy_per_room'] = df.groupby('room_name')['energy_consumption_kwh'].mean().mean()
+                total_energy = df['energy_consumption_kwh'].sum()
+                avg_energy = df['energy_consumption_kwh'].mean()
+                
+                # Room-wise analysis
+                if 'room_name' in df.columns:
+                    room_energy = df.groupby('room_name')['energy_consumption_kwh'].sum().sort_values(ascending=False)
+                    top_consumer = room_energy.index[0] if len(room_energy) > 0 else "Unknown"
+                    top_consumption = room_energy.iloc[0] if len(room_energy) > 0 else 0
+                    efficiency_score = (1 - (room_energy.std() / room_energy.mean())) * 100 if room_energy.mean() > 0 else 0
+                    
+                    answer_lines.append("⚡ **Energy Performance:**")
+                    answer_lines.append(f"   • Total Consumption: **{total_energy:.2f} kWh**")
+                    answer_lines.append(f"   • Highest Consumer: **{top_consumer}** ({top_consumption:.2f} kWh)")
+                    answer_lines.append(f"   • Distribution Efficiency: **{efficiency_score:.1f}%**")
+                    
+                    # Cost estimation
+                    cost_per_kwh = 12.00  # PHP per kWh
+                    total_cost = total_energy * cost_per_kwh
+                    answer_lines.append(f"   • Estimated Cost: **₱{total_cost:.2f}**")
+                    answer_lines.append("")
             
-            # Occupancy KPIs
-            if 'occupancy_count' in df.columns:
-                kpis['total_occupancy'] = df['occupancy_count'].sum()
-                kpis['avg_occupancy'] = df['occupancy_count'].mean()
+            # Occupancy & Utilization
+            if 'occupancy_count' in df.columns and 'room_name' in df.columns:
+                total_occupancy = df['occupancy_count'].sum()
+                occupied_events = len(df[df['occupancy_count'] > 0])
+                total_events = len(df)
+                utilization_rate = (occupied_events / total_events * 100) if total_events > 0 else 0
+                
+                # Peak occupancy analysis
+                peak_occupancy = df['occupancy_count'].max()
+                avg_when_occupied = df[df['occupancy_count'] > 0]['occupancy_count'].mean() if occupied_events > 0 else 0
+                
+                answer_lines.append("👥 **Space Utilization:**")
+                answer_lines.append(f"   • Utilization Rate: **{utilization_rate:.1f}%**")
+                answer_lines.append(f"   • Peak Occupancy: **{peak_occupancy:.0f} people**")
+                answer_lines.append(f"   • Avg When Occupied: **{avg_when_occupied:.1f} people**")
+                
+                # Energy efficiency per person
+                if 'energy_consumption_kwh' in df.columns and total_occupancy > 0:
+                    energy_per_person = total_energy / total_occupancy
+                    answer_lines.append(f"   • Energy per Person: **{energy_per_person:.2f} kWh**")
+                answer_lines.append("")
             
-            # Power KPIs
-            if 'power_consumption_watts.total' in df.columns:
-                kpis['avg_power'] = df['power_consumption_watts.total'].mean()
-                kpis['peak_power'] = df['power_consumption_watts.total'].max()
-            
-            # Environmental KPIs
+            # Environmental Comfort
             if 'environmental_data.temperature_celsius' in df.columns:
-                kpis['avg_temperature'] = df['environmental_data.temperature_celsius'].mean()
-            
-            kpi_text = []
-            for kpi, value in kpis.items():
-                if 'energy' in kpi:
-                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.2f} kWh")
-                elif 'power' in kpi:
-                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.2f} W")
-                elif 'temperature' in kpi:
-                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.1f}°C")
+                temps = df['environmental_data.temperature_celsius'].dropna()
+                avg_temp = temps.mean()
+                min_temp = temps.min()
+                max_temp = temps.max()
+                
+                # Comfort assessment (ideal: 20-24°C)
+                comfort_range = df[(df['environmental_data.temperature_celsius'] >= 20) & 
+                                  (df['environmental_data.temperature_celsius'] <= 24)]
+                comfort_rate = (len(comfort_range) / len(temps) * 100) if len(temps) > 0 else 0
+                
+                answer_lines.append("🌡️ **Environmental Comfort:**")
+                answer_lines.append(f"   • Average Temperature: **{avg_temp:.1f}°C**")
+                answer_lines.append(f"   • Range: **{min_temp:.1f}°C - {max_temp:.1f}°C**")
+                answer_lines.append(f"   • Comfort Rate: **{comfort_rate:.1f}%** (20-24°C)")
+                
+                # Temperature status
+                if avg_temp < 20:
+                    answer_lines.append(f"   • Status: ❄️ **Too Cold** - Consider heating")
+                elif avg_temp > 24:
+                    answer_lines.append(f"   • Status: 🔥 **Too Warm** - Optimize cooling")
                 else:
-                    kpi_text.append(f"{kpi.replace('_', ' ').title()}: {value:.1f}")
+                    answer_lines.append(f"   • Status: ✅ **Optimal**")
+                answer_lines.append("")
             
-            answer = "Key Performance Indicators:\n" + "\n".join([f"• {kpi}" for kpi in kpi_text])
+            # System Health & Efficiency
+            answer_lines.append("📈 **System Health:**")
+            data_points = len(df)
+            unique_rooms = df['room_name'].nunique() if 'room_name' in df.columns else 0
+            
+            answer_lines.append(f"   • Data Points Analyzed: **{data_points:,}**")
+            answer_lines.append(f"   • Active Rooms: **{unique_rooms}**")
+            
+            # Calculate overall efficiency score
+            scores = []
+            if 'energy_consumption_kwh' in df.columns and 'room_name' in df.columns:
+                scores.append(min(efficiency_score, 100))
+            if 'occupancy_count' in df.columns:
+                scores.append(utilization_rate)
+            if 'environmental_data.temperature_celsius' in df.columns:
+                scores.append(comfort_rate)
+            
+            if scores:
+                overall_score = sum(scores) / len(scores)
+                answer_lines.append(f"   • Overall Efficiency: **{overall_score:.1f}%**")
+                
+                if overall_score >= 80:
+                    answer_lines.append(f"   • Rating: 🌟 **Excellent**")
+                elif overall_score >= 60:
+                    answer_lines.append(f"   • Rating: ✅ **Good**")
+                elif overall_score >= 40:
+                    answer_lines.append(f"   • Rating: ⚠️ **Fair**")
+                else:
+                    answer_lines.append(f"   • Rating: ❌ **Needs Improvement**")
+            answer_lines.append("")
+            
+            # Actionable Recommendations
+            answer_lines.append("💡 **Recommendations:**")
+            recommendations = []
+            
+            if 'energy_consumption_kwh' in df.columns and 'room_name' in df.columns:
+                if efficiency_score < 70:
+                    recommendations.append(f"Investigate high energy usage in **{top_consumer}**")
+                if total_energy > 50:
+                    recommendations.append("Consider implementing energy-saving schedules")
+            
+            if 'occupancy_count' in df.columns:
+                if utilization_rate < 50:
+                    recommendations.append(f"Low utilization ({utilization_rate:.0f}%) - optimize space allocation")
+                elif utilization_rate > 90:
+                    recommendations.append("High utilization - consider expanding capacity")
+            
+            if 'environmental_data.temperature_celsius' in df.columns:
+                if comfort_rate < 70:
+                    recommendations.append(f"Improve temperature control (only {comfort_rate:.0f}% in comfort zone)")
+            
+            if not recommendations:
+                recommendations.append("✅ All systems operating optimally")
+                recommendations.append("Continue monitoring for sustained performance")
+            
+            for rec in recommendations:
+                answer_lines.append(f"   • {rec}")
+            
+            answer = "\n".join(answer_lines)
             
             return {
                 "answer": answer,
-                "kpis": kpis
+                "kpis": {
+                    "total_energy": total_energy if 'energy_consumption_kwh' in df.columns else 0,
+                    "utilization_rate": utilization_rate if 'occupancy_count' in df.columns else 0,
+                    "comfort_rate": comfort_rate if 'environmental_data.temperature_celsius' in df.columns else 0,
+                    "overall_score": overall_score if scores else 0
+                }
             }
             
         except Exception as e:
@@ -2275,16 +2379,16 @@ class RoomLogAnalyzer:
 
     def ask(self, query, user_id=None, username=None, session_id=None, client_ip=None):
         """Ask a question about the room logs with robust logging"""
-        self.logger.info(f"Processing ask request for query: '{query}' with user_id: {user_id}, username: {username}")
+        start_time = time.time()
+        self.logger.info(f"Processing query: {query}")
         
-        if self.use_database:
-            mongo_uri = os.getenv("MONGO_ATLAS_URI")
-            mongo_db_name = os.getenv("MONGO_DB_NAME", "LLM_logs")
-            mongo_collection_name = os.getenv("MONGO_COLLECTION_NAME", "logs")
-            prompt_logs_db_name = os.getenv("PROMPT_LOGS_DB_NAME", "chat_logs")
-            prompt_logs_collection_name = os.getenv("PROMPT_LOGS_COLLECTION_NAME", "conversations")
-            self.logger_manager.ensure_mongodb_connection(mongo_uri, mongo_db_name, mongo_collection_name,
-                                                          prompt_logs_db_name, prompt_logs_collection_name)
+        # Force refresh room cache if it's a room-related query
+        if any(term in query.lower() for term in ['room', 'rooms', 'space', 'location']):
+            try:
+                if hasattr(self, 'room_handlers') and self.room_handlers:
+                    self.room_handlers.refresh_room_cache()
+            except Exception as e:
+                self.logger.error(f"Error refreshing room cache: {e}")
         
         if not self.qa_chain:
             self.logger.error("QA chain not initialized")

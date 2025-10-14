@@ -61,15 +61,28 @@ class AdvancedLLMHandlers:
     def __init__(self, prompts_config, database_adapter: Optional['DatabaseAdapter'] = None):
         self.prompts = prompts_config
         self.maintenance_rules = prompts_config.get_all_prompts().get("maintenance_rules", {
-            "power_anomaly_threshold": 1.5,
+            "power_anomaly_threshold": 2.0,  # Increased threshold to reduce false positives
             "temperature_anomaly_range": [18, 27],
-            "humidity_anomaly_range": [25, 70],
+            "humidity_anomaly_range": {
+                "office": [30, 60],
+                "conference": [30, 60],
+                "lab": [30, 65],
+                "server": [40, 60],
+                "default": [25, 70]
+            },
             "runtime_anomaly_threshold": 12,
             "current_anomaly_range": [0, 5],
             "voltage_anomaly_range": [200, 240],
             "power_anomaly_range": [0, 2000],
-            "energy_spike_threshold": 2.0,
-            "occupancy_anomaly_threshold": 2.0
+            "energy_spike_threshold": 2.5,  # Increased threshold
+            "occupancy_anomaly_threshold": 2.5,  # Increased threshold
+            "working_hours": {
+                "start": 8,  # 8 AM
+                "end": 18,   # 6 PM
+                "weekdays": [0, 1, 2, 3, 4]  # Monday to Friday
+            },
+            "motion_cooldown_minutes": 15,  # Minimum minutes between motion alerts
+            "min_confidence_threshold": 0.7  # Minimum confidence to report an anomaly
         })
         self.insights_config = prompts_config.get_all_prompts().get("insights_config", {
             "default_cost_per_kwh": 0.15
@@ -585,142 +598,57 @@ class AdvancedLLMHandlers:
                         equipment=equipment,
                         component=component,
                         impact="Unnecessary energy consumption",
-                        recommendation="Implement automatic shut-off for unoccupied rooms"
+                        recommendation="Check for equipment left running or scheduling issues"
                     ))
-        
-        return anomalies
-    
-    def _detect_electrical_anomalies(self, df: pd.DataFrame, room: str, equipment: str, component: str) -> List[AnomalyDetection]:
-        """Detect anomalies in electrical metrics (current, power, voltage)."""
-        anomalies = []
-        
-        # Define ranges for electrical metrics
-        current_range = self.maintenance_rules.get("current_anomaly_range", [0, 5])
-        power_range = self.maintenance_rules.get("power_anomaly_range", [0, 2000])
-        voltage_range = self.maintenance_rules.get("voltage_anomaly_range", [200, 240])
-        
-        for idx, row in df.iterrows():
-            # Use safe timestamp conversion
-            timestamp_str = self._safe_timestamp_conversion(row.get('timestamp'))
-            
-            # Current anomalies
-            if "current" in df.columns and pd.notnull(row["current"]):
-                current = row["current"]
-                if current < current_range[0] or current > current_range[1]:
-                    severity = "Critical" if current > current_range[1] * 1.5 else "High"
-                    impact = "Potential electrical fault or equipment damage"
-                    recommendation = "Immediate electrical system inspection required"
-                    
-                    anomalies.append(AnomalyDetection(
-                        anomaly_type="Current",
-                        severity=severity,
-                        location=f"{room} - {equipment} ({component})",
-                        description=f"Current {current:.2f}A is outside normal range {current_range}",
-                        timestamp=timestamp_str,
-                        value=current,
-                        expected_range=(current_range[0], current_range[1]),
-                        confidence=0.85,
-                        equipment=equipment,
-                        component=component,
-                        impact=impact,
-                        recommendation=recommendation
-                    ))
-            
-            # Power anomalies
-            if "power" in df.columns and pd.notnull(row["power"]):
-                power = row["power"]
-                if power < power_range[0] or power > power_range[1]:
-                    severity = "High" if power > power_range[1] * 1.5 else "Medium"
-                    impact = "Equipment operating outside design parameters"
-                    recommendation = "Check equipment load and electrical supply"
-                    
-                    anomalies.append(AnomalyDetection(
-                        anomaly_type="Power",
-                        severity=severity,
-                        location=f"{room} - {equipment} ({component})",
-                        description=f"Power {power:.1f}W is outside normal range {power_range}",
-                        timestamp=timestamp_str,
-                        value=power,
-                        expected_range=(power_range[0], power_range[1]),
-                        confidence=0.85,
-                        equipment=equipment,
-                        component=component,
-                        impact=impact,
-                        recommendation=recommendation
-                    ))
-            
-            # Voltage anomalies
-            if "voltage" in df.columns and pd.notnull(row["voltage"]):
-                voltage = row["voltage"]
-                if voltage < voltage_range[0] or voltage > voltage_range[1]:
-                    severity = "Critical" if voltage < voltage_range[0] * 0.9 or voltage > voltage_range[1] * 1.1 else "High"
-                    impact = "Risk of equipment damage and electrical system instability"
-                    recommendation = "Urgent electrical system inspection and voltage regulation"
-                    
-                    anomalies.append(AnomalyDetection(
-                        anomaly_type="Voltage",
-                        severity=severity,
-                        location=f"{room} - {equipment} ({component})",
-                        description=f"Voltage {voltage:.1f}V is outside normal range {voltage_range}",
-                        timestamp=timestamp_str,
-                        value=voltage,
-                        expected_range=(voltage_range[0], voltage_range[1]),
-                        confidence=0.9,
-                        equipment=equipment,
-                        component=component,
-                        impact=impact,
-                        recommendation=recommendation
-                    ))
-        
-        return anomalies
-    
-    def _detect_runtime_anomalies(self, df: pd.DataFrame, room: str, equipment: str, component: str) -> List[AnomalyDetection]:
-        """Detect equipment runtime anomalies."""
-        anomalies = []
-        runtime_threshold = self.maintenance_rules.get("runtime_anomaly_threshold", 12)
-        
-        runtime_columns = [
-            "equipment_usage.lights_on_hours",
-            "equipment_usage.air_conditioner_on_hours",
-            "equipment_usage.projector_on_hours",
-            "equipment_usage.computer_on_hours"
-        ]
-        
-        for col in runtime_columns:
-            if col not in df.columns:
-                logger.warning(f"Missing '{col}' for {equipment} in {room}")
-                continue
-                
-            equipment_type = col.split('.')[-1].replace('_on_hours', '').replace('_', ' ').title()
-            
-            for idx, row in df.iterrows():
-                runtime = row[col]
-                
-                if pd.notnull(runtime) and runtime > runtime_threshold:
-                    severity = "High" if runtime > 16 else "Medium"
-                    impact = "Equipment wear and tear, increased maintenance needs"
-                    recommendation = "Implement usage scheduling and automatic shut-off"
-                    
-                    # Use safe timestamp conversion
-                    timestamp_str = self._safe_timestamp_conversion(row.get('timestamp'))
-                    
-                    anomalies.append(AnomalyDetection(
-                        anomaly_type="Equipment Runtime",
-                        severity=severity,
-                        location=f"{room} - {equipment} ({component})",
-                        description=f"{equipment_type} runtime {runtime:.1f}h exceeds normal operating hours",
-                        timestamp=timestamp_str,
-                        value=runtime,
-                        expected_range=(0, runtime_threshold),
-                        confidence=0.7,
-                        equipment=equipment,
-                        component=component,
-                        impact=impact,
-                        recommendation=recommendation
-                    ))
-        
-        return anomalies
 
+        # Motion detection after hours
+        if len(df) > 1 and 'timestamp' in df.columns and 'occupancy_count' in df.columns:
+            df = df.sort_values('timestamp')
+            current_time = df['timestamp'].iloc[-1]
+            
+            if not self._is_working_hours(current_time):
+                # Get motion detections in the last 2 hours
+                recent_motion = df[
+                    (df['timestamp'] >= current_time - pd.Timedelta(hours=2)) &
+                    (df['occupancy_count'] > 0)
+                ]
+                
+                if not recent_motion.empty:
+                    # Require more detections to trigger higher severity
+                    detection_count = len(recent_motion)
+                    confidence = min(0.9, 0.3 + (detection_count * 0.1))  # Lower base confidence
+                    min_confidence = self.maintenance_rules.get("min_confidence_threshold", 0.7)
+                    
+                    # Only create alert if we have enough confidence
+                    if confidence >= min_confidence:
+                        # Higher threshold for High severity
+                        if detection_count >= 5:  # Was 3
+                            severity = "High"
+                        elif detection_count >= 3:  # New Medium threshold
+                            severity = "Medium"
+                        else:
+                            severity = "Low"
+                            
+                        anomalies.append(AnomalyDetection(
+                            anomaly_type="Motion_After_Hours",
+                            severity=severity,
+                            location=room,
+                            description=f"Motion detected outside working hours at {current_time.strftime('%H:%M')} "
+                                      f"({detection_count} detections in 2h window)",
+                            timestamp=self._safe_timestamp_conversion(current_time),
+                            value=detection_count,
+                            expected_range=(0, 0),  # Expect no motion after hours
+                            confidence=confidence,
+                            equipment=equipment,
+                            component=component,
+                            impact="Potential security concern or cleaning crew" if severity in ["High", "Medium"] else "Likely normal activity",
+                            recommendation=("Verify if this is expected activity (e.g., cleaning, maintenance) "
+                                         "or investigate potential security issue" if severity in ["High", "Medium"]
+                                         else "No action required - likely normal activity")
+                        ))
+        
+        return anomalies
+    
     def generate_anomaly_report(self, anomalies: List[AnomalyDetection]) -> str:
         """Generate a comprehensive anomaly report with actionable insights."""
         if not anomalies:
@@ -870,6 +798,141 @@ class AdvancedLLMHandlers:
     # ... (keep all other methods the same - handle_kpi_query, generate_energy_insights, handle_energy_trends_query, etc.)
     # Make sure to use self._safe_timestamp_conversion in any other methods that process timestamps
 
+    def generate_maintenance_suggestions(self, df: pd.DataFrame, anomalies: List[AnomalyDetection]) -> List[MaintenanceAlert]:
+        """
+        Generate actionable maintenance suggestions based on detected anomalies and sensor data.
+        Returns a list of MaintenanceAlert objects with detailed recommendations.
+        """
+        maintenance_alerts = []
+        
+        if not anomalies:
+            logger.info("No anomalies detected, generating preventive maintenance suggestions")
+            # Generate preventive maintenance suggestions even without anomalies
+            maintenance_alerts.extend(self._generate_preventive_maintenance(df))
+            return maintenance_alerts
+        
+        # Group anomalies by equipment and room for consolidated recommendations
+        anomaly_groups = {}
+        for anomaly in anomalies:
+            key = (anomaly.room, anomaly.equipment, anomaly.component)
+            if key not in anomaly_groups:
+                anomaly_groups[key] = []
+            anomaly_groups[key].append(anomaly)
+        
+        # Generate maintenance alerts for each equipment/room combination
+        for (room, equipment, component), group_anomalies in anomaly_groups.items():
+            # Sort by severity
+            critical_anomalies = [a for a in group_anomalies if a.severity == "Critical"]
+            high_anomalies = [a for a in group_anomalies if a.severity == "High"]
+            medium_anomalies = [a for a in group_anomalies if a.severity == "Medium"]
+            
+            # Generate alerts based on severity
+            if critical_anomalies:
+                for anomaly in critical_anomalies:
+                    maintenance_alerts.append(MaintenanceAlert(
+                        equipment=equipment,
+                        issue=f"CRITICAL: {anomaly.anomaly_type} - {anomaly.description}",
+                        urgency="Critical",
+                        confidence=anomaly.confidence,
+                        timeline="Immediate (within 2 hours)",
+                        action=anomaly.recommendation,
+                        cost_estimate="High priority - immediate action required",
+                        risk_level="Critical - Equipment damage or safety risk",
+                        room=room,
+                        component=component
+                    ))
+            
+            if high_anomalies:
+                # Consolidate high priority issues
+                issue_types = set([a.anomaly_type for a in high_anomalies])
+                issue_description = ", ".join(issue_types)
+                primary_anomaly = high_anomalies[0]
+                
+                maintenance_alerts.append(MaintenanceAlert(
+                    equipment=equipment,
+                    issue=f"HIGH PRIORITY: {issue_description} detected",
+                    urgency="High",
+                    confidence=sum([a.confidence for a in high_anomalies]) / len(high_anomalies),
+                    timeline="Within 24 hours",
+                    action=primary_anomaly.recommendation,
+                    cost_estimate="Medium - Schedule maintenance soon",
+                    risk_level="High - Performance degradation likely",
+                    room=room,
+                    component=component
+                ))
+            
+            if medium_anomalies and not critical_anomalies and not high_anomalies:
+                # Only create medium alerts if no higher priority issues exist
+                issue_types = set([a.anomaly_type for a in medium_anomalies])
+                issue_description = ", ".join(issue_types)
+                primary_anomaly = medium_anomalies[0]
+                
+                maintenance_alerts.append(MaintenanceAlert(
+                    equipment=equipment,
+                    issue=f"MEDIUM: {issue_description} - Monitor and schedule maintenance",
+                    urgency="Medium",
+                    confidence=sum([a.confidence for a in medium_anomalies]) / len(medium_anomalies),
+                    timeline="Within 1 week",
+                    action=primary_anomaly.recommendation,
+                    cost_estimate="Low - Include in regular maintenance cycle",
+                    risk_level="Medium - Monitor for escalation",
+                    room=room,
+                    component=component
+                ))
+        
+        # Add preventive maintenance suggestions
+        maintenance_alerts.extend(self._generate_preventive_maintenance(df))
+        
+        logger.info(f"Generated {len(maintenance_alerts)} maintenance suggestions")
+        return maintenance_alerts
+    
+    def _generate_preventive_maintenance(self, df: pd.DataFrame) -> List[MaintenanceAlert]:
+        """Generate preventive maintenance suggestions based on usage patterns."""
+        preventive_alerts = []
+        
+        if df.empty:
+            return preventive_alerts
+        
+        # Analyze equipment usage patterns
+        if 'equipment_name' in df.columns and 'room_name' in df.columns:
+            equipment_groups = df.groupby(['room_name', 'equipment_name'])
+            
+            for (room, equipment), group in equipment_groups:
+                # Check for high usage equipment
+                if 'equipment_usage.lights_on_hours' in group.columns:
+                    avg_light_hours = group['equipment_usage.lights_on_hours'].mean()
+                    if avg_light_hours > 10:
+                        preventive_alerts.append(MaintenanceAlert(
+                            equipment=equipment,
+                            issue="High lighting usage detected - Consider LED upgrade or occupancy sensors",
+                            urgency="Low",
+                            confidence=0.7,
+                            timeline="Next maintenance cycle (1-2 weeks)",
+                            action="Evaluate lighting efficiency and consider smart controls",
+                            cost_estimate="Low - Preventive measure",
+                            risk_level="Low - Optimization opportunity",
+                            room=room,
+                            component="Lighting System"
+                        ))
+                
+                if 'equipment_usage.air_conditioner_on_hours' in group.columns:
+                    avg_ac_hours = group['equipment_usage.air_conditioner_on_hours'].mean()
+                    if avg_ac_hours > 8:
+                        preventive_alerts.append(MaintenanceAlert(
+                            equipment=equipment,
+                            issue="Extended HVAC operation - Schedule filter cleaning and system check",
+                            urgency="Low",
+                            confidence=0.6,
+                            timeline="Next maintenance cycle (1-2 weeks)",
+                            action="Clean/replace filters, check refrigerant levels, inspect coils",
+                            cost_estimate="Low - Routine maintenance",
+                            risk_level="Low - Preventive care",
+                            room=room,
+                            component="HVAC System"
+                        ))
+        
+        return preventive_alerts
+
     def handle_query(self, query: str, df: pd.DataFrame) -> Dict[str, Any]:
         """Route queries to appropriate handlers with enhanced anomaly detection."""
         query = query.lower().strip()
@@ -910,6 +973,26 @@ class AdvancedLLMHandlers:
             return self.generate_weekly_summary(df)
         elif any(k in query for k in ["current status", "room status", "what's the current room status"]):
             return self.handle_context_aware_query(query, df)
+        elif "maintenance suggestions" in query:
+            anomalies = self.detect_anomalies(df)
+            maintenance_suggestions = self.generate_maintenance_suggestions(df, anomalies)
+            return {
+                "answer": "Maintenance suggestions generated",
+                "maintenance_suggestions": [
+                    {
+                        "equipment": s.equipment,
+                        "issue": s.issue,
+                        "urgency": s.urgency,
+                        "confidence": s.confidence,
+                        "timeline": s.timeline,
+                        "action": s.action,
+                        "cost_estimate": s.cost_estimate,
+                        "risk_level": s.risk_level,
+                        "room": s.room,
+                        "component": s.component
+                    } for s in maintenance_suggestions
+                ]
+            }
         else:
             logger.warning(f"No deterministic match for query: '{query}'; falling back to LLM")
             return {"error": "Query not supported, falling back to LLM"}
