@@ -79,7 +79,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           widget.onMenuSelection(_navItems[index]['value']);
         }
       },
-      selectedItemColor: const Color(0xFF184BFB), // Vibrant blue for selected label
+      selectedItemColor: const Color(0xFF4D6BFE), // Vibrant blue for selected label
       unselectedItemColor: Colors.white70, // White70 for unselected label
       selectedFontSize: 12,
       unselectedFontSize: 12,
