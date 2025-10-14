@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../Config/api.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
+import '../Screens/NotificationsScreen.dart'; // Added import
 import '../Widgets/bottom_navbar.dart';
 import '../Widgets/AnalyticsWidgets.dart';
 import '../Services/auth_service.dart';
@@ -904,14 +905,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       if (isTemperature) return 50.0;
       if (isHumidity) return 100.0;
       if (isSecurity) return 10.0;
-      return isEnergy ? 0.1 : 100.0; // Increased default for energy to avoid small values
+      return isEnergy ? 0.1 : 100.0;
     }
     final maxY = spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b);
     if (maxY == 0) {
       if (isTemperature) return 50.0;
       if (isHumidity) return 100.0;
       if (isSecurity) return 10.0;
-      return isEnergy ? 0.1 : 100.0; // Ensure non-zero default
+      return isEnergy ? 0.1 : 100.0;
     }
     if (isTemperature) return (maxY * 1.2).ceilToDouble();
     if (isHumidity) return (maxY * 1.2).ceilToDouble();
@@ -1006,6 +1007,40 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     });
   }
 
+  // Added navigation to NotificationsScreen
+  Route _createSlideRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+        return SlideTransition(
+          position: offsetAnimation,
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+    );
+  }
+
+  void _navigateToNotifications() {
+    Navigator.push(
+      context,
+      _createSlideRoute(
+        NotificationsScreen(
+          accessToken: AuthService().accessToken ?? widget.accessToken,
+          refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+        ),
+      ),
+    ).then((_) {
+      // Refresh data when returning, if needed
+      loadEnergyData();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -1028,7 +1063,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     final interval = _getInterval(timeFrame);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF000000), // Black background
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F1E23),
         title: Text(
@@ -1039,12 +1074,12 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
             color: Colors.white,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white), // Set default back button to white
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: isRefreshingToken ? null : loadEnergyData,
-            tooltip: 'Refresh Data',
+            icon: const Icon(Icons.notifications, color: Colors.white),
+            onPressed: isRefreshingToken ? null : _navigateToNotifications,
+            tooltip: 'View Notifications',
           ),
         ],
       ),
