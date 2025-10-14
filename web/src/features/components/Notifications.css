@@ -57,17 +57,6 @@
   margin-bottom: 8px; /* Add spacing below the row */
 }
 
-.notif-card-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: white;
-  margin: 0; /* Remove default margin */
-  overflow: hidden;
-  display: -webkit-box; /* ✅ required for line clamp */
-  -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
-}
-
 /* Orange Divider Line */
 .notif-card-divider {
   height: 2px;
@@ -80,11 +69,6 @@
   font-size: 1rem;
   color: white;
   margin-bottom: 16px; /* Add spacing below the content */
-  overflow: hidden;
-  display: -webkit-box; /* ✅ required for line clamp */
-  -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
-  height: 65px;
 }
 
 /* Actions */

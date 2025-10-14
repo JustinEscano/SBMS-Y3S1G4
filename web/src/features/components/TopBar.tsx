@@ -2,9 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "./TopBar.css";
 import { useNavigate } from "react-router-dom";
 import ModalLogout from "./ModalLogout";
-import { useAuth } from "../context/AuthContext";
-import { useUser } from "../hooks/useUser";
-import { userService } from "../services/userService";
+import { jwtDecode } from "jwt-decode";
 
 type TopBarProps = {
   collapsed: boolean;
@@ -13,85 +11,78 @@ type TopBarProps = {
   handleLogout: () => void;
 };
 
+type TokenPayload = {
+  user_id: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  role_display?: string;
+  exp: number;
+  token_type: string;
+};
+
+type User = {
+  id: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  role_display?: string;
+};
+
 const TopBar: React.FC<TopBarProps> = ({
   collapsed,
+  darkMode,
+  setDarkMode,
   handleLogout,
 }) => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const { token } = useAuth();
-  const { user, loading, clearUser } = useUser(token);
-  const [profilePic, setProfilePic] = useState<string | File | undefined>(undefined);
+  const [user, setUser] = useState<User | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
-  const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-
-  // ✅ Convert different picture formats into usable src
-  const getAvatarSrc = (profilePic?: string | File | null) => {
-    if (!profilePic) return undefined;
-
-    if (typeof profilePic === "string") {
-      const trimmed = profilePic.trim();
-      if (!trimmed) return undefined;
-      return trimmed.startsWith("http") ? trimmed : `${BACKEND_URL}${trimmed}`;
-    }
-
-    try {
-      return URL.createObjectURL(profilePic);
-    } catch (err) {
-      console.error("Failed to create object URL for profile file", err);
-      return undefined;
-    }
-  };
-
-  // ✅ Fetch user profile picture
-  useEffect(() => {
-    const fetchProfilePic = async () => {
-      if (token) {
-        try {
-          const profileResponse = await userService.getProfile();
-          setProfilePic(profileResponse.profile?.profile_picture || undefined);
-        } catch (err) {
-          console.error("Failed to fetch profile picture:", err);
-          setProfilePic(undefined);
-        }
-      }
-    };
-    fetchProfilePic();
-  }, [token]);
 
   const handleConfirmLogout = () => {
-    clearUser();
     setLogoutModalOpen(false);
     handleLogout();
   };
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      const decoded = jwtDecode<TokenPayload>(token);
+
+      // we only *guarantee* user_id, but keep other fields if your backend puts them
+      setUser({
+        id: decoded.user_id,
+        username: decoded.username ?? undefined,
+        email: decoded.email ?? undefined,
+        role: decoded.role ?? undefined,
+        role_display: decoded.role_display ?? decoded.role ?? "Client",
+      });
+    } catch (err) {
+      console.error("Failed to decode JWT:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
     };
-    const handleEsc = (e: KeyboardEvent) => {
+    const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setDropdownOpen(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onEsc);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onEsc);
     };
   }, []);
-
-  const getInitial = (name: string) => name.charAt(0).toUpperCase();
-
-  const avatarContent = () => {
-    if (loading) return <div className="avatar-circle">?</div>;
-    const src = getAvatarSrc(profilePic || user?.profile_picture);
-    if (src) return <img src={src} alt="Profile" className="avatar-circle" />;
-    return <div className="avatar-circle">{getInitial(user?.username ?? "G")}</div>;
-  };
 
   return (
     <header className={`topbar ${collapsed ? "collapsed" : ""}`}>
@@ -103,27 +94,44 @@ const TopBar: React.FC<TopBarProps> = ({
         <div className="profile-dropdown" ref={menuRef}>
           <div
             className="profile-button"
-            onClick={() => setDropdownOpen((prev) => !prev)}
+            onClick={() => setDropdownOpen(!dropdownOpen)}
           >
-            {avatarContent()}
+            <div className="avatar-circle">
+              {user?.username?.charAt(0).toUpperCase() ?? "?"}
+            </div>
             <span className="topbar-user">
-              {loading ? "Loading..." : user?.username ?? "Guest"} ▾
+              {user?.role_display ?? "Guest"} ▾
             </span>
           </div>
 
           {dropdownOpen && (
             <div className="dropdown-menu">
               <div className="dropdown-header">
-                {avatarContent()}
+                <div className="avatar-large">
+                  {user?.username?.charAt(0).toUpperCase() ?? "?"}
+                </div>
                 <div>
                   <h4>{user?.username ?? "Guest"}</h4>
-                  <small>{user?.email ?? "No email"}</small>
+                  <small>ID: {user?.id ?? "N/A"}</small>
                 </div>
               </div>
 
               <div className="dropdown-links">
                 <button onClick={() => navigate("/profile")}>My Profile</button>
-                <button onClick={() => navigate("/settings")}>Settings</button>
+                <button onClick={() => alert("Go to settings")}>
+                  Settings
+                </button>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={darkMode}
+                    onChange={() => setDarkMode(!darkMode)}
+                  />
+                  <span className="slider"></span>
+                  <span className="switch-label">
+                    {darkMode ? "Dark Mode" : "Light Mode"}
+                  </span>
+                </label>
               </div>
 
               <div className="dropdown-footer">

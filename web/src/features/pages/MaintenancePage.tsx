@@ -8,7 +8,6 @@ import { useMaintenanceRequests } from "../hooks/useMaintenance";
 import { useEquipment } from "../hooks/useEquipment";
 import { userService } from "../services/userService";
 import { maintenanceService } from "../services/maintenanceService";
-import { useAuth } from "../context/AuthContext"; // Adjust import to your auth hook/context
 import type { MaintenanceRequest, User } from "../types/dashboardTypes";
 import "../pages/PageStyle.css";
 
@@ -18,7 +17,7 @@ type MaintenanceFormData = Partial<MaintenanceRequest> & {
   comments?: string;
 };
 
-const ITEMS_PER_PAGE = 7;
+const ITEMS_PER_PAGE = 5;
 
 const STATUS_MAP: Record<string, "pending" | "in_progress" | "resolved"> = {
   pending: "pending",
@@ -31,7 +30,6 @@ type ModalType = MaintenanceModalMode | "view" | null;
 const MaintenancePage: React.FC = () => {
   const { requests, loading, error, updateRequest, deleteRequest, refetch } = useMaintenanceRequests();
   const { equipment } = useEquipment();
-  const { currentUser } = useAuth(); // Add this: Pull current user from auth hook/context
 
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
@@ -110,102 +108,103 @@ const MaintenancePage: React.FC = () => {
   );
 
   const handleAdd = async (data: MaintenanceFormData): Promise<void> => {
-    setSubmitting(true);
+  setSubmitting(true);
 
-    // Optimistic: close modal right away
-    closeModal();
+  // Optimistic: close modal right away
+  closeModal();
 
-    // Optimistic: add placeholder request
-    const tempId = `temp-${Date.now()}`;
-    const optimisticRequest: MaintenanceRequest = {
-      id: tempId,
-      user: data.user!,
-      equipment: data.equipment!,
-      issue: data.issue || "",
-      status: data.status ? STATUS_MAP[data.status.toLowerCase()] : "pending",
-      scheduled_date: data.scheduled_date || new Date().toISOString().split("T")[0],
-      resolved_at: data.resolved_at,
-      assigned_to: data.assigned_to,
-      comments: data.comments || "",
-      attachments: []
-    };
+  // Optimistic: add placeholder request
+  const tempId = `temp-${Date.now()}`;
+  const optimisticRequest: MaintenanceRequest = {
+    id: tempId,
+    user: data.user!,
+    equipment: data.equipment!,
+    issue: data.issue || "",
+    status: data.status ? STATUS_MAP[data.status.toLowerCase()] : "pending",
+    scheduled_date: data.scheduled_date || new Date().toISOString().split("T")[0],
+    resolved_at: data.resolved_at,
+    assigned_to: data.assigned_to,
+    comments: data.comments || "",
+    attachments: []
+  };
 
-    updateRequest(tempId, optimisticRequest); // put into state immediately
+  updateRequest(tempId, optimisticRequest); // put into state immediately
 
-    try {
-      const created = await maintenanceService.create(optimisticRequest);
+  try {
+    const created = await maintenanceService.create(optimisticRequest);
 
-      if (data.newAttachments?.length) {
-        for (const file of data.newAttachments) {
-          await maintenanceService.uploadAttachment(created.id!, file);
-        }
+    if (data.newAttachments?.length) {
+      for (const file of data.newAttachments) {
+        await maintenanceService.uploadAttachment(created.id!, file);
       }
-
-      // Replace temp with real one
-      updateRequest(tempId, created);
-    } catch (err) {
-      console.error("Failed to create request:", err);
-      // Rollback: refetch from server
-      await refetch();
-    } finally {
-      setSubmitting(false);
     }
+
+    // Replace temp with real one
+    updateRequest(tempId, created);
+  } catch (err) {
+    console.error("Failed to create request:", err);
+    // Rollback: refetch from server
+    await refetch();
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+// EDIT
+const handleEdit = async (data: MaintenanceFormData): Promise<void> => {
+  if (!selectedRequest) return;
+
+  setSubmitting(true);
+  closeModal();
+
+  const payload: Partial<MaintenanceRequest> = {
+    issue: data.issue,
+    status: data.status ? STATUS_MAP[data.status.toLowerCase()] : selectedRequest.status,
+    scheduled_date: data.scheduled_date || selectedRequest.scheduled_date,
+    resolved_at: data.resolved_at,
+    assigned_to: data.assigned_to,
+    comments: data.comments,
   };
 
-  // EDIT
-  const handleEdit = async (data: MaintenanceFormData): Promise<void> => {
-    if (!selectedRequest) return;
+  // Optimistic update
+  updateRequest(selectedRequest.id, { ...selectedRequest, ...payload });
 
-    setSubmitting(true);
-    closeModal();
+  try {
+    await maintenanceService.update(selectedRequest.id, payload);
 
-    const payload: Partial<MaintenanceRequest> = {
-      issue: data.issue,
-      status: data.status ? STATUS_MAP[data.status.toLowerCase()] : selectedRequest.status,
-      scheduled_date: data.scheduled_date || selectedRequest.scheduled_date,
-      resolved_at: data.resolved_at,
-      assigned_to: data.assigned_to,
-      comments: data.comments,
-    };
-
-    // Optimistic update
-    updateRequest(selectedRequest.id, { ...selectedRequest, ...payload });
-
-    try {
-      await maintenanceService.update(selectedRequest.id, payload);
-
-      if (data.newAttachments?.length) {
-        for (const file of data.newAttachments) {
-          await maintenanceService.uploadAttachment(selectedRequest.id, file);
-        }
+    if (data.newAttachments?.length) {
+      for (const file of data.newAttachments) {
+        await maintenanceService.uploadAttachment(selectedRequest.id, file);
       }
-    } catch (err) {
-      console.error("Failed to update request:", err);
-      await refetch(); // rollback
-    } finally {
-      setSubmitting(false);
     }
-  };
+  } catch (err) {
+    console.error("Failed to update request:", err);
+    await refetch(); // rollback
+  } finally {
+    setSubmitting(false);
+  }
+};
 
-  // DELETE
-  const handleDelete = async (): Promise<void> => {
-    if (!selectedRequest) return;
+// DELETE
+const handleDelete = async (): Promise<void> => {
+  if (!selectedRequest) return;
 
-    setSubmitting(true);
-    closeModal();
+  setSubmitting(true);
+  closeModal();
 
-    // Optimistic: remove from UI immediately
-    updateRequest(selectedRequest.id, null as any); // or filter out manually
+  // Optimistic: remove from UI immediately
+  updateRequest(selectedRequest.id, null as any); // or filter out manually
 
-    try {
-      await deleteRequest(selectedRequest.id);
-    } catch (err) {
-      console.error("Failed to delete request:", err);
-      await refetch(); // rollback
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  try {
+    await deleteRequest(selectedRequest.id);
+  } catch (err) {
+    console.error("Failed to delete request:", err);
+    await refetch(); // rollback
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   return (
     <PageLayout initialSection={{ parent: "Dashboard", child: "Maintenance" }}>
@@ -311,7 +310,6 @@ const MaintenancePage: React.FC = () => {
           <MaintenanceViewModal
             request={selectedRequest}
             users={users}
-            currentUser={currentUser} // Add this line: Pass the current user
             onClose={closeModal}
             onRefresh={refetch}
             updateRequest={updateRequest} 

@@ -4,17 +4,20 @@ import NotificationCard from "./NotificationCard";
 import "../components/Notifications.css";
 import { useNotifications } from "../hooks/useNotification";
 import type { Notification } from "../types/notificationTypes";
+import { notificationService } from "../services/notificationService";
 
 const NotificationPage: React.FC = () => {
   const userId = localStorage.getItem("user_id");
-  const {
-    notifications,
-    loading,
-    markAsUnread,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-  } = useNotifications(userId || undefined);
+  const { notifications, loading, markAsRead, markAllAsRead } = useNotifications(userId || undefined);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await notificationService.delete(id);
+      // TODO: refetch notifications after delete
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+    }
+  };
 
   return (
     <PageLayout initialSection={{ parent: "Notification" }}>
@@ -24,6 +27,7 @@ const NotificationPage: React.FC = () => {
         <p>No notifications found.</p>
       ) : (
         <>
+          {/* Mark All as Read Button */}
           <div className="notif-actions left">
             <button className="mark-all-btn" onClick={markAllAsRead}>
               Mark All as Read
@@ -34,10 +38,15 @@ const NotificationPage: React.FC = () => {
             {notifications.map((notif: Notification) => (
               <NotificationCard
                 key={notif.id}
-                notif={notif}
+                notif={{
+                  id: notif.id,
+                  title: notif.title,
+                  content: notif.message,
+                  created_at: notif.created_at,
+                  read: notif.read,
+                }}
                 onMarkRead={markAsRead}
-                onMarkUnread={markAsUnread}
-                onDelete={deleteNotification}
+                onDelete={handleDelete}
               />
             ))}
           </div>

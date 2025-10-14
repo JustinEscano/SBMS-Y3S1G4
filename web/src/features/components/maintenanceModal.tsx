@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import type { MaintenanceRequest, Equipment, User } from "../types/dashboardTypes";
-import { parseComments } from "../utils/comments"; // Adjust path
 
 export type MaintenanceModalMode = "add" | "edit" | "delete";
 
@@ -26,7 +25,7 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ mode, request, equi
     resolved_at: "",
     assigned_to: "",
   });
-  const [initialComments, setInitialComments] = useState(""); // For add only
+  const [comments, setComments] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -42,6 +41,7 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ mode, request, equi
         resolved_at: request.resolved_at ? request.resolved_at.replace("Z", "") : "",
         assigned_to: request.assigned_to || "",
       });
+      setComments(request.comments || "");
     } else if (mode === "add") {
       resetForm();
     }
@@ -57,7 +57,7 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ mode, request, equi
       resolved_at: "",
       assigned_to: "",
     });
-    setInitialComments(""); // Clear for add
+    setComments("");
     setAttachments([]);
     setPage(1);
   };
@@ -65,10 +65,6 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ mode, request, equi
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleInitialCommentsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInitialComments(e.target.value);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,15 +77,9 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ mode, request, equi
     if (submitting) return;
     setSubmitting(true);
     try {
-      let finalComments = initialComments;
-      if (mode === "add" && initialComments.trim()) {
-        // Auto-append creation note
-        const now = new Date().toLocaleString();
-        finalComments = `\n[${now}] System (Auto): Request created - ${initialComments}`;
-      }
-      const payload: Partial<MaintenanceRequest> & { id?: string; newAttachments?: File[]; comments?: string } = {
+      const payload: Partial<MaintenanceRequest> & { id?: string; newAttachments?: File[] } = {
         ...formData,
-        comments: finalComments || undefined, // Only for add
+        comments,
         id: request?.id,
         newAttachments: attachments,
         resolved_at: formData.resolved_at ? new Date(formData.resolved_at).toISOString() : undefined,
@@ -195,13 +185,8 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ mode, request, equi
               </label>
 
               <label>
-                Initial Comments
-                <textarea
-                  value={initialComments}
-                  onChange={handleInitialCommentsChange}
-                  placeholder="Add initial notes (will be logged on creation)..."
-                  rows={3}
-                />
+                Comments
+                <textarea name="comments" value={comments} onChange={e => setComments(e.target.value)} placeholder="Add comments..." />
               </label>
 
               <label>
@@ -262,21 +247,9 @@ const MaintenanceModal: React.FC<MaintenanceModalProps> = ({ mode, request, equi
                 <input type="datetime-local" name="resolved_at" value={formData.resolved_at} onChange={handleChange} />
               </label>
 
-              {/* Read-only Comments Log */}
               <label>
-                Comments History
-                <div className="comments-log" style={{ border: '1px solid #ccc', padding: '10px', minHeight: '100px', maxHeight: '200px', overflowY: 'auto', background: '#f9f9f9' }}>
-                  {parseComments(request.comments).length > 0 ? (
-                    parseComments(request.comments).map((entry, index) => (
-                      <div key={index} style={{ marginBottom: '5px', fontSize: '0.9em' }}>
-                        <strong style={{ color: '#666' }}>[{entry.timestamp}] {entry.user} ({entry.role}):</strong>
-                        <p style={{ margin: '2px 0', color: '#333' }}>{entry.message}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{ color: '#999', fontStyle: 'italic' }}>No comments yet. Use "View Details" to add responses.</p>
-                  )}
-                </div>
+                Comments
+                <textarea name="comments" value={comments} onChange={e => setComments(e.target.value)} />
               </label>
 
               <div className="modal-actions">
