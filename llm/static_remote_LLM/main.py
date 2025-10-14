@@ -10,7 +10,16 @@ from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 from langchain_ollama import OllamaEmbeddings
 from langchain_ollama import OllamaLLM
-from langchain_community.vectorstores import Chroma
+
+# FIXED: Updated Chroma import
+try:
+    from langchain_chroma import Chroma
+    print("Using langchain-chroma package")
+except ImportError:
+    # Fallback for compatibility
+    from langchain.vectorstores import Chroma
+    print("Using legacy langchain Chroma - consider upgrading: pip install langchain-chroma")
+
 from database_adapter import DatabaseAdapter
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -1232,45 +1241,82 @@ class RoomLogAnalyzer:
         self.logger.info(f"Created {new_document_count} new documents")
         return documents
 
-    def initialize_vector_store(self, documents, reset=False):
+    # FIXED: Improved vector store initialization
+    def initialize_vector_store(self, documents=None, reset=False):
         """Initialize or load the vector store with documents"""
         try:
+            # Create chroma directory if it doesn't exist
+            os.makedirs(self.chroma_dir, exist_ok=True)
+            
             if reset and os.path.exists(self.chroma_dir):
                 self.logger.info("Resetting vector store")
                 shutil.rmtree(self.chroma_dir)
                 self.processed_hashes.clear()
                 self._save_processed_hashes()
 
+            embedding = OllamaEmbeddings(model="nomic-embed-text")
+            
+            # Check if we have an existing vector store
             if os.path.exists(self.chroma_dir) and os.listdir(self.chroma_dir) and not reset:
                 self.logger.info("Loading existing vector store")
-                embedding = OllamaEmbeddings(model="nomic-embed-text")
-                vector_store = Chroma(
-                    persist_directory=self.chroma_dir,
-                    embedding_function=embedding,
-                    collection_name="room_logs"
-                )
-                existing_docs = vector_store.get()
-                existing_hashes = {doc.get('doc_hash') for doc in existing_docs['metadatas'] if isinstance(doc, dict) and 'doc_hash' in doc}
-                new_documents = [doc for doc in documents if doc.metadata['doc_hash'] not in existing_hashes]
-                if new_documents:
-                    self.logger.info(f"Adding {len(new_documents)} new documents to existing vector store")
-                    vector_store.add_documents(new_documents)
-                    vector_store.persist()
-                else:
-                    self.logger.info("No new documents to add to vector store")
+                try:
+                    vector_store = Chroma(
+                        persist_directory=self.chroma_dir,
+                        embedding_function=embedding,
+                        collection_name="room_logs"
+                    )
+                    
+                    # Test if the vector store is accessible
+                    _ = vector_store._collection.count()
+                    self.logger.info("Successfully loaded existing vector store")
+                    
+                    # Add new documents if provided
+                    if documents:
+                        existing_docs = vector_store.get()
+                        existing_hashes = {doc.get('doc_hash') for doc in existing_docs['metadatas'] if isinstance(doc, dict) and 'doc_hash' in doc}
+                        new_documents = [doc for doc in documents if doc.metadata.get('doc_hash') not in existing_hashes]
+                        
+                        if new_documents:
+                            self.logger.info(f"Adding {len(new_documents)} new documents to existing vector store")
+                            vector_store.add_documents(new_documents)
+                            vector_store.persist()
+                        else:
+                            self.logger.info("No new documents to add to vector store")
+                    
+                    self.vector_store = vector_store
+                    
+                except Exception as e:
+                    self.logger.warning(f"Failed to load existing vector store: {e}. Creating new one.")
+                    if documents:
+                        vector_store = Chroma.from_documents(
+                            documents=documents,
+                            embedding=embedding,
+                            persist_directory=self.chroma_dir,
+                            collection_name="room_logs"
+                        )
+                        vector_store.persist()
+                        self.vector_store = vector_store
+                    else:
+                        self.logger.error("No documents provided and cannot load existing vector store")
+                        raise ValueError("Cannot initialize vector store without documents")
             else:
-                self.logger.info("Creating new vector store")
-                embedding = OllamaEmbeddings(model="nomic-embed-text")
-                vector_store = Chroma.from_documents(
-                    documents=documents,
-                    embedding=embedding,
-                    persist_directory=self.chroma_dir,
-                    collection_name="room_logs"
-                )
-                vector_store.persist()
+                # Create new vector store
+                if documents:
+                    self.logger.info("Creating new vector store")
+                    vector_store = Chroma.from_documents(
+                        documents=documents,
+                        embedding=embedding,
+                        persist_directory=self.chroma_dir,
+                        collection_name="room_logs"
+                    )
+                    vector_store.persist()
+                    self.vector_store = vector_store
+                else:
+                    self.logger.error("No documents provided for new vector store")
+                    raise ValueError("Cannot create new vector store without documents")
 
-            self.vector_store = vector_store
             self._save_processed_hashes()
+            self.logger.info("Vector store initialized successfully")
 
         except Exception as e:
             self.logger.error(f"Error initializing vector store: {e}")
@@ -1280,7 +1326,18 @@ class RoomLogAnalyzer:
         """Initialize the QA chain with the LLM"""
         try:
             if not self.vector_store:
-                raise ValueError("Vector store not initialized")
+                # Try to initialize vector store with current data
+                self.logger.info("Vector store not found, attempting to initialize with current data")
+                df = self.load_and_process_data(include_maintenance=True)
+                if df is not None and not df.empty:
+                    documents = self.create_documents(df, include_maintenance=True)
+                    if documents:
+                        self.initialize_vector_store(documents)
+                    else:
+                        raise ValueError("No documents available to initialize vector store")
+                else:
+                    raise ValueError("No data available to initialize vector store")
+            
             llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
             self.qa_chain = RetrievalQA.from_chain_type(
                 llm=llm,
@@ -1289,7 +1346,7 @@ class RoomLogAnalyzer:
                 return_source_documents=True
             )
             self.logger.info("QA chain initialized successfully")
-        except ValueError as e:
+        except Exception as e:
             self.logger.error(f"Error initializing QA chain: {e}")
             raise
 
