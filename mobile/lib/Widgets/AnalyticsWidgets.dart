@@ -1,158 +1,222 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class AnalyticsWidgets {
+  // Error Banner Widget
   static Widget buildErrorBanner(String errorMessage) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red[100],
-        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFFFFCDD2), // Red[100] for error
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error, color: Colors.red),
-          const SizedBox(width: 8),
-          Expanded(child: Text(errorMessage, style: const TextStyle(color: Colors.red))),
+          const Icon(Icons.error, color: Colors.red, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              errorMessage,
+              style: GoogleFonts.urbanist(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  static Widget buildOverviewCard(String scopeTitle, String timeFrame) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.analytics, color: Colors.teal[700], size: 28),
-                const SizedBox(width: 12),
-                Text(
-                  '$scopeTitle Analytics Overview',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Analyze energy, HVAC, and security trends over $timeFrame intervals',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget buildTimeFrameSelector(String currentTimeFrame, Function(String) onTimeFrameChanged) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        ChoiceChip(
-          label: const Text('Daily'),
-          selected: currentTimeFrame == 'daily',
-          onSelected: (selected) => onTimeFrameChanged('daily'),
-          selectedColor: Colors.teal[100],
-          backgroundColor: Colors.grey[200],
-        ),
-        ChoiceChip(
-          label: const Text('Weekly'),
-          selected: currentTimeFrame == 'weekly',
-          onSelected: (selected) => onTimeFrameChanged('weekly'),
-          selectedColor: Colors.teal[100],
-          backgroundColor: Colors.grey[200],
-        ),
-        ChoiceChip(
-          label: const Text('Monthly'),
-          selected: currentTimeFrame == 'monthly',
-          onSelected: (selected) => onTimeFrameChanged('monthly'),
-          selectedColor: Colors.teal[100],
-          backgroundColor: Colors.grey[200],
-        ),
-      ],
-    );
-  }
-
-  static Widget buildScopeSelector(String currentScope, Function(String) onScopeChanged) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        ChoiceChip(
-          label: const Text('Building'),
-          selected: currentScope == 'building',
-          onSelected: (selected) => onScopeChanged('building'),
-          selectedColor: Colors.teal[100],
-          backgroundColor: Colors.grey[200],
-        ),
-        ChoiceChip(
-          label: const Text('All Rooms'),
-          selected: currentScope == 'all_rooms',
-          onSelected: (selected) => onScopeChanged('all_rooms'),
-          selectedColor: Colors.teal[100],
-          backgroundColor: Colors.grey[200],
-        ),
-        ChoiceChip(
-          label: const Text('Room'),
-          selected: currentScope == 'room',
-          onSelected: (selected) => onScopeChanged('room'),
-          selectedColor: Colors.teal[100],
-          backgroundColor: Colors.grey[200],
-        ),
-      ],
-    );
-  }
-
-  static Widget buildRoomSelector({
+  // Combined Filter Selector (Scope, Room, Equipment)
+  static Widget buildFilterSelector({
+    required String currentTimeFrame,
+    required Function(String) onTimeFrameChanged,
+    required String currentScope,
+    required Function(String) onScopeChanged,
     required String? selectedRoomId,
     required List<dynamic> rooms,
     required Function(String?) onRoomChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
-        labelText: 'Select Room',
-        border: OutlineInputBorder(),
-      ),
-      value: selectedRoomId,
-      items: rooms.map<DropdownMenuItem<String>>((room) {
-        return DropdownMenuItem<String>(
-          value: room['id'],
-          child: Text(room['name']),
-        );
-      }).toList(),
-      onChanged: onRoomChanged,
-    );
-  }
-
-  static Widget buildEquipmentSelector({
     required String? selectedComponentId,
     required List<dynamic> equipment,
-    required String? selectedRoomId,
     required Function(String?) onEquipmentChanged,
   }) {
-    return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
-        labelText: 'Select Equipment',
-        border: OutlineInputBorder(),
-      ),
-      value: selectedComponentId,
-      items: equipment
-          .where((eq) => eq['room'] == selectedRoomId)
-          .map<DropdownMenuItem<String>>((eq) {
-        return DropdownMenuItem<String>(
-          value: eq['component_id'],
-          child: Text(eq['name']),
-        );
-      }).toList(),
-      onChanged: onEquipmentChanged,
-      hint: const Text('All Equipment in Room'),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Card(
+          color: const Color(0xFF1F1E23), // Darker gray for filter section
+          elevation: 3,
+          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 14), // Slightly wider card
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Energy Usage',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _buildFilterChip(
+                      label: 'Building',
+                      isSelected: currentScope == 'building',
+                      onSelected: () => onScopeChanged('building'),
+                    ),
+                    _buildFilterChip(
+                      label: 'All Rooms',
+                      isSelected: currentScope == 'all_rooms',
+                      onSelected: () => onScopeChanged('all_rooms'),
+                    ),
+                    _buildFilterChip(
+                      label: 'Room',
+                      isSelected: currentScope == 'room',
+                      onSelected: () => onScopeChanged('room'),
+                    ),
+                  ],
+                ),
+                if (currentScope == 'room') ...[
+                  const SizedBox(height: 16),
+                  // Room Selector
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Select Room',
+                      labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    value: selectedRoomId,
+                    items: rooms.map<DropdownMenuItem<String>>((room) {
+                      return DropdownMenuItem<String>(
+                        value: room['id'],
+                        child: Text(
+                          room['name'],
+                          style: GoogleFonts.urbanist(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: onRoomChanged,
+                    dropdownColor: const Color(0xFF1E1E1E),
+                  ),
+                  if (selectedRoomId != null) ...[
+                    const SizedBox(height: 12),
+                    // Equipment Selector
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: 'Select Equipment',
+                        labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.1),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      value: selectedComponentId,
+                      items: equipment
+                          .where((eq) => eq['room'] == selectedRoomId)
+                          .map<DropdownMenuItem<String>>((eq) {
+                        return DropdownMenuItem<String>(
+                          value: eq['component_id'],
+                          child: Text(
+                            eq['name'],
+                            style: GoogleFonts.urbanist(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: onEquipmentChanged,
+                      hint: Text(
+                        'All Equipment in Room',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      dropdownColor: const Color(0xFF1E1E1E),
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ),
+        ),
+        // Time Frame Selector (outside and below the card)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Wrap(
+            spacing: 10,
+            children: [
+              _buildFilterChip(
+                label: 'Daily',
+                isSelected: currentTimeFrame == 'daily',
+                onSelected: () => onTimeFrameChanged('daily'),
+              ),
+              _buildFilterChip(
+                label: 'Weekly',
+                isSelected: currentTimeFrame == 'weekly',
+                onSelected: () => onTimeFrameChanged('weekly'),
+              ),
+              _buildFilterChip(
+                label: 'Monthly',
+                isSelected: currentTimeFrame == 'monthly',
+                onSelected: () => onTimeFrameChanged('monthly'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
+  // Helper method for filter chips
+  static Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onSelected,
+  }) {
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: GoogleFonts.urbanist(
+          fontSize: 14,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          color: isSelected ? Colors.white : Colors.white70,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) => onSelected(),
+      selectedColor: const Color(0xFF184BFB), // Vibrant blue for selected
+      backgroundColor: const Color(0xFF1E1E1E), // Dark gray for unselected
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.white.withOpacity(0.2)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    );
+  }
+
+  // Power Chart Widget
   static Widget buildPowerChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -165,98 +229,130 @@ class AnalyticsWidgets {
     required Function(double, String) shouldShowLabel,
     required double maxY,
   }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$scopeTitle Power Consumption Trend$chartSuffix',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toStringAsFixed(1)} W',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: interval,
-                        getTitlesWidget: (value, meta) {
-                          if (!shouldShowLabel(value, timeFrame)) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              formatTimeAxis(value, timeFrame, startTime),
-                              style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: true),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: powerSpots,
-                      isCurved: true,
-                      color: Colors.teal,
-                      barWidth: 2,
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: Colors.teal.withOpacity(0.2),
-                      ),
-                      dotData: FlDotData(show: true),
-                    ),
-                  ],
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            '${spot.y.toStringAsFixed(2)} W\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
-                            const TextStyle(color: Colors.white),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  minX: 0,
-                  maxX: maxX,
-                  minY: 0,
-                  maxY: maxY,
+    return AnimatedOpacity(
+      opacity: powerSpots.isNotEmpty ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+      child: Card(
+        color: const Color(0xFF1E1E1E), // Dark gray card background
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$scopeTitle Power Consumption Trend$chartSuffix',
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 220,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY > 0 ? maxY / 5 : 20.0, // Safeguard against zero
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.white.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 48,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              '${value.toStringAsFixed(1)} W',
+                              style: GoogleFonts.urbanist(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 36,
+                          interval: interval,
+                          getTitlesWidget: (value, meta) {
+                            if (!shouldShowLabel(value, timeFrame)) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                formatTimeAxis(value, timeFrame, startTime),
+                                style: GoogleFonts.urbanist(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: powerSpots,
+                        isCurved: true,
+                        color: const Color(0xFF184BFB), // Vibrant blue for line
+                        barWidth: 3,
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: const Color(0xFF184BFB).withOpacity(0.3),
+                        ),
+                        dotData: FlDotData(show: true),
+                      ),
+                    ],
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => const Color(0xFF1F1E23),
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            return LineTooltipItem(
+                              '${spot.y.toStringAsFixed(2)} W\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
+                              GoogleFonts.urbanist(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                    minX: 0,
+                    maxX: maxX,
+                    minY: 0,
+                    maxY: maxY,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Energy Chart Widget
   static Widget buildEnergyChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -269,98 +365,130 @@ class AnalyticsWidgets {
     required Function(double, String) shouldShowLabel,
     required double maxY,
   }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$scopeTitle Energy Consumption Trend$chartSuffix',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toStringAsFixed(3)} kWh',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: interval,
-                        getTitlesWidget: (value, meta) {
-                          if (!shouldShowLabel(value, timeFrame)) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              formatTimeAxis(value, timeFrame, startTime),
-                              style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: true),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: energySpots,
-                      isCurved: true,
-                      color: Colors.green,
-                      barWidth: 2,
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: Colors.green.withOpacity(0.2),
-                      ),
-                      dotData: FlDotData(show: true),
-                    ),
-                  ],
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            '${spot.y.toStringAsFixed(3)} kWh\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
-                            const TextStyle(color: Colors.white),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  minX: 0,
-                  maxX: maxX,
-                  minY: 0,
-                  maxY: maxY,
+    return AnimatedOpacity(
+      opacity: energySpots.isNotEmpty ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+      child: Card(
+        color: const Color(0xFF1E1E1E), // Dark gray card background
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$scopeTitle Energy Consumption Trend$chartSuffix',
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 220,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY > 0 ? maxY / 5 : 0.02, // Safeguard for energy (kWh)
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.white.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 48,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              '${value.toStringAsFixed(3)} kWh',
+                              style: GoogleFonts.urbanist(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 36,
+                          interval: interval,
+                          getTitlesWidget: (value, meta) {
+                            if (!shouldShowLabel(value, timeFrame)) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                formatTimeAxis(value, timeFrame, startTime),
+                                style: GoogleFonts.urbanist(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: energySpots,
+                        isCurved: true,
+                        color: Colors.greenAccent, // Green for energy
+                        barWidth: 3,
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.greenAccent.withOpacity(0.3),
+                        ),
+                        dotData: FlDotData(show: true),
+                      ),
+                    ],
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => const Color(0xFF1F1E23),
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            return LineTooltipItem(
+                              '${spot.y.toStringAsFixed(3)} kWh\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
+                              GoogleFonts.urbanist(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                    minX: 0,
+                    maxX: maxX,
+                    minY: 0,
+                    maxY: maxY,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Temperature Chart Widget
   static Widget buildTemperatureChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -373,98 +501,130 @@ class AnalyticsWidgets {
     required Function(double, String) shouldShowLabel,
     required double maxY,
   }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$scopeTitle Temperature Trend$chartSuffix',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toStringAsFixed(1)}°C',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: interval,
-                        getTitlesWidget: (value, meta) {
-                          if (!shouldShowLabel(value, timeFrame)) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              formatTimeAxis(value, timeFrame, startTime),
-                              style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: true),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: temperatureSpots,
-                      isCurved: true,
-                      color: Colors.red,
-                      barWidth: 2,
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: Colors.red.withOpacity(0.2),
-                      ),
-                      dotData: FlDotData(show: true),
-                    ),
-                  ],
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            '${spot.y.toStringAsFixed(1)}°C\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
-                            const TextStyle(color: Colors.white),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  minX: 0,
-                  maxX: maxX,
-                  minY: 0,
-                  maxY: maxY,
+    return AnimatedOpacity(
+      opacity: temperatureSpots.isNotEmpty ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+      child: Card(
+        color: const Color(0xFF1E1E1E), // Dark gray card background
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$scopeTitle Temperature Trend$chartSuffix',
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 220,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY > 0 ? maxY / 5 : 10.0, // Safeguard for temperature (°C)
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.white.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 48,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              '${value.toStringAsFixed(1)}°C',
+                              style: GoogleFonts.urbanist(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 36,
+                          interval: interval,
+                          getTitlesWidget: (value, meta) {
+                            if (!shouldShowLabel(value, timeFrame)) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                formatTimeAxis(value, timeFrame, startTime),
+                                style: GoogleFonts.urbanist(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: temperatureSpots,
+                        isCurved: true,
+                        color: Colors.redAccent, // Red for temperature
+                        barWidth: 3,
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.redAccent.withOpacity(0.3),
+                        ),
+                        dotData: FlDotData(show: true),
+                      ),
+                    ],
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => const Color(0xFF1F1E23),
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            return LineTooltipItem(
+                              '${spot.y.toStringAsFixed(1)}°C\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
+                              GoogleFonts.urbanist(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                    minX: 0,
+                    maxX: maxX,
+                    minY: 0,
+                    maxY: maxY,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Humidity Chart Widget
   static Widget buildHumidityChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -477,98 +637,130 @@ class AnalyticsWidgets {
     required Function(double, String) shouldShowLabel,
     required double maxY,
   }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$scopeTitle Humidity Trend$chartSuffix',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toStringAsFixed(1)}%',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: interval,
-                        getTitlesWidget: (value, meta) {
-                          if (!shouldShowLabel(value, timeFrame)) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              formatTimeAxis(value, timeFrame, startTime),
-                              style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: true),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: humiditySpots,
-                      isCurved: true,
-                      color: Colors.blue,
-                      barWidth: 2,
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: Colors.blue.withOpacity(0.2),
-                      ),
-                      dotData: FlDotData(show: true),
-                    ),
-                  ],
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            '${spot.y.toStringAsFixed(1)}%\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
-                            const TextStyle(color: Colors.white),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  minX: 0,
-                  maxX: maxX,
-                  minY: 0,
-                  maxY: maxY,
+    return AnimatedOpacity(
+      opacity: humiditySpots.isNotEmpty ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+      child: Card(
+        color: const Color(0xFF1E1E1E), // Dark gray card background
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$scopeTitle Humidity Trend$chartSuffix',
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 220,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY > 0 ? maxY / 5 : 20.0, // Safeguard for humidity (%)
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.white.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 48,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              '${value.toStringAsFixed(1)}%',
+                              style: GoogleFonts.urbanist(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 36,
+                          interval: interval,
+                          getTitlesWidget: (value, meta) {
+                            if (!shouldShowLabel(value, timeFrame)) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                formatTimeAxis(value, timeFrame, startTime),
+                                style: GoogleFonts.urbanist(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: humiditySpots,
+                        isCurved: true,
+                        color: Colors.blueAccent, // Blue for humidity
+                        barWidth: 3,
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.blueAccent.withOpacity(0.3),
+                        ),
+                        dotData: FlDotData(show: true),
+                      ),
+                    ],
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => const Color(0xFF1F1E23),
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            return LineTooltipItem(
+                              '${spot.y.toStringAsFixed(1)}%\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
+                              GoogleFonts.urbanist(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                    minX: 0,
+                    maxX: maxX,
+                    minY: 0,
+                    maxY: maxY,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Security Chart Widget
   static Widget buildSecurityChart({
     required String scopeTitle,
     required String chartSuffix,
@@ -581,98 +773,130 @@ class AnalyticsWidgets {
     required Function(double, String) shouldShowLabel,
     required double maxY,
   }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$scopeTitle Security Alerts Trend$chartSuffix',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toInt().toString(),
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: interval,
-                        getTitlesWidget: (value, meta) {
-                          if (!shouldShowLabel(value, timeFrame)) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              formatTimeAxis(value, timeFrame, startTime),
-                              style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: true),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: securityAlertSpots,
-                      isCurved: true,
-                      color: Colors.red,
-                      barWidth: 2,
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: Colors.red.withOpacity(0.2),
-                      ),
-                      dotData: FlDotData(show: true),
-                    ),
-                  ],
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            '${spot.y.toInt()} Alerts\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
-                            const TextStyle(color: Colors.white),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  minX: 0,
-                  maxX: maxX,
-                  minY: 0,
-                  maxY: maxY,
+    return AnimatedOpacity(
+      opacity: securityAlertSpots.isNotEmpty ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 500),
+      child: Card(
+        color: const Color(0xFF1E1E1E), // Dark gray card background
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$scopeTitle Security Alerts Trend$chartSuffix',
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 220,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY > 0 ? maxY / 5 : 2.0, // Safeguard for security alerts
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.white.withOpacity(0.1),
+                        strokeWidth: 1,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 48,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              value.toInt().toString(),
+                              style: GoogleFonts.urbanist(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 36,
+                          interval: interval,
+                          getTitlesWidget: (value, meta) {
+                            if (!shouldShowLabel(value, timeFrame)) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                formatTimeAxis(value, timeFrame, startTime),
+                                style: GoogleFonts.urbanist(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: securityAlertSpots,
+                        isCurved: true,
+                        color: Colors.redAccent, // Red for security alerts
+                        barWidth: 3,
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.redAccent.withOpacity(0.3),
+                        ),
+                        dotData: FlDotData(show: true),
+                      ),
+                    ],
+                    lineTouchData: LineTouchData(
+                      enabled: true,
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => const Color(0xFF1F1E23),
+                        getTooltipItems: (touchedSpots) {
+                          return touchedSpots.map((spot) {
+                            return LineTooltipItem(
+                              '${spot.y.toInt()} Alerts\n${formatTimeAxis(spot.x, timeFrame, startTime)}',
+                              GoogleFonts.urbanist(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                    minX: 0,
+                    maxX: maxX,
+                    minY: 0,
+                    maxY: maxY,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Statistics Card Widget
   static Widget buildStatisticsCard({
     required String scopeTitle,
     required Map<String, dynamic> summaryData,
@@ -681,7 +905,9 @@ class AnalyticsWidgets {
     required Map<String, dynamic> billingData,
   }) {
     return Card(
-      elevation: 2,
+      color: const Color(0xFF1E1E1E), // Dark gray card background
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -689,7 +915,11 @@ class AnalyticsWidgets {
           children: [
             Text(
               '$scopeTitle Energy Statistics',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.urbanist(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 12),
             _buildStatRow('Total Energy', '${summaryData['total_energy']?.toStringAsFixed(3) ?? '0.000'} kWh'),
@@ -697,14 +927,18 @@ class AnalyticsWidgets {
             _buildStatRow('Peak Power', '${summaryData['peak_power']?.toStringAsFixed(1) ?? '0.0'} W'),
             _buildStatRow('Reading Count', '${summaryData['reading_count'] ?? '0'}'),
             _buildStatRow('Anomaly Count', '${summaryData['anomaly_count'] ?? '0'}'),
-            const Divider(),
+            const Divider(color: Colors.white24),
             _buildStatRow('Total Cost', '$totalCost ${billingData['currency'] ?? 'PHP'}'),
             _buildStatRow('Effective Rate', '$effectiveRate ${billingData['currency'] ?? 'PHP'}/kWh'),
             if (billingData['details']?.isNotEmpty == true) ...[
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Cost Breakdown by Component',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 8),
               ...billingData['details'].map<Widget>((detail) {
@@ -720,12 +954,15 @@ class AnalyticsWidgets {
     );
   }
 
+  // HVAC Status Card Widget
   static Widget buildHvacStatusCard({
     required String scopeTitle,
     required Map<String, dynamic> hvacData,
   }) {
     return Card(
-      elevation: 2,
+      color: const Color(0xFF1E1E1E), // Dark gray card background
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -733,7 +970,11 @@ class AnalyticsWidgets {
           children: [
             Text(
               '$scopeTitle HVAC Status',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.urbanist(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 12),
             _buildStatRow('Average Temperature', '${hvacData['avgTemperature']?.toStringAsFixed(1) ?? '0.0'}°C'),
@@ -749,12 +990,15 @@ class AnalyticsWidgets {
     );
   }
 
+  // Security Status Card Widget
   static Widget buildSecurityStatusCard({
     required String scopeTitle,
     required Map<String, dynamic> securityData,
   }) {
     return Card(
-      elevation: 2,
+      color: const Color(0xFF1E1E1E), // Dark gray card background
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -762,7 +1006,11 @@ class AnalyticsWidgets {
           children: [
             Text(
               '$scopeTitle Security Status',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.urbanist(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 12),
             _buildStatRow('Active Devices', '${securityData['activeDevices'] ?? 0}/${securityData['totalDevices'] ?? 0}'),
@@ -777,19 +1025,28 @@ class AnalyticsWidgets {
     );
   }
 
+  // Helper method for stat rows
   static Widget _buildStatRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white70,
+            ),
           ),
           Text(
             value,
-            style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
           ),
         ],
       ),
