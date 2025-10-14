@@ -548,7 +548,7 @@
       "languageVersion": "3.8"
     },
     {
-      "name": "mobile",
+      "name": "Orbit",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.7"

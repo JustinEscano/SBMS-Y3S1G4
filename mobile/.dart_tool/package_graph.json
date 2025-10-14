@@ -1,10 +1,10 @@
 {
   "roots": [
-    "mobile"
+    "Orbit"
   ],
   "packages": [
     {
-      "name": "mobile",
+      "name": "Orbit",
       "version": "1.0.0+1",
       "dependencies": [
         "cupertino_icons",

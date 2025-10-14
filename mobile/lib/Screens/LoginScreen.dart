@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
 import '../Screens/RegisterScreen.dart';
 import '../Screens/DashboardScreen.dart';
 import '../Services/auth_service.dart';
-import '../providers/dashboard_provider.dart';
 import '../utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -144,101 +143,206 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Smart Building Login'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.business,
-                size: 80,
-                color: Colors.blue,
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Smart Building Management',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 48),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email or Username',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email or username';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              if (_errorMessage.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.red[100],
-                    borderRadius: BorderRadius.circular(8),
+      backgroundColor: const Color(0xFF161C28),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/icons/logo.png',
+                    height: 80,
+                    fit: BoxFit.contain,
                   ),
-                  child: Text(
-                    _errorMessage,
-                    style: TextStyle(color: Colors.red[800]),
+                  const SizedBox(height: 16),
+                  Image.asset(
+                    'assets/icons/ORBIT.png',
+                    height: 40,
+                    fit: BoxFit.contain,
                   ),
-                ),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                      : const Text('Login'),
-                ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Login To Continue',
+                    style: const TextStyle(
+                      fontFamily: 'Arial',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 26,
+                      color: Color(0xFFFFFFFF),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 48),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Email',
+                      style: const TextStyle(
+                        fontFamily: 'Arial',
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your email',
+                      hintStyle: const TextStyle(
+                        fontFamily: 'Arial',
+                        color: Color(0xFF676767),
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF28292E),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    style: const TextStyle(
+                      fontFamily: 'Arial',
+                      color: Color(0xFFFFFFFF),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Password',
+                      style: const TextStyle(
+                        fontFamily: 'Arial',
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your password',
+                      hintStyle: const TextStyle(
+                        fontFamily: 'Arial',
+                        color: Color(0xFF676767),
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF28292E),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    style: const TextStyle(
+                      fontFamily: 'Arial',
+                      color: Color(0xFFFFFFFF),
+                    ),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  if (_errorMessage.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF28292E),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _errorMessage,
+                        style: const TextStyle(
+                          fontFamily: 'Arial',
+                          color: Colors.red,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4D6BFE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFFFF)),
+                        ),
+                      )
+                          : const Text(
+                        'Login',
+                        style: TextStyle(
+                          fontFamily: 'Arial',
+                          color: Color(0xFFFFFFFF),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: const TextStyle(
+                          fontFamily: 'Arial',
+                          color: Color(0xFFFFFFFF),
+                          fontSize: 14,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                          );
+                        },
+                        child: Text(
+                          'Sign Up',
+                          style: const TextStyle(
+                            fontFamily: 'Arial',
+                            color: Color(0xFF28292E),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                  );
-                },
-                child: const Text('Don\'t have an account? Register'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
