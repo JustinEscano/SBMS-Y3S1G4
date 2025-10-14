@@ -38,7 +38,7 @@ const AboutPage: React.FC = () => {
         <h2 className="subheading">Legal</h2>
         <p>
           Orbit is a registered trademark of {companyName}. Use of this platform is subject to our{" "}
-          <a href="/help-support">Terms of Service</a> and <a href="/policy">Privacy Policy</a>.
+          <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.
         </p>
       </section>
     </PageLayout>

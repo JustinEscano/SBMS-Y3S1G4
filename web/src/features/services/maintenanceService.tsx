@@ -6,7 +6,7 @@ const inProgressCreates = new Set<string>();
 
 const BASE_URL = '/api/maintenancerequest/';
 
-const ATTACHMENT_URL = '/api/maintenanceattachment/'.trim();  // Trim to remove any accidental leading/trailing whitespace
+const ATTACHMENT_URL = '/api/maintenanceattachment/';
 
 export const maintenanceService = {
   // Get all maintenance requests
@@ -103,24 +103,17 @@ export const maintenanceService = {
     }
   },
 
-  deleteAttachment: async (attachmentId: string): Promise<void> => {  // Add return type and logging for debugging
-    console.log(`Deleting attachment ID: ${attachmentId}`);
-    const deleteUrl = `${ATTACHMENT_URL}${attachmentId}/`;
-    console.log(`DELETE URL: ${deleteUrl}`);  // Log the exact URL being called
-    try {
-      await axiosInstance.delete(deleteUrl);
-      console.log(`Successfully deleted attachment: ${attachmentId}`);
-    } catch (error: any) {
-      console.error(`Error deleting attachment ${attachmentId}:`, error.response?.data || error);
-      throw error;
-    }
+  deleteAttachment: async (requestId: string, attachmentId: string) => {
+    await axiosInstance.delete(
+      `/api/maintenancerequest/${requestId}/upload_attachment/${attachmentId}/`
+    );
   },
 
-  respond: async (requestId: string, payload: { response: string; assigned_to?: string }): Promise<MaintenanceRequest> => {  // Add return type
-    const res = await axiosInstance.post<MaintenanceRequest>(
-      `/api/maintenancerequest/${requestId}/respond/`,
-      payload
-    );
-    return res.data;
-  },
+  respond: async (requestId: string, payload: { response: string; assigned_to?: string }) => {
+  const res = await axiosInstance.post<MaintenanceRequest>(
+    `/api/maintenancerequest/${requestId}/respond/`,
+    payload
+  );
+  return res.data;
+},
 };
