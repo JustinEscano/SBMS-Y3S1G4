@@ -429,7 +429,7 @@ const MaintenanceViewModal: React.FC<MaintenanceViewModalProps> = ({
               </div>
             )}
             <button 
-              className="btn btn-secondary preview-close" 
+              className="preview-close" 
               onClick={() => setPreviewAttachment(null)} 
               aria-label="Close preview"
             >

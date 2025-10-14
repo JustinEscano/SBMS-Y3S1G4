@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { PenSquareIcon, TrashIcon, EyeIcon } from "lucide-react";
-import type { Notification } from "../types/notificationTypes";
 import NotificationModal from "../components/notificationModal";
 import "../components/Notifications.css";
 

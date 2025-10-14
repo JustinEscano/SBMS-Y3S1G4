@@ -110,9 +110,10 @@
   display: flex;
   flex-direction: column;
   font-size: 14px;
-  color: var(--off-white);
+  color: var(--black);
   font-weight: 500; /* Bolder labels */
   letter-spacing: 0.3px;
+  background-color: var(--white);
 }
 
 .modal-content input,
@@ -141,9 +142,9 @@
   box-sizing: border-box;
   margin-top: 5px;
   margin-bottom: 10px;
-  background: var(--header-bg);
-  color: var(--off-white);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white);
+  color: var(--black);
+  border: 2px 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 12px 14px;
   resize: vertical;
@@ -155,7 +156,7 @@
   outline: none;
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
-  background: var(--dark-bg);
+  background: var(--white);
 }
 
 .modal-content input::placeholder {

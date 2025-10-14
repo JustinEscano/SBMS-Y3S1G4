@@ -92,7 +92,7 @@ function LoginScreen() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <a href="#" className="forgot-password">Forget Your Password?</a>
+        <a href="/forgot" className="forgot-password">Forget Your Password?</a>
 
         {error && <div className="error-message">* {error}</div>}
 

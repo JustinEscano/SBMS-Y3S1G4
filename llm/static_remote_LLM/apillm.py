@@ -225,7 +225,7 @@ def initialize_system() -> bool:
                 "data_analysis": data_quality
             })
             
-            logger.info(f"✅ System initialized successfully. Loaded {len(df)} records.")
+            logger.info(f"System initialized successfully. Loaded {len(df)} records.")
             print(f"DEBUG: System initialized with {len(df)} records. Data quality: {data_quality['data_quality']}")
             return True
         else:
@@ -405,6 +405,66 @@ def energy_insights():
         df = energy_analyzer.load_and_process_data()
         data_quality = DataAnalyzer.analyze_dataset_quality(df)
         energy_patterns = DataAnalyzer.detect_energy_patterns(df)
+
+        # Build enhanced trend metrics
+        trend = {}
+        try:
+            if not df.empty and 'timestamp' in df.columns and 'energy_consumption_kwh' in df.columns:
+                ts_df = df[['timestamp', 'room_name', 'energy_consumption_kwh']].dropna()
+                ts_df['timestamp'] = pd.to_datetime(ts_df['timestamp'], errors='coerce')
+                ts_df = ts_df.dropna()
+                if not ts_df.empty:
+                    ts_df['date'] = ts_df['timestamp'].dt.date
+                    daily = ts_df.groupby('date', as_index=False)['energy_consumption_kwh'].sum()
+                    daily = daily.sort_values('date')
+                    # Rolling averages
+                    daily['rolling_7'] = daily['energy_consumption_kwh'].rolling(7, min_periods=1).mean()
+                    daily['rolling_30'] = daily['energy_consumption_kwh'].rolling(30, min_periods=1).mean()
+                    # Period deltas (last 7 vs prev 7)
+                    last7 = daily.tail(7)['energy_consumption_kwh'].sum()
+                    prev7 = daily.tail(14).head(7)['energy_consumption_kwh'].sum() if len(daily) >= 14 else 0
+                    delta7 = ((last7 - prev7) / prev7 * 100) if prev7 > 0 else None
+                    # Top rooms (last 7 days)
+                    cutoff = daily['date'].max()
+                    last7_dates = set(daily['date'].tail(7).tolist()) if len(daily) >= 1 else set()
+                    recent = ts_df[ts_df['date'].isin(last7_dates)]
+                    top_rooms = []
+                    if 'room_name' in recent.columns:
+                        top_agg = recent.groupby('room_name', as_index=False)['energy_consumption_kwh'].sum()
+                        top_agg = top_agg.sort_values('energy_consumption_kwh', ascending=False).head(5)
+                        top_rooms = [
+                            {
+                                'room_name': r['room_name'] or 'Unknown',
+                                'energy_kwh': float(r['energy_consumption_kwh'])
+                            } for _, r in top_agg.iterrows()
+                        ]
+                    # Peak days
+                    peak_days = daily.sort_values('energy_consumption_kwh', ascending=False).head(5)
+                    peak_list = [
+                        {
+                            'date': str(r['date']),
+                            'energy_kwh': float(r['energy_consumption_kwh'])
+                        } for _, r in peak_days.iterrows()
+                    ]
+                    trend = {
+                        'summary': {
+                            'last7_total_kwh': float(last7),
+                            'prev7_total_kwh': float(prev7),
+                            'last7_vs_prev7_delta_pct': float(delta7) if delta7 is not None else None
+                        },
+                        'top_rooms_last7': top_rooms,
+                        'peak_days': peak_list,
+                        'series_daily': [
+                            {
+                                'date': str(r['date']),
+                                'kwh': float(r['energy_consumption_kwh']),
+                                'rolling_7': float(r['rolling_7']),
+                                'rolling_30': float(r['rolling_30'])
+                            } for _, r in daily.iterrows()
+                        ]
+                    }
+        except Exception as te:
+            logger.warning(f"Energy trend calc failed: {te}")
         
         # Process query or generate automatic insights
         if query:
@@ -439,7 +499,8 @@ def energy_insights():
             "energy_analysis": {
                 "patterns_detected": len(energy_patterns),
                 "data_quality": data_quality,
-                "detailed_patterns": energy_patterns
+                "detailed_patterns": energy_patterns,
+                "trend": trend
             },
             "recommendations": [
                 "Monitor high-consumption periods for optimization opportunities",
@@ -576,7 +637,8 @@ def detect_anomalies():
             prompts_config_file="advanced_prompts.json"
         )
         
-        df = anomaly_analyzer.load_and_process_data()
+        # For anomaly detection, exclude maintenance docs to avoid LLM bleed-through
+        df = anomaly_analyzer.load_and_process_data(include_maintenance=False)
         
         # Enhanced anomaly detection with fallback
         try:
@@ -609,11 +671,102 @@ def detect_anomalies():
                     })
         
         all_anomalies = list(anomalies) + statistical_anomalies
+
+        # Read actual alerts from core_alert and build actionable suggestions
+        alerts_payload = []
+        suggestions = []
+        alert_as_anomalies = []
+        try:
+            alerts_df = anomaly_analyzer.db_adapter.get_alerts_with_equipment_info(days_back=30)
+            if alerts_df is not None and not alerts_df.empty:
+                # Normalize types
+                if 'created_at' in alerts_df.columns:
+                    alerts_df['created_at'] = pd.to_datetime(alerts_df['created_at'], errors='coerce')
+                if 'resolved_at' in alerts_df.columns:
+                    alerts_df['resolved_at'] = pd.to_datetime(alerts_df['resolved_at'], errors='coerce')
+
+                for _, row in alerts_df.head(50).iterrows():
+                    alerts_payload.append({
+                        "id": str(row.get('id')),
+                        "type": row.get('alert_type'),
+                        "message": row.get('message'),
+                        "severity": row.get('severity_level'),
+                        "created_at": row.get('created_at').isoformat() if pd.notna(row.get('created_at')) else None,
+                        "is_resolved": bool(row.get('is_resolved')),
+                        "resolved_at": row.get('resolved_at').isoformat() if pd.notna(row.get('resolved_at')) else None,
+                        "equipment_id": str(row.get('equipment_id')) if row.get('equipment_id') else None,
+                        "equipment_name": row.get('equipment_name'),
+                        "room_name": row.get('room_name')
+                    })
+
+                    # Convert alert into anomaly-like entry to contribute to totals
+                    sev_raw = (row.get('severity_level') or '').lower()
+                    # Map DB severity to anomaly severity buckets used elsewhere
+                    sev_bucket = 'Critical' if sev_raw == 'high' else 'High' if sev_raw == 'medium' else 'Medium'
+                    a_type = row.get('alert_type') or 'Alert'
+                    location = ''
+                    if row.get('room_name'):
+                        location = row.get('room_name')
+                    if row.get('equipment_name'):
+                        location = f"{location} - {row.get('equipment_name')}" if location else row.get('equipment_name')
+                    alert_as_anomalies.append({
+                        "anomaly_type": f"Alert: {a_type}",
+                        "type": f"Alert: {a_type}",
+                        "severity": sev_bucket,
+                        "location": location or 'Unknown',
+                        "description": row.get('message') or 'Alert raised',
+                        "value": None,
+                        "confidence": 0.9,
+                        "detection_method": "alert"
+                    })
+
+                # Actionable next steps based on unresolved/high alerts
+                unresolved = alerts_df[alerts_df['is_resolved'] == False] if 'is_resolved' in alerts_df.columns else alerts_df
+                for _, ar in unresolved.iterrows():
+                    a_type = (ar.get('alert_type') or '').lower()
+                    sev = (ar.get('severity_level') or '').lower()
+                    room_name = ar.get('room_name') or 'the room'
+                    equipment_name = ar.get('equipment_name') or 'equipment'
+                    if a_type == 'temperature_high':
+                        suggestions.append(f"Immediate: Inspect HVAC for {room_name}, verify cooling for {equipment_name}, and check airflow/thermostat.")
+                    elif a_type == 'temperature_low':
+                        suggestions.append(f"Immediate: Inspect heating controls for {room_name}, verify setpoint/sensors for {equipment_name}.")
+                    elif a_type == 'humidity_high':
+                        suggestions.append(f"Urgent: Dehumidify {room_name}, inspect for leaks and verify ventilation.")
+                    elif a_type == 'humidity_low':
+                        suggestions.append(f"Planned: Adjust humidification for {room_name}, verify sensor calibration.")
+                    elif a_type == 'energy_anomaly':
+                        suggestions.append(f"High priority: Audit schedules and standby loads in {room_name}; inspect {equipment_name} for inefficiency.")
+                    elif a_type == 'motion':
+                        if sev in ['high', 'medium']:
+                            suggestions.append(f"Review motion alert in {room_name}; verify occupancy schedule and sensor sensitivity.")
+
+                # De-duplicate suggestions while preserving order
+                seen = set()
+                deduped = []
+                for s in suggestions:
+                    if s not in seen:
+                        deduped.append(s)
+                        seen.add(s)
+                suggestions = deduped[:10]
+        except Exception as e:
+            logger.warning(f"Failed to fetch or process alerts: {e}")
+            alerts_payload = []
+            suggestions = []
+            alert_as_anomalies = []
         
         # Categorize by severity
-        critical_anomalies = [a for a in all_anomalies if getattr(a, 'severity', 'Medium') == "Critical"]
-        high_anomalies = [a for a in all_anomalies if getattr(a, 'severity', 'Medium') == "High"]
-        medium_anomalies = [a for a in all_anomalies if getattr(a, 'severity', 'Medium') == "Medium"]
+        # Merge alert-derived anomalies into overall list
+        if alert_as_anomalies:
+            all_anomalies.extend(alert_as_anomalies)
+
+        # Normalize access for both object-like and dict-like entries
+        def _get_sev(x):
+            return (getattr(x, 'severity', None) or (x.get('severity') if isinstance(x, dict) else None) or 'Medium')
+
+        critical_anomalies = [a for a in all_anomalies if _get_sev(a) == "Critical"]
+        high_anomalies = [a for a in all_anomalies if _get_sev(a) == "High"]
+        medium_anomalies = [a for a in all_anomalies if _get_sev(a) == "Medium"]
         
         response = {
             "status": "success",
@@ -630,15 +783,16 @@ def detect_anomalies():
             "anomalies": [
                 {
                     "id": f"anom_{i}",
-                    "type": getattr(a, 'anomaly_type', getattr(a, 'type', 'Unknown')),
-                    "severity": getattr(a, 'severity', 'Medium'),
-                    "location": getattr(a, 'location', 'Unknown'),
-                    "description": getattr(a, 'description', 'Anomaly detected'),
-                    "value": getattr(a, 'value', None),
-                    "confidence": getattr(a, 'confidence', 0.5),
-                    "detection_method": "advanced" if i < len(anomalies) else "statistical"
+                    "type": (getattr(a, 'anomaly_type', None) or (a.get('anomaly_type') if isinstance(a, dict) else None) or getattr(a, 'type', None) or (a.get('type') if isinstance(a, dict) else 'Unknown')),
+                    "severity": (getattr(a, 'severity', None) or (a.get('severity') if isinstance(a, dict) else 'Medium')),
+                    "location": (getattr(a, 'location', None) or (a.get('location') if isinstance(a, dict) else 'Unknown')),
+                    "description": (getattr(a, 'description', None) or (a.get('description') if isinstance(a, dict) else 'Anomaly detected')),
+                    "value": (getattr(a, 'value', None) if hasattr(a, 'value') else (a.get('value') if isinstance(a, dict) else None)),
+                    "confidence": (getattr(a, 'confidence', None) if hasattr(a, 'confidence') else (a.get('confidence') if isinstance(a, dict) else 0.5)),
+                    "detection_method": ("advanced" if i < len(anomalies) else (a.get('detection_method') if isinstance(a, dict) and a.get('detection_method') else "statistical"))
                 } for i, a in enumerate(all_anomalies)
             ],
+            "alerts": alerts_payload,
             "recommendations": [
                 "Investigate critical anomalies immediately",
                 "Review high-severity anomalies within 24 hours",
@@ -647,6 +801,11 @@ def detect_anomalies():
                 "No significant anomalies detected",
                 "Continue regular monitoring",
                 "Maintain current operational procedures"
+            ],
+            "next_steps": suggestions if suggestions else [
+                "Review unresolved alerts and assign follow-up",
+                "Verify sensor calibration for recent temperature/humidity alerts",
+                "Audit equipment schedules for energy anomalies"
             ]
         }
         
@@ -919,6 +1078,212 @@ def context_analysis():
         return jsonify({
             "status": "error",
             "error": f"Context analysis failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/energy/report', methods=['POST', 'OPTIONS'])
+def energy_report():
+    """
+    Aggregated energy report from core_energysummary.
+    Body: { period: 'daily'|'monthly'|'yearly', room_id?: string, start?: ISO, end?: ISO }
+    """
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+
+    try:
+        data = request.get_json() or {}
+        period = (data.get('period') or 'daily').lower()
+        room_id = data.get('room_id')
+        start = data.get('start')
+        end = data.get('end')
+
+        report_analyzer = RoomLogAnalyzer(
+            use_database=True,
+            prompt_type="energy_report",
+            document_template="energy_report",
+            prompts_config_file="advanced_prompts.json"
+        )
+
+        # Fetch summaries
+        start_dt = pd.to_datetime(start, errors='coerce') if start else None
+        end_dt = pd.to_datetime(end, errors='coerce') if end else None
+        es_df = report_analyzer.db_adapter.get_energy_summary_dataframe(
+            start_date=start_dt, end_date=end_dt, room_id=room_id
+        )
+
+        if es_df is None or es_df.empty:
+            return jsonify({
+                "status": "success",
+                "period": period,
+                "totals": {"total_energy": 0, "total_cost": 0},
+                "groups": []
+            })
+
+        # Map room_id -> room_name for readability (ensure string keys for UUIDs)
+        rooms = report_analyzer.db_adapter.get_rooms_list()
+        room_map = {str(r['id']): r['name'] for r in rooms}
+        if 'room_id' in es_df.columns:
+            es_df['room_id'] = es_df['room_id'].astype(str)
+            es_df['room_name'] = es_df['room_id'].map(room_map).fillna('Unknown')
+        else:
+            es_df['room_name'] = 'Unknown'
+
+        # Build time key per period
+        if 'period_start' in es_df.columns:
+            es_df['period_start'] = pd.to_datetime(es_df['period_start'], errors='coerce')
+
+        if period == 'daily':
+            es_df['bucket'] = es_df['period_start'].dt.strftime('%Y-%m-%d')
+        elif period == 'monthly':
+            es_df['bucket'] = es_df['period_start'].dt.strftime('%Y-%m')
+        elif period == 'yearly':
+            es_df['bucket'] = es_df['period_start'].dt.strftime('%Y')
+        else:
+            return jsonify({"status": "error", "error": "Invalid period. Use daily, monthly, or yearly."}), 400
+
+        # Aggregate
+        agg = es_df.groupby(['bucket', 'room_name'], dropna=False).agg({
+            'total_energy': 'sum',
+            'total_cost': 'sum',
+            'reading_count': 'sum',
+            'anomaly_count': 'sum'
+        }).reset_index()
+
+        groups = []
+        for (_, row) in agg.iterrows():
+            groups.append({
+                "period": row['bucket'],
+                "room_name": row['room_name'],
+                "total_energy": float(row['total_energy'] or 0),
+                "total_cost": float(row['total_cost'] or 0),
+                "reading_count": int(row['reading_count'] or 0),
+                "anomaly_count": int(row['anomaly_count'] or 0)
+            })
+
+        totals = {
+            "total_energy": float(es_df['total_energy'].sum() or 0),
+            "total_cost": float(es_df['total_cost'].sum() or 0)
+        }
+
+        return jsonify({
+            "status": "success",
+            "period": period,
+            "filters": {"room_id": room_id, "start": start, "end": end},
+            "totals": totals,
+            "groups": groups
+        })
+
+    except Exception as e:
+        logger.error(f"Energy report error: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"Energy report failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/billing/rates', methods=['POST', 'OPTIONS'])
+def billing_rates():
+    """
+    Retrieve billing rates (from core_billingrate) and provide suggestions.
+    Body: { room_id?: string, at?: ISO datetime }
+    """
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+
+    try:
+        data = request.get_json() or {}
+        room_id = data.get('room_id')
+        at = data.get('at')
+        ts = pd.to_datetime(at, errors='coerce') if at else pd.Timestamp.now(tz=timezone.utc)
+
+        analyzer = RoomLogAnalyzer(
+            use_database=True,
+            prompt_type="billing",
+            document_template="standard",
+            prompts_config_file="advanced_prompts.json"
+        )
+
+        # First try active-at timestamp
+        rates_df = analyzer.db_adapter.get_billing_rates_dataframe(room_id=room_id, active_at=ts)
+        rooms = analyzer.db_adapter.get_rooms_list()
+        room_map = {r['id']: r['name'] for r in rooms}
+
+        rates = []
+        suggestions = []
+        # If still empty, fetch latest without time filter
+        if rates_df is None or rates_df.empty:
+            rates_df = analyzer.db_adapter.get_billing_rates_dataframe(room_id=room_id, active_at=None)
+
+        if rates_df is not None and not rates_df.empty:
+            for _, row in rates_df.iterrows():
+                rid = row.get('room_id')
+                currency = (row.get('currency') or 'PHP').upper()
+                rate = float(row.get('rate_per_kwh') or 0)
+                php_rate = rate if currency == 'PHP' else rate * 56
+                info = {
+                    "id": str(row.get('id')),
+                    "room_id": str(rid) if rid else None,
+                    "room_name": room_map.get(rid, 'Global') if rid else 'Global',
+                    "rate_per_kwh": rate,
+                    "currency": currency,
+                    "effective_rate_php": round(php_rate, 4),
+                    "start_time": str(row.get('start_time')) if row.get('start_time') is not pd.NaT else None,
+                    "end_time": str(row.get('end_time')) if row.get('end_time') is not pd.NaT else None,
+                    "valid_from": row.get('valid_from').isoformat() if pd.notna(row.get('valid_from')) else None,
+                    "valid_to": row.get('valid_to').isoformat() if pd.notna(row.get('valid_to')) else None,
+                    "created_at": row.get('created_at').isoformat() if pd.notna(row.get('created_at')) else None
+                }
+                rates.append(info)
+
+                # Suggestions based on currency and rate
+                if currency != 'PHP':
+                    suggestions.append(f"Convert rate {rate} {currency}/kWh for {info['room_name']} to PHP to avoid frontend inconsistencies.")
+                if info['start_time'] and info['end_time']:
+                    suggestions.append(f"Time-windowed rate detected for {info['room_name']}. Consider off-peak optimization outside {info['start_time']}-{info['end_time']}.")
+        else:
+            # No rate found: propose creating a default
+            target_room = room_map.get(room_id, 'this room') if room_id else 'all rooms'
+            suggestions.append(f"No billing rate found for {target_room} at {ts.isoformat()}. Create a PHP/kWh rate to enable cost calculations.")
+
+            # DEBUG: surface database counts to help diagnose
+            try:
+                with analyzer.db_adapter.connection.cursor() as cur:
+                    cur.execute("SELECT COUNT(*) FROM core_billingrate")
+                    count_row = cur.fetchone()
+                    rate_count = int(count_row[0]) if count_row else 0
+                    # Fetch one sample row if exists
+                    sample = None
+                    if rate_count > 0:
+                        cur.execute("SELECT id, rate_per_kwh, currency, created_at FROM core_billingrate ORDER BY created_at DESC LIMIT 1")
+                        sample = cur.fetchone()
+                debug_info = {"core_billingrate_count": rate_count, "sample": sample}
+            except Exception as dbg_e:
+                debug_info = {"error": str(dbg_e)}
+
+        # De-duplicate suggestions
+        seen = set()
+        deduped = []
+        for s in suggestions:
+            if s not in seen:
+                deduped.append(s)
+                seen.add(s)
+
+        resp = {
+            "status": "success",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "filters": {"room_id": room_id, "at": ts.isoformat()},
+            "rates": rates,
+            "suggestions": deduped[:10]
+        }
+        if not rates:
+            resp["debug"] = debug_info
+        return jsonify(resp)
+
+    except Exception as e:
+        logger.error(f"Billing rates error: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"Billing rates failed: {str(e)}",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 

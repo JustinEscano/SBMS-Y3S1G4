@@ -3,8 +3,13 @@ import axiosInstance from "../../service/AppService.tsx";
 
 const BASE_URL = "/api/notification/";
 
+interface NotificationResponse {
+  results?: Notification[];
+  notifications?: Notification[];
+}
+
 export const notificationService = {
-  // Get all notifications (raw, from backend)
+  // ✅ Get all notifications (raw, from backend)
   getAll: async (): Promise<Notification[]> => {
     try {
       const res = await axiosInstance.get<Notification[]>(BASE_URL);
@@ -15,25 +20,26 @@ export const notificationService = {
     }
   },
 
-  // Get notifications for a specific user (frontend filter)
+  // ✅ Get notifications for a specific user (safe + flexible)
   getByUserId: async (userId: string): Promise<Notification[]> => {
-  try {
-    const allNotifications = await notificationService.getAll();
-    return allNotifications.filter((n) => {
-      // If user is object with id
-      if (typeof n.user === "object" && n.user !== null) {
-        return n.user.id === userId;
-      }
-      // If user is just a string, compare directly
-      return n.user === userId;
-    });
-  } catch (error: any) {
-    console.error(`Error fetching notifications for user ${userId}:`, error.response?.data || error);
-    throw error;
-  }
-},
+    try {
+      const res = await axiosInstance.get<Notification[] | NotificationResponse>(BASE_URL, {
+        params: { user: userId },
+      });
 
-  // Get unread notifications for a user
+      const data = res.data as Notification[] | NotificationResponse;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.results)) return data.results;
+      if (Array.isArray(data.notifications)) return data.notifications;
+
+      return [];
+    } catch (error: any) {
+      console.error(`Error fetching notifications for user ${userId}:`, error.response?.data || error);
+      throw error;
+    }
+  },
+
+  // ✅ Get unread notifications for a user
   getUnreadByUserId: async (userId: string): Promise<Notification[]> => {
     try {
       const userNotifications = await notificationService.getByUserId(userId);
@@ -44,7 +50,7 @@ export const notificationService = {
     }
   },
 
-  // Create a notification (admin/system)
+  // ✅ Create a notification (admin/system)
   create: async (payload: Partial<Notification>): Promise<Notification> => {
     try {
       const res = await axiosInstance.post<Notification>(BASE_URL, payload);
@@ -55,7 +61,7 @@ export const notificationService = {
     }
   },
 
-  // Mark a notification as read
+  // ✅ Mark a notification as read
   markAsRead: async (id: string): Promise<Notification> => {
     try {
       const res = await axiosInstance.patch<Notification>(`${BASE_URL}${id}/`, { read: true });
@@ -66,7 +72,7 @@ export const notificationService = {
     }
   },
 
-  // Mark a notification as unread
+  // ✅ Mark a notification as unread
   markAsUnread: async (id: string): Promise<Notification> => {
     try {
       const res = await axiosInstance.patch<Notification>(`${BASE_URL}${id}/`, { read: false });
@@ -77,7 +83,7 @@ export const notificationService = {
     }
   },
 
-  // Mark all notifications as read (frontend fallback)
+  // ✅ Mark all notifications as read (frontend fallback)
   markAllAsRead: async (): Promise<void> => {
     try {
       const unread = await notificationService.getAll();
@@ -94,7 +100,7 @@ export const notificationService = {
     }
   },
 
-  // Delete a notification
+  // ✅ Delete a notification
   delete: async (id: string): Promise<void> => {
     try {
       await axiosInstance.delete(`${BASE_URL}${id}/`);

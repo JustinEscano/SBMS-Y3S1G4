@@ -1,6 +1,3 @@
-// service/logoutUser.ts
-import { useAuth } from "../context/AuthContext";
-
 let logoutFn: (() => void) | null = null;
 
 // Called inside AuthProvider to register the logout function
