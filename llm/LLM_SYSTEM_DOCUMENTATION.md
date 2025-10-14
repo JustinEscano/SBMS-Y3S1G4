@@ -38,10 +38,12 @@ ORB AI empowers users with a robust set of tools to monitor and optimize buildin
 
 ### 5. Advanced Analytics & Reporting
 
-- **Key Performance Indicators (KPIs)**: Comprehensive metrics for building performance.
-- **Weekly Summaries**: Consolidated reports on weekly performance.
-- **Trend Analysis**: Identify energy and usage patterns.
-- **Anomaly Detection**: Detect unusual patterns and potential issues.
+- **Building Performance Dashboard**: Comprehensive KPIs with efficiency scoring and ratings.
+- **Smart Recommendations**: Context-aware, actionable suggestions based on real data.
+- **Multi-Period Reports**: Daily, weekly, monthly, and yearly energy reports.
+- **Trend Analysis**: Identify energy and usage patterns with cost projections.
+- **Anomaly Detection**: Detect unusual patterns and potential issues with alerts.
+- **Billing Analysis**: Real-time rate information with cost optimization suggestions.
 
 ## 🗣️ What You Can Ask
 
@@ -137,8 +139,9 @@ ORB AI is designed to handle a wide range of queries, from simple data lookups t
 
 - "Generate weekly summary."
 - "Show me this week's performance report."
-- "Monthly energy consumption summary."
-- "Quarterly maintenance report."
+- "Daily report" / "Monthly report" / "Yearly report"
+- "Show me billing rates."
+- "Check for maintenance issues."
 
 #### Anomaly Detection
 
@@ -306,5 +309,151 @@ ORB AI is built with cutting-edge technology to ensure robust performance and fl
 - Request trend analysis for specific time periods.
 - Ask for optimization recommendations.
 - Request comparative analysis between rooms or periods.
+
+## 🎨 User Interface Features
+
+### Modern Chat Interface
+
+- **Clean Design**: Centered layout with optimized spacing for readability.
+- **Smooth Animations**: Messages fade in with smooth transitions.
+- **Auto-Scroll**: Automatically scrolls to new messages.
+- **Responsive**: Adapts to desktop and mobile screens.
+
+### Message Display
+
+- **User Messages**: Blue gradient background, right-aligned.
+- **AI Responses**: Dark background with blue accent border, left-aligned.
+- **Formatted Content**: Supports bold text, emojis, and structured data.
+- **Timestamps**: Shows when each message was sent.
+
+### Input Controls
+
+- **Centered Input Box**: Fixed at bottom, max-width 1400px.
+- **Clear Button**: Appears when messages exist, removes all chat history.
+- **Send Button**: Submits your query to ORB AI.
+- **Loading States**: Visual feedback while processing.
+
+## 🆕 Recent Enhancements
+
+### Intelligent Query Routing
+
+ORB AI now automatically detects query intent and routes to specialized endpoints:
+
+- **Maintenance Queries**: "Check for maintenance" → Dedicated maintenance analysis
+- **Report Queries**: "Daily/Monthly/Yearly report" → Period-specific energy reports
+- **Billing Queries**: "Show billing rates" → Real-time rate information
+- **Room Queries**: "Room utilization" → Comprehensive space analysis
+
+### Enhanced KPI Dashboard
+
+The new **Building Performance Dashboard** provides:
+
+- **Energy Performance**: Total consumption, highest consumer, efficiency score, cost estimation
+- **Space Utilization**: Utilization rate, peak occupancy, energy per person
+- **Environmental Comfort**: Temperature range, comfort rate (20-24°C ideal), status indicators
+- **System Health**: Overall efficiency score (0-100%), performance ratings
+- **Smart Recommendations**: Context-aware suggestions based on actual performance
+
+### Improved Reporting
+
+- **Multi-Period Reports**: Daily, monthly, yearly energy summaries
+- **Cost Analysis**: Automatic cost calculations in PHP
+- **Top Consumers**: Identifies highest energy-consuming rooms
+- **Trend Indicators**: Shows increases/decreases with percentages
+
+### Better Maintenance Insights
+
+- **User Attribution**: Shows who requested each maintenance item
+- **Status Tracking**: Pending, in-progress, resolved with timestamps
+- **AI + User Requests**: Combines predictive maintenance with actual user requests
+- **Priority Levels**: Critical, high, medium, low urgency indicators
+
+### Enhanced Room Utilization
+
+- **Detailed Breakdown**: All rooms with event counts and percentages
+- **Usage Levels**: Color-coded (🔴 High, 🟡 Medium, 🟢 Low)
+- **Statistics**: Average events per room, utilization distribution
+- **Recommendations**: Actionable suggestions for space optimization
+
+### Billing Rate Display
+
+- **Clean Format**: Organized by room with clear rate information
+- **Time Windows**: Shows active hours for each rate
+- **Validity Periods**: Displays when rates are effective
+- **Summary Statistics**: Total rates, average, min/max ranges
+- **Optimization Tips**: Suggestions for cost savings
+
+## 📝 Response Format Examples
+
+### Building Performance Dashboard
+
+```
+📊 **Building Performance Dashboard**
+
+⚡ **Energy Performance:**
+   • Total Consumption: **60.70 kWh**
+   • Highest Consumer: **Conference Room A** (25.30 kWh)
+   • Distribution Efficiency: **85.5%**
+   • Estimated Cost: **₱728.40**
+
+👥 **Space Utilization:**
+   • Utilization Rate: **65.0%**
+   • Peak Occupancy: **8 people**
+   • Avg When Occupied: **3.5 people**
+   • Energy per Person: **12.14 kWh**
+
+🌡️ **Environmental Comfort:**
+   • Average Temperature: **22.5°C**
+   • Range: **20.0°C - 24.5°C**
+   • Comfort Rate: **85.0%** (20-24°C)
+   • Status: ✅ **Optimal**
+
+📈 **System Health:**
+   • Data Points Analyzed: **1,250**
+   • Active Rooms: **5**
+   • Overall Efficiency: **78.5%**
+   • Rating: ✅ **Good**
+
+💡 **Recommendations:**
+   • ✅ All systems operating optimally
+   • Continue monitoring for sustained performance
+```
+
+### Room Utilization Analysis
+
+```
+🏢 Room Utilization Analysis
+
+📊 Total Rooms in System: 5
+📈 Total Events Recorded: 2,730
+
+📍 Most Utilized Room:
+   Break Room D
+   • Events: 1,234
+   • Usage: 45.2% of total activity
+
+📊 Overall Statistics:
+   • Total Rooms: 5
+   • Total Events: 2,730
+   • Average Events/Room: 546.0
+
+📈 Utilization Distribution:
+   • 🔴 High Usage: 1 rooms
+   • 🟡 Medium Usage: 3 rooms
+   • 🟢 Low Usage: 1 rooms
+
+🏠 Room Breakdown:
+   1. 🔴 Break Room D
+      Events: 1,234
+      Share: 45.2%
+   
+   2. 🟡 Conference Room A
+      Events: 856
+      Share: 31.4%
+
+💡 Recommendations:
+   • Focus maintenance on high-usage room: Break Room D
+   • Monitor usage patterns for optimization opportunities
+```
 
 **Note:** ORB AI is designed to provide both immediate factual answers and deeper analytical insights, making it an invaluable tool for facility management, energy optimization, and maintenance coordination in smart building environments.

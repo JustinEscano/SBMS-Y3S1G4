@@ -20,7 +20,9 @@ const LLMChatPage: React.FC = () => {
 
   // Scroll to bottom when new messages are added
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 100);
   };
 
   // Call energy report endpoint
@@ -89,10 +91,10 @@ const LLMChatPage: React.FC = () => {
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
       const rates: any[] = Array.isArray(data.rates) ? data.rates : [];
-      const suggestions: string[] = Array.isArray(data.suggestions) ? data.suggestions : [];
 
       const lines: string[] = [];
-      lines.push("💱 Billing Rates (effective PHP/kWh)\n");
+      lines.push("💱 Billing Rates Analysis\n");
+
       if (rates.length > 0) {
         const byRoom = new Map<string, any[]>();
         rates.forEach((r) => {
@@ -100,29 +102,94 @@ const LLMChatPage: React.FC = () => {
           if (!byRoom.has(room)) byRoom.set(room, []);
           byRoom.get(room)!.push(r);
         });
+
         const roomNames = Array.from(byRoom.keys()).sort();
-        roomNames.forEach((room) => {
-          lines.push(`- ${room}:`);
+        roomNames.forEach((room, roomIdx) => {
+          if (roomIdx > 0) lines.push(""); // Add spacing between rooms
+          lines.push(`📍 ${room}:`);
+
           const roomRates = byRoom.get(room)!
             .sort((a, b) => (b.effective_rate_php ?? 0) - (a.effective_rate_php ?? 0));
-          roomRates.forEach((r) => {
-            const php = Number(r.effective_rate_php).toFixed(2);
-            const orig = `${r.rate_per_kwh} ${r.currency}`;
-            const window = (r.start_time && r.end_time) ? `, window ${r.start_time}-${r.end_time}` : '';
-            const valid = (r.valid_from || r.valid_to) ? `, valid ${r.valid_from || 'open'} → ${r.valid_to || 'open'}` : '';
-            lines.push(`  • ₱${php}/kWh (${orig}/kWh${window}${valid})`);
-          });
-          lines.push("");
-        });
-        if (lines[lines.length - 1] === "") lines.pop();
-      } else {
-        lines.push("No rates found. Create a PHP/kWh rate to enable cost calculations.");
-      }
 
-      if (suggestions.length > 0) {
-        const uniq = Array.from(new Set(suggestions));
-        lines.push("\nSuggestions:");
-        uniq.forEach((s) => lines.push(`- ${s}`));
+          roomRates.forEach((r, idx) => {
+            const php = Number(r.effective_rate_php).toFixed(2);
+            const startTime = r.start_time || '00:00:00';
+            const endTime = r.end_time || '23:59:59';
+            const validFrom = r.valid_from ? new Date(r.valid_from).toLocaleDateString() : 'Now';
+            const validTo = r.valid_to ? new Date(r.valid_to).toLocaleDateString() : 'Ongoing';
+
+            // Calculate rate tier and emoji
+            const rate = Number(php);
+            let tier, emoji;
+            if (rate >= 12) {
+              tier = "Premium";
+              emoji = "💎";
+            } else if (rate >= 10) {
+              tier = "High";
+              emoji = "🔴";
+            } else if (rate >= 8) {
+              tier = "Medium";
+              emoji = "🟡";
+            } else {
+              tier = "Economy";
+              emoji = "🟢";
+            }
+
+            // Main rate line
+            lines.push(`\n${idx + 1}. ${emoji} ₱${php}/kWh`);
+            lines.push(`   ⏰ Active: ${startTime} - ${endTime}`);
+            lines.push(`   📅 Valid: ${validFrom} → ${validTo}`);
+            lines.push(`   🏷️  ${tier} Rate`);
+          });
+        });
+
+        // Enhanced summary statistics
+        const allPhpRates = rates.map(r => Number(r.effective_rate_php)).filter(r => !isNaN(r));
+        if (allPhpRates.length > 0) {
+          const avgRate = (allPhpRates.reduce((a, b) => a + b, 0) / allPhpRates.length).toFixed(2);
+          const minRate = Math.min(...allPhpRates).toFixed(2);
+          const maxRate = Math.max(...allPhpRates).toFixed(2);
+
+          // Calculate savings potential
+          const savings = (Number(maxRate) - Number(minRate)).toFixed(2);
+
+          lines.push("\n\n📊 **Rate Analysis:**");
+          lines.push(`• Total Configurations: ${rates.length}`);
+          lines.push(`• Peak Rate: ₱${maxRate}/kWh`);
+          lines.push(`• Base Rate: ₱${minRate}/kWh`);
+          lines.push(`• Average Rate: ₱${avgRate}/kWh`);
+          lines.push(`• Potential Savings: ₱${savings}/kWh (by choosing optimal times)`);
+
+          // Find best and worst times
+          const cheapest = rates.find(r => Number(r.effective_rate_php) === Number(minRate));
+          const mostExpensive = rates.find(r => Number(r.effective_rate_php) === Number(maxRate));
+
+          if (cheapest) {
+            lines.push(`• Best Time: ${cheapest.start_time || 'All Day'} - ${cheapest.end_time || 'All Day'} (₱${minRate}/kWh)`);
+          }
+          if (mostExpensive) {
+            lines.push(`• Peak Time: ${mostExpensive.start_time || 'All Day'} - ${mostExpensive.end_time || 'All Day'} (₱${maxRate}/kWh)`);
+          }
+        }
+
+        // Enhanced recommendations
+        const hasTimeWindows = rates.some(r => r.start_time && r.end_time);
+        const rateRange = allPhpRates.length > 1 ? (Math.max(...allPhpRates) - Math.min(...allPhpRates)) : 0;
+
+        lines.push("\n💡 **Optimization Tips:**");
+        if (hasTimeWindows && rateRange > 2) {
+          lines.push("• ⏰ **Time-of-Use Strategy**: Schedule energy-intensive tasks during lowest rate periods");
+          lines.push(`• 💰 **Potential Savings**: Up to ₱${rateRange.toFixed(2)}/kWh by choosing optimal timing`);
+        }
+        if (rates.some(r => r.room_name && r.room_name !== 'Global')) {
+          lines.push("• 🏢 **Room-Specific Rates**: Consider custom rates for high-usage areas");
+        }
+        lines.push("• 📈 **Monitor Trends**: Track rate changes and seasonal variations");
+        lines.push("• 🔄 **Review Quarterly**: Reassess billing strategy every 3 months for best rates");
+
+      } else {
+        lines.push("No billing rates configured.");
+        lines.push("\n💡 Tip: Configure billing rates to enable cost calculations and optimization.");
       }
 
       setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: lines.join("\n"), isLoading: false }) : m));
@@ -156,8 +223,10 @@ const LLMChatPage: React.FC = () => {
   const determineQueryType = (query: string): QueryType => {
     const lowerQuery = query.toLowerCase();
     
+    // Check for maintenance first (more specific)
     if (lowerQuery.includes("maintenance") || lowerQuery.includes("repair") || 
-        lowerQuery.includes("fix") || lowerQuery.includes("broken")) {
+        lowerQuery.includes("fix") || lowerQuery.includes("broken") ||
+        lowerQuery.includes("check for maintenance")) {
       return "maintenance";
     } else if (lowerQuery.includes("anomal") || lowerQuery.includes("unusual") || 
                lowerQuery.includes("strange") || lowerQuery.includes("weird")) {
@@ -172,7 +241,9 @@ const LLMChatPage: React.FC = () => {
                lowerQuery.includes("usage") || lowerQuery.includes("occupied") ||
                lowerQuery.includes("most used")) {
       return "utilization";
-    } else if (lowerQuery.includes("summary") || lowerQuery.includes("report") || 
+    } else if (lowerQuery.includes("report") || lowerQuery.includes("summary") ||
+               lowerQuery.includes("weekly") || lowerQuery.includes("daily") ||
+               lowerQuery.includes("monthly") || lowerQuery.includes("yearly") ||
                lowerQuery.includes("week") || lowerQuery.includes("overview")) {
       return "summary";
     } else if (lowerQuery.includes("context") || lowerQuery.includes("situation") || 
@@ -316,6 +387,202 @@ const LLMChatPage: React.FC = () => {
     }
   };
 
+  // Determine report period from query
+  const determineReportPeriod = (query: string): 'daily' | 'monthly' | 'yearly' | 'weekly' => {
+    const lowerQuery = query.toLowerCase();
+    if (lowerQuery.includes('daily') || lowerQuery.includes('day')) return 'daily';
+    if (lowerQuery.includes('monthly') || lowerQuery.includes('month')) return 'monthly';
+    if (lowerQuery.includes('yearly') || lowerQuery.includes('year') || lowerQuery.includes('annual')) return 'yearly';
+    return 'weekly';
+  };
+
+  // Call room utilization endpoint
+  const callRoomUtilization = async () => {
+    const loadingId = (Date.now() + Math.random()).toString();
+    const loadingMessage: ChatMessage = {
+      id: loadingId,
+      type: "assistant",
+      content: "Analyzing room utilization...",
+      timestamp: new Date(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/rooms/utilization", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
+        body: JSON.stringify({ user_id: "web_user" })
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      
+      const lines: string[] = [];
+      const metrics = data.detailed_metrics || {};
+      const recommendations: string[] = Array.isArray(data.recommendations) ? data.recommendations : [];
+      
+      lines.push("🏢 Room Utilization Analysis\n");
+      
+      if (data.status === "success" && metrics.status === "success") {
+        // Quick answer for simple queries
+        lines.push(`📊 Total Rooms in System: ${metrics.unique_rooms || 0}`);
+        lines.push(`📈 Total Events Recorded: ${(metrics.total_events || 0).toLocaleString()}\n`);
+        
+        // Most used room section
+        lines.push("📍 Most Utilized Room:");
+        lines.push(`   ${metrics.most_used_room || "Unknown"}`);
+        lines.push(`   • Events: ${(metrics.most_used_count || 0).toLocaleString()}`);
+        if (metrics.usage_percentage) {
+          lines.push(`   • Usage: ${metrics.usage_percentage.toFixed(1)}% of total activity`);
+        }
+        
+        // Overall statistics
+        lines.push("\n📊 Overall Statistics:");
+        lines.push(`   • Total Rooms: ${metrics.unique_rooms || 0}`);
+        lines.push(`   • Total Events: ${(metrics.total_events || 0).toLocaleString()}`);
+        if (metrics.avg_events_per_room) {
+          lines.push(`   • Average Events/Room: ${metrics.avg_events_per_room.toFixed(1)}`);
+        }
+        
+        // Utilization distribution
+        if (metrics.utilization_distribution) {
+          const dist = metrics.utilization_distribution;
+          lines.push("\n📈 Utilization Distribution:");
+          lines.push(`   • 🔴 High Usage: ${dist.high_usage || 0} rooms`);
+          lines.push(`   • 🟡 Medium Usage: ${dist.medium_usage || 0} rooms`);
+          lines.push(`   • 🟢 Low Usage: ${dist.low_usage || 0} rooms`);
+        }
+        
+        // Room breakdown if available
+        if (metrics.room_details && Array.isArray(metrics.room_details)) {
+          lines.push("\n🏠 Room Breakdown:");
+          metrics.room_details.slice(0, 10).forEach((room: any, idx: number) => {
+            const usage = room.usage_level || "medium";
+            const emoji = usage === "high" ? "🔴" : usage === "low" ? "🟢" : "🟡";
+            lines.push(`   ${idx + 1}. ${emoji} ${room.room_name || "Unknown"}`);
+            lines.push(`      Events: ${(room.event_count || 0).toLocaleString()}`);
+            if (room.percentage) {
+              lines.push(`      Share: ${room.percentage.toFixed(1)}%`);
+            }
+          });
+        }
+        
+        // Recommendations
+        if (recommendations.length > 0) {
+          lines.push("\n💡 Recommendations:");
+          recommendations.forEach(rec => lines.push(`   • ${rec}`));
+        }
+      } else {
+        lines.push("No room utilization data available.");
+        lines.push("\n💡 Tip: Ensure room sensors are properly configured and reporting data.");
+      }
+      
+      const formattedContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: formattedContent, isLoading: false }) : m));
+    } catch (err: any) {
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Call maintenance prediction endpoint
+  const callMaintenancePredict = async () => {
+    const loadingId = (Date.now() + Math.random()).toString();
+    const loadingMessage: ChatMessage = {
+      id: loadingId,
+      type: "assistant",
+      content: "Analyzing equipment and generating maintenance suggestions...",
+      timestamp: new Date(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/maintenance/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
+        body: JSON.stringify({ 
+          query: "Analyze equipment and suggest maintenance",
+          user_id: "web_user",
+          username: "Web User"
+        })
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      
+      // Format the maintenance response
+      const lines: string[] = [];
+      const summary = data.summary || {};
+      const suggestions: any[] = Array.isArray(data.maintenance_suggestions) ? data.maintenance_suggestions : [];
+      const requestedBy = data.requested_by || {};
+      
+      lines.push("🔧 Maintenance Analysis");
+      if (requestedBy.username) {
+        lines.push(`Requested by: ${requestedBy.username}\n`);
+      }
+      
+      lines.push("📊 Summary:");
+      lines.push(`• Total Items: ${summary.total_maintenance_items || 0}`);
+      lines.push(`• 🤖 AI Predictions: ${summary.ai_predictions || 0}`);
+      lines.push(`• 👤 User Requests: ${summary.user_requests || 0}`);
+      if (summary.critical_count > 0) {
+        lines.push(`• 🔴 Critical: ${summary.critical_count}`);
+      }
+      if (summary.high_count > 0) {
+        lines.push(`• 🟠 High Priority: ${summary.high_count}`);
+      }
+      if (summary.medium_count > 0) {
+        lines.push(`• 🟡 Medium Priority: ${summary.medium_count}`);
+      }
+      if (summary.low_count > 0) {
+        lines.push(`• ⚪ Low Priority: ${summary.low_count}`);
+      }
+      lines.push(`\n📈 Request Status:`);
+      lines.push(`• Pending: ${summary.pending_requests || 0}`);
+      lines.push(`• In Progress: ${summary.in_progress_requests || 0}`);
+      lines.push(`• Resolved: ${summary.resolved_requests || 0}`);
+      lines.push(`• Data Points Analyzed: ${summary.data_points || 0}`);
+      
+      if (suggestions.length > 0) {
+        lines.push("\n🔧 Top Maintenance Items:");
+        suggestions.slice(0, 10).forEach((s: any, idx: number) => {
+          const urgency = s.urgency || "Medium";
+          const source = s.source || "UNKNOWN";
+          const sourceIcon = source === "AI_PREDICTION" ? "🤖" : "👤";
+          const urgencyEmoji = urgency === "Critical" ? "🔴" : urgency === "High" ? "🟠" : urgency === "Medium" ? "🟡" : "⚪";
+          
+          lines.push(`\n${idx + 1}. ${sourceIcon} ${urgencyEmoji} ${s.equipment || "Equipment"} (${s.room || "Unknown Room"})`);
+          lines.push(`   Issue: ${s.issue || "Maintenance needed"}`);
+          lines.push(`   Requested by: ${s.requested_by || "System"}`);
+          lines.push(`   Action: ${s.action || "Inspect and maintain"}`);
+          lines.push(`   Timeline: ${s.timeline || "Schedule soon"}`);
+          
+          if (source === "USER_REQUEST") {
+            lines.push(`   Status: ${(s.status || "pending").toUpperCase()}`);
+            if (s.assigned_to && s.assigned_to !== "Unassigned") {
+              lines.push(`   Assigned to: ${s.assigned_to}`);
+            }
+          } else if (s.confidence) {
+            lines.push(`   Confidence: ${(s.confidence * 100).toFixed(0)}%`);
+          }
+        });
+      } else {
+        lines.push("\n✅ No maintenance issues detected.");
+        lines.push("All equipment is operating within normal parameters.");
+      }
+      
+      const formattedContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: formattedContent, isLoading: false }) : m));
+    } catch (err: any) {
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = async (query?: string) => {
     const messageText = query || inputValue.trim();
     if (!messageText || isLoading) return;
@@ -332,7 +599,7 @@ const LLMChatPage: React.FC = () => {
       const queryType = determineQueryType(messageText);
       const userRole = determineUserRole(queryType);
 
-      // For billing and weekly summary, use dedicated flows (they manage their own loader/output)
+      // For billing, weekly summary, and maintenance, use dedicated flows
       if (queryType === "billing") {
         setMessages((prev) => [...prev, userMessage]);
         await callBillingRates();
@@ -340,7 +607,22 @@ const LLMChatPage: React.FC = () => {
       }
       if (queryType === "summary") {
         setMessages((prev) => [...prev, userMessage]);
-        await callWeeklySummary();
+        const period = determineReportPeriod(messageText);
+        if (period === 'daily' || period === 'monthly' || period === 'yearly') {
+          await callEnergyReport(period);
+        } else {
+          await callWeeklySummary();
+        }
+        return;
+      }
+      if (queryType === "maintenance") {
+        setMessages((prev) => [...prev, userMessage]);
+        await callMaintenancePredict();
+        return;
+      }
+      if (queryType === "utilization") {
+        setMessages((prev) => [...prev, userMessage]);
+        await callRoomUtilization();
         return;
       }
 
@@ -598,13 +880,7 @@ const LLMChatPage: React.FC = () => {
           </div>
         )}
 
-        {messages.length > 0 && (
-          <div className="orb-chat-actions">
-            <button onClick={clearChat} className="orb-clear-button">
-              🗑️ Clear Chat
-            </button>
-          </div>
-        )}
+        {/* Clear chat button moved to input area */}
       </div>
 
       <div className="orb-input-floating">
@@ -647,6 +923,14 @@ const LLMChatPage: React.FC = () => {
               ⚠️
             </button>
             <button
+              title="Maintenance predictions"
+              className="orb-icon-button"
+              onClick={() => callMaintenancePredict()}
+              disabled={isLoading}
+            >
+              🔧
+            </button>
+            <button
               title="Daily energy report"
               className="orb-icon-button"
               onClick={() => callEnergyReport('daily')}
@@ -680,6 +964,16 @@ const LLMChatPage: React.FC = () => {
             </button>
           </div>
           <div className="orb-right-button">
+            {messages.length > 0 && (
+              <button
+                title="Clear Chat"
+                className="orb-clear-button"
+                onClick={clearChat}
+                disabled={isLoading}
+              >
+                🗑️ Clear
+              </button>
+            )}
             <button
               title="Send prompt"
               className="orb-send-button"

@@ -173,24 +173,50 @@ class DataAnalyzer:
         room_data = df[room_column].dropna()
         room_usage = room_data.value_counts()
         
+        # Calculate thresholds for usage levels
+        mean_usage = room_usage.mean()
+        std_usage = room_usage.std()
+        high_threshold = mean_usage + std_usage
+        low_threshold = mean_usage - std_usage
+        
+        # Build detailed room breakdown
+        room_details = []
+        total_events = len(room_data)
+        for room_name, count in room_usage.items():
+            # Determine usage level
+            if count > high_threshold:
+                usage_level = "high"
+            elif count < low_threshold:
+                usage_level = "low"
+            else:
+                usage_level = "medium"
+            
+            room_details.append({
+                "room_name": str(room_name),
+                "event_count": int(count),
+                "percentage": float((count / total_events) * 100),
+                "usage_level": usage_level
+            })
+        
         analysis = {
             "status": "success",
             "room_column": room_column,
-            "total_events": len(room_data),
+            "total_events": total_events,
             "unique_rooms": len(room_usage),
             "most_used_room": str(room_usage.index[0]) if len(room_usage) > 0 else "Unknown",
             "most_used_count": int(room_usage.iloc[0]) if len(room_usage) > 0 else 0,
             "utilization_distribution": {
-                "high_usage": len([x for x in room_usage if x > room_usage.mean() + room_usage.std()]),
-                "medium_usage": len([x for x in room_usage if abs(x - room_usage.mean()) <= room_usage.std()]),
-                "low_usage": len([x for x in room_usage if x < room_usage.mean() - room_usage.std()])
+                "high_usage": len([x for x in room_usage if x > high_threshold]),
+                "medium_usage": len([x for x in room_usage if low_threshold <= x <= high_threshold]),
+                "low_usage": len([x for x in room_usage if x < low_threshold])
             },
-            "top_rooms": {str(room): int(count) for room, count in room_usage.head(10).items()}
+            "top_rooms": {str(room): int(count) for room, count in room_usage.head(10).items()},
+            "room_details": room_details
         }
         
         if len(room_usage) > 0:
-            analysis["usage_percentage"] = float((room_usage.iloc[0] / len(room_data)) * 100)
-            analysis["avg_events_per_room"] = float(len(room_data) / len(room_usage))
+            analysis["usage_percentage"] = float((room_usage.iloc[0] / total_events) * 100)
+            analysis["avg_events_per_room"] = float(total_events / len(room_usage))
         
         return analysis
 
@@ -518,7 +544,6 @@ def energy_insights():
     except Exception as e:
         logger.error(f"Energy insights error: {e}\n{traceback.format_exc()}")
         return jsonify({
-            "status": "error",
             "error": f"Energy analysis failed: {str(e)}",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
@@ -526,7 +551,7 @@ def energy_insights():
 @app.route('/maintenance/predict', methods=['POST', 'OPTIONS'])
 def predict_maintenance():
     """
-    Enhanced predictive maintenance with fallback analysis
+    Enhanced predictive maintenance with user tracking and actionable suggestions
     """
     if request.method == 'OPTIONS':
         return jsonify({}), 200
@@ -535,8 +560,9 @@ def predict_maintenance():
         data = request.get_json() or {}
         query = data.get('query', 'Analyze equipment and suggest maintenance')
         user_id = data.get('user_id', 'anonymous')
+        username = data.get('username', 'anonymous')
         
-        logger.info(f"Maintenance prediction request from {user_id}")
+        logger.info(f"Maintenance prediction request from {username} (ID: {user_id})")
         
         maintenance_analyzer = RoomLogAnalyzer(
             use_database=True,
@@ -546,6 +572,9 @@ def predict_maintenance():
         )
         
         df = maintenance_analyzer.load_and_process_data()
+        
+        # Fetch actual maintenance requests from database
+        maintenance_requests_df = maintenance_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=50)
         
         # Try advanced analysis first, fallback to basic if needed
         try:
@@ -571,37 +600,157 @@ def predict_maintenance():
                         "maintenance_suggestion": "Regular inspection recommended" if len(equipment_counts) > 10 else "Normal operation"
                     }
         
+        # Format AI-generated maintenance suggestions with user context
+        formatted_suggestions = []
+        for m in maintenance_alerts:
+            suggestion = {
+                "equipment": getattr(m, 'equipment', 'General'),
+                "room": getattr(m, 'room', 'Unknown'),
+                "component": getattr(m, 'component', 'Unknown'),
+                "issue": getattr(m, 'issue', 'Maintenance check needed'),
+                "urgency": getattr(m, 'urgency', 'Medium'),
+                "action": getattr(m, 'action', 'Inspect and maintain'),
+                "timeline": getattr(m, 'timeline', 'Schedule soon'),
+                "confidence": getattr(m, 'confidence', 0.5),
+                "cost_estimate": getattr(m, 'cost_estimate', 'To be determined'),
+                "risk_level": getattr(m, 'risk_level', 'Medium'),
+                "requested_by": username,
+                "user_id": user_id,
+                "suggested_at": datetime.now(timezone.utc).isoformat(),
+                "source": "AI_PREDICTION"
+            }
+            formatted_suggestions.append(suggestion)
+        
+        # Add actual maintenance requests from database
+        actual_requests = []
+        if maintenance_requests_df is not None and not maintenance_requests_df.empty:
+            for _, req in maintenance_requests_df.iterrows():
+                # Map status to urgency
+                status = req.get('status', 'pending')
+                urgency_map = {
+                    'pending': 'High',
+                    'in_progress': 'Medium',
+                    'resolved': 'Low'
+                }
+                
+                actual_request = {
+                    "equipment": req.get('equipment_name', 'Unknown Equipment'),
+                    "room": req.get('room_name', 'Unknown Room'),
+                    "component": req.get('equipment_type', 'Unknown'),
+                    "issue": req.get('issue_description', 'No description'),
+                    "urgency": urgency_map.get(status, 'Medium'),
+                    "action": req.get('notes', 'Review and address'),
+                    "timeline": f"Scheduled: {req.get('requested_date')}" if pd.notna(req.get('requested_date')) else "Not scheduled",
+                    "confidence": 1.0,  # Actual requests have 100% confidence
+                    "cost_estimate": "To be determined",
+                    "risk_level": urgency_map.get(status, 'Medium'),
+                    "requested_by": req.get('requested_by_username', 'Unknown User'),
+                    "user_id": str(req.get('requested_by_id', 'unknown')),
+                    "requested_by_email": req.get('requested_by_email', ''),
+                    "requested_by_role": req.get('requested_by_role', ''),
+                    "assigned_to": req.get('assigned_to_username', 'Unassigned'),
+                    "status": status,
+                    "created_at": req.get('created_at').isoformat() if pd.notna(req.get('created_at')) else None,
+                    "resolved_at": req.get('resolved_date').isoformat() if pd.notna(req.get('resolved_date')) else None,
+                    "source": "USER_REQUEST"
+                }
+                actual_requests.append(actual_request)
+                formatted_suggestions.append(actual_request)
+        
+        # Generate human-readable summary
+        summary_text = f"🔧 **Maintenance Analysis for {username}**\n\n"
+        
+        # Count by source
+        ai_predictions = len(maintenance_alerts)
+        user_requests = len(actual_requests)
+        total_items = len(formatted_suggestions)
+        
+        # Count by urgency from all suggestions
+        all_urgencies = [s.get('urgency', 'Medium') for s in formatted_suggestions]
+        critical_count = all_urgencies.count('Critical')
+        high_count = all_urgencies.count('High')
+        medium_count = all_urgencies.count('Medium')
+        low_count = all_urgencies.count('Low')
+        
+        summary_text += f"📊 **Summary:**\n"
+        summary_text += f"• Total Items: {total_items}\n"
+        summary_text += f"• 🤖 AI Predictions: {ai_predictions}\n"
+        summary_text += f"• 👤 User Requests: {user_requests}\n"
+        if critical_count > 0:
+            summary_text += f"• 🔴 Critical: {critical_count}\n"
+        if high_count > 0:
+            summary_text += f"• 🟠 High Priority: {high_count}\n"
+        if medium_count > 0:
+            summary_text += f"• 🟡 Medium Priority: {medium_count}\n"
+        if low_count > 0:
+            summary_text += f"• ⚪ Low Priority: {low_count}\n"
+        
+        if formatted_suggestions:
+            summary_text += f"\n**Top Maintenance Items:**\n"
+            for i, s in enumerate(formatted_suggestions[:10], 1):
+                source_icon = "🤖" if s.get('source') == 'AI_PREDICTION' else "👤"
+                urgency = s.get('urgency', 'Medium')
+                urgency_emoji = "🔴" if urgency == "Critical" else "🟠" if urgency == "High" else "🟡" if urgency == "Medium" else "⚪"
+                
+                summary_text += f"\n{i}. {source_icon} {urgency_emoji} **{s.get('equipment', 'Equipment')}** ({s.get('room', 'Unknown Room')})\n"
+                summary_text += f"   - Issue: {s.get('issue', 'Maintenance needed')}\n"
+                summary_text += f"   - Requested by: {s.get('requested_by', 'System')}\n"
+                summary_text += f"   - Action: {s.get('action', 'Inspect')}\n"
+                summary_text += f"   - Timeline: {s.get('timeline', 'Schedule soon')}\n"
+                if s.get('source') == 'USER_REQUEST':
+                    summary_text += f"   - Status: {s.get('status', 'pending').upper()}\n"
+                    if s.get('assigned_to'):
+                        summary_text += f"   - Assigned to: {s.get('assigned_to')}\n"
+        else:
+            summary_text += "\n✅ No maintenance issues detected.\n"
+            summary_text += "All equipment is operating within normal parameters.\n\n"
+            summary_text += "💡 **Recommendations:**\n"
+            summary_text += "• Continue regular monitoring\n"
+            summary_text += "• Schedule preventive maintenance as planned\n"
+            summary_text += "• Keep maintenance logs updated\n"
+        
         response = {
             "status": "success",
             "analysis_type": "predictive_maintenance",
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "requested_by": {
+                "user_id": user_id,
+                "username": username
+            },
             "summary": {
                 "anomalies_detected": len(anomalies),
-                "maintenance_alerts": len(maintenance_alerts),
+                "ai_predictions": ai_predictions,
+                "user_requests": user_requests,
+                "total_maintenance_items": total_items,
                 "equipment_analyzed": len(equipment_analysis),
-                "data_points": len(df)
+                "data_points": len(df),
+                "critical_count": critical_count,
+                "high_count": high_count,
+                "medium_count": medium_count,
+                "low_count": low_count,
+                "pending_requests": len([r for r in actual_requests if r.get('status') == 'pending']),
+                "in_progress_requests": len([r for r in actual_requests if r.get('status') == 'in_progress']),
+                "resolved_requests": len([r for r in actual_requests if r.get('status') == 'resolved'])
             },
+            "summary_text": summary_text,
             "anomalies": [
                 {
                     "type": getattr(a, 'anomaly_type', 'Unknown'),
                     "severity": getattr(a, 'severity', 'Medium'),
                     "description": getattr(a, 'description', 'Anomaly detected'),
-                    "confidence": getattr(a, 'confidence', 0.5)
+                    "confidence": getattr(a, 'confidence', 0.5),
+                    "location": getattr(a, 'location', 'Unknown'),
+                    "impact": getattr(a, 'impact', ''),
+                    "recommendation": getattr(a, 'recommendation', '')
                 } for a in anomalies
             ] if anomalies else [],
-            "maintenance_suggestions": [
-                {
-                    "equipment": getattr(m, 'equipment', 'General'),
-                    "issue": getattr(m, 'issue', 'Maintenance check needed'),
-                    "urgency": getattr(m, 'urgency', 'Medium'),
-                    "action": getattr(m, 'action', 'Inspect and maintain')
-                } for m in maintenance_alerts
-            ] if maintenance_alerts else [],
+            "maintenance_suggestions": formatted_suggestions,
             "equipment_analysis": equipment_analysis,
             "recommendations": [
                 "Schedule regular preventive maintenance",
                 "Monitor equipment performance metrics",
-                "Keep maintenance logs updated"
+                "Keep maintenance logs updated",
+                "Review high-priority items within their timelines"
             ]
         }
         
