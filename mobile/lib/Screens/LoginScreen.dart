@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isCheckingStoredLogin = true;
   String _errorMessage = '';
 
   final Dio _dio = Dio();
@@ -27,70 +26,18 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkStoredLogin();
+    _loadStoredEmail();
   }
 
-  Future<void> _checkStoredLogin() async {
+  Future<void> _loadStoredEmail() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final accessToken = authService.accessToken;
-      final refreshToken = authService.refreshToken;
       final storedEmail = await authService.getStoredEmail();
-
-      if (accessToken != null && refreshToken != null) {
-        final isValid = await authService.verifyToken();
-        if (isValid) {
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DashboardScreen(accessToken: accessToken),
-              ),
-            );
-          }
-          return;
-        } else {
-          final success = await authService.refresh();
-          if (success && mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DashboardScreen(accessToken: authService.accessToken!),
-              ),
-            );
-            return;
-          }
-          await authService.clearTokens();
-        }
-      }
-
       if (storedEmail != null && storedEmail.isNotEmpty) {
         _emailController.text = storedEmail;
       }
-
-      if (accessToken != null) {
-        try {
-          final response = await _dio.get(
-            ApiConfig.userInfo,
-            options: Options(
-              headers: {'Authorization': 'Bearer $accessToken'},
-            ),
-          );
-          if (response.statusCode == 200 && response.data['username'] != null) {
-            _emailController.text = response.data['username'];
-          }
-        } catch (e) {
-          // Ignore profile fetch errors
-        }
-      }
     } catch (e) {
-      print('Error checking stored login: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCheckingStoredLogin = false;
-        });
-      }
+      print('Error loading stored email: $e');
     }
   }
 
@@ -128,8 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
           final accessToken = data['access'] as String;
           final refreshToken = data['refresh'] as String;
 
-          final provider = Provider.of<DashboardProvider>(context, listen: false);
-          await provider.setTokens(accessToken, refreshToken);
+          final authService = Provider.of<AuthService>(context, listen: false);
+          await authService.setTokens(accessToken, refreshToken, email: email);
           if (mounted) {
             Navigator.pushReplacement(
               context,
@@ -196,21 +143,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isCheckingStoredLogin) {
-      return const Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Checking login status...'),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Smart Building Login'),

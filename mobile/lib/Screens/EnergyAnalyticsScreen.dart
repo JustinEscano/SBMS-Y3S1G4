@@ -1214,14 +1214,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         onMenuSelection: (value) {
           switch (value) {
             case 'dashboard':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DashboardScreen(
-                    accessToken: AuthService().accessToken ?? widget.accessToken,
-                  ),
-                ),
-              );
+              Navigator.pop(context);
               break;
             case 'maintenance_requests':
               _navigateToMaintenanceManagement();

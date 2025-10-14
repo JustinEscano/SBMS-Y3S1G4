@@ -7,13 +7,44 @@ class ApiService {
   final AuthService _authService;
   final Dio _dio;
 
-  ApiService(this._authService) : _dio = Dio();
+  ApiService(this._authService) : _dio = Dio() {
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        if (await _authService.ensureValidToken()) {
+          options.headers.addAll(_authService.getAuthHeaders());
+        } else {
+          print('No valid token available for request: ${options.uri}');
+        }
+        return handler.next(options);
+      },
+      onError: (DioError error, handler) async {
+        if (error.response?.statusCode == 401) {
+          print('401 Unauthorized detected. Attempting token refresh...');
+          if (await _authService.refresh()) {
+            print('Token refreshed successfully. Retrying request...');
+            error.requestOptions.headers.addAll(_authService.getAuthHeaders());
+            try {
+              final retryResponse = await _dio.fetch(error.requestOptions);
+              return handler.resolve(retryResponse);
+            } catch (retryError) {
+              print('Retry failed: $retryError');
+              return handler.reject(error);
+            }
+          } else {
+            print('Token refresh failed. Logging out...');
+            await _authService.logout();
+            return handler.reject(error);
+          }
+        }
+        return handler.next(error);
+      },
+    ));
+  }
 
   Future<List<dynamic>> fetchRooms() async {
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.rooms,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     ).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       return response.data is List ? response.data : [];
@@ -22,10 +53,9 @@ class ApiService {
   }
 
   Future<List<dynamic>> fetchEquipment() async {
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.equipment,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     ).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       return response.data is List ? response.data : [];
@@ -34,10 +64,9 @@ class ApiService {
   }
 
   Future<List<dynamic>> fetchSensorLogs() async {
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.sensorLog,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     ).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       return response.data is List ? response.data : [];
@@ -46,10 +75,9 @@ class ApiService {
   }
 
   Future<List<dynamic>> fetchLatestSensorData() async {
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.latestSensorData,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     ).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       final data = response.data;
@@ -59,10 +87,9 @@ class ApiService {
   }
 
   Future<List<dynamic>> fetchMaintenanceRequests() async {
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.maintenanceRequest,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     ).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       return response.data is List ? response.data : [];
@@ -71,10 +98,9 @@ class ApiService {
   }
 
   Future<List<dynamic>> fetchNotifications() async {
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.notification(page: 1, pageSize: 10),
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     ).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       final data = response.data;
@@ -87,10 +113,9 @@ class ApiService {
     if (!(await _authService.ensureValidToken())) {
       throw Exception('Invalid or expired token');
     }
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.userInfo,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     ).timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
       final userData = response.data;
@@ -108,10 +133,9 @@ class ApiService {
     if (!(await _authService.ensureValidToken())) {
       throw Exception('Invalid or expired token');
     }
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.get(
       ApiConfig.profile,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     );
     if (response.statusCode == 200) {
       return response.data;
@@ -130,7 +154,6 @@ class ApiService {
     if (!(await _authService.ensureValidToken())) {
       throw Exception('Invalid or expired token');
     }
-    final headers = _authService.getAuthHeaders();
     final formData = FormData.fromMap({
       'username': username,
       'email': email,
@@ -152,7 +175,7 @@ class ApiService {
     final response = await _dio.patch(
       ApiConfig.profile,
       data: formData,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     );
 
     if (response.statusCode == 200) {
@@ -170,7 +193,6 @@ class ApiService {
     if (!(await _authService.ensureValidToken())) {
       throw Exception('Invalid or expired token');
     }
-    final headers = _authService.getAuthHeaders();
     final formData = FormData.fromMap({
       'full_name': fullName,
       'organization': organization,
@@ -190,7 +212,7 @@ class ApiService {
     final response = await _dio.post(
       ApiConfig.profile,
       data: formData,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     );
 
     if (response.statusCode == 201) {
@@ -203,10 +225,9 @@ class ApiService {
     if (!(await _authService.ensureValidToken())) {
       throw Exception('Invalid or expired token');
     }
-    final headers = _authService.getAuthHeaders();
     final response = await _dio.delete(
       ApiConfig.profile,
-      options: Options(headers: headers),
+      options: Options(headers: _authService.getAuthHeaders()),
     );
 
     if (response.statusCode != 204) {
