@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../Config/api.dart';
@@ -301,9 +302,16 @@ class _RoomManagementScreenState extends State<RoomManagementScreen> {
     final floorCount = rooms.map((room) => room['floor']).toSet().length;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: const Text('Room Management'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text('Room Management',
+        style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),),
+        backgroundColor: const Color(0xFF1F1E23),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
