@@ -55,7 +55,7 @@ class NotificationWidgets {
         final hasMaintenance = hasMaintenanceRequest(notification);
 
         return Card(
-          color: notification['read'] ? Colors.grey[100] : Colors.white,
+          color: notification['read'] ? Color(0xFF1F1E23) : Colors.grey[300],
           elevation: notification['read'] ? 1 : 3,
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
@@ -67,6 +67,7 @@ class NotificationWidgets {
               notification['title'] ?? 'No Title',
               style: TextStyle(
                 fontWeight: notification['read'] ? FontWeight.normal : FontWeight.bold,
+                color: notification['read'] ? Colors.white : Colors.black,
               ),
             ),
             subtitle: Column(
@@ -76,6 +77,7 @@ class NotificationWidgets {
                   notification['message'] ?? 'No Message',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: notification['read'] ? Colors.white70 : Colors.black),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -155,6 +157,7 @@ class NotificationWidgets {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white
                   ),
                 ),
               ),
@@ -198,13 +201,13 @@ class NotificationWidgets {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              color: Colors.grey[100],
             ),
           ),
           const SizedBox(height: 8),
           Text(
             notification['message'] ?? 'No Message',
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
           const SizedBox(height: 16),
           Text(

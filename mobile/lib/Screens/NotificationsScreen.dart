@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../Config/api.dart';
@@ -472,9 +473,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Notifications'),
+        backgroundColor: const Color(0xFF1F1E23),
+        title: Text('Notifications',
+          style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (notifications.any((n) => n['read'] == false))
             TextButton(
@@ -732,9 +741,17 @@ class NotificationDetailsScreen extends StatelessWidget {
     final maintenanceRequestId = _getMaintenanceRequestId();
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(notification['title'] ?? 'Notification Details'),
+        backgroundColor: const Color(0xFF1F1E23),
+        title: Text(notification['title'] ?? 'Notification Details',
+          style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (!notification['read'])
             IconButton(

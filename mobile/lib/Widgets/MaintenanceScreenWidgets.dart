@@ -73,6 +73,7 @@ class MaintenanceScreenWidgets {
   static Widget buildSummaryCard(BuildContext context, String title, int count, IconData icon, Color color) {
     return Expanded(
       child: Card(
+        color: const Color(0xFF1F1E23),
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
@@ -81,7 +82,7 @@ class MaintenanceScreenWidgets {
             children: [
               Icon(icon, color: color, size: 28),
               const SizedBox(height: 8),
-              Text('$count', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+              Text('$count', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.white)),
               Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
             ],
           ),
@@ -158,6 +159,7 @@ class MaintenanceScreenWidgets {
     final statusColor = getStatusColor(request['status'] ?? '');
 
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.only(bottom: 16),
@@ -168,7 +170,7 @@ class MaintenanceScreenWidgets {
         ),
         title: Text(
           getEquipmentName(request['equipment']?.toString()),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Column(
@@ -304,14 +306,16 @@ class MaintenanceScreenWidgets {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: currentPage > 1 ? onPreviousPage : null,
+            color: Colors.white,
           ),
           Text(
             'Page $currentPage of $totalPages',
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: currentPage < totalPages ? onNextPage : null,
+            color: Colors.white,
           ),
         ],
       ),

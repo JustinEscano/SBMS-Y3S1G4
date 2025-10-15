@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
@@ -621,10 +622,17 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
     developer.log('Request User: ${_requestData['user']?.toString()}, Assigned To: ${_requestData['assigned_to']?.toString()}', name: 'MaintenanceDetailsScreen');
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: Text(_getEquipmentName(_requestData['equipment']?.toString())),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        title: Text(_getEquipmentName(_requestData['equipment']?.toString()),
+          style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),),
+        backgroundColor: const Color(0xFF1F1E23),      
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),

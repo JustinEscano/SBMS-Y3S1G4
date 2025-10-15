@@ -14,6 +14,7 @@ class RoomManagementWidgets {
         children: [
           Expanded(
             child: Card(
+              color: const Color(0xFF1F1E23),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -23,9 +24,9 @@ class RoomManagementWidgets {
                     const SizedBox(height: 4),
                     Text(
                       '$roomCount',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    const Text('Total Rooms', style: TextStyle(fontSize: 12)),
+                    const Text('Total Rooms', style: TextStyle(fontSize: 12, color: Colors.white)),
                   ],
                 ),
               ),
@@ -34,6 +35,7 @@ class RoomManagementWidgets {
           const SizedBox(width: 8),
           Expanded(
             child: Card(
+              color: const Color(0xFF1F1E23),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -43,9 +45,9 @@ class RoomManagementWidgets {
                     const SizedBox(height: 4),
                     Text(
                       '$floorCount',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    const Text('Floors', style: TextStyle(fontSize: 12)),
+                    const Text('Floors', style: TextStyle(fontSize: 12, color: Colors.white)),
                   ],
                 ),
               ),
@@ -54,6 +56,7 @@ class RoomManagementWidgets {
           const SizedBox(width: 8),
           Expanded(
             child: Card(
+              color: const Color(0xFF1F1E23),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -63,9 +66,9 @@ class RoomManagementWidgets {
                     const SizedBox(height: 4),
                     Text(
                       '$totalCapacity',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    const Text('Total Capacity', style: TextStyle(fontSize: 12)),
+                    const Text('Total Capacity', style: TextStyle(fontSize: 12, color: Colors.white)),
                   ],
                 ),
               ),
@@ -145,6 +148,7 @@ class RoomManagementWidgets {
         itemBuilder: (context, index) {
           final room = rooms[index];
           return Card(
+            color: const Color(0xFF1F1E23),
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
               leading: CircleAvatar(
@@ -159,13 +163,13 @@ class RoomManagementWidgets {
               ),
               title: Text(
                 room['name'] ?? 'Unknown Room',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Floor ${room['floor']} • ${getRoomTypeLabel(room['type'])}'),
-                  Text('Capacity: ${room['capacity']} people'),
+                  Text('Floor ${room['floor']} • ${getRoomTypeLabel(room['type'])}', style: const TextStyle(color: Colors.white70)),
+                  Text('Capacity: ${room['capacity']} people', style: const TextStyle(color: Colors.white70)),
                 ],
               ),
               trailing: PopupMenuButton<String>(
