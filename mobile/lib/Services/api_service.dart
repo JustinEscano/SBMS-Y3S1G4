@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:Orbit/Services/auth_service.dart';
-import 'package:Orbit/utils/constants.dart';
+import '/Services/auth_service.dart';
+import '/utils/constants.dart';
 import 'dart:io';
 
 class ApiService {
