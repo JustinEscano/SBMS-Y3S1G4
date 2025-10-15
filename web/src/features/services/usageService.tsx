@@ -16,18 +16,30 @@ export interface EnergySummary {
   room_id: string;
 }
 
-// Cost per kWh (adjust to your business logic)
-const COST_PER_KWH = 0.12;
+// Billing calculation (client-side since no API)
+export const calculateEnergyCost = (totalEnergy: number, periodType: PeriodType) => {
+  const rate = 0.12; // Fixed rate like COST_PER_KWH
+  return {
+    total_cost: totalEnergy * rate,
+    effective_rate: rate,
+    currency: 'PHP',
+    details: [],
+  };
+};
 
-async function fetchEnergySummaries(): Promise<EnergySummary[]> {
-  const res = await axiosInstance.get<EnergySummary[]>("/api/energysummary/");
+export async function fetchEnergySummaries(roomId?: string): Promise<EnergySummary[]> {
+  let url = "/api/energysummary/";
+  if (roomId) {
+    url += `?room_id=${roomId}`;
+  }
+  const res = await axiosInstance.get<EnergySummary[]>(url);
   return res.data;
 }
 
-export async function getUsageTable(periodType: PeriodType) {
-  const all = await fetchEnergySummaries();
+export async function getUsageTable(roomId: string, periodType: PeriodType) {
+  const all = await fetchEnergySummaries(roomId);
   return all
-    .filter((row) => row.period_type === periodType)
+    .filter((row) => row.period_type === periodType && row.room_id === roomId)
     .map((row) => ({
       componentId: row.component_id,
       energy: row.total_energy,
@@ -40,14 +52,10 @@ export async function getUsageTable(periodType: PeriodType) {
     }));
 }
 
-/**
- * Chart data: time series per component
- */
-export async function getUsageChart(periodType: PeriodType) {
-  const all = await fetchEnergySummaries();
-  const filtered = all.filter((row) => row.period_type === periodType);
+export async function getUsageChart(roomId: string, periodType: PeriodType) {
+  const all = await fetchEnergySummaries(roomId);
+  const filtered = all.filter((row) => row.period_type === periodType && row.room_id === roomId);
 
-  // group by component
   const grouped: Record<string, { x: string; y: number }[]> = {};
 
   filtered.forEach((row) => {
@@ -60,30 +68,27 @@ export async function getUsageChart(periodType: PeriodType) {
     });
   });
 
-  // return dataset for chart.js/recharts
   return Object.entries(grouped).map(([componentId, data]) => ({
     id: componentId,
     data: data.sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime()),
   }));
 }
 
-/**
- * Stats data: totals for cards
- */
-export async function getUsageStats(periodType: PeriodType) {
-  const all = await fetchEnergySummaries();
-  const filtered = all.filter((row) => row.period_type === periodType);
+export async function getUsageStats(roomId: string, periodType: PeriodType) {
+  const all = await fetchEnergySummaries(roomId);
+  const filtered = all.filter((row) => row.period_type === periodType && row.room_id === roomId);
 
   const totalUsage = filtered.reduce((sum, r) => sum + r.total_energy, 0);
 
-  // Figure out how many days this period covers
   let days = 1;
   if (periodType === "weekly") days = 7;
   if (periodType === "monthly") days = 30;
 
+  const billing = calculateEnergyCost(totalUsage, periodType);
+
   return {
     totalUsage,
     avgDaily: totalUsage / days,
-    totalCost: totalUsage * COST_PER_KWH,
+    ...billing,
   };
 }

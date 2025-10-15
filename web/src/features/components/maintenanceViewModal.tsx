@@ -49,25 +49,45 @@ const MaintenanceViewModal: React.FC<MaintenanceViewModalProps> = ({
   };
 
   // Fetch reportedBy if not in local users list
-  useEffect(() => {
-    const fetchReporter = async () => {
-      if (!request.user) {
-        setReportedByLoading(false);
-        return;
-      }
-      let user = users.find(u => u.id === request.user);
-      if (!user) {
-        try {
-          user = await userService.getById(request.user);
-        } catch (err) {
-          console.error("Failed to fetch reporter:", err);
-        }
-      }
-      setReportedBy(user || null);
+  // Updated useEffect in MaintenanceViewModal
+useEffect(() => {
+  const fetchReporter = async () => {
+    if (!request.user) {
       setReportedByLoading(false);
-    };
-    fetchReporter();
-  }, [request.user, users]);
+      return;
+    }
+
+    console.log('Fetching reporter for ID:', request.user); // Debug
+
+    // Priority 1: If it's the current user (self-report), use directly
+    if (currentUser?.id === request.user) {
+      console.log('Using currentUser for reporter'); // Debug
+      setReportedBy(currentUser as User); // Assumes currentUser has username/role
+      setReportedByLoading(false);
+      return;
+    }
+
+    // Priority 2: Check local users list
+    let user = users.find(u => u.id === request.user);
+    console.log('Found in users prop?', !!user); // Debug
+
+    if (!user) {
+      try {
+        console.log('Fetching via service...'); // Debug
+        user = await userService.getById(request.user);
+        console.log('Fetched user:', user); // Debug: Inspect response
+      } catch (err: any) {
+        console.error("Failed to fetch reporter:", err.response?.status, err.response?.data || err.message);
+        // Fallback: Construct minimal user if partial data available
+        user = { id: request.user, username: 'Unknown User', email: '', role: 'Client' } as User; // Or pull from request if embedded
+      }
+    }
+
+    setReportedBy(user);
+    setReportedByLoading(false);
+  };
+  fetchReporter();
+}, [request.user, users, currentUser]); // Added currentUser dep
 
   const handleDeleteAttachment = async (attachmentId: string, isTemp: boolean = false): Promise<void> => {
     if (deletingId) return; // Prevent concurrent deletes
@@ -182,7 +202,7 @@ const MaintenanceViewModal: React.FC<MaintenanceViewModalProps> = ({
       assigned_to: assignedTo || undefined,
     };
     // 1. Close instantly and go back to page 1
-    setPage(1);
+    onClose();
     // 2. Optimistic update (if parent supports it)
     updateRequest?.(request.id!, { ...request, comments: optimisticComments, assigned_to: payload.assigned_to });
     // 3. Background request
