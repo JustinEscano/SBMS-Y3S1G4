@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:mobile/Screens/PrivacyPolicyScreen.dart';
+import 'package:mobile/Screens/ProfileDetails.dart';
 import 'dart:io';
 import 'dart:developer' as developer;
 import '../utils/constants.dart';
 
 class ProfileWidgets {
+  
   static Widget buildProfileHeader({
+    VoidCallback? onCardTap,
     required BuildContext context,
     required Map<String, dynamic>? profileData,
     required File? profilePicture,
@@ -46,8 +50,8 @@ class ProfileWidgets {
     }
 
     return GestureDetector(
-      onTap: isEditing && !isProfileDeleted ? onPickImage : null,
-      child: Card(
+      onTap: onCardTap,
+        child: Card(
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Container(
@@ -273,7 +277,7 @@ class ProfileWidgets {
     );
   }
 
-  static Widget buildOptionsCard(BuildContext context) {
+  static Widget buildOptionsCard(BuildContext context, String accessToken, String refreshToken) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -318,10 +322,13 @@ class ProfileWidgets {
               icon: Icons.privacy_tip,
               title: 'Privacy Policy',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Privacy Policy feature coming soon!', style: GoogleFonts.poppins())),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Privacypolicyscreen(accessToken: accessToken, refreshToken: refreshToken ?? '',),
+                  ),
                 );
-              },
+              }
             ),
           ],
         ),
