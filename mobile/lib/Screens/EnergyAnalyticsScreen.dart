@@ -403,42 +403,53 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
         latestSensorData = latestData['success'] == true ? (latestData['data'] ?? []) : [];
       });
 
-      if (responses[1].statusCode == 401) {
-        if (await _refreshToken()) {
-          return loadEnergyData();
-        } else {
-          throw Exception('Session expired. Please log in again.');
-        }
-      } else if (responses[1].statusCode != 200) {
-        throw Exception('Failed to load billing data: ${responses[1].statusCode} - ${responses[1].reasonPhrase}');
-      }
-
-      final billing = json.decode(responses[1].body);
-      print('Raw Billing Data: $billing');
       Map<String, dynamic> parsedBillingData = {
         'total_cost': 0.0,
         'effective_rate': 0.0,
         'currency': 'PHP',
         'details': [],
       };
-      if (billing is Map<String, dynamic> && billing.containsKey('data')) {
-        final data = billing['data'] as Map<String, dynamic>;
-        parsedBillingData = {
-          'total_cost': (data['total_cost'] as num?)?.toDouble() ?? 0.0,
-          'effective_rate': (data['effective_rate'] as num?)?.toDouble() ?? 0.0,
-          'currency': data['currency'] ?? 'PHP',
-          'details': data['details'] ?? [],
-        };
-      }
-      print('Parsed Billing Data: $parsedBillingData');
 
-      setState(() {
-        billingData = parsedBillingData;
-        _cachedBillingData[cacheKey] = billingData;
-        _lastCacheTime = DateTime.now();
-        totalCost = parsedBillingData['total_cost'].toStringAsFixed(2);
-        effectiveRate = parsedBillingData['effective_rate'].toStringAsFixed(2);
-      });
+      if (responses[1].statusCode == 401) {
+        if (await _refreshToken()) {
+          return loadEnergyData();
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else if (responses[1].statusCode == 404) {
+        // Handle 404 (Billing period not found) gracefully
+        print('Billing period not found (404). Setting default billing data.');
+        setState(() {
+          billingData = parsedBillingData;
+          _cachedBillingData[cacheKey] = billingData;
+          _lastCacheTime = DateTime.now();
+          totalCost = '0.00';
+          effectiveRate = '0.00';
+        });
+      } else if (responses[1].statusCode != 200) {
+        throw Exception('Failed to load billing data: ${responses[1].statusCode} - ${responses[1].reasonPhrase}');
+      } else {
+        final billing = json.decode(responses[1].body);
+        print('Raw Billing Data: $billing');
+        if (billing is Map<String, dynamic> && billing.containsKey('data')) {
+          final data = billing['data'] as Map<String, dynamic>;
+          parsedBillingData = {
+            'total_cost': (data['total_cost'] as num?)?.toDouble() ?? 0.0,
+            'effective_rate': (data['effective_rate'] as num?)?.toDouble() ?? 0.0,
+            'currency': data['currency'] ?? 'PHP',
+            'details': data['details'] ?? [],
+          };
+        }
+        print('Parsed Billing Data: $parsedBillingData');
+
+        setState(() {
+          billingData = parsedBillingData;
+          _cachedBillingData[cacheKey] = billingData;
+          _lastCacheTime = DateTime.now();
+          totalCost = parsedBillingData['total_cost'].toStringAsFixed(2);
+          effectiveRate = parsedBillingData['effective_rate'].toStringAsFixed(2);
+        });
+      }
 
       _generateHVACData();
       _generateSecurityData();
