@@ -536,14 +536,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Color.fromRGBO(31, 30, 35, 100),
               ),
             ),
-            actions: [
-              IconButton(
-                icon: Icon(_isEditing ? Icons.close : Icons.edit, color: Colors.white),
-                onPressed: () {
-                  setState(() => _isEditing = !_isEditing);
-                },
-              ).animate().fadeIn(duration: 300.ms),
-            ],
+            // actions: [
+            //   IconButton(
+            //     icon: Icon(_isEditing ? Icons.close : Icons.edit, color: Colors.white),
+            //     onPressed: () {
+            //       setState(() => _isEditing = !_isEditing);
+            //     },
+            //   ).animate().fadeIn(duration: 300.ms),
+            // ],
             foregroundColor: Colors.white,
             backgroundColor: Color.fromRGBO(31, 30, 35, 100),
           ),
@@ -573,7 +573,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     );
                                   }
                     ),
-                    const SizedBox(height: 15),
+                    // const SizedBox(height: 15),
                     // if (!_isProfileDeleted)
                     //   ProfileWidgets.buildProfileFields(
                     //     usernameController: _usernameController,
@@ -584,15 +584,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     //     isEditing: _isEditing,
                     //   ),
                     // const SizedBox(height: 15),
-                    if (_isEditing)
-                      ProfileWidgets.buildActionButtons(
-                        context: context,
-                        isProfileDeleted: _isProfileDeleted,
-                        onUpdateProfile: _updateProfile,
-                        onCreateProfile: _createProfile,
-                        onDeleteProfile: () => _showDeleteConfirmation(context),
-                      ),
-                    const SizedBox(height: 15),
+                    // if (_isEditing)
+                    //   ProfileWidgets.buildActionButtons(
+                    //     context: context,
+                    //     isProfileDeleted: _isProfileDeleted,
+                    //     onUpdateProfile: _updateProfile,
+                    //     onCreateProfile: _createProfile,
+                    //     onDeleteProfile: () => _showDeleteConfirmation(context),
+                    //   ),
+                    // const SizedBox(height: 15),
                     ProfileWidgets.buildOptionsCard(context, widget.accessToken, authService.refreshToken ?? ''),
                     const SizedBox(height: 15),
                     ProfileWidgets.buildLogoutButton(
