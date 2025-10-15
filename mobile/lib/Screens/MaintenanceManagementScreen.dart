@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
@@ -290,20 +291,29 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     final resolvedCount = maintenanceRequests.where((r) => r['status'] == 'resolved').length;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: const Text('Maintenance Requests'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        title: Text('Maintenance Requests',
+        style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),),
+        backgroundColor: const Color(0xFF1F1E23),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
             tooltip: 'Filter',
+            color: Colors.white70,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: isRefreshingToken ? null : _loadData,
             tooltip: 'Refresh',
+            color: Colors.white70,
           ),
         ],
       ),
