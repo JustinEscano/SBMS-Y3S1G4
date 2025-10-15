@@ -515,10 +515,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200.0,
+            expandedHeight: 100.0,
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
@@ -530,13 +531,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF4B79A1), Color(0xFF283E51)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
+                color: Color.fromRGBO(31, 30, 35, 100),
               ),
             ),
             actions: [
@@ -547,6 +542,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
               ).animate().fadeIn(duration: 300.ms),
             ],
+            foregroundColor: Colors.white,
+            backgroundColor: Color.fromRGBO(31, 30, 35, 100),
           ),
           SliverToBoxAdapter(
             child: _isLoading
