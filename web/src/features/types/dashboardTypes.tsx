@@ -69,6 +69,26 @@ export interface User {
   role: string;
   created_at: string;      // ISO datetime string
   last_login?: string | null; // can be null
+  profile?: Profile;  // Optional to handle incomplete data
+  full_name?: string;  // Direct on User if used that way; otherwise remove if nested under profile
+  organization?: string;
+  address?: string;
+  profile_picture?: string;  // Assuming this is a URL string; use File | string if handling uploads
 };
 
 export type EquipmentStatus = "online" | "offline" | "maintenance" | "error";
+
+export interface Profile {
+  id?: string;
+  full_name: string;
+  organization: string;
+  address: string;
+  profile_picture?: string | File; // URL or File for upload
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Optional: If Profile is nested in User responses
+export interface UserWithProfile extends User {
+  profile?: Profile;
+}

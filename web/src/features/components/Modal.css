@@ -1,3 +1,32 @@
+:root {
+  --sidebar-expanded: 220px;
+  --sidebar-collapsed: 70px;
+  --topbar-height: 60px;
+  --red: #e74c3c;
+  --dark-red: #c0392b;
+  --blue: #4c6ef5;
+  --light-blue: #4cafef;
+  --hover-blue: #3a9cd6;
+  --dark-blue: #3652d9;
+  --dark-bg: #1f2235;
+  --mid-bg: #2a2d43;
+  --header-bg: #3a3f61;
+  --white: #ffffff;
+  --off-white: #f5f5f5;
+  --light-purple: #a6b1ff;
+  --purple: #9b59b6;
+  --brown: #a0522d;
+  --black: #000000;
+  --gray: #aaa;
+  --light-gray: #ddd;
+  --blue-gray: #607D8B;
+  --lime-green: #32cd32;
+  --success: #4CAF50;
+  --warning: #ff9800;
+  --error: #f44336;
+  transition: transform 0.2s ease;
+}
+
 /* Modal backdrop */
 .modal-backdrop {
   position: fixed;
@@ -5,24 +34,28 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(31, 34, 53, 0.8); /* Slightly tinted to match --dark-bg */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  backdrop-filter: blur(4px); /* Add subtle blur for depth */
 }
 
 /* Modal container */
 .modal {
-  background-color: #fff;
-  border-radius: 12px;
-  width: 400px;
+  background: linear-gradient(145deg, var(--mid-bg), var(--dark-bg)); /* Subtle gradient for visual interest */
+  border-radius: 16px; /* Slightly larger radius for modern feel */
+  width: 420px; /* Slightly wider */
   max-width: 90%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05); /* Enhanced shadow with inner glow */
   overflow: visible; /* allow dropdown to overflow */
-  animation: fadeIn 0.2s ease-out;
+  animation: slideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
   z-index: 10000;
+  border: none; /* Remove border for cleaner look */
 }
 
 /* Modal header */
@@ -30,110 +63,171 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #ddd;
-  background-color: #f5f5f5;
-  color: #000;
+  padding: 20px 24px; /* More padding */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(90deg, var(--header-bg), var(--blue)); /* Gradient header for pop */
+  color: var(--white);
+  border-radius: 16px 16px 0 0; /* Rounded top */
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px; /* Slightly larger */
   font-weight: 600;
+  letter-spacing: 0.5px; /* Subtle spacing */
 }
 
 .modal-close {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%; /* Circular close button */
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 18px;
   cursor: pointer;
-  color: #555;
-  transition: color 0.2s;
+  color: var(--light-gray);
+  transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  color: #000;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+  transform: scale(1.1);
 }
 
 /* Modal content */
 .modal-content {
-  padding: 20px;
+  padding: 24px; /* More padding */
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px; /* Increased gap */
 }
 
 .modal-content label {
   display: flex;
   flex-direction: column;
   font-size: 14px;
-  color: #333;
+  color: var(--black);
+  font-weight: 500; /* Bolder labels */
+  letter-spacing: 0.3px;
+  background-color: var(--white);
 }
 
 .modal-content input,
 .modal-content select {
-  margin-top: 6px;
-  padding: 8px 10px;
+  margin-bottom: 5px;
+  padding: 12px 14px; /* More padding for comfort */
   font-size: 14px;
-  border-radius: 6px;
+  border-radius: 8px; /* Larger radius */
   border: 1px solid #ccc;
   box-sizing: border-box;
+  background: var(--white);
+  color: var(--blue-gray);
+  transition: all 0.2s ease;
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1); /* Focus ring */
 }
 
 .modal-content textarea {
-  width: 100%;           /* prevent overflow */
-  max-width: 100%;       /* lock it inside modal */
+  width: 100%;           
+  max-width: 100%;       
   box-sizing: border-box;
   margin-top: 5px;
   margin-bottom: 10px;
+  background: var(--white);
+  color: var(--black);
+  border: 2px 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.2s ease;
+}
+
+.modal-content textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
+  background: var(--white);
+}
+
+.modal-content input::placeholder {
+  color: var(--gray);
 }
 
 .modal-content input[disabled] {
-  background-color: #f0f0f0;
-  color: #555;
+  background-color: var(--mid-bg);
+  color: var(--gray);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Modal actions */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px; /* Slightly more gap */
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1); /* Subtle separator */
 }
 
 .modal-actions button {
-  padding: 8px 16px;
+  padding: 10px 20px; /* Larger buttons */
   font-size: 14px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
 }
 
 .modal-actions button:hover {
-  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .modal-actions button[type="submit"],
 .add-btn {
-  background-color: #4caf50;
-  color: #fff;
+  background: linear-gradient(90deg, var(--blue), var(--dark-blue)); /* Gradient for primary */
+  color: var(--white);
 }
 
 .modal-actions button.delete-btn {
-  background-color: #f44336;
-  color: #fff;
+  background: linear-gradient(90deg, var(--red), var(--dark-red)); /* Gradient for delete */
+  color: var(--white);
 }
 
 .modal-actions button[type="button"] {
-  background-color: #ccc;
-  color: #333;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--off-white);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+.modal-actions button[type="button"]:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
 }
 
 /* Dropdown wrapper */
@@ -145,69 +239,113 @@
 
 .dropdown-wrapper input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 12px 14px;
   font-size: 14px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #ccc;
   box-sizing: border-box;
   margin-top: 6px;
   position: relative;
   z-index: 1;
+  color: var(--blue-gray);
+  transition: all 0.2s ease;
+}
+
+.dropdown-wrapper input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
+}
+
+.dropdown-wrapper input::placeholder {
+  color: var(--gray);
 }
 
 /* Dropdown menu */
 .dropdown {
-  position: static;
+  position: absolute; /* Changed to absolute for better positioning */
   top: 100%;
   left: 0;
   width: 100%;
   max-height: 220px;
   overflow-y: auto;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  z-index: 9999999;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 10002; /* Higher z-index */
   list-style: none;
   margin: 4px 0 0 0;
   padding: 0;
+  animation: fadeInUp 0.2s ease-out;
+  margin-bottom: 10px;
+  background-color: var(--white);
 }
 
 .dropdown-item {
-  padding: 8px 12px;
+  padding: 12px 14px; /* More padding */
   cursor: pointer;
-  color: #000;
+  color: var(--blue-gray);
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Subtle separators */
+  z-index: 10000;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+  margin-bottom: 10px;
 }
 
 .dropdown-item:hover {
-  background-color: #f5f5f5;
+  background: linear-gradient(90deg, var(--header-bg), var(--blue)); /* Gradient hover */
+  color: var(--white);
+  padding-left: 18px; /* Slight indent on hover */
 }
 
 .dropdown-item.selected {
-  background-color: #4caf50;
-  color: #fff;
+  background: linear-gradient(90deg, var(--blue), var(--dark-blue));
+  color: var(--white);
   font-weight: 500;
 }
 
 .dropdown-item.disabled {
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.4;
+  color: var(--gray);
+  background: transparent;
+}
+
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
 /* Field error */
 .field-error {
   margin-top: 6px;
-  color: #c62828;
+  color: var(--error);
   font-size: 0.9rem;
 }
 
 .error-text {
-  color: red;
+  color: var(--error);
   font-size: 0.85rem;
   margin-top: 2px;
   display: block;
-  margin: 4px;
-  z-index: 1; /* lower than dropdown */
-  position: absolute;
+  margin: 4px 0 0 0;
+  z-index: 1;
+  position: relative; /* Changed to relative */
 }
 
+.input-error {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+  background: rgba(244, 67, 54, 0.05);
+}

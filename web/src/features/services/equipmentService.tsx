@@ -27,4 +27,9 @@ export const equipmentService = {
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${EQUIPMENT_API}${id}/`);
   },
+
+  fetchByRoom: async (roomId: string): Promise<Equipment[]> => {
+    const { data } = await axiosInstance.get<Equipment[]>(`${EQUIPMENT_API}?room=${roomId}`);
+    return data;
+  },
 };
