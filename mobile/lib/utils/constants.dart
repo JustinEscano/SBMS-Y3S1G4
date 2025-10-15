@@ -10,7 +10,7 @@ class ApiConfig {
 
   // LLM Direct Server (bypass Django API)
   static String get _llmDevBaseUrl => Platform.isAndroid
-      ? 'http://192.168.0.28:5000'  // Adjust IP if needed (e.g., 10.0.2.2 for Android emulator)
+      ? 'http://192.168.0.28:5000'
       : 'http://localhost:5000';
   static String get llmBaseUrl => _environment == 'prod' ? 'https://your-llm-domain.com' : _llmDevBaseUrl;
   static String get llmQueryDirect => '$llmBaseUrl/llmquery';
@@ -27,6 +27,9 @@ class ApiConfig {
   static String get refreshToken => '$baseUrl/token/refresh/';
   static String get verifyToken => '$baseUrl/token/verify/';
   static String get userInfo => '$baseUrl/users/me/';
+  static String get otpRequest => '$baseUrl/otp-password/request/';
+  static String get otpVerify => '$baseUrl/otp-password/verify/';
+  static String get otpVerifyOnly => '$baseUrl/otp-password/verify-otp/';
 
   // Dashboard and Summary Endpoints
   static String get dashboardSummary => '$baseUrl/dashboard/summary/';

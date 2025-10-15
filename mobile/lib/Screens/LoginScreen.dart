@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
 import '../Screens/RegisterScreen.dart';
 import '../Screens/DashboardScreen.dart';
+import '../Screens/OtpScreen.dart';
 import '../Services/auth_service.dart';
 import '../utils/constants.dart';
 
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await _dio.post(
-        '${ApiConfig.baseUrl}/token/',
+        ApiConfig.login,
         data: {
           'email': email,
           'password': password,
@@ -127,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else if (e.type == DioExceptionType.connectionError) {
             _errorMessage = 'Cannot connect to server. Check if Django is running on port 8000';
           } else {
-            _errorMessage = 'Error: ${e.message}';
+            _errorMessage = 'Error: ${e.message ?? e.toString()}';
           }
         } else {
           _errorMessage = 'Error: $e';
@@ -259,6 +260,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const OtpScreen()),
+                        );
+                      },
+                      child: Text(
+                        'Forgot Password?',
+                        style: const TextStyle(
+                          fontFamily: 'Arial',
+                          color: Color(0xFF4D6BFE),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   if (_errorMessage.isNotEmpty)
                     Container(
@@ -332,7 +354,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Sign Up',
                           style: const TextStyle(
                             fontFamily: 'Arial',
-                            color: Color(0xFF28292E),
+                            color: Color(0xFF4D6BFE),
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
