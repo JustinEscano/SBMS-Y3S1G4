@@ -264,6 +264,9 @@ class ProfileWidgets {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -281,6 +284,7 @@ class ProfileWidgets {
           ),
         ),
       ).animate().scale(duration: 200.ms),
+      )
     );
   }
 
