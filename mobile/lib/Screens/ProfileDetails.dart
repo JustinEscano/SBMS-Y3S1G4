@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:mobile/Screens/ProfileDetails.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,21 +12,21 @@ import '../Services/auth_service.dart';
 import './LoginScreen.dart';
 import '../Widgets/ProfileWidgets.dart';
 
-class ProfileScreen extends StatefulWidget {
+class Profiledetails extends StatefulWidget {
   final String accessToken;
   final String refreshToken;
 
-  const ProfileScreen({
+  const Profiledetails({
     super.key,
     required this.accessToken,
     required this.refreshToken,
   });
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  _ProfiledetailsState createState() => _ProfiledetailsState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfiledetailsState extends State<Profiledetails> {
   // SharedPreferences keys
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
@@ -66,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       return false;
     } catch (e) {
-      developer.log('Token refresh failed: $e', name: 'ProfileScreen.Token');
+      developer.log('Token refresh failed: $e', name: 'Profiledetails.Token');
       return false;
     }
   }
@@ -104,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (profilePictureUrl.isNotEmpty) {
         developer.log(
           'Profile picture URL: $profilePictureUrl',
-          name: 'ProfileScreen.Image',
+          name: 'Profiledetails.Image',
         );
       }
     } catch (e) {
@@ -129,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (profilePictureUrl.isNotEmpty) {
               developer.log(
                 'Profile picture URL after retry: $profilePictureUrl',
-                name: 'ProfileScreen.Image',
+                name: 'Profiledetails.Image',
               );
             }
             return;
@@ -470,52 +469,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Logout function
-  Future<void> _logout(BuildContext context) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: 20),
-              Text('Logging out...', style: GoogleFonts.poppins()),
-            ],
-          ),
-        );
-      },
-    );
-
-    try {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      await authService.logout();
-      if (mounted) { // Check before navigation
-        Navigator.of(context).pop();
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) { // Check before navigation and SnackBar
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error during logout: $e', style: GoogleFonts.poppins()),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
     return Scaffold(
       backgroundColor: Colors.black,
       body: CustomScrollView(
@@ -557,33 +512,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ProfileWidgets.buildProfileHeader(
-                      context: context,
-                      profileData: _profileData,
-                      profilePicture: _profilePicture,
-                      isEditing: _isEditing,
-                      isProfileDeleted: _isProfileDeleted,
-                      onPickImage: _pickImage,
-                      onCardTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => Profiledetails(accessToken: widget.accessToken, refreshToken: authService.refreshToken ?? '',),
-                                      ),
-                                    );
-                                  }
-                    ),
+                    if (!_isProfileDeleted)
+                      ProfileWidgets.buildProfileFields(
+                        usernameController: _usernameController,
+                        emailController: _emailController,
+                        fullNameController: _fullNameController,
+                        organizationController: _organizationController,
+                        addressController: _addressController,
+                        isEditing: _isEditing,
+                      ),
                     const SizedBox(height: 15),
-                    // if (!_isProfileDeleted)
-                    //   ProfileWidgets.buildProfileFields(
-                    //     usernameController: _usernameController,
-                    //     emailController: _emailController,
-                    //     fullNameController: _fullNameController,
-                    //     organizationController: _organizationController,
-                    //     addressController: _addressController,
-                    //     isEditing: _isEditing,
-                    //   ),
-                    // const SizedBox(height: 15),
                     if (_isEditing)
                       ProfileWidgets.buildActionButtons(
                         context: context,
@@ -592,13 +530,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onCreateProfile: _createProfile,
                         onDeleteProfile: () => _showDeleteConfirmation(context),
                       ),
-                    const SizedBox(height: 15),
-                    ProfileWidgets.buildOptionsCard(context, widget.accessToken, authService.refreshToken ?? ''),
-                    const SizedBox(height: 15),
-                    ProfileWidgets.buildLogoutButton(
-                      context: context,
-                      onLogout: () => _logout(context),
-                    ),
                   ],
                 ),
               ),
