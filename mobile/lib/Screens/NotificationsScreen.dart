@@ -741,9 +741,17 @@ class NotificationDetailsScreen extends StatelessWidget {
     final maintenanceRequestId = _getMaintenanceRequestId();
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(notification['title'] ?? 'Notification Details'),
+        backgroundColor: const Color(0xFF1F1E23),
+        title: Text(notification['title'] ?? 'Notification Details',
+          style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (!notification['read'])
             IconButton(

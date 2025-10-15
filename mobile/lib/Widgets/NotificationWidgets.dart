@@ -157,6 +157,7 @@ class NotificationWidgets {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white
                   ),
                 ),
               ),
@@ -200,13 +201,13 @@ class NotificationWidgets {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
+              color: Colors.grey[100],
             ),
           ),
           const SizedBox(height: 8),
           Text(
             notification['message'] ?? 'No Message',
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
           const SizedBox(height: 16),
           Text(
