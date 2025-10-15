@@ -1,10 +1,10 @@
 // Raw sensor log data (from ESP32 or SensorLog model)
 export interface SensorData {
   equipment_id: string;
-  equipment_name: string;
+  equipment_name?: string;
   device_id: string;
   status: string;
-  recorded_at: string;
+  recorded_at: string | null;
 
   // Equipment type for filtering (esp32, sensor, actuator, etc.)
   type?: string;
@@ -14,12 +14,13 @@ export interface SensorData {
   humidity?: number;
 
   // Lighting
-  light_level?: number;
+  light_level?: boolean;
   energy_usage?: number;
 
   // Security
-  motion_detected?: boolean;
+  motion_detect?: boolean;
   camera_status?: string;
+  component_name?: string;
 }
 
 export interface ESP32Response {
@@ -61,3 +62,17 @@ export interface RoomAnalytics {
     security?: EquipmentSummary[];
   };
 }
+
+export interface RoomAnalyticsItem {
+  period_start: string;
+  period_end: string;
+  period_type: string;
+  total_energy: number;
+  avg_power: number;
+  peak_power: number;
+  reading_count: number;
+  anomaly_count: number;
+  total_cost: number;
+  currency?: string;
+}
+
