@@ -260,6 +260,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
+      backgroundColor: const Color(0xFF000000),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
