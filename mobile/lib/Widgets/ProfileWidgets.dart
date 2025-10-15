@@ -53,7 +53,7 @@ class ProfileWidgets {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
+            color: Color.fromRGBO(18, 24, 34, 100),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),
@@ -117,6 +117,7 @@ class ProfileWidgets {
                         style: GoogleFonts.poppins(
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -125,7 +126,7 @@ class ProfileWidgets {
                             (isProfileDeleted ? 'Create a new profile' : 'Smart Building Dashboard User'),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: Colors.grey,
                         ),
                       ),
                     ],
@@ -153,7 +154,7 @@ class ProfileWidgets {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Colors.white,
+          color: Color.fromRGBO(18, 24, 34, 100),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.2),
@@ -221,7 +222,7 @@ class ProfileWidgets {
         border: InputBorder.none,
       ),
       enabled: enabled,
-      style: GoogleFonts.poppins(fontSize: 16),
+      style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
       validator: validator,
     );
   }
@@ -267,6 +268,7 @@ class ProfileWidgets {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 56),
           backgroundColor: color,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -291,7 +293,7 @@ class ProfileWidgets {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Colors.white,
+          color: Color.fromRGBO(18, 24, 34, 100),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.2),
@@ -359,7 +361,7 @@ class ProfileWidgets {
   }) {
     return ListTile(
       leading: Icon(icon, color: Colors.blue),
-      title: Text(title, style: GoogleFonts.poppins(fontSize: 16)),
+      title: Text(title, style: GoogleFonts.poppins(fontSize: 16, color: Colors.white)),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
     ).animate().fadeIn(duration: 300.ms);
