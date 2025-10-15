@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../Config/api.dart';
+import 'LoginScreen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,9 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Dio _dio = Dio();
 
   Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     if (_passwordController.text != _confirmPasswordController.text) {
       setState(() {
@@ -42,16 +41,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final response = await _dio.post(
         ApiConfig.register,
         data: {
-          'username': _usernameController.text,
-          'email': _emailController.text,
-          'password': _passwordController.text,
+          'username': _usernameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
           'role': _selectedRole,
         },
         options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         ),
       );
 
@@ -63,7 +59,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
         }
       } else {
         setState(() {
@@ -73,29 +72,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       setState(() {
         if (e is DioException) {
-          if (e.type == DioExceptionType.connectionTimeout ||
-              e.type == DioExceptionType.sendTimeout ||
-              e.type == DioExceptionType.receiveTimeout) {
-            _errorMessage = 'Request timed out. Server might be slow or down';
-          } else if (e.type == DioExceptionType.connectionError) {
+          if (e.type == DioExceptionType.connectionError) {
             _errorMessage = 'Cannot connect to server. Check if Django is running on port 8000';
           } else if (e.response?.statusCode == 400) {
-            final errorData = e.response?.data;
-            String errorMsg = 'Registration failed: ';
-            if (errorData is Map) {
-              List<String> errors = [];
-              errorData.forEach((key, value) {
-                if (value is List && value.isNotEmpty) {
-                  errors.add('$key: ${value.first}');
-                } else if (value is String) {
-                  errors.add('$key: $value');
-                }
-              });
-              errorMsg += errors.join(', ');
+            final data = e.response?.data;
+            if (data is Map) {
+              _errorMessage = data.entries
+                  .map((e) => "${e.key}: ${(e.value is List ? e.value.first : e.value)}")
+                  .join(', ');
             } else {
-              errorMsg += 'Invalid request format';
+              _errorMessage = 'Invalid input format';
             }
-            _errorMessage = errorMsg;
           } else {
             _errorMessage = 'Error: ${e.message}';
           }
@@ -104,162 +91,284 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    const darkBg = Color(0xFF161C28);
+    const fieldBg = Color(0xFF28292E);
+    const textColor = Color(0xFFFFFFFF);
+    const accentColor = Color(0xFF4D6BFE);
+    const hintColor = Color(0xFF9E9E9E);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
+      backgroundColor: darkBg,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-                const Icon(
-                  Icons.person_add,
-                  size: 80,
-                  color: Colors.blue,
-                ),
-                const SizedBox(height: 32),
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  Image.asset(
+                    'assets/icons/logo.png',
+                    height: 80,
+                    fit: BoxFit.contain,
                   ),
-                ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                  const SizedBox(height: 16),
+                  Image.asset(
+                    'assets/icons/ORBIT.png',
+                    height: 40,
+                    fit: BoxFit.contain,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a username';
-                    }
-                    if (value.length < 3) {
-                      return 'Username must be at least 3 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter an email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedRole,
-                  decoration: const InputDecoration(
-                    labelText: 'Role',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.work),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'client', child: Text('Client')),
-                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedRole = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                if (_errorMessage.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.red[100],
-                      borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Create Your Account',
+                    style: TextStyle(
+                      fontFamily: 'Arial',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 26,
+                      color: textColor,
                     ),
-                    child: Text(
-                      _errorMessage,
-                      style: TextStyle(color: Colors.red[800]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 48),
+
+                  // Username
+                  TextFormField(
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      labelStyle: const TextStyle(color: hintColor),
+                      prefixIcon: const Icon(Icons.person, color: hintColor),
+                      filled: true,
+                      fillColor: fieldBg,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: accentColor, width: 1.5),
+                      ),
+                      floatingLabelStyle: const TextStyle(color: accentColor),
+                    ),
+                    style: const TextStyle(color: textColor),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Please enter your username';
+                      if (value.length < 3) return 'Username must be at least 3 characters';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Email
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: const TextStyle(color: hintColor),
+                      prefixIcon: const Icon(Icons.email, color: hintColor),
+                      filled: true,
+                      fillColor: fieldBg,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: accentColor, width: 1.5),
+                      ),
+                      floatingLabelStyle: const TextStyle(color: accentColor),
+                    ),
+                    style: const TextStyle(color: textColor),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Please enter your email';
+                      if (!value.contains('@')) return 'Enter a valid email';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Role Dropdown
+                  DropdownButtonFormField<String>(
+                    value: _selectedRole,
+                    dropdownColor: fieldBg,
+                    decoration: InputDecoration(
+                      labelText: 'Role',
+                      labelStyle: const TextStyle(color: hintColor),
+                      prefixIcon: const Icon(Icons.work, color: hintColor),
+                      filled: true,
+                      fillColor: fieldBg,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: accentColor, width: 1.5),
+                      ),
+                      floatingLabelStyle: const TextStyle(color: accentColor),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'client',
+                        child: Text('Client', style: TextStyle(color: textColor)),
+                      ),
+                      DropdownMenuItem(
+                        value: 'admin',
+                        child: Text('Admin', style: TextStyle(color: textColor)),
+                      ),
+                    ],
+                    onChanged: (value) => setState(() => _selectedRole = value!),
+                    style: const TextStyle(color: textColor),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Password
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: const TextStyle(color: hintColor),
+                      prefixIcon: const Icon(Icons.lock, color: hintColor),
+                      filled: true,
+                      fillColor: fieldBg,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: accentColor, width: 1.5),
+                      ),
+                      floatingLabelStyle: const TextStyle(color: accentColor),
+                    ),
+                    style: const TextStyle(color: textColor),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Please enter a password';
+                      if (value.length < 6) return 'Password must be at least 6 characters';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Confirm Password
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm Password',
+                      labelStyle: const TextStyle(color: hintColor),
+                      prefixIcon: const Icon(Icons.lock_outline, color: hintColor),
+                      filled: true,
+                      fillColor: fieldBg,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: accentColor, width: 1.5),
+                      ),
+                      floatingLabelStyle: const TextStyle(color: accentColor),
+                    ),
+                    style: const TextStyle(color: textColor),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Please confirm your password';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Error Message
+                  if (_errorMessage.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: fieldBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _errorMessage,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                  // Register Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(textColor),
+                        ),
+                      )
+                          : const Text(
+                        'Register',
+                        style: TextStyle(
+                          fontFamily: 'Arial',
+                          color: textColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _register,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Register'),
+                  const SizedBox(height: 16),
+
+                  // Login Redirect
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Already have an account? ",
+                        style: TextStyle(
+                          fontFamily: 'Arial',
+                          color: textColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          );
+                        },
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(
+                            fontFamily: 'Arial',
+                            color: accentColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Already have an account? Login'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
