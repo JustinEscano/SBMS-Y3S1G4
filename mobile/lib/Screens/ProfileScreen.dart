@@ -563,7 +563,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       isProfileDeleted: _isProfileDeleted,
                       onPickImage: _pickImage,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 15),
                     if (!_isProfileDeleted)
                       ProfileWidgets.buildProfileFields(
                         usernameController: _usernameController,
@@ -573,7 +573,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         addressController: _addressController,
                         isEditing: _isEditing,
                       ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 15),
                     if (_isEditing)
                       ProfileWidgets.buildActionButtons(
                         context: context,
@@ -582,9 +582,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onCreateProfile: _createProfile,
                         onDeleteProfile: () => _showDeleteConfirmation(context),
                       ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 15),
                     ProfileWidgets.buildOptionsCard(context),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 15),
                     ProfileWidgets.buildLogoutButton(
                       context: context,
                       onLogout: () => _logout(context),

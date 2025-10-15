@@ -49,23 +49,11 @@ class ProfileWidgets {
       onTap: isEditing && !isProfileDeleted ? onPickImage : null,
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             color: Color.fromRGBO(18, 24, 34, 100),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(2, 2),
-              ),
-              BoxShadow(
-                color: Colors.white.withOpacity(0.8),
-                blurRadius: 8,
-                offset: const Offset(-2, -2),
-              ),
-            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -150,35 +138,25 @@ class ProfileWidgets {
   }) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           color: Color.fromRGBO(18, 24, 34, 100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(2, 2),
-            ),
-            BoxShadow(
-              color: Colors.white.withOpacity(0.8),
-              blurRadius: 8,
-              offset: const Offset(-2, -2),
-            ),
-          ],
         ),
         child: Column(
           children: [
             _buildTextField(
               controller: usernameController,
               label: 'Username',
+              icon: Icons.perm_identity,
               validator: (value) => value!.isEmpty ? 'Username is required' : null,
               enabled: isEditing,
             ),
             const Divider(height: 1),
             _buildTextField(
               controller: emailController,
+              icon: Icons.email,
               label: 'Email',
               validator: (value) => value!.contains('@') ? null : 'Invalid email',
               enabled: isEditing,
@@ -186,18 +164,21 @@ class ProfileWidgets {
             const Divider(height: 1),
             _buildTextField(
               controller: fullNameController,
+              icon: Icons.perm_identity_rounded,
               label: 'Full Name',
               enabled: isEditing,
             ),
             const Divider(height: 1),
             _buildTextField(
               controller: organizationController,
+              icon: Icons.business,
               label: 'Organization',
               enabled: isEditing,
             ),
             const Divider(height: 1),
             _buildTextField(
               controller: addressController,
+              icon: Icons.house,
               label: 'Address',
               enabled: isEditing,
             ),
@@ -209,6 +190,7 @@ class ProfileWidgets {
 
   static Widget _buildTextField({
     required TextEditingController controller,
+    required IconData icon,
     required String label,
     bool enabled = true,
     String? Function(String?)? validator,
@@ -217,12 +199,13 @@ class ProfileWidgets {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+        labelStyle: GoogleFonts.poppins(color: Colors.white),
+        prefixIcon: Icon(icon, color: Color.fromRGBO(77, 107, 254, 100),),
         contentPadding: const EdgeInsets.all(16.0),
         border: InputBorder.none,
       ),
       enabled: enabled,
-      style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
+      style: GoogleFonts.poppins(fontSize: 16, color: Color.fromRGBO(153, 152, 152, 100)),
       validator: validator,
     );
   }
@@ -240,13 +223,13 @@ class ProfileWidgets {
           _buildButton(
             text: 'Create Profile',
             onPressed: onCreateProfile,
-            color: Colors.blue,
+            color: Color.fromRGBO(77, 107, 254, 100),
           ),
         if (!isProfileDeleted)
           _buildButton(
             text: 'Save Changes',
             onPressed: onUpdateProfile,
-            color: Colors.blue,
+            color: Color.fromRGBO(77, 107, 254, 100),
           ),
         if (!isProfileDeleted)
           _buildButton(
@@ -267,7 +250,7 @@ class ProfileWidgets {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: SizedBox(
         width: double.infinity,
-        height: 50,
+        height: 60,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -275,7 +258,7 @@ class ProfileWidgets {
           backgroundColor: color,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           elevation: 2,
         ),
         child: Text(
@@ -296,20 +279,8 @@ class ProfileWidgets {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           color: Color.fromRGBO(18, 24, 34, 100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(2, 2),
-            ),
-            BoxShadow(
-              color: Colors.white.withOpacity(0.8),
-              blurRadius: 8,
-              offset: const Offset(-2, -2),
-            ),
-          ],
         ),
         child: Column(
           children: [
@@ -364,7 +335,7 @@ class ProfileWidgets {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: Colors.blue),
+      leading: Icon(icon, color: Color.fromRGBO(77, 107, 254, 100)),
       title: Text(title, style: GoogleFonts.poppins(fontSize: 16, color: Colors.white)),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
