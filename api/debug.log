@@ -9335,3 +9335,184 @@ Returning 0 sensor readings
 Latest sensor data requested
 Returning 0 sensor readings
 Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-14T00:00:00.000Z'], 'period_end': ['2025-10-14T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-14T00:00:00+00:00, period_end=2025-10-15T00:00:00+00:00
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'room_id': ['9ab8ece2-0396-49d6-9367-385dfe087a74'], 'period_start': ['2025-10-14T00:00:00.000Z'], 'period_end': ['2025-10-14T23:59:59.000Z']}>
+Initial query count: 0
+After room_id filter (9ab8ece2-0396-49d6-9367-385dfe087a74): 0
+All matching EnergySummaries: []
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-14T00:00:00.000Z'], 'period_end': ['2025-10-14T23:59:59.000Z']}>
+No daily energy summaries found for criteria: room_id=9ab8ece2-0396-49d6-9367-385dfe087a74, equipment_id=None, component_id=None, period_start=2025-10-14T00:00:00+00:00, period_end=2025-10-15T00:00:00+00:00
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-14T00:00:00+00:00, period_end=2025-10-15T00:00:00+00:00
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Marked 26 notifications as read for Peter 6 (User ID: 6bbeea39-3194-4ab2-97fc-313d2376c1fb)
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Maintenance request created: 56618dfd-a932-4928-b338-ecf5769e227c by Peter 6
+In-app notification created for Peter 6 (ID: 81e6ed65-b3ff-4bda-a138-0e75972c13b4, Type: maintenance_request_created, User ID: 6bbeea39-3194-4ab2-97fc-313d2376c1fb)
+Email sent to peter6@gmail.com (Notification ID: 81e6ed65-b3ff-4bda-a138-0e75972c13b4, Type: maintenance_request_created, User ID: 6bbeea39-3194-4ab2-97fc-313d2376c1fb)
+In-app notification created for Peter (ID: 98a3de4d-d97c-4d08-ba6b-058f05fbae22, Type: maintenance_request_created, User ID: ee05018c-1411-4c4c-bd99-0059308e8f98)
+Latest sensor data requested
+Maintenance request created: 819ff430-49a7-45a1-bc2c-89ad8e96535c by Peter 6
+Skipped duplicate notification for Peter 6 (Type: maintenance_request_created, User ID: 6bbeea39-3194-4ab2-97fc-313d2376c1fb)
+Returning 0 sensor readings
+Skipped duplicate notification for Peter (Type: maintenance_request_created, User ID: ee05018c-1411-4c4c-bd99-0059308e8f98)
+In-app notification created for peter (ID: a0b4c306-867d-4675-8f7e-1d64aac7d273, Type: maintenance_request_created, User ID: aae3f210-d007-4883-8984-aa00080c4608)
+Email sent to peter@gmail.com (Notification ID: 98a3de4d-d97c-4d08-ba6b-058f05fbae22, Type: maintenance_request_created, User ID: ee05018c-1411-4c4c-bd99-0059308e8f98)
+Skipped duplicate notification for peter (Type: maintenance_request_created, User ID: aae3f210-d007-4883-8984-aa00080c4608)
+In-app notification created for Peter 3 (ID: 9ad01c06-f1c5-49d9-a39c-27367ec8a0b6, Type: maintenance_request_created, User ID: 4ef5110b-47cd-4254-82f4-c7185ef16b67)
+Email sent to peter2@gmail.com (Notification ID: a0b4c306-867d-4675-8f7e-1d64aac7d273, Type: maintenance_request_created, User ID: aae3f210-d007-4883-8984-aa00080c4608)
+Skipped duplicate notification for Peter 3 (Type: maintenance_request_created, User ID: 4ef5110b-47cd-4254-82f4-c7185ef16b67)
+In-app notification created for Peter 5 (ID: 09fe906b-864f-4e94-add7-5ade1cee511d, Type: maintenance_request_created, User ID: dc45a9fa-78c1-4891-8c5c-9d15e1dfbd82)
+Email sent to peter3@gmail.com (Notification ID: 9ad01c06-f1c5-49d9-a39c-27367ec8a0b6, Type: maintenance_request_created, User ID: 4ef5110b-47cd-4254-82f4-c7185ef16b67)
+Skipped duplicate notification for Peter 5 (Type: maintenance_request_created, User ID: dc45a9fa-78c1-4891-8c5c-9d15e1dfbd82)
+Skipped duplicate notification for Peter 6 (Type: maintenance_request_created, User ID: 6bbeea39-3194-4ab2-97fc-313d2376c1fb)
+Email sent to peter5@gmail.com (Notification ID: 09fe906b-864f-4e94-add7-5ade1cee511d, Type: maintenance_request_created, User ID: dc45a9fa-78c1-4891-8c5c-9d15e1dfbd82)
+Skipped duplicate notification for Peter 6 (Type: maintenance_request_created, User ID: 6bbeea39-3194-4ab2-97fc-313d2376c1fb)
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Successfully imported core.views.signals
