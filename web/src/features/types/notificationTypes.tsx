@@ -3,6 +3,11 @@ export interface Notification {
   title: string;
   message: string;
   read: boolean;
-  created_at: string;
-  user: { id: string; username: string } | string; // <-- make this explicit
+  type?: string;  // Matches 'type'
+  metadata?: {    // ← This might be missing or unused
+    user_name: string;
+    category_display: string;
+    created_at: string;  // ← Here, not root 'date'
+  };
+  // No 'date' or 'createdAt' at root?
 }

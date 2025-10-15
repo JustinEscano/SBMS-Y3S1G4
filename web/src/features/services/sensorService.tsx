@@ -3,28 +3,30 @@ import axiosInstance from "../../service/AppService.tsx";
 import type { ESP32Response, SensorData } from "../types/sensorLogTypes";
 
 const SENSOR_API = "/api/esp32/";
-
-console.log("🚀 [SensorService] axiosInstance imported:", axiosInstance);
+const SENSOR_LOG_API = "/api/sensorlog/";
 
 export const sensorService = {
-  // ✅ Get latest sensor data
   fetchLatest: async (): Promise<ESP32Response> => {
-    console.log("🔍 [SensorService] Fetching latest sensor data");
     const { data } = await axiosInstance.get<ESP32Response>(`${SENSOR_API}latest/`);
     return data;
   },
 
-  // src/features/services/sensorService.ts
   fetchLatestReading: async (componentId: string): Promise<SensorData | null> => {
     try {
       const { data } = await axiosInstance.get<ESP32Response>(`${SENSOR_API}latest/`, {
         params: { component: componentId },
       });
-      return data?.data?.[0] || null; // return latest log object
+      return data?.data?.[0] || null;
     } catch (error) {
-      console.error("❌ [SensorService] Failed to fetch latest reading:", error);
+      console.error("Failed to fetch latest reading:", error);
       return null;
     }
+  },
+
+  // Generalized fetch logs with params
+  fetchLogs: async (params: Record<string, string>): Promise<SensorData[]> => {
+    const { data } = await axiosInstance.get<SensorData[]>(SENSOR_LOG_API, { params });
+    return data;
   },
 
 

@@ -5,46 +5,53 @@ import type { Notification } from "../types/notificationTypes";
 export const useNotifications = (userId?: string, pollInterval = 30000) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // 🔹 Fetch notifications
+  // Utility to normalize dates (fallback to now if invalid/missing)
+  const normalizeNotification = useCallback((notif: Notification): Notification => {
+    const createdAt = notif.metadata?.created_at;
+    const date = createdAt ? new Date(createdAt) : new Date(); // Defaults to Oct 15, 2025
+    return {
+      ...notif,
+      metadata: {
+        user_name: notif.metadata?.user_name ?? "",
+        category_display: notif.metadata?.category_display ?? "",
+        created_at: isNaN(date.getTime()) ? new Date().toISOString() : (createdAt ?? ""),
+      },
+    };
+  }, []);
+
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const data = userId
         ? await notificationService.getByUserId(userId)
         : await notificationService.getAll();
-      setNotifications(data);
-      setError(null);
+      
+      // Normalize dates and log (now accesses nested)
+      const normalizedData = data.map(normalizeNotification);+
+      
+      setNotifications(normalizedData);
     } catch (err: any) {
-      console.error("Failed to fetch notifications:", err);
-      setError("Failed to load notifications");
+      console.error(err);
+      setNotifications([]); // Fallback to empty on error
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, normalizeNotification]);
 
-  // 🔹 Poll periodically
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, pollInterval);
     return () => clearInterval(interval);
-  }, [fetchNotifications, pollInterval]);
+  }, [fetchNotifications, pollInterval, userId]); // Added userId dep
 
-  // 🔹 Helper to sync sidebar instantly
-  const triggerSidebarUpdate = () => {
-    localStorage.setItem("notificationsUpdated", Date.now().toString());
-  };
-
-  // 🔹 Mark read/unread
   const markAsRead = useCallback(async (id: string) => {
     try {
       await notificationService.markAsRead(id);
       setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, read: true } : n))
+        prev.map(n => (n.id === id ? { ...n, read: true } : n)) // Preserves metadata
       );
-      triggerSidebarUpdate();
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Failed to mark notification ${id} as read:`, err);
     }
   }, []);
@@ -53,47 +60,32 @@ export const useNotifications = (userId?: string, pollInterval = 30000) => {
     try {
       await notificationService.markAsUnread(id);
       setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, read: false } : n))
+        prev.map(n => (n.id === id ? { ...n, read: false } : n)) // Preserves metadata
       );
-      triggerSidebarUpdate();
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Failed to mark notification ${id} as unread:`, err);
     }
   }, []);
 
-  // 🔹 Mark all as read
   const markAllAsRead = useCallback(async () => {
     try {
       const unread = notifications.filter(n => !n.read);
       await Promise.all(
         unread.map(n => notificationService.markAsRead(n.id).catch(console.error))
       );
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      triggerSidebarUpdate();
-    } catch (err) {
+      setNotifications(prev => prev.map(n => ({ ...n, read: true }))); // Preserves metadata
+      fetchNotifications(); // Refetch to sync
+    } catch (err: any) {
       console.error("Failed to mark all notifications as read:", err);
     }
   }, [notifications]);
 
-  // 🔹 Delete notification
-  const deleteNotification = useCallback(async (id: string) => {
-    try {
-      await notificationService.delete(id);
-      setNotifications(prev => prev.filter(n => n.id !== id));
-      triggerSidebarUpdate();
-    } catch (err) {
-      console.error(`Failed to delete notification ${id}:`, err);
-    }
-  }, []);
-
   return {
     notifications,
     loading,
-    error,
     fetchNotifications,
     markAsRead,
     markAsUnread,
     markAllAsRead,
-    deleteNotification,
   };
 };
