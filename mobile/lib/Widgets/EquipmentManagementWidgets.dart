@@ -11,6 +11,7 @@ class EquipmentManagementWidgets {
               children: [
                 Expanded(
                   child: Card(
+                    color: const Color(0xFF1F1E23),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -21,11 +22,11 @@ class EquipmentManagementWidgets {
                           FittedBox(
                             child: Text(
                               '$totalCount',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),
                           const FittedBox(
-                            child: Text('Total Equipment', style: TextStyle(fontSize: 12)),
+                            child: Text('Total Equipment', style: TextStyle(fontSize: 12, color: Colors.white70)),
                           ),
                         ],
                       ),
@@ -35,6 +36,7 @@ class EquipmentManagementWidgets {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Card(
+                    color: const Color(0xFF1F1E23),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -45,11 +47,11 @@ class EquipmentManagementWidgets {
                           FittedBox(
                             child: Text(
                               '$onlineCount',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),
                           const FittedBox(
-                            child: Text('Online', style: TextStyle(fontSize: 12)),
+                            child: Text('Online', style: TextStyle(fontSize: 12, color: Colors.white70)),
                           ),
                         ],
                       ),
@@ -59,6 +61,7 @@ class EquipmentManagementWidgets {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Card(
+                    color: const Color(0xFF1F1E23),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -69,11 +72,11 @@ class EquipmentManagementWidgets {
                           FittedBox(
                             child: Text(
                               '$esp32Count',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ),
                           const FittedBox(
-                            child: Text('ESP32 Devices', style: TextStyle(fontSize: 12)),
+                            child: Text('ESP32 Devices', style: TextStyle(fontSize: 12, color: Colors.white70)),
                           ),
                         ],
                       ),
@@ -196,6 +199,7 @@ class EquipmentManagementWidgets {
     final statusColor = getStatusColor(equipment['status']);
 
     return Card(
+      color: const Color(0xFF1F1E23),
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
@@ -207,7 +211,7 @@ class EquipmentManagementWidgets {
         ),
         title: Text(
           equipment['name'] ?? 'Unknown Equipment',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Column(
@@ -215,6 +219,7 @@ class EquipmentManagementWidgets {
           children: [
             Text(
               'Type: ${getTypeLabel(equipment['type'])} • Room: ${getRoomName(equipment['room']?.toString())}',
+              style: const TextStyle(color: Colors.white70),
               overflow: TextOverflow.ellipsis,
             ),
             if (equipment['device_id'] != null)

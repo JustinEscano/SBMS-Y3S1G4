@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
@@ -677,9 +678,16 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     developer.log('Building UI with ${filtered.length} filtered items', name: 'EquipmentScreen.Build');
 
     return Scaffold(
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: const Text('Equipment Management'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text('Equipment Management',
+          style: GoogleFonts.urbanist(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),),
+        backgroundColor: const Color(0xFF1F1E23),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.bug_report),

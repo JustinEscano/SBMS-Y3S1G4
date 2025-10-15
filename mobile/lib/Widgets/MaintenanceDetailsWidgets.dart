@@ -72,7 +72,7 @@ class MaintenanceDetailsWidgets {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: color ?? Theme.of(context).colorScheme.onSurface,
+                  color: color ?? Colors.white,
                 ),
               ),
             ],
@@ -87,7 +87,7 @@ class MaintenanceDetailsWidgets {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: const Color(0xFF1F1E23),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
@@ -99,19 +99,19 @@ class MaintenanceDetailsWidgets {
               Expanded(
                 child: Text(
                   '${comment['user'] ?? 'Unknown'} (${comment['role'] ?? 'Unknown'})',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
                 ),
               ),
               Text(
                 comment['timestamp'] ?? 'No timestamp',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             comment['text'] ?? 'No comment text',
-            style: TextStyle(color: Colors.grey[800], fontSize: 14),
+            style: TextStyle(color: Colors.white, fontSize: 14),
           ),
         ],
       ),
@@ -149,6 +149,7 @@ class MaintenanceDetailsWidgets {
     required VoidCallback onNextPage,
   }) {
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -156,7 +157,7 @@ class MaintenanceDetailsWidgets {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Comments', style: Theme.of(context).textTheme.titleLarge),
+            Text('Comments', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
             const SizedBox(height: 16),
             if (comments.isEmpty)
               Text(
@@ -244,28 +245,7 @@ class MaintenanceDetailsWidgets {
               ),
               maxLines: 3,
               textInputAction: TextInputAction.newline,
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Tooltip(
-                message: 'Post your comment',
-                child: ElevatedButton.icon(
-                  onPressed: responseController.text.isEmpty || isRefreshingToken
-                      ? null
-                      : onAddComment,
-                  icon: const Icon(Icons.send, size: 20),
-                  label: const Text('Add Comment'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
+            ),            
             if (effectiveRole == 'admin' || effectiveRole == 'superadmin') ...[
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -292,6 +272,27 @@ class MaintenanceDetailsWidgets {
                 ],
                 onChanged: onAssignedToChanged,
               ),
+              const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Tooltip(
+                message: 'Post your comment',
+                child: ElevatedButton.icon(
+                  onPressed: responseController.text.isEmpty || isRefreshingToken
+                      ? null
+                      : onAddComment,
+                  icon: const Icon(Icons.send, size: 20),
+                  label: const Text('Add Comment'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
             ],
           ],
         ),
@@ -419,6 +420,7 @@ class MaintenanceDetailsWidgets {
     final statusColor = getStatusColor(requestData['status'] ?? '');
 
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -426,7 +428,7 @@ class MaintenanceDetailsWidgets {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Request Details', style: Theme.of(context).textTheme.titleLarge),
+            Text('Request Details', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
             const SizedBox(height: 16),
             buildDetailRow(context, 'Issue', requestData['issue'] ?? 'No description', Icons.description),
             const SizedBox(height: 12),
