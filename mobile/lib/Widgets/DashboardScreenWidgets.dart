@@ -5,6 +5,7 @@ class DashboardScreenWidgets {
   // Welcome Card Widget
   static Widget buildWelcomeCard() {
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -17,7 +18,7 @@ class DashboardScreenWidgets {
                 const SizedBox(width: 12),
                 const Text(
                   'Welcome to Smart Building',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ],
             ),
@@ -45,6 +46,7 @@ class DashboardScreenWidgets {
     Color statusColor = getSystemStatusColor(status);
 
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 2,
       child: InkWell(
         onTap: onTap,
@@ -77,7 +79,7 @@ class DashboardScreenWidgets {
               const SizedBox(height: 8),
               Text(
                 value,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               Text(
                 subtitle,
@@ -105,6 +107,7 @@ class DashboardScreenWidgets {
     VoidCallback? onTap,
   }) {
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 2,
       child: InkWell(
         onTap: onTap,
@@ -117,7 +120,7 @@ class DashboardScreenWidgets {
               const SizedBox(height: 8),
               Text(
                 value,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               Text(
                 title,
@@ -138,6 +141,7 @@ class DashboardScreenWidgets {
     required VoidCallback onTap,
   }) {
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 3,
       child: InkWell(
         onTap: onTap,
@@ -164,6 +168,7 @@ class DashboardScreenWidgets {
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
+                  color: Colors.white,
                 ),
               ),
             ],
