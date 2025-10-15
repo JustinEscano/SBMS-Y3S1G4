@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import "./TopBar.css";
 import { useNavigate } from "react-router-dom";
 import ModalLogout from "./ModalLogout";
@@ -22,7 +22,7 @@ const TopBar: React.FC<TopBarProps> = ({
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const { token } = useAuth();
   const { user, loading, clearUser } = useUser(token);
-  const [profilePic, setProfilePic] = useState<string | File | undefined>(undefined);
+  const [profilePic, setProfilePic] = useState<string | File | undefined>();
 
   const menuRef = useRef<HTMLDivElement>(null);
   const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
@@ -45,28 +45,32 @@ const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
-  // ✅ Fetch user profile picture
+  // ✅ Fetch user profile picture once (if not already cached)
   useEffect(() => {
     const fetchProfilePic = async () => {
-      if (token) {
-        try {
-          const profileResponse = await userService.getProfile();
-          setProfilePic(profileResponse.profile?.profile_picture || undefined);
-        } catch (err) {
-          console.error("Failed to fetch profile picture:", err);
-          setProfilePic(undefined);
-        }
+      if (!token || profilePic) return; // already have it or not logged in
+
+      try {
+        const profileResponse = await userService.getProfile();
+        const pic = profileResponse.profile?.profile_picture || undefined;
+        setProfilePic(pic);
+        if (typeof pic === "string") localStorage.setItem("profilePic", pic);
+      } catch (err) {
+        console.error("Failed to fetch profile picture:", err);
       }
     };
+
     fetchProfilePic();
-  }, [token]);
+  }, [token, profilePic]);
 
   const handleConfirmLogout = () => {
     clearUser();
+    localStorage.removeItem("profilePic");
     setLogoutModalOpen(false);
     handleLogout();
   };
 
+  // ✅ Close dropdown on outside click or ESC
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -86,12 +90,13 @@ const TopBar: React.FC<TopBarProps> = ({
 
   const getInitial = (name: string) => name.charAt(0).toUpperCase();
 
-  const avatarContent = () => {
+  // ✅ Memoize avatar to prevent re-render flicker
+  const avatarContent = useMemo(() => {
     if (loading) return <div className="avatar-circle">?</div>;
     const src = getAvatarSrc(profilePic || user?.profile_picture);
     if (src) return <img src={src} alt="Profile" className="avatar-circle" />;
     return <div className="avatar-circle">{getInitial(user?.username ?? "G")}</div>;
-  };
+  }, [loading, profilePic, user?.username, user?.profile_picture]);
 
   return (
     <header className={`topbar ${collapsed ? "collapsed" : ""}`}>
@@ -105,7 +110,7 @@ const TopBar: React.FC<TopBarProps> = ({
             className="profile-button"
             onClick={() => setDropdownOpen((prev) => !prev)}
           >
-            {avatarContent()}
+            {avatarContent}
             <span className="topbar-user">
               {loading ? "Loading..." : user?.username ?? "Guest"} ▾
             </span>
@@ -114,7 +119,7 @@ const TopBar: React.FC<TopBarProps> = ({
           {dropdownOpen && (
             <div className="dropdown-menu">
               <div className="dropdown-header">
-                {avatarContent()}
+                {avatarContent}
                 <div>
                   <h4>{user?.username ?? "Guest"}</h4>
                   <small>{user?.email ?? "No email"}</small>

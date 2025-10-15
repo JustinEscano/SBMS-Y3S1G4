@@ -16,6 +16,7 @@ import HelpSupportPage from "../features/pages/SupportPage";
 import { PAGE_TYPES } from "../features/constants/constant";
 import ProfilePage from "../features/pages/ProfilePage";
 import PasswordResetScreen from "../features/pages/PasswordResetPage";
+import UsersPage from "../features/pages/UserPage";
 
 // ✅ Reusable wrapper for route protection
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -83,6 +84,7 @@ const AppRoutes = () => {
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/policy" element={<ProtectedRoute><PolicyPage /></ProtectedRoute>} />
       <Route path="/help-support" element={<ProtectedRoute><HelpSupportPage /></ProtectedRoute>} />
+      <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
       <Route path="/forgot" element={<PasswordResetScreen />} />
     </Routes>
   );

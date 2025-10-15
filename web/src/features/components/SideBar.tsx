@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./SideBar.css";
 import {
-  Home, Bell, BarChart2, LogOut, ChevronLeft, ChevronRight, Info, Bot,
+  Home, Bell, BarChart2, LogOut, ChevronLeft, ChevronRight, Info, Bot, Users,
 } from "lucide-react";
 import OrbitLogo from "../../assets/ORBIT.png";
 import CompanyNameLogo from "../../assets/Logo-Name.png";
@@ -39,6 +39,7 @@ const sections: Section[] = [
   { id: "Usage", label: "Usage", icon: <BarChart2 size={18} />, path: "/usage" },
   { id: "Notification", label: "Notification", icon: <Bell size={18} />, path: "/notifications" },
   { id: "LLM", label: "LLM Chat", icon: <Bot size={18} />, path: "/llm" },
+  { id: "Users", label: "Users", icon: <Users size={18} />, path: "/users" },
   { id: "About", label: "About Us", icon: <Info size={18} />, path: "/about" },
 ];
 
@@ -50,9 +51,7 @@ const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle, handleLogout }) 
   const userId = localStorage.getItem("user_id");
   const { notifications } = useNotifications(userId || undefined);
 
-  const unreadCount = Array.isArray(notifications)
-  ? notifications.filter(n => !n.read).length
-  : 0;
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleConfirmLogout = () => {
     setLogoutModalOpen(false);

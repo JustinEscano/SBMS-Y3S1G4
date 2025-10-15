@@ -1,7 +1,9 @@
-// PasswordResetPage.tsx - Fixed TypeScript errors: Cast verifyOTP response to OTPResponse and use it to suppress unused warning
-import React, { useState, useEffect } from 'react';
+// PasswordResetPage.tsx - Fixed TypeScript errors: Use verifyOTPUnauthenticated for unauth flow, cast response to OTPResponse
+// + Anti-spam: Submit lock, email validation, clear messages on step change
+// + Full Reset on Change Email: Clears ALL fields and messages for fresh start
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { requestOTPPasswordReset, verifyOTP, verifyOTPPasswordReset } from '../services/authService.tsx'; // Add verifyOTP import
+import { requestOTPPasswordReset, verifyOTPUnauthenticated, verifyOTPPasswordReset } from '../services/authService.tsx';
 import { Link } from 'react-router-dom';
 import '../pages/LoginScreen.css'; // Reuse the same CSS
 
@@ -28,6 +30,7 @@ function PasswordResetScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // NEW: Lock to prevent spam submits
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [stars, setStars] = useState<Star[]>([]);
@@ -57,8 +60,29 @@ function PasswordResetScreen() {
     }
   }, [location.search]);
 
+  // NEW: Simple email validation helper
+  const isValidEmail = useCallback((emailStr: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr.trim());
+  }, []);
+
+  // ENHANCED: Full reset when switching to email step (clears EVERYTHING for fresh start)
+  const goToEmailStep = useCallback(() => {
+    setEmail(''); // Clear email too
+    setOtp('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setError('');
+    setSuccess('');
+    setStep('enterEmail');
+  }, []);
+
   const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || !isValidEmail(email)) {
+      setError('Please enter a valid email.');
+      return;
+    }
+    setIsSubmitting(true);
     setLoading(true);
     setError('');
 
@@ -70,59 +94,54 @@ function PasswordResetScreen() {
       setError(err.response?.data?.detail || 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
+      setIsSubmitting(false); // Unlock submit
     }
   };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || otp.length !== 6) {
+      setError('OTP must be 6 digits.');
+      return;
+    }
+    setIsSubmitting(true);
     setLoading(true);
     setError('');
 
-    if (otp.length !== 6) {
-      setError('OTP must be 6 digits.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Cast the response to the expected type (assuming the function returns Promise<unknown>)
-      const response = await verifyOTP(email, otp) as OTPResponse;
+      // Use unauth version (sends email + otp)
+      const response = await verifyOTPUnauthenticated(email, otp) as OTPResponse;
       setSuccess(response.detail);  // Use the response detail for success message
       setStep('enterNewPassword');
     } catch (err: any) {
       setError(err.response?.data?.otp?.[0] || err.response?.data?.detail || 'Invalid OTP. Please try again.');
     } finally {
       setLoading(false);
+      setIsSubmitting(false); // Unlock submit
     }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || newPassword.length < 6 || newPassword !== confirmNewPassword) {
+      setError(newPassword.length < 6 ? 'New password must be at least 6 characters.' : 'Passwords do not match.');
+      return;
+    }
+    setIsSubmitting(true);
     setLoading(true);
     setError('');
-
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters.');
-      setLoading(false);
-      return;
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      setError('Passwords do not match.');
-      setLoading(false);
-      return;
-    }
 
     try {
       // Now reset with verified OTP and new password
       const response = await verifyOTPPasswordReset(email, otp, newPassword) as ResetResponse;
       setSuccess('Password reset successfully! You can now log in.');
       setOtp('');
-      setTimeout(() => navigate('/login'), 2000)
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
+      setIsSubmitting(false); // Unlock submit
     }
   };
 
@@ -142,7 +161,11 @@ function PasswordResetScreen() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <button type="submit" className="login-button" disabled={loading}>
+            <button 
+              type="submit" 
+              className="login-button" 
+              disabled={loading || isSubmitting || !isValidEmail(email)} // Disable if invalid
+            >
               {loading ? 'Sending...' : 'Send Reset Code'}
             </button>
           </>
@@ -165,12 +188,16 @@ function PasswordResetScreen() {
             <button
               type="button"
               className="login-button secondary"
-              onClick={() => setStep('enterEmail')}
-              disabled={loading}
+              onClick={goToEmailStep} // Use helper for full reset
+              disabled={loading || isSubmitting}
             >
               Change Email
             </button>
-            <button type="submit" className="login-button" disabled={loading || otp.length !== 6}>
+            <button 
+              type="submit" 
+              className="login-button" 
+              disabled={loading || isSubmitting || otp.length !== 6}
+            >
               {loading ? 'Verifying...' : 'Continue'}
             </button>
           </>
@@ -202,11 +229,15 @@ function PasswordResetScreen() {
               type="button"
               className="login-button secondary"
               onClick={() => setStep('enterOTP')}
-              disabled={loading}
+              disabled={loading || isSubmitting}
             >
               Back
             </button>
-            <button type="submit" className="login-button" disabled={loading}>
+            <button 
+              type="submit" 
+              className="login-button" 
+              disabled={loading || isSubmitting || newPassword.length < 6 || newPassword !== confirmNewPassword}
+            >
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>
           </>

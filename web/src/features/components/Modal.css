@@ -211,8 +211,8 @@
 
 .modal-actions button[type="button"] {
   background: rgba(255, 255, 255, 0.1);
-  color: var(--off-white);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--black);
+  border: 1px solid #000000;
 }
 
 .modal-actions button[type="button"]:hover {
