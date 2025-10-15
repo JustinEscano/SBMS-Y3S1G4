@@ -1,26 +1,21 @@
-// Raw sensor log data (from ESP32 or SensorLog model)
+// src/types/sensorLogTypes.ts
 export interface SensorData {
-  equipment_id: string;
+  id?: string;
+  device_id?: string;
+  equipment_id?: string;
   equipment_name?: string;
-  device_id: string;
-  status: string;
-  recorded_at: string | null;
-
-  // Equipment type for filtering (esp32, sensor, actuator, etc.)
-  type?: string;
-
-  // HVAC
-  temperature?: number;
-  humidity?: number;
-
-  // Lighting
-  light_level?: boolean;
-  energy_usage?: number;
-
-  // Security
-  motion_detect?: boolean;
-  camera_status?: string;
   component_name?: string;
+  component_type?: string;  // ✅ Add this
+  status?: string;
+  energy_usage?: number;
+  power?: number;
+  temperature?: number | null;
+  humidity?: number | null;
+  light_level?: boolean | null;
+  motion_detect?: boolean | null;
+  recorded_at?: string;
+  // Add other fields from your backend response
+  [key: string]: any; // For backend fields not explicitly typed
 }
 
 export interface ESP32Response {
