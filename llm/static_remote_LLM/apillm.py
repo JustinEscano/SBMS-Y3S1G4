@@ -1054,15 +1054,13 @@ def detect_anomalies():
         
         logger.info(f"Anomaly detection request from {username}")
         
-        # Initialize analyzer
-        analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="anomaly_detection",
-            document_template="anomaly_report"
-        )
+        # Get alerts from database using DatabaseAdapter (no date restriction)
+        from database_adapter import DatabaseAdapter
+        db_adapter = DatabaseAdapter()
+        alerts_df = db_adapter.get_alerts_with_equipment_info(days_back=365)  # Get all alerts (1 year)
         
-        # Fetch alerts from database
-        alerts_df = analyzer.db_adapter.get_alerts_with_equipment_info(days_back=7)
+        logger.info(f"Alerts DataFrame: {alerts_df.shape if alerts_df is not None else 'None'}")
+        logger.info(f"Alerts columns: {alerts_df.columns.tolist() if alerts_df is not None and not alerts_df.empty else 'Empty'}")
         
         if alerts_df is None or alerts_df.empty:
             return jsonify({
@@ -1142,119 +1140,24 @@ Monitor alert trends and address root causes proactively."""
                         "message": row.get('message'),
                         "severity": row.get('severity_level'),
                         "timestamp": row['created_at'].isoformat() if pd.notna(row.get('created_at')) else None,
-                        "is_resolved": bool(row.get('is_resolved'))
+                        "is_resolved": bool(row.get('is_resolved')),
+                        "equipment": row.get('equipment_name')
                     })
-
-                    # Convert alert into anomaly-like entry to contribute to totals
-                    sev_raw = (row.get('severity_level') or '').lower()
-                    # Map DB severity to anomaly severity buckets used elsewhere
-                    sev_bucket = 'Critical' if sev_raw == 'high' else 'High' if sev_raw == 'medium' else 'Medium'
-                    a_type = row.get('alert_type') or 'Alert'
-                    location = ''
-                    if row.get('room_name'):
-                        location = row.get('room_name')
-                    if row.get('equipment_name'):
-                        location = f"{location} - {row.get('equipment_name')}" if location else row.get('equipment_name')
-                    alert_as_anomalies.append({
-                        "anomaly_type": f"Alert: {a_type}",
-                        "type": f"Alert: {a_type}",
-                        "severity": sev_bucket,
-                        "location": location or 'Unknown',
-                        "description": row.get('message') or 'Alert raised',
-                        "value": None,
-                        "confidence": 0.9,
-                        "detection_method": "alert",
-                        "timestamp": row.get('created_at').isoformat() if pd.notna(row.get('created_at')) else None
-                    })
-
-                # Actionable next steps based on unresolved/high alerts
-                unresolved = alerts_df[alerts_df['is_resolved'] == False] if 'is_resolved' in alerts_df.columns else alerts_df
-                for _, ar in unresolved.iterrows():
-                    a_type = (ar.get('alert_type') or '').lower()
-                    sev = (ar.get('severity_level') or '').lower()
-                    room_name = ar.get('room_name') or 'the room'
-                    equipment_name = ar.get('equipment_name') or 'equipment'
-                    if a_type == 'temperature_high':
-                        suggestions.append(f"Immediate: Inspect HVAC for {room_name}, verify cooling for {equipment_name}, and check airflow/thermostat.")
-                    elif a_type == 'temperature_low':
-                        suggestions.append(f"Immediate: Inspect heating controls for {room_name}, verify setpoint/sensors for {equipment_name}.")
-                    elif a_type == 'humidity_high':
-                        suggestions.append(f"Urgent: Dehumidify {room_name}, inspect for leaks and verify ventilation.")
-                    elif a_type == 'humidity_low':
-                        suggestions.append(f"Planned: Adjust humidification for {room_name}, verify sensor calibration.")
-                    elif a_type == 'energy_anomaly':
-                        suggestions.append(f"High priority: Audit schedules and standby loads in {room_name}; inspect {equipment_name} for inefficiency.")
-                    elif a_type == 'motion':
-                        if sev in ['high', 'medium']:
-                            suggestions.append(f"Review motion alert in {room_name}; verify occupancy schedule and sensor sensitivity.")
-
-                # De-duplicate suggestions while preserving order
-                seen = set()
-                deduped = []
-                for s in suggestions:
-                    if s not in seen:
-                        deduped.append(s)
-                        seen.add(s)
-                suggestions = deduped[:10]
         except Exception as e:
-            logger.warning(f"Failed to fetch or process alerts: {e}")
-            alerts_payload = []
-            suggestions = []
-            alert_as_anomalies = []
+            logger.warning(f"Failed to process alerts: {e}")
         
-        # Categorize by severity
-        # Merge alert-derived anomalies into overall list
-        if alert_as_anomalies:
-            all_anomalies.extend(alert_as_anomalies)
-
-        # Normalize access for both object-like and dict-like entries
-        def _get_sev(x):
-            return (getattr(x, 'severity', None) or (x.get('severity') if isinstance(x, dict) else None) or 'Medium')
-
-        critical_anomalies = [a for a in all_anomalies if _get_sev(a) == "Critical"]
-        high_anomalies = [a for a in all_anomalies if _get_sev(a) == "High"]
-        medium_anomalies = [a for a in all_anomalies if _get_sev(a) == "Medium"]
-        
+        # Build simple response with LLM analysis
         response = {
             "status": "success",
-            "detection_type": "comprehensive_anomaly_analysis",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "summary": {
-                "total_anomalies": len(all_anomalies),
-                "critical": len(critical_anomalies),
-                "high": len(high_anomalies),
-                "medium": len(medium_anomalies),
-                "sensitivity_used": sensitivity,
-                "data_points_analyzed": len(df)
+            "answer": llm_analysis,
+            "alert_summary": {
+                "total_alerts": total_alerts,
+                "unresolved": unresolved_count,
+                "by_severity": severity_counts,
+                "by_type": type_counts
             },
-            "anomalies": [
-                {
-                    "id": f"anom_{i}",
-                    "type": (getattr(a, 'anomaly_type', None) or (a.get('anomaly_type') if isinstance(a, dict) else None) or getattr(a, 'type', None) or (a.get('type') if isinstance(a, dict) else 'Unknown')),
-                    "severity": (getattr(a, 'severity', None) or (a.get('severity') if isinstance(a, dict) else 'Medium')),
-                    "location": (getattr(a, 'location', None) or (a.get('location') if isinstance(a, dict) else 'Unknown')),
-                    "description": (getattr(a, 'description', None) or (a.get('description') if isinstance(a, dict) else 'Anomaly detected')),
-                    "value": (getattr(a, 'value', None) if hasattr(a, 'value') else (a.get('value') if isinstance(a, dict) else None)),
-                    "confidence": (getattr(a, 'confidence', None) if hasattr(a, 'confidence') else (a.get('confidence') if isinstance(a, dict) else 0.5)),
-                    "detection_method": ("advanced" if i < len(anomalies) else (a.get('detection_method') if isinstance(a, dict) and a.get('detection_method') else "statistical")),
-                    "timestamp": (getattr(a, 'timestamp', None) if hasattr(a, 'timestamp') else (a.get('timestamp') if isinstance(a, dict) else None))
-                } for i, a in enumerate(all_anomalies)
-            ],
-            "alerts": alerts_payload,
-            "recommendations": [
-                "Investigate critical anomalies immediately",
-                "Review high-severity anomalies within 24 hours",
-                "Monitor medium-severity anomalies regularly"
-            ] if all_anomalies else [
-                "No significant anomalies detected",
-                "Continue regular monitoring",
-                "Maintain current operational procedures"
-            ],
-            "next_steps": suggestions if suggestions else [
-                "Review unresolved alerts and assign follow-up",
-                "Verify sensor calibration for recent temperature/humidity alerts",
-                "Audit equipment schedules for energy anomalies"
-            ]
+            "sample_alerts": alerts_list,
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         return jsonify(response)
@@ -2149,14 +2052,14 @@ def billing_rates():
             })
         
         # Prepare LLM context
-        llm_context = f"""You are a billing and cost optimization analyst. Analyze these electricity billing rates and provide recommendations.
+        llm_context = f"""Analyze electricity billing rates and provide cost optimization recommendations.
 
-BILLING RATES DATA:
+BILLING RATES SUMMARY:
 - Total rate configurations: {total_rates}
-- Average rate: {avg_rate:.4f} per kWh
-- Lowest rate: {min_rate:.4f} per kWh
-- Highest rate: {max_rate:.4f} per kWh
-- Currency: {billing_df['currency'].iloc[0] if len(billing_df) > 0 else 'PHP'}
+- Average rate: {avg_rate:.4f} PHP per kWh
+- Lowest rate: {min_rate:.4f} PHP per kWh
+- Highest rate: {max_rate:.4f} PHP per kWh
+- Currency: PHP
 
 RATE DETAILS:
 """
@@ -2201,7 +2104,7 @@ Schedule high-energy tasks during off-peak hours when rates are lowest."""
                 "average_rate": float(avg_rate),
                 "min_rate": float(min_rate),
                 "max_rate": float(max_rate),
-                "currency": billing_df['currency'].iloc[0] if len(billing_df) > 0 else 'PHP',
+                "currency": "PHP",  # Always use PHP
                 "rates": rates_list
             },
             "timestamp": datetime.now(timezone.utc).isoformat()

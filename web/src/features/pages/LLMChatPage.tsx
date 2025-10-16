@@ -194,7 +194,7 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Save chat to MongoDB
-  const saveChatToMongoDB = async (userMessage: string, assistantResponse: string, queryType: string, userRole: string, responseTimeMs?: number, hasError: boolean = false) => {
+  const saveChatToMongoDB = async (userMessage: string, assistantResponse: string, queryType: QueryType, userRole: string, responseTimeMs?: number, hasError: boolean = false) => {
     try {
       await fetch("http://localhost:5000/chat/history/save", {
         method: "POST",
@@ -808,73 +808,76 @@ const LLMChatPage: React.FC = () => {
         try {
           const response = await callAnomaliesDetect(userRole);
           
-          const summary = response.summary || {};
-          const anomalies: any[] = Array.isArray(response.anomalies) ? response.anomalies : [];
-          const alerts: any[] = Array.isArray(response.alerts) ? response.alerts : [];
-          const nextSteps: string[] = Array.isArray(response.next_steps) ? response.next_steps : [];
+          // Use the new simple format with LLM answer
+          const llmAnswer = response.answer || "No analysis available";
+          const alertSummary = response.alert_summary || {};
+          const sampleAlerts: any[] = Array.isArray(response.sample_alerts) ? response.sample_alerts : [];
 
           const lines: string[] = [];
-          lines.push("⚠️ Anomaly Detection:\n");
-          lines.push(
-            `Summary: total=${summary.total_anomalies ?? anomalies.length}, critical=${summary.critical ?? 0}, high=${summary.high ?? 0}, medium=${summary.medium ?? 0}`
-          );
+          lines.push("⚠️ **ANOMALY DETECTION**\n");
+          
+          // Show summary
+          lines.push("📊 Alert Summary:");
+          lines.push(`• Total Alerts: ${alertSummary.total_alerts || 0}`);
+          lines.push(`• Unresolved: ${alertSummary.unresolved || 0}`);
+          if (alertSummary.by_severity) {
+            const sevCounts = alertSummary.by_severity;
+            lines.push(`• Severity: High: ${sevCounts.high || 0}, Medium: ${sevCounts.medium || 0}, Low: ${sevCounts.low || 0}`);
+          }
+          if (alertSummary.by_type) {
+            lines.push(`• Alert Types: ${Object.keys(alertSummary.by_type).length} different types\n`);
+          }
 
-          if (anomalies.length > 0) {
-            lines.push("\nTop Anomalies:");
-            anomalies.slice(0, 5).forEach((a: any, idx: number) => {
-              const type = a.type || "Unknown";
-              const sev = a.severity || "Medium";
-              const desc = a.description || "Anomaly detected";
-              const timestamp = a.timestamp ? new Date(a.timestamp).toLocaleString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-                timeZone: 'America/Los_Angeles'
-              }) : "N/A";
-              lines.push(`- ${idx + 1}. [${sev}] ${type} — ${desc} (at ${timestamp})`);
+          // Show sample alerts with better formatting
+          if (sampleAlerts.length > 0) {
+            lines.push("\n📋 Recent Alerts:\n");
+            sampleAlerts.forEach((alert: any, idx: number) => {
+              const type = alert.type || "unknown";
+              const msg = alert.message || "Alert raised";
+              const sev = alert.severity || "medium";
+              const resolved = alert.is_resolved ? "✅ Resolved" : "🔴 Active";
+              const equipment = alert.equipment || "Unknown";
+              
+              // Format timestamp nicely
+              let timeStr = "Unknown time";
+              if (alert.timestamp) {
+                try {
+                  const date = new Date(alert.timestamp);
+                  timeStr = date.toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                  });
+                } catch {
+                  timeStr = String(alert.timestamp);
+                }
+              }
+              
+              lines.push(`**${idx + 1}. [${sev.toUpperCase()}] ${type}**`);
+              lines.push(`   📝 ${msg}`);
+              lines.push(`   🔧 Equipment: ${equipment}`);
+              lines.push(`   📅 ${timeStr}`);
+              lines.push(`   ${resolved}\n`);
             });
-          } else {
-            lines.push("\nNo model-detected anomalies in this window.");
           }
 
-          if (alerts.length > 0) {
-            lines.push("\nRecent Alerts (from core_alert):");
-            alerts.slice(0, 5).forEach((al: any, idx: number) => {
-              const sev = al.severity || "";
-              const t = al.type || "alert";
-              const msg = al.message || "";
-              const resolved = al.is_resolved ? "resolved" : "unresolved";
-              const timestamp = al.timestamp ? new Date(al.timestamp).toLocaleString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-                timeZone: 'America/Los_Angeles'
-              }) : "N/A";
-              lines.push(`- ${idx + 1}. [${sev}] ${t}: ${msg} (${resolved}) (at ${timestamp})`);
-            });
-          }
+          // Add LLM analysis
+          lines.push("\n\n🤖 **AI ANALYSIS**\n");
+          lines.push(llmAnswer);
 
-          if (nextSteps.length > 0) {
-            lines.push("\nNext Steps:");
-            nextSteps.forEach((s: string) => lines.push(`- ${s}`));
-          }
-
-          const answer = lines.join("\n");
+          const formattedContent = lines.join("\n");
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === loadingMessage.id
-                ? { ...msg, content: answer, isLoading: false }
+                ? { ...msg, content: formattedContent, isLoading: false }
                 : msg
             )
           );
+          
+          // Save to MongoDB
+          await saveChatToMongoDB("Show me anomalies", formattedContent, "anomalies", userRole);
         } catch (error: any) {
           setMessages((prev) =>
             prev.map((msg) =>
@@ -996,11 +999,12 @@ const LLMChatPage: React.FC = () => {
       "daily energy report",
       "weekly energy report",
       "monthly energy report",
+      "yearly energy report",
       "check for maintenance",
       "show billing rates",
-      "yearly energy report",
       "show me alerts",
-      "kpi performance"
+      "show anomalies",
+      "kpi performance",
     ];
   };
 
