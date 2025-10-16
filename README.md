@@ -545,9 +545,9 @@ git clone https://github.com/yourusername/SBMS-Y3S1G4.git
 cd SBMS-Y3S1G4/llm/static_remote_LLM
 
 # Create virtual environment
-python -m venv myenv or
-python3.11 -m venv myenv
-source myenv/bin/activate  # On Windows: myenv\Scripts\activate
+py -3.11 -m venv myenv
+On Linux: source myenv/bin/activate 
+On Windows: myenv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
