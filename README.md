@@ -532,7 +532,7 @@ python apillm.py
 
 ### Prerequisites
 ```bash
-# Python 3.11+
+# Python 3.11
 # PostgreSQL database with building management data
 # MongoDB Atlas account
 # Ollama with incept5/llama3.1-claude:latest model
@@ -545,7 +545,8 @@ git clone https://github.com/yourusername/SBMS-Y3S1G4.git
 cd SBMS-Y3S1G4/llm/static_remote_LLM
 
 # Create virtual environment
-python -m venv myenv
+python -m venv myenv or
+python3.11 -m venv myenv
 source myenv/bin/activate  # On Windows: myenv\Scripts\activate
 
 # Install dependencies
