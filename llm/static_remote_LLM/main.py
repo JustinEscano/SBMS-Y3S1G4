@@ -167,149 +167,8 @@ class LoggingManager:
         # Implementation for backup recovery
         pass
 
-class PromptsConfig:
-    """Configuration manager for prompts and templates"""
-    
-    def __init__(self, config_file=None):
-        self.config_file = config_file
-        self.default_prompts = {
-            "system_prompts": {
-                "base_enhancement": """You are an intelligent room management assistant. Analyze the provided room sensor data and maintenance information to answer questions accurately. Focus on:
-
-1. Room occupancy and usage patterns
-2. Energy and power consumption analysis  
-3. Environmental conditions (temperature, humidity)
-4. Maintenance requests and equipment status
-5. Efficiency recommendations
-
-Always base your answers on the actual data provided. If specific numbers aren't available, provide general insights. Be concise and helpful.
-
-User Question: {query}""",
-
-                "analytical": """You are a data analyst specializing in building management systems. Provide detailed analysis of:
-
-- Energy consumption trends and patterns
-- Room utilization efficiency  
-- Equipment performance metrics
-- Maintenance optimization opportunities
-- Cost-saving recommendations
-
-Support your analysis with specific data points when available. Provide actionable insights.
-
-User Question: {query}""",
-
-                "technical": """You are a technical building operations specialist. Focus on:
-
-- Equipment performance and efficiency
-- Power consumption breakdowns
-- Environmental control systems
-- Maintenance scheduling and prioritization
-- Technical specifications and recommendations
-
-Use technical terminology appropriately and provide precise information.
-
-User Question: {query}"""
-            },
-            
-            "document_templates": {
-                "standard": """Room: {room_name}
-Timestamp: {timestamp}
-Occupancy: {occupancy_status} ({occupancy_count} people)
-Energy: {energy_consumption_kwh} kWh
-Power Breakdown:
-- Lighting: {lighting_power}W
-- HVAC Fan: {hvac_power}W  
-- AC Compressor: {ac_compressor_power}W
-- Projector: {projector_power}W
-- Computer: {computer_power}W
-- Standby: {standby_power}W
-- Total: {total_power}W
-Equipment Usage:
-- Lights: {lights_hours}h
-- AC: {ac_hours}h
-- Projector: {projector_hours}h
-- Computer: {computer_hours}h
-Environment: {temperature}°C, {humidity}% humidity""",
-
-                "analytical": """DATA POINT: Room {room_name} at {timestamp}
-OCCUPANCY: {occupancy_count} people ({occupancy_status})
-ENERGY: {energy_consumption_kwh} kWh consumed
-POWER: {total_power}W total ({lighting_power}W lighting, {hvac_power}W HVAC, {ac_compressor_power}W AC)
-USAGE: Lights {lights_hours}h, AC {ac_hours}h, Projector {projector_hours}h
-ENVIRONMENT: {temperature}°C, {humidity}% humidity""",
-
-                "maintenance": """MAINTENANCE REQUEST: {issue_description}
-STATUS: {status}
-SCHEDULED: {requested_date}
-RESOLVED: {resolved_date}
-EQUIPMENT: {equipment_id}
-REQUESTED BY: {requested_by}
-ASSIGNED TO: {assigned_to}
-NOTES: {notes}"""
-            },
-            
-            # ADD THIS SECTION for maintenance rules
-            "maintenance_rules": {
-                "sensor_malfunction": {
-                    "urgency": "high",
-                    "timeline": "48 hours",
-                    "action": "Replace or calibrate sensor",
-                    "impact": "Data accuracy compromised"
-                },
-                "temperature_sensor_error": {
-                    "urgency": "medium", 
-                    "timeline": "1 week",
-                    "action": "Calibrate or replace temperature sensor",
-                    "impact": "Environmental control affected"
-                },
-                "motion_detector_fault": {
-                    "urgency": "medium",
-                    "timeline": "1 week", 
-                    "action": "Repair or replace motion detector",
-                    "impact": "Occupancy tracking inaccurate"
-                },
-                "high_energy_usage": {
-                    "urgency": "medium",
-                    "timeline": "2 weeks",
-                    "action": "Investigate energy consumption patterns",
-                    "impact": "Increased operational costs"
-                },
-                "humidity_calibration_needed": {
-                    "urgency": "low",
-                    "timeline": "1 month",
-                    "action": "Schedule calibration",
-                    "impact": "Minor environmental data inaccuracy"
-                },
-                "power_supply_issue": {
-                    "urgency": "high",
-                    "timeline": "24 hours",
-                    "action": "Immediate inspection required",
-                    "impact": "Potential system failure"
-                }
-            }
-        }
-        
-        self.prompts = self.default_prompts
-        if config_file and os.path.exists(config_file):
-            try:
-                with open(config_file, 'r') as f:
-                    custom_prompts = json.load(f)
-                    self.prompts.update(custom_prompts)
-            except Exception as e:
-                logging.error(f"Error loading custom prompts: {e}")
-    
-    def get_system_prompt(self, prompt_type="base_enhancement"):
-        """Get system prompt by type"""
-        return self.prompts["system_prompts"].get(prompt_type, self.prompts["system_prompts"]["base_enhancement"])
-    
-    def get_document_template(self, template_type="standard"):
-        """Get document template by type"""
-        return self.prompts["document_templates"].get(template_type, self.prompts["document_templates"]["standard"])
-    
-    # ADD THIS METHOD to fix the error
-    def get_all_prompts(self):
-        """Get all prompts configuration - required by advanced_llm_handlers"""
-        return self.prompts
+# Import PromptsConfig from existing file instead of duplicating it
+from prompts_config import PromptsConfig
 
 class AdvancedLLMHandlers:
     """Advanced query handlers for complex analytical queries"""
@@ -906,51 +765,42 @@ Insufficient data points for trend analysis.
             confidence = "high" if len(data) > 10 else "medium" if len(data) > 5 else "low"
             
             return {"slope": slope, "confidence": confidence}
-            
         except Exception as e:
             self.logger.error(f"Error calculating trend: {e}")
             return {"slope": 0, "confidence": "low"}
 
-# ADD THIS IMPORT - Import the comprehensive RoomSpecificHandlers
-try:
-    from room_specific_handlers import RoomSpecificHandlers
-    print("Successfully imported comprehensive RoomSpecificHandlers from room_specific_handlers.py")
-except ImportError as e:
-    print(f"Failed to import RoomSpecificHandlers from room_specific_handlers.py: {e}")
-    print("Falling back to basic RoomSpecificHandlers")
+# RoomSpecificHandlers - Using basic fallback version (room_specific_handlers.py was removed during cleanup)
+class RoomSpecificHandlers:
+    """Basic fallback handlers for room-specific queries"""
     
-    # Fallback to the basic version (keep your existing basic class as backup)
-    class RoomSpecificHandlers:
-        """Basic fallback handlers for room-specific queries"""
-        
-        def __init__(self, prompts_config, db_adapter):
-            self.prompts = prompts_config
-            self.db_adapter = db_adapter
-            self.logger = logging.getLogger(__name__)
-        
-        def handle_room_specific_query(self, query):
-            """Handle queries about specific rooms"""
-            try:
-                # Extract room name from query
-                room_pattern = r'(?:room|Room)\s+([A-Za-z0-9\s]+)'
-                match = re.search(room_pattern, query)
-                
-                if not match:
-                    return {"error": "No room specified in query"}
-                
-                room_name = match.group(1).strip()
-                self.logger.info(f"Processing query for room: {room_name}")
-                
-                # This would typically query the database for specific room data
-                # For now, return a generic response
-                return {
-                    "answer": f"Room {room_name} data would be retrieved and analyzed here. Specific room queries are supported.",
-                    "sources": []
-                }
-                
-            except Exception as e:
-                self.logger.error(f"Error in room-specific handler: {e}")
-                return {"error": f"Room-specific query failed: {str(e)}"}
+    def __init__(self, prompts_config, db_adapter):
+        self.prompts = prompts_config
+        self.db_adapter = db_adapter
+        self.logger = logging.getLogger(__name__)
+    
+    def handle_room_specific_query(self, query):
+        """Handle queries about specific rooms"""
+        try:
+            # Extract room name from query
+            room_pattern = r'(?:room|Room)\s+([A-Za-z0-9\s]+)'
+            match = re.search(room_pattern, query)
+            
+            if not match:
+                return {"error": "No room specified in query"}
+            
+            room_name = match.group(1).strip()
+            self.logger.info(f"Processing query for room: {room_name}")
+            
+            # This would typically query the database for specific room data
+            # For now, return a generic response
+            return {
+                "answer": f"Room {room_name} data would be retrieved and analyzed here. Specific room queries are supported.",
+                "sources": []
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error in room-specific handler: {e}")
+            return {"error": f"Room-specific query failed: {str(e)}"}
 
 class RoomLogAnalyzer:
     """

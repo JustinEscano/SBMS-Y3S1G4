@@ -36,17 +36,14 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from main import RoomLogAnalyzer, ask
     from prompts_config import PromptsConfig
-    from advanced_llm_handlers import AdvancedLLMHandlers
 except ImportError as e:
-    print(f"DEBUG: Import error: {e}")
+    print(f"⚠️ Import warning: {e}")
     # Create fallback classes if imports fail
     class RoomLogAnalyzer:
         def __init__(self, *args, **kwargs):
             pass
         def load_and_process_data(self):
             return pd.DataFrame()
-    class AdvancedLLMHandlers:
-        pass
 
 # Setup logging with UTF-8 encoding
 log_file = 'apillm_enhanced.log'
@@ -395,15 +392,47 @@ def energy_report():
         
         logger.info(f"Energy report request ({period}) from {username}")
         
-        # Initialize analyzer
+        # Initialize analyzer first
         analyzer = RoomLogAnalyzer(
             use_database=True,
             prompt_type="energy_insights",
             document_template="energy_report"
         )
         
-        # Fetch energy summary data from database
-        energy_df = analyzer.db_adapter.get_energy_summary_data(period_type=period, limit=30)
+        # Get recent data of this period type
+        # Limit based on period to get appropriate amount of recent data
+        limit_map = {
+            'daily': 7,      # Last 7 days
+            'weekly': 4,     # Last 4 weeks
+            'monthly': 3,    # Last 3 months
+            'yearly': 2      # Last 2 years
+        }
+        data_limit = limit_map.get(period, 10)
+        
+        all_data = analyzer.db_adapter.get_energy_summary_data(
+            period_type=period,
+            limit=data_limit
+        )
+        
+        if all_data is None or all_data.empty:
+            return jsonify({
+                "status": "success",
+                "answer": f"No {period} energy data available yet. Start collecting data to see insights.",
+                "period": period,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Sort by date to ensure we have the most recent data
+        all_data = all_data.sort_values('period_start', ascending=False)
+        
+        # Get actual date range from available data
+        actual_start = all_data['period_start'].min()
+        actual_end = all_data['period_end'].max()
+        
+        logger.info(f"Found {len(all_data)} {period} records from {actual_start.date()} to {actual_end.date()}")
+        
+        # Use the actual data we already fetched
+        energy_df = all_data
         
         if energy_df is None or energy_df.empty:
             return jsonify({
@@ -439,34 +468,62 @@ def energy_report():
         
         top_rooms = sorted(room_totals.items(), key=lambda x: x[1], reverse=True)[:3]
         
-        # Prepare LLM context
-        llm_context = f"""You are an energy analyst. Analyze this {period} energy data and provide recommendations.
+        # Format dates for better readability
+        start_date_str = period_start.strftime('%B %d, %Y') if period_start and pd.notna(period_start) else 'Unknown'
+        end_date_str = period_end.strftime('%B %d, %Y') if period_end and pd.notna(period_end) else 'Unknown'
+        peak_time_str = peak_time.strftime('%B %d, %Y at %I:%M %p') if peak_time and pd.notna(peak_time) else 'Unknown'
+        current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        
+        # Calculate additional insights
+        energy_variance = energy_df['total_energy'].std() if len(energy_df) > 1 else 0
+        efficiency_score = (min_energy / avg_energy * 100) if avg_energy > 0 else 0
+        
+        # Prepare enhanced LLM context with timestamps and deeper analysis
+        llm_context = f"""You are an expert energy analyst with deep knowledge of building efficiency and sustainability. Analyze this {period} energy data and provide actionable, data-driven recommendations.
 
-ENERGY DATA:
-- Period: {period}
+📅 REPORTING PERIOD: {start_date_str} to {end_date_str}
+📊 Report Generated: {current_time}
+
+COMPREHENSIVE ENERGY DATA:
+- Period: {period.upper()}
 - Total consumption: {total_energy:.2f} kWh
 - Average: {avg_energy:.2f} kWh per period
-- Peak: {max_energy:.2f} kWh
+- Peak: {max_energy:.2f} kWh (occurred on {peak_time_str})
 - Lowest: {min_energy:.2f} kWh
-- Data points: {len(energy_df)}
+- Variance: {energy_variance:.2f} kWh (consistency indicator)
+- Efficiency Score: {efficiency_score:.1f}% (lower is better)
+- Data points analyzed: {len(energy_df)}
 
-TOP CONSUMING ROOMS:
+TOP CONSUMING ROOMS (with percentage breakdown):
 """
         for i, (room, energy) in enumerate(top_rooms, 1):
-            llm_context += f"{i}. {room}: {energy:.2f} kWh\n"
+            percentage = (energy / total_energy * 100) if total_energy > 0 else 0
+            llm_context += f"{i}. {room}: {energy:.2f} kWh ({percentage:.1f}% of total)\n"
         
-        llm_context += f"""\n\nProvide 3 recommendations using this format:
+        llm_context += f"""\n\nProvide 3 DETAILED, ACTIONABLE recommendations using this format:
 
-**1. CONSUMPTION ANALYSIS:**
-What patterns do you see in the {period} energy usage?
+**1. CONSUMPTION PATTERN ANALYSIS ({period.upper()} - {start_date_str} to {end_date_str}):**
+Analyze the energy consumption patterns during this period. Consider:
+- Peak vs. average consumption (is the {max_energy:.2f} kWh peak concerning?)
+- Room distribution (why is {top_rooms[0][0]} using {(top_rooms[0][1]/total_energy*100):.1f}%?)
+- Variance patterns (is {energy_variance:.2f} kWh variance normal?)
+- Time-based trends (what happened on {peak_time_str}?)
 
-**2. COST OPTIMIZATION:**
-How can we reduce energy costs based on this data?
+**2. COST OPTIMIZATION STRATEGIES:**
+Provide specific, implementable cost-saving strategies:
+- Target the high-consumption rooms (especially {top_rooms[0][0]})
+- Suggest equipment upgrades or behavioral changes
+- Estimate potential savings (e.g., "reducing peak by 20% could save X kWh")
+- Consider efficiency improvements
 
-**3. ACTION ITEMS:**
-What specific actions should we take this {period}?
+**3. IMMEDIATE ACTION ITEMS FOR NEXT {period.upper()}:**
+List 3-4 concrete actions with expected impact:
+- Specific rooms to monitor or optimize
+- Equipment to inspect or upgrade
+- Behavioral changes to implement
+- Measurable goals (e.g., "reduce {top_rooms[0][0]} consumption by 15%")
 
-Be concise (2-3 sentences each)."""        
+Be specific, use the actual data provided, and make recommendations actionable with clear expected outcomes. Each section should be 3-4 sentences with concrete numbers and examples."""        
         # Call LLM directly
         try:
             from langchain_ollama import OllamaLLM
@@ -488,6 +545,11 @@ Monitor peak usage times and implement energy-saving measures in high-consumptio
             "status": "success",
             "answer": llm_analysis,
             "period": period,
+            "date_range": {
+                "start": actual_start.isoformat(),
+                "end": actual_end.isoformat(),
+                "description": f"{start_date_str} to {end_date_str}"
+            },
             "energy_data": {
                 "total_kwh": float(total_energy),
                 "average_kwh": float(avg_energy),
@@ -497,7 +559,9 @@ Monitor peak usage times and implement energy-saving measures in high-consumptio
                 "lowest_time": lowest_time.isoformat() if lowest_time and pd.notna(lowest_time) else None,
                 "period_start": period_start.isoformat() if period_start and pd.notna(period_start) else None,
                 "period_end": period_end.isoformat() if period_end and pd.notna(period_end) else None,
-                "data_points": len(energy_df)
+                "data_points": len(energy_df),
+                "variance": float(energy_variance),
+                "efficiency_score": float(efficiency_score)
             },
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
@@ -512,17 +576,13 @@ Monitor peak usage times and implement energy-saving measures in high-consumptio
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
-@app.route('/ask', methods=['POST', 'OPTIONS'])
+# Removed: /ask and /insights/energy endpoints (replaced by specific endpoints)
+
 @app.route('/llmquery', methods=['POST', 'OPTIONS'])
 def llm_query():
-    """
-    Enhanced main LLM query endpoint with better error handling and analytics
-    Accessible via /ask or /llmquery
-    """
+    """Enhanced general LLM chat with conversation history and smart routing"""
     if request.method == 'OPTIONS':
         return jsonify({}), 200
-    
-    start_time = datetime.now(timezone.utc)
     
     try:
         data = request.get_json() or {}
@@ -538,194 +598,210 @@ def llm_query():
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }), 400
         
-        logger.info(f"Query from {username}: {query[:100]}...")
+        logger.info(f"💬 Chat query from {username}: {query[:100]}...")
         
-        # Use enhanced ask function with timeout
-        result = ask(
-            query=query,
-            user_id=user_id,
-            username=username,
-            session_id=session_id,
-            client_ip=request.remote_addr
-        )
-        
-        processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        
-        response = {
-            "status": "success",
-            "query": query,
-            "answer": result.get('answer', 'I apologize, but I could not generate a response for your query.'),
-            "sources": result.get('sources', []),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "metadata": {
-                "processing_time_seconds": round(processing_time, 2),
-                "sources_count": len(result.get('sources', [])),
-                "query_complexity": "high" if len(query.split()) > 15 else "medium" if len(query.split()) > 5 else "low"
-            }
+        # Smart query routing - detect if user wants specific analysis
+        query_lower = query.lower()
+        route_keywords = {
+            'energy': ['energy', 'power', 'consumption', 'kwh', 'electricity', 'usage'],
+            'maintenance': ['maintenance', 'repair', 'broken', 'issue', 'problem', 'fix'],
+            'anomaly': ['anomaly', 'unusual', 'strange', 'abnormal', 'weird', 'unexpected'],
+            'billing': ['billing', 'cost', 'rate', 'price', 'expense', 'payment']
         }
         
-        # Add any additional result fields
-        for key in ['metrics', 'anomalies', 'maintenance_alerts', 'insights']:
-            if key in result:
-                response[key] = result[key]
+        detected_intent = None
+        for intent, keywords in route_keywords.items():
+            if any(keyword in query_lower for keyword in keywords):
+                detected_intent = intent
+                break
         
-        logger.info(f"Query processed in {processing_time:.2f}s")
-        return jsonify(response)
+        # Get conversation history from MongoDB (last 5 messages)
+        conversation_history = []
+        try:
+            if mongo_chat_collection is not None:
+                history_docs = mongo_chat_collection.find(
+                    {'session_id': session_id}
+                ).sort('timestamp', -1).limit(5)
+                
+                conversation_history = list(reversed([
+                    f"{doc.get('role', 'user')}: {doc.get('content', '')}"
+                    for doc in history_docs
+                ]))
+        except Exception as e:
+            logger.warning(f"Could not fetch conversation history: {e}")
+        
+        # Build context from history
+        history_context = "\n".join(conversation_history) if conversation_history else "No previous conversation"
+        
+        # Get building status for context
+        building_context = ""
+        try:
+            if analyzer and analyzer.df is not None and not analyzer.df.empty:
+                df = analyzer.df
+                total_rooms = df['room_name'].nunique() if 'room_name' in df.columns else 0
+                avg_energy = df['energy_consumption_kwh'].mean() if 'energy_consumption_kwh' in df.columns else 0
+                building_context = f"""
+Current Building Status:
+- Active Rooms: {total_rooms}
+- Average Energy: {avg_energy:.2f} kWh/day
+- Data Points: {len(df)}
+"""
+        except Exception as e:
+            logger.warning(f"Could not get building context: {e}")
+        
+        # Enhanced system prompt with conversation awareness and better general responses
+        current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        system_prompt = f"""You are an intelligent building management assistant with deep expertise in energy, maintenance, and facility operations. You have access to real-time building data and can provide specific, actionable insights.
+
+Current Time: {current_time}
+
+{building_context}
+
+Previous Conversation:
+{history_context}
+
+YOUR CORE CAPABILITIES:
+1. **Energy Analysis**: Analyze consumption patterns, identify inefficiencies, generate detailed reports (daily/weekly/monthly/yearly)
+2. **Maintenance Management**: Predict equipment failures, track maintenance requests (can show 1-50 requests), prioritize repairs
+3. **Room Utilization**: Monitor occupancy, optimize space allocation, track usage patterns across all rooms
+4. **Cost Optimization**: Analyze billing rates, suggest energy-saving measures, estimate cost reductions
+5. **Anomaly Detection**: Identify unusual patterns in energy, occupancy, or equipment behavior
+6. **Conversational Help**: Answer questions about building data, provide insights, offer recommendations
+
+RESPONSE GUIDELINES:
+1. **Be Specific**: Always use actual building data (room names, numbers, equipment) in your responses
+2. **Be Actionable**: Provide concrete next steps, not vague suggestions
+3. **Be Engaging**: Use a friendly, conversational tone - you're a helpful expert, not a robot
+4. **Be Contextual**: Reference previous conversation naturally
+5. **Be Comprehensive**: For "what can you do" questions, give 4-5 specific examples with real data
+6. **Be Concise**: Keep responses to 2-3 paragraphs, but make them information-dense
+7. **Be Proactive**: Always end with a helpful question or suggestion for next steps
+
+WHEN ASKED "WHAT CAN YOU DO" OR SIMILAR:
+Provide 4-5 SPECIFIC examples using ACTUAL building data:
+- Example 1: Energy analysis with specific room names and consumption numbers
+- Example 2: Maintenance tracking with actual request counts
+- Example 3: Cost optimization with potential savings estimates
+- Example 4: Anomaly detection with specific patterns
+- Example 5: Custom analysis offer
+
+Format like this:
+"Great question! I'm currently monitoring [X] rooms with [Y] kWh average consumption. Here's what I can help with:
+
+1. **Energy Insights**: I can analyze which rooms consume the most (like [Room Name] using [X]% of total) and suggest optimization strategies. I can generate daily, weekly, monthly, or yearly reports with detailed breakdowns.
+
+2. **Maintenance Tracking**: I'm monitoring [X] maintenance requests right now. I can show you 1, 5, 10, or all requests, prioritize them by urgency, and predict potential equipment failures before they happen.
+
+3. **Cost Analysis**: I can review your billing rates, identify peak usage times, and estimate potential savings. For example, reducing [Room Name]'s consumption by 20% could save approximately [X] kWh per month.
+
+4. **Smart Monitoring**: I can detect unusual patterns - like sudden spikes in energy usage or equipment anomalies - and alert you before they become problems.
+
+Would you like me to dive into any of these areas? I can also generate a comprehensive report or analyze specific rooms!"
+
+WHEN ASKED ABOUT ROOMS OR BUILDING FEATURES:
+- List specific rooms from the building context with actual numbers
+- Explain what data we track for each room (energy, occupancy, equipment, maintenance)
+- Offer to analyze specific rooms in detail
+- Provide actionable insights based on current data
+- Suggest optimizations or improvements
+
+IMPORTANT: Always use the building context data to make your responses specific and relevant. Never give generic responses - always include actual room names, numbers, and equipment from the context.
+
+User Query: {query}
+
+
+Assistant:"""
+        
+        # Direct LLM call (bypass vector store for speed)
+        try:
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            response = llm.invoke(system_prompt)
+            
+            # Add suggestion if specific intent detected
+            if detected_intent:
+                suggestions = {
+                    'energy': '\n\n💡 Tip: Use `/energy/report` for detailed energy analysis.',
+                    'maintenance': '\n\n💡 Tip: Use `/maintenance/predict` for AI-powered maintenance predictions.',
+                    'anomaly': '\n\n💡 Tip: Use `/anomalies/detect` for comprehensive anomaly detection.',
+                    'billing': '\n\n💡 Tip: Use `/billing/rates` for detailed billing analysis.'
+                }
+                response += suggestions.get(detected_intent, '')
+            
+            # Save to conversation history
+            try:
+                if mongo_chat_collection is not None:
+                    mongo_chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'user',
+                        'content': query,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+                    mongo_chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'assistant',
+                        'content': response,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+            except Exception as e:
+                logger.warning(f"Could not save to conversation history: {e}")
+            
+            return jsonify({
+                "status": "success",
+                "query": query,
+                "answer": response,
+                "detected_intent": detected_intent,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            
+        except Exception as llm_error:
+            logger.error(f"LLM invocation failed: {llm_error}")
+            # Fallback to basic response
+            return jsonify({
+                "status": "success",
+                "query": query,
+                "answer": f"I'm here to help with building management. You asked: '{query}'. How can I assist you further?",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
         
     except Exception as e:
-        logger.error(f"Error processing query: {e}\n{traceback.format_exc()}")
+        logger.error(f"LLM query error: {e}\n{traceback.format_exc()}")
         return jsonify({
             "status": "error",
-            "error": f"Failed to process query: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "suggestions": [
-                "Try rephrasing your question",
-                "Check if your question is related to building data",
-                "Ensure the system has loaded relevant data"
-            ]
+            "error": f"Query failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
-@app.route('/insights/energy', methods=['POST', 'OPTIONS'])
-def energy_insights():
-    """
-    Enhanced energy insights with comprehensive pattern detection
-    """
+# Legacy endpoint redirects for frontend compatibility
+@app.route('/ask', methods=['POST', 'OPTIONS'])
+def ask_legacy():
+    """Legacy /ask endpoint - redirects to /llmquery"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    # Forward to /llmquery
+    return llm_query()
+
+@app.route('/reports/weekly', methods=['POST', 'OPTIONS'])
+def weekly_report_legacy():
+    """Legacy /reports/weekly endpoint - redirects to /energy/report with weekly period"""
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
     try:
         data = request.get_json() or {}
-        query = data.get('query', '').strip()
-        user_id = data.get('user_id', 'anonymous')
-        username = data.get('username', 'anonymous')
+        # Override period to weekly
+        data['period'] = 'weekly'
         
-        logger.info(f"Energy insights request from {username}")
-        
-        # Initialize analyzer for energy insights
-        energy_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="energy_insights",
-            document_template="energy_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = energy_analyzer.load_and_process_data()
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        energy_patterns = DataAnalyzer.detect_energy_patterns(df)
-
-        # Build enhanced trend metrics
-        trend = {}
-        try:
-            if not df.empty and 'timestamp' in df.columns and 'energy_consumption_kwh' in df.columns:
-                ts_df = df[['timestamp', 'room_name', 'energy_consumption_kwh']].dropna()
-                ts_df['timestamp'] = pd.to_datetime(ts_df['timestamp'], errors='coerce')
-                ts_df = ts_df.dropna()
-                if not ts_df.empty:
-                    ts_df['date'] = ts_df['timestamp'].dt.date
-                    daily = ts_df.groupby('date', as_index=False)['energy_consumption_kwh'].sum()
-                    daily = daily.sort_values('date')
-                    # Rolling averages
-                    daily['rolling_7'] = daily['energy_consumption_kwh'].rolling(7, min_periods=1).mean()
-                    daily['rolling_30'] = daily['energy_consumption_kwh'].rolling(30, min_periods=1).mean()
-                    # Period deltas (last 7 vs prev 7)
-                    last7 = daily.tail(7)['energy_consumption_kwh'].sum()
-                    prev7 = daily.tail(14).head(7)['energy_consumption_kwh'].sum() if len(daily) >= 14 else 0
-                    delta7 = ((last7 - prev7) / prev7 * 100) if prev7 > 0 else None
-                    # Top rooms (last 7 days)
-                    cutoff = daily['date'].max()
-                    last7_dates = set(daily['date'].tail(7).tolist()) if len(daily) >= 1 else set()
-                    recent = ts_df[ts_df['date'].isin(last7_dates)]
-                    top_rooms = []
-                    if 'room_name' in recent.columns:
-                        top_agg = recent.groupby('room_name', as_index=False)['energy_consumption_kwh'].sum()
-                        top_agg = top_agg.sort_values('energy_consumption_kwh', ascending=False).head(5)
-                        top_rooms = [
-                            {
-                                'room_name': r['room_name'] or 'Unknown',
-                                'energy_kwh': float(r['energy_consumption_kwh'])
-                            } for _, r in top_agg.iterrows()
-                        ]
-                    # Peak days
-                    peak_days = daily.sort_values('energy_consumption_kwh', ascending=False).head(5)
-                    peak_list = [
-                        {
-                            'date': str(r['date']),
-                            'energy_kwh': float(r['energy_consumption_kwh'])
-                        } for _, r in peak_days.iterrows()
-                    ]
-                    trend = {
-                        'summary': {
-                            'last7_total_kwh': float(last7),
-                            'prev7_total_kwh': float(prev7),
-                            'last7_vs_prev7_delta_pct': float(delta7) if delta7 is not None else None
-                        },
-                        'top_rooms_last7': top_rooms,
-                        'peak_days': peak_list,
-                        'series_daily': [
-                            {
-                                'date': str(r['date']),
-                                'kwh': float(r['energy_consumption_kwh']),
-                                'rolling_7': float(r['rolling_7']),
-                                'rolling_30': float(r['rolling_30'])
-                            } for _, r in daily.iterrows()
-                        ]
-                    }
-        except Exception as te:
-            logger.warning(f"Energy trend calc failed: {te}")
-        
-        # Process query or generate automatic insights
-        if query:
-            result = ask(
-                query=query,
-                user_id=user_id,
-                username=username,
-                session_id=f"energy_{datetime.now().timestamp()}",
-                client_ip=request.remote_addr
-            )
-            answer = result.get('answer', 'No specific energy insights available.')
-        else:
-            if energy_patterns:
-                insights = ["🔋 Energy Consumption Analysis:"]
-                for pattern in energy_patterns:
-                    insights.append(f"• {pattern['column']}: Avg {pattern['average']:.2f}, Trend: {pattern['trend']}")
-                    insights.append(f"  Range: {pattern['minimum']:.2f} - {pattern['maximum']:.2f}")
-                
-                insights.append(f"\n📊 Dataset: {data_quality['total_records']} records, {len(energy_patterns)} energy metrics")
-                answer = "\n".join(insights)
-            else:
-                answer = "No energy consumption patterns detected in the current dataset.\n\nAvailable data analysis:\n" + \
-                        f"• Total records: {data_quality['total_records']}\n" + \
-                        f"• Data quality: {data_quality['data_quality'].title()}\n" + \
-                        f"• Numeric columns: {data_quality['column_types']['numeric']}"
-        
-        response = {
-            "status": "success",
-            "query": query,
-            "answer": answer,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "energy_analysis": {
-                "patterns_detected": len(energy_patterns),
-                "data_quality": data_quality,
-                "detailed_patterns": energy_patterns,
-                "trend": trend
-            },
-            "recommendations": [
-                "Monitor high-consumption periods for optimization opportunities",
-                "Consider implementing energy-saving measures during peak usage",
-                "Regularly review energy patterns for anomalies"
-            ] if energy_patterns else [
-                "Ensure energy monitoring systems are properly configured",
-                "Verify sensor data collection for energy metrics",
-                "Check data connectivity for energy monitoring devices"
-            ]
-        }
-        
-        return jsonify(response)
+        # Forward to energy_report with modified data
+        request._cached_json = (data, data)
+        return energy_report()
         
     except Exception as e:
-        logger.error(f"Energy insights error: {e}\n{traceback.format_exc()}")
+        logger.error(f"Weekly report error: {e}")
         return jsonify({
-            "error": f"Energy analysis failed: {str(e)}",
+            "status": "error",
+            "error": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
@@ -754,8 +830,28 @@ def predict_maintenance():
         
         df = maintenance_analyzer.load_and_process_data()
         
+        # Extract number from query (e.g., "provide 3 maintenance requests", "give me 5 issues")
+        import re
+        limit = 50  # default
+        
+        # Check for specific numbers
+        number_match = re.search(r'\b(\d+)\b', query.lower())
+        if number_match:
+            limit = int(number_match.group(1))
+            limit = min(limit, 50)  # Cap at 50 for safety
+        elif 'one' in query.lower() or 'single' in query.lower():
+            limit = 1
+        elif 'two' in query.lower():
+            limit = 2
+        elif 'three' in query.lower():
+            limit = 3
+        elif 'five' in query.lower():
+            limit = 5
+        elif 'ten' in query.lower():
+            limit = 10
+        
         # Fetch actual maintenance requests from database
-        maintenance_requests_df = maintenance_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=50)
+        maintenance_requests_df = maintenance_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=limit)
         
         # Try advanced analysis first, fallback to basic if needed
         try:
@@ -1170,839 +1266,6 @@ Monitor alert trends and address root causes proactively."""
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
-@app.route('/reports/weekly', methods=['POST', 'OPTIONS'])
-def generate_weekly_summary():
-    """
-    Enhanced weekly summary with comprehensive analytics using actual database timestamps
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        report_type = data.get('type', 'executive')
-        user_id = data.get('user_id', 'anonymous')
-        end_date = data.get('end_date')  # Optional: specify week end date
-        
-        logger.info(f"Weekly summary request from {user_id}, type: {report_type}")
-        
-        summary_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="weekly_summary",
-            document_template="summary_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        # Calculate date range for the week
-        if end_date:
-            week_end = pd.to_datetime(end_date)
-        else:
-            week_end = pd.Timestamp.now(tz=timezone.utc)
-        week_start = week_end - pd.Timedelta(days=7)
-        
-        # Fetch data with date filter
-        df = summary_analyzer.load_and_process_data()
-        
-        # Filter to last 7 days if timestamp column exists
-        if 'timestamp' in df.columns and not df.empty:
-            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-            df_week = df[(df['timestamp'] >= week_start) & (df['timestamp'] <= week_end)]
-        else:
-            df_week = df
-        
-        # Generate comprehensive summary with timestamps
-        data_quality = DataAnalyzer.analyze_dataset_quality(df_week)
-        energy_patterns = DataAnalyzer.detect_energy_patterns(df_week)
-        room_analysis = DataAnalyzer.analyze_room_utilization(df_week)
-        
-        # Get weekly energy summary from database
-        weekly_energy = {}
-        try:
-            es_df = summary_analyzer.db_adapter.get_energy_summary_dataframe(
-                start_date=week_start, end_date=week_end
-            )
-            if es_df is not None and not es_df.empty:
-                weekly_energy = {
-                    "total_energy_kwh": float(es_df['total_energy'].sum()),
-                    "total_cost_php": float(es_df['total_cost'].sum()),
-                    "avg_power_w": float(es_df['avg_power'].mean()),
-                    "peak_power_w": float(es_df['peak_power'].max()),
-                    "anomaly_count": int(es_df['anomaly_count'].sum())
-                }
-        except Exception as e:
-            logger.warning(f"Could not fetch energy summary: {e}")
-        
-        # Get maintenance activity for the week
-        maintenance_summary = {}
-        try:
-            maint_df = summary_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=100)
-            if maint_df is not None and not maint_df.empty:
-                maint_df['created_at'] = pd.to_datetime(maint_df['created_at'], errors='coerce')
-                week_maint = maint_df[
-                    (maint_df['created_at'] >= week_start) & 
-                    (maint_df['created_at'] <= week_end)
-                ]
-                maintenance_summary = {
-                    "total_requests": len(week_maint),
-                    "pending": len(week_maint[week_maint['status'] == 'pending']),
-                    "in_progress": len(week_maint[week_maint['status'] == 'in_progress']),
-                    "resolved": len(week_maint[week_maint['status'] == 'resolved'])
-                }
-        except Exception as e:
-            logger.warning(f"Could not fetch maintenance data: {e}")
-        
-        # Get alerts for the week
-        alerts_summary = {}
-        try:
-            alerts_df = summary_analyzer.db_adapter.get_alerts_with_equipment_info(days_back=7)
-            if alerts_df is not None and not alerts_df.empty:
-                alerts_summary = {
-                    "total_alerts": len(alerts_df),
-                    "critical": len(alerts_df[alerts_df['severity_level'] == 'high']),
-                    "resolved": len(alerts_df[alerts_df['is_resolved'] == True]),
-                    "unresolved": len(alerts_df[alerts_df['is_resolved'] == False])
-                }
-        except Exception as e:
-            logger.warning(f"Could not fetch alerts: {e}")
-        
-        # Create executive summary with actual data
-        executive_summary = f"📅 **Weekly Building Management Report**\n"
-        executive_summary += f"**Period:** {week_start.strftime('%Y-%m-%d')} to {week_end.strftime('%Y-%m-%d')}\n\n"
-        
-        executive_summary += f"📊 **Data Overview:**\n"
-        executive_summary += f"• Total Records: {data_quality.get('total_records', len(df_week)):,}\n"
-        executive_summary += f"• Data Quality: {data_quality.get('data_quality', 'good').title()}\n"
-        executive_summary += f"• Completeness: {data_quality.get('completeness_score', 1.0):.1%}\n\n"
-        
-        if weekly_energy:
-            executive_summary += f"⚡ **Energy Summary:**\n"
-            executive_summary += f"• Total Consumption: {weekly_energy.get('total_energy_kwh', 0):.2f} kWh\n"
-            executive_summary += f"• Total Cost: ₱{weekly_energy.get('total_cost_php', 0):.2f} PHP\n"
-            executive_summary += f"• Average Power: {weekly_energy.get('avg_power_w', 0):.2f} W\n"
-            executive_summary += f"• Peak Power: {weekly_energy.get('peak_power_w', 0):.2f} W\n\n"
-        
-        if energy_patterns:
-            executive_summary += f"🔋 **Energy Trends:**\n"
-            for pattern in energy_patterns[:3]:
-                executive_summary += f"• {pattern['column']}: {pattern['average']:.2f} avg ({pattern['trend']} trend)\n"
-            executive_summary += f"\n"
-        
-        if room_analysis['status'] == 'success':
-            executive_summary += f"🏢 **Room Utilization:**\n"
-            executive_summary += f"• Most Used: {room_analysis['most_used_room']} ({room_analysis['most_used_count']} events)\n"
-            executive_summary += f"• Total Rooms: {room_analysis['unique_rooms']}\n"
-            executive_summary += f"• High Usage: {room_analysis['utilization_distribution']['high_usage']} rooms\n\n"
-        
-        if maintenance_summary:
-            executive_summary += f"🔧 **Maintenance Activity:**\n"
-            executive_summary += f"• Total Requests: {maintenance_summary.get('total_requests', 0)}\n"
-            executive_summary += f"• Resolved: {maintenance_summary.get('resolved', 0)}\n"
-            executive_summary += f"• Pending: {maintenance_summary.get('pending', 0)}\n"
-            executive_summary += f"• In Progress: {maintenance_summary.get('in_progress', 0)}\n\n"
-        
-        if alerts_summary:
-            executive_summary += f"🚨 **Alerts:**\n"
-            executive_summary += f"• Total Alerts: {alerts_summary.get('total_alerts', 0)}\n"
-            executive_summary += f"• Critical: {alerts_summary.get('critical', 0)}\n"
-            executive_summary += f"• Resolved: {alerts_summary.get('resolved', 0)}\n"
-            executive_summary += f"• Unresolved: {alerts_summary.get('unresolved', 0)}\n\n"
-        
-        executive_summary += f"💡 **Recommendations:**\n"
-        executive_summary += f"• Continue monitoring key performance indicators\n"
-        executive_summary += f"• Review equipment maintenance schedules\n"
-        executive_summary += f"• Optimize energy consumption patterns\n"
-        if alerts_summary.get('unresolved', 0) > 0:
-            executive_summary += f"• Address {alerts_summary['unresolved']} unresolved alerts\n"
-        
-        response = {
-            "status": "success",
-            "report_type": "weekly_summary",
-            "period": {
-                "start": week_start.isoformat(),
-                "end": week_end.isoformat(),
-                "description": f"Week ending {week_end.strftime('%Y-%m-%d')}"
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "executive_summary": executive_summary,
-            "detailed_analysis": {
-                "data_quality": data_quality,
-                "energy_insights": energy_patterns,
-                "room_utilization": room_analysis,
-                "weekly_energy": weekly_energy,
-                "maintenance_summary": maintenance_summary,
-                "alerts_summary": alerts_summary,
-                "key_metrics": {
-                    "total_operations": len(df_week),
-                    "records_analyzed": data_quality.get('total_records', len(df_week)),
-                    "time_range_days": 7
-                }
-            },
-            "action_items": [
-                "Review energy consumption trends",
-                "Check equipment maintenance status",
-                "Analyze room utilization patterns",
-                "Update operational procedures as needed"
-            ]
-        }
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Weekly summary error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Weekly summary generation failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/reports/daily', methods=['POST', 'OPTIONS'])
-def generate_daily_summary():
-    """
-    Daily summary using core_energysummary table with actual timestamps
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        user_id = data.get('user_id', 'anonymous')
-        target_date = data.get('date')  # Optional: YYYY-MM-DD format
-        
-        logger.info(f"Daily summary request from {user_id}")
-        
-        # Calculate date range for the day
-        if target_date:
-            day = pd.to_datetime(target_date)
-        else:
-            day = pd.Timestamp.now(tz=timezone.utc)
-        day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
-        day_end = day.replace(hour=23, minute=59, second=59, microsecond=999999)
-        
-        # Initialize analyzer
-        summary_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="daily_summary",
-            document_template="summary_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        # Get daily energy summary from core_energysummary table
-        daily_energy = {}
-        daily_breakdown = []
-        try:
-            # First try to get data for the specific day
-            es_df = summary_analyzer.db_adapter.get_energy_summary_dataframe(
-                start_date=day_start, end_date=day_end
-            )
-            
-            # If no data for today, get the most recent day's data
-            if (es_df is None or es_df.empty) and not target_date:
-                logger.info(f"No data for {day.strftime('%Y-%m-%d')}, fetching most recent data")
-                es_df = summary_analyzer.db_adapter.get_energy_summary_dataframe()
-                if es_df is not None and not es_df.empty:
-                    # Get the most recent date
-                    es_df['period_start'] = pd.to_datetime(es_df['period_start'])
-                    most_recent_date = es_df['period_start'].max().date()
-                    day = pd.Timestamp(most_recent_date)
-                    day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
-                    day_end = day.replace(hour=23, minute=59, second=59, microsecond=999999)
-                    es_df = es_df[es_df['period_start'].dt.date == most_recent_date]
-                    logger.info(f"Using most recent data from {most_recent_date}")
-            
-            if es_df is not None and not es_df.empty:
-                daily_energy = {
-                    "total_energy_kwh": float(es_df['total_energy'].sum()),
-                    "total_cost_php": float(es_df['total_cost'].sum()),
-                    "avg_power_w": float(es_df['avg_power'].mean()),
-                    "peak_power_w": float(es_df['peak_power'].max()),
-                    "reading_count": int(es_df['reading_count'].sum()),
-                    "anomaly_count": int(es_df['anomaly_count'].sum())
-                }
-                
-                # Get breakdown by component/room if available
-                for _, row in es_df.iterrows():
-                    daily_breakdown.append({
-                        "period": row['period_start'].strftime('%Y-%m-%d %H:%M') if pd.notna(row.get('period_start')) else 'N/A',
-                        "energy_kwh": float(row['total_energy']),
-                        "cost_php": float(row['total_cost']),
-                        "readings": int(row['reading_count'])
-                    })
-        except Exception as e:
-            logger.warning(f"Could not fetch daily energy summary: {e}")
-        
-        # Get alerts for the day
-        daily_alerts = []
-        try:
-            alerts_df = summary_analyzer.db_adapter.get_alerts_with_equipment_info(days_back=1)
-            if alerts_df is not None and not alerts_df.empty:
-                alerts_df['created_at'] = pd.to_datetime(alerts_df['created_at'], errors='coerce')
-                day_alerts = alerts_df[
-                    (alerts_df['created_at'] >= day_start) & 
-                    (alerts_df['created_at'] <= day_end)
-                ]
-                for _, alert in day_alerts.iterrows():
-                    daily_alerts.append({
-                        "type": alert.get('alert_type'),
-                        "severity": alert.get('severity_level'),
-                        "message": alert.get('message'),
-                        "timestamp": alert.get('created_at').isoformat() if pd.notna(alert.get('created_at')) else None,
-                        "room": alert.get('room_name'),
-                        "equipment": alert.get('equipment_name'),
-                        "resolved": bool(alert.get('is_resolved'))
-                    })
-        except Exception as e:
-            logger.warning(f"Could not fetch daily alerts: {e}")
-        
-        # Create daily summary
-        summary = f"📅 **Daily Building Management Report**\n"
-        summary += f"**Date:** {day.strftime('%Y-%m-%d (%A)')}\n\n"
-        
-        if daily_energy:
-            summary += f"⚡ **Energy Summary:**\n"
-            summary += f"• Total Consumption: {daily_energy.get('total_energy_kwh', 0):.2f} kWh\n"
-            summary += f"• Total Cost: ₱{daily_energy.get('total_cost_php', 0):.2f} PHP\n"
-            summary += f"• Average Power: {daily_energy.get('avg_power_w', 0):.2f} W\n"
-            summary += f"• Peak Power: {daily_energy.get('peak_power_w', 0):.2f} W\n"
-            summary += f"• Readings: {daily_energy.get('reading_count', 0):,}\n"
-            if daily_energy.get('anomaly_count', 0) > 0:
-                summary += f"• ⚠️ Anomalies Detected: {daily_energy.get('anomaly_count', 0)}\n"
-            summary += f"\n"
-        else:
-            summary += f"⚡ **Energy Summary:**\n"
-            summary += f"• No energy data available for this date\n\n"
-        
-        if daily_alerts:
-            summary += f"🚨 **Alerts ({len(daily_alerts)}):**\n"
-            for i, alert in enumerate(daily_alerts[:5], 1):  # Show top 5
-                severity_emoji = "🔴" if alert['severity'] == 'high' else "🟡" if alert['severity'] == 'medium' else "🟢"
-                status = "✅" if alert['resolved'] else "❌"
-                summary += f"{i}. {severity_emoji} [{alert['severity'].upper()}] {alert['type']}: {alert['message']} {status}\n"
-                if alert['room']:
-                    summary += f"   Location: {alert['room']}\n"
-            if len(daily_alerts) > 5:
-                summary += f"   ... and {len(daily_alerts) - 5} more alerts\n"
-            summary += f"\n"
-        
-        summary += f"📊 **Data Points:** {daily_energy.get('reading_count', 0):,} records analyzed\n"
-        
-        response = {
-            "status": "success",
-            "report_type": "daily_summary",
-            "date": day.strftime('%Y-%m-%d'),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "summary": summary,
-            "detailed_analysis": {
-                "daily_energy": daily_energy,
-                "energy_breakdown": daily_breakdown,
-                "alerts": daily_alerts,
-                "data_points": daily_energy.get('reading_count', 0)
-            }
-        }
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Daily summary error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Daily summary generation failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/reports/monthly', methods=['POST', 'OPTIONS'])
-def generate_monthly_summary():
-    """
-    Monthly summary using core_energysummary table with actual timestamps
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        user_id = data.get('user_id', 'anonymous')
-        target_month = data.get('month')  # Optional: YYYY-MM format
-        
-        logger.info(f"Monthly summary request from {user_id}")
-        
-        # Calculate date range for the month
-        if target_month:
-            month_start = pd.to_datetime(target_month + '-01')
-        else:
-            now = pd.Timestamp.now(tz=timezone.utc)
-            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        
-        # Calculate month end
-        if month_start.month == 12:
-            month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - pd.Timedelta(seconds=1)
-        else:
-            month_end = month_start.replace(month=month_start.month + 1, day=1) - pd.Timedelta(seconds=1)
-        
-        # Initialize analyzer
-        summary_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="monthly_summary",
-            document_template="summary_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        # Get monthly energy summary from core_energysummary table (period_type='monthly' only)
-        monthly_energy = {}
-        daily_breakdown = []
-        try:
-            # Try to get monthly period_type data first
-            es_df = summary_analyzer.db_adapter.get_energy_summary_data(
-                start_date=month_start, end_date=month_end, period_type='monthly'
-            )
-            
-            # If no monthly data exists, aggregate from daily data
-            if (es_df is None or es_df.empty):
-                logger.info(f"No monthly period_type data, aggregating from daily data")
-                es_df = summary_analyzer.db_adapter.get_energy_summary_data(
-                    start_date=month_start, end_date=month_end, period_type='daily'
-                )
-            if es_df is not None and not es_df.empty:
-                monthly_energy = {
-                    "total_energy_kwh": float(es_df['total_energy'].sum()),
-                    "total_cost_php": float(es_df['total_cost'].sum()),
-                    "avg_power_w": float(es_df['avg_power'].mean()),
-                    "peak_power_w": float(es_df['peak_power'].max()),
-                    "total_readings": int(es_df['reading_count'].sum()),
-                    "total_anomalies": int(es_df['anomaly_count'].sum()),
-                    "days_with_data": len(es_df['period_start'].dt.date.unique()) if 'period_start' in es_df.columns else 0
-                }
-                
-                # Group by day for daily breakdown
-                if 'period_start' in es_df.columns:
-                    es_df['date'] = pd.to_datetime(es_df['period_start']).dt.date
-                    daily_summary = es_df.groupby('date').agg({
-                        'total_energy': 'sum',
-                        'total_cost': 'sum',
-                        'reading_count': 'sum'
-                    }).reset_index()
-                    
-                    for _, row in daily_summary.iterrows():
-                        daily_breakdown.append({
-                            "date": str(row['date']),
-                            "energy_kwh": float(row['total_energy']),
-                            "cost_php": float(row['total_cost']),
-                            "readings": int(row['reading_count'])
-                        })
-        except Exception as e:
-            logger.warning(f"Could not fetch monthly energy summary: {e}")
-        
-        # Get maintenance summary for the month
-        monthly_maintenance = {}
-        try:
-            maint_df = summary_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=500)
-            if maint_df is not None and not maint_df.empty:
-                maint_df['created_at'] = pd.to_datetime(maint_df['created_at'], errors='coerce')
-                month_maint = maint_df[
-                    (maint_df['created_at'] >= month_start) & 
-                    (maint_df['created_at'] <= month_end)
-                ]
-                monthly_maintenance = {
-                    "total_requests": len(month_maint),
-                    "resolved": len(month_maint[month_maint['status'] == 'resolved']),
-                    "pending": len(month_maint[month_maint['status'] == 'pending']),
-                    "in_progress": len(month_maint[month_maint['status'] == 'in_progress'])
-                }
-        except Exception as e:
-            logger.warning(f"Could not fetch monthly maintenance data: {e}")
-        
-        # Create monthly summary
-        summary = f"📅 **Monthly Building Management Report**\n"
-        summary += f"**Period:** {month_start.strftime('%B %Y')}\n"
-        summary += f"**Date Range:** {month_start.strftime('%Y-%m-%d')} to {month_end.strftime('%Y-%m-%d')}\n\n"
-        
-        if monthly_energy:
-            summary += f"⚡ **Energy Summary:**\n"
-            summary += f"• Total Consumption: {monthly_energy.get('total_energy_kwh', 0):.2f} kWh\n"
-            summary += f"• Total Cost: ₱{monthly_energy.get('total_cost_php', 0):,.2f} PHP\n"
-            days_with_data = monthly_energy.get('days_with_data', 1)
-            if days_with_data > 0:
-                summary += f"• Average Daily: {monthly_energy.get('total_energy_kwh', 0) / days_with_data:.2f} kWh/day\n"
-            summary += f"• Peak Power: {monthly_energy.get('peak_power_w', 0):.2f} W\n"
-            summary += f"• Days with Data: {days_with_data}\n"
-            if monthly_energy.get('total_anomalies', 0) > 0:
-                summary += f"• ⚠️ Total Anomalies: {monthly_energy.get('total_anomalies', 0)}\n"
-            summary += f"\n"
-        else:
-            summary += f"⚡ **Energy Summary:**\n"
-            summary += f"• No energy data available for this month\n\n"
-        
-        if monthly_maintenance:
-            summary += f"🔧 **Maintenance Summary:**\n"
-            summary += f"• Total Requests: {monthly_maintenance.get('total_requests', 0)}\n"
-            summary += f"• Resolved: {monthly_maintenance.get('resolved', 0)}\n"
-            summary += f"• Pending: {monthly_maintenance.get('pending', 0)}\n"
-            summary += f"• In Progress: {monthly_maintenance.get('in_progress', 0)}\n\n"
-        
-        summary += f"📊 **Data Points:** {monthly_energy.get('total_readings', 0):,} records analyzed\n"
-        
-        response = {
-            "status": "success",
-            "report_type": "monthly_summary",
-            "period": {
-                "month": month_start.strftime('%Y-%m'),
-                "start": month_start.isoformat(),
-                "end": month_end.isoformat(),
-                "description": month_start.strftime('%B %Y')
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "summary": summary,
-            "detailed_analysis": {
-                "monthly_energy": monthly_energy,
-                "daily_breakdown": daily_breakdown,
-                "monthly_maintenance": monthly_maintenance,
-                "data_points": monthly_energy.get('total_readings', 0)
-            }
-        }
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Monthly summary error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Monthly summary generation failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/reports/yearly', methods=['POST', 'OPTIONS'])
-def generate_yearly_summary():
-    """
-    Yearly summary using core_energysummary table with actual timestamps
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        user_id = data.get('user_id', 'anonymous')
-        target_year = data.get('year')  # Optional: YYYY format
-        
-        logger.info(f"Yearly summary request from {user_id}")
-        
-        # Calculate date range for the year
-        if target_year:
-            year_start = pd.to_datetime(f"{target_year}-01-01")
-        else:
-            now = pd.Timestamp.now(tz=timezone.utc)
-            year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        
-        # Calculate year end
-        year_end = year_start.replace(year=year_start.year + 1, month=1, day=1) - pd.Timedelta(seconds=1)
-        
-        # Initialize analyzer
-        summary_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="yearly_summary",
-            document_template="summary_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        # Get yearly energy summary from core_energysummary table (period_type='yearly' only)
-        yearly_energy = {}
-        monthly_breakdown = []
-        try:
-            # Try to get yearly period_type data first
-            es_df = summary_analyzer.db_adapter.get_energy_summary_data(
-                start_date=year_start, end_date=year_end, period_type='yearly'
-            )
-            
-            # If no yearly data exists, aggregate from monthly or daily data
-            if (es_df is None or es_df.empty):
-                logger.info(f"No yearly period_type data, trying monthly data")
-                es_df = summary_analyzer.db_adapter.get_energy_summary_data(
-                    start_date=year_start, end_date=year_end, period_type='monthly'
-                )
-                
-            # If still no data, try daily
-            if (es_df is None or es_df.empty):
-                logger.info(f"No monthly period_type data, aggregating from daily data")
-                es_df = summary_analyzer.db_adapter.get_energy_summary_data(
-                    start_date=year_start, end_date=year_end, period_type='daily'
-                )
-            if es_df is not None and not es_df.empty:
-                yearly_energy = {
-                    "total_energy_kwh": float(es_df['total_energy'].sum()),
-                    "total_cost_php": float(es_df['total_cost'].sum()),
-                    "avg_power_w": float(es_df['avg_power'].mean()),
-                    "peak_power_w": float(es_df['peak_power'].max()),
-                    "total_readings": int(es_df['reading_count'].sum()),
-                    "total_anomalies": int(es_df['anomaly_count'].sum()),
-                    "days_with_data": len(es_df['period_start'].dt.date.unique()) if 'period_start' in es_df.columns else 0
-                }
-                
-                # Group by month for monthly breakdown
-                if 'period_start' in es_df.columns:
-                    es_df['month'] = pd.to_datetime(es_df['period_start']).dt.to_period('M')
-                    monthly_summary = es_df.groupby('month').agg({
-                        'total_energy': 'sum',
-                        'total_cost': 'sum',
-                        'reading_count': 'sum'
-                    }).reset_index()
-                    
-                    for _, row in monthly_summary.iterrows():
-                        monthly_breakdown.append({
-                            "month": str(row['month']),
-                            "energy_kwh": float(row['total_energy']),
-                            "cost_php": float(row['total_cost']),
-                            "readings": int(row['reading_count'])
-                        })
-        except Exception as e:
-            logger.warning(f"Could not fetch yearly energy summary: {e}")
-        
-        # Get maintenance summary for the year
-        yearly_maintenance = {}
-        try:
-            maint_df = summary_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=1000)
-            if maint_df is not None and not maint_df.empty:
-                maint_df['created_at'] = pd.to_datetime(maint_df['created_at'], errors='coerce')
-                year_maint = maint_df[
-                    (maint_df['created_at'] >= year_start) & 
-                    (maint_df['created_at'] <= year_end)
-                ]
-                yearly_maintenance = {
-                    "total_requests": len(year_maint),
-                    "resolved": len(year_maint[year_maint['status'] == 'resolved']),
-                    "pending": len(year_maint[year_maint['status'] == 'pending']),
-                    "in_progress": len(year_maint[year_maint['status'] == 'in_progress'])
-                }
-        except Exception as e:
-            logger.warning(f"Could not fetch yearly maintenance data: {e}")
-        
-        # Create yearly summary
-        summary = f"📅 **Yearly Building Management Report**\n"
-        summary += f"**Period:** {year_start.strftime('%Y')}\n"
-        summary += f"**Date Range:** {year_start.strftime('%Y-%m-%d')} to {year_end.strftime('%Y-%m-%d')}\n\n"
-        
-        if yearly_energy:
-            summary += f"⚡ **Energy Summary:**\n"
-            summary += f"• Total Consumption: {yearly_energy.get('total_energy_kwh', 0):.2f} kWh\n"
-            summary += f"• Total Cost: ₱{yearly_energy.get('total_cost_php', 0):,.2f} PHP\n"
-            days_with_data = yearly_energy.get('days_with_data', 1)
-            if days_with_data > 0:
-                summary += f"• Average Daily: {yearly_energy.get('total_energy_kwh', 0) / days_with_data:.2f} kWh/day\n"
-                summary += f"• Average Monthly: {yearly_energy.get('total_energy_kwh', 0) / 12:.2f} kWh/month\n"
-            summary += f"• Peak Power: {yearly_energy.get('peak_power_w', 0):.2f} W\n"
-            summary += f"• Days with Data: {days_with_data}\n"
-            if yearly_energy.get('total_anomalies', 0) > 0:
-                summary += f"• ⚠️ Total Anomalies: {yearly_energy.get('total_anomalies', 0)}\n"
-            summary += f"\n"
-        else:
-            summary += f"⚡ **Energy Summary:**\n"
-            summary += f"• No energy data available for this year\n\n"
-        
-        if yearly_maintenance:
-            summary += f"🔧 **Maintenance Summary:**\n"
-            summary += f"• Total Requests: {yearly_maintenance.get('total_requests', 0)}\n"
-            summary += f"• Resolved: {yearly_maintenance.get('resolved', 0)}\n"
-            summary += f"• Pending: {yearly_maintenance.get('pending', 0)}\n"
-            summary += f"• In Progress: {yearly_maintenance.get('in_progress', 0)}\n\n"
-        
-        summary += f"📊 **Data Points:** {yearly_energy.get('total_readings', 0):,} records analyzed\n"
-        
-        response = {
-            "status": "success",
-            "report_type": "yearly_summary",
-            "period": {
-                "year": year_start.strftime('%Y'),
-                "start": year_start.isoformat(),
-                "end": year_end.isoformat(),
-                "description": year_start.strftime('%Y')
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "summary": summary,
-            "detailed_analysis": {
-                "yearly_energy": yearly_energy,
-                "monthly_breakdown": monthly_breakdown,
-                "yearly_maintenance": yearly_maintenance,
-                "data_points": yearly_energy.get('total_readings', 0)
-            }
-        }
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Yearly summary error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Yearly summary generation failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/rooms/utilization', methods=['POST', 'OPTIONS'])
-def room_utilization():
-    """
-    Enhanced room utilization analysis with comprehensive metrics
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        user_id = data.get('user_id', 'anonymous')
-        
-        logger.info(f"Room utilization analysis request from {user_id}")
-        
-        utilization_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="chat_assistant",
-            document_template="standard",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = utilization_analyzer.load_and_process_data()
-        room_analysis = DataAnalyzer.analyze_room_utilization(df)
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        
-        if room_analysis['status'] == 'success':
-            summary = f"🏢 Comprehensive Room Utilization Analysis\n\n"
-            summary += f"• Most Utilized Room: {room_analysis['most_used_room']}\n"
-            summary += f"• Usage Count: {room_analysis['most_used_count']:,} events\n"
-            summary += f"• Usage Percentage: {room_analysis.get('usage_percentage', 0):.1f}% of total\n"
-            summary += f"• Total Rooms: {room_analysis['unique_rooms']}\n"
-            summary += f"• Total Events: {room_analysis['total_events']:,}\n"
-            summary += f"• Average Events per Room: {room_analysis.get('avg_events_per_room', 0):.1f}\n\n"
-            
-            summary += f"📈 Utilization Distribution:\n"
-            summary += f"• High Usage: {room_analysis['utilization_distribution']['high_usage']} rooms\n"
-            summary += f"• Medium Usage: {room_analysis['utilization_distribution']['medium_usage']} rooms\n"
-            summary += f"• Low Usage: {room_analysis['utilization_distribution']['low_usage']} rooms\n"
-            
-            response_data = {
-                "status": "success",
-                "analysis_type": "room_utilization",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "summary": summary,
-                "detailed_metrics": room_analysis,
-                "data_quality": data_quality,
-                "recommendations": [
-                    f"Focus maintenance on high-usage room: {room_analysis['most_used_room']}",
-                    "Consider load balancing for underutilized spaces",
-                    "Monitor usage patterns for optimization opportunities",
-                    "Review peak usage times for energy efficiency"
-                ]
-            }
-        else:
-            response_data = {
-                "status": "success",
-                "analysis_type": "room_utilization",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "summary": "Room utilization analysis completed. No specific room data identified in current dataset.",
-                "data_analysis": {
-                    "data_quality": data_quality,
-                    "available_columns": df.columns.tolist(),
-                    "suggested_improvements": [
-                        "Add room identification columns (room_id, location, etc.)",
-                        "Ensure consistent data labeling across systems",
-                        "Implement standardized room naming conventions"
-                    ]
-                },
-                "recommendations": [
-                    "Review data collection schema for room identification",
-                    "Ensure sensors are properly tagged with location data",
-                    "Consider implementing room usage tracking system"
-                ]
-            }
-        
-        return jsonify(response_data)
-        
-    except Exception as e:
-        logger.error(f"Room utilization error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Room utilization analysis failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/context/analyze', methods=['POST', 'OPTIONS'])
-def context_analysis():
-    """
-    Enhanced context-aware analysis with situational awareness
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        query = data.get('query', 'Provide current system status and insights').strip()
-        user_id = data.get('user_id', 'anonymous')
-        
-        logger.info(f"Context analysis request from {user_id}: {query}")
-        
-        context_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="context_aware",
-            document_template="standard",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = context_analyzer.load_and_process_data()
-        
-        # Comprehensive context analysis
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        energy_patterns = DataAnalyzer.detect_energy_patterns(df)
-        room_analysis = DataAnalyzer.analyze_room_utilization(df)
-        
-        # Build context profile
-        current_context = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "data_status": {
-                "records_available": data_quality['total_records'],
-                "data_quality": data_quality['data_quality'],
-                "completeness": f"{data_quality['completeness_score']:.1%}"
-            },
-            "system_health": system_health['status'],
-            "key_metrics": {
-                "energy_metrics_detected": len(energy_patterns),
-                "rooms_analyzed": room_analysis.get('unique_rooms', 0),
-                "operational_status": "Normal"
-            }
-        }
-        
-        # Generate context-aware insights
-        insights = []
-        
-        if energy_patterns:
-            avg_energy = sum(p['average'] for p in energy_patterns) / len(energy_patterns)
-            insights.append(f"Current energy consumption averaging {avg_energy:.2f} across {len(energy_patterns)} metrics")
-        
-        if room_analysis['status'] == 'success':
-            insights.append(f"Room utilization shows {room_analysis['most_used_room']} as most active with {room_analysis['most_used_count']} events")
-        
-        if data_quality['data_quality'] == 'good':
-            insights.append("Data quality is good, enabling reliable analysis")
-        else:
-            insights.append("Data quality needs improvement for optimal insights")
-        
-        response = {
-            "status": "success",
-            "analysis_type": "context_aware",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "context_analysis": f"Current System Context Analysis:\n\n" + "\n".join([f"• {insight}" for insight in insights]),
-            "current_context": current_context,
-            "insights": insights,
-            "recommendations": [
-                "Continue monitoring system performance",
-                "Review data collection processes regularly",
-                "Implement proactive maintenance based on usage patterns"
-            ],
-            "alerts": [
-                "No critical issues detected" if system_health['status'] == 'healthy' else "System requires attention"
-            ]
-        }
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Context analysis error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "error": f"Context analysis failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
 @app.route('/billing/rates', methods=['POST', 'OPTIONS'])
 def billing_rates():
     """Get billing rates with LLM-powered cost optimization suggestions"""
@@ -2408,13 +1671,10 @@ def require_role(required_role: str):
         return decorated_function
     return decorator
 
-# Apply enhanced role-based access control
+# Apply enhanced role-based access control (only for existing endpoints)
 predict_maintenance = require_role('maintenance')(predict_maintenance)
 detect_anomalies = require_role('anomalies')(detect_anomalies)
-generate_weekly_summary = require_role('reports')(generate_weekly_summary)
-energy_insights = require_role('energy')(energy_insights)
-room_utilization = require_role('utilization')(room_utilization)
-context_analysis = require_role('context')(context_analysis)
+# Removed decorators for deleted endpoints: generate_weekly_summary, energy_insights, room_utilization, context_analysis
 
 # Error handlers
 @app.errorhandler(404)
@@ -2469,28 +1729,31 @@ if __name__ == '__main__':
         
         print("\n📡 Available Endpoints:")
         endpoints = [
-            ("GET   /health", "System health with detailed analytics"),
-            ("POST  /llmquery", "Enhanced LLM queries with metadata"),
-            ("POST  /insights/energy", "Comprehensive energy analysis"),
-            ("POST  /maintenance/predict", "Predictive maintenance with fallbacks"),
-            ("POST  /anomalies/detect", "Multi-method anomaly detection"),
-            ("POST  /reports/weekly", "Detailed weekly summaries"),
-            ("POST  /rooms/utilization", "Advanced room usage analytics"),
-            ("POST  /context/analyze", "Context-aware system analysis"),
-            ("GET   /system/status", "Comprehensive system status")
+            ("GET   /health", "System health check"),
+            ("POST  /llmquery", "General LLM chat queries"),
+            ("POST  /energy/report", "Energy analysis (daily/weekly/monthly/yearly)"),
+            ("POST  /maintenance/predict", "Maintenance predictions with LLM"),
+            ("POST  /anomalies/detect", "Anomaly detection"),
+            ("POST  /billing/rates", "Billing analysis with LLM"),
+            ("POST  /kpi/heartbeat", "KPI monitoring"),
+            ("POST  /chat/history/save", "Save chat to MongoDB"),
+            ("POST  /chat/history/get", "Retrieve chat history"),
+            ("GET   /system/status", "System status"),
+            ("", ""),
+            ("POST  /ask", "Legacy: redirects to /llmquery"),
+            ("POST  /reports/weekly", "Legacy: redirects to /energy/report")
         ]
         
         for endpoint, description in endpoints:
-            print(f"  {endpoint:<25} {description}")
+            print(f"  {endpoint:<30} {description}")
         
-        print("\n🔐 Enhanced Role-Based Access:")
+        print("\n🔐 Role-Based Access:")
         roles = {
             'admin': 'Full system access',
-            'facility_manager': 'Maintenance, reports, anomalies, energy, utilization',
-            'energy_analyst': 'Energy analysis, reports, context',
+            'facility_manager': 'Maintenance, energy, anomalies, billing, KPI',
+            'energy_analyst': 'Energy analysis, billing, KPI',
             'technician': 'Maintenance and anomaly access', 
-            'viewer': 'Reports and utilization analysis',
-            'guest': 'Basic report access'
+            'viewer': 'Energy reports and KPI monitoring'
         }
         
         for role, access in roles.items():

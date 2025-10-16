@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import PageLayout from "./PageLayout";
-import LLMService from "../../service/LLMService";
 import type { ChatMessage } from "../../service/LLMService";
 import "./LLMChatPage.css";
 
@@ -11,7 +10,33 @@ type QueryType = "general" | "maintenance" | "anomalies" | "energy" | "utilizati
 type UserRole = "viewer" | "technician" | "energy_analyst" | "facility_manager" | "admin";
 
 const LLMChatPage: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Generate or retrieve session ID for chat persistence
+  const [sessionId] = useState(() => {
+    let id = sessionStorage.getItem("chat_session_id");
+    if (!id) {
+      id = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem("chat_session_id", id);
+    }
+    return id;
+  });
+  
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // Load messages from localStorage on mount
+    try {
+      const saved = localStorage.getItem('llm_chat_messages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Convert timestamp strings back to Date objects
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to load messages from localStorage:", error);
+    }
+    return [];
+  });
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [llmHealth, setLlmHealth] = useState<string>("checking");
@@ -176,11 +201,65 @@ const LLMChatPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('llm_chat_messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error("Failed to save messages to localStorage:", error);
+    }
+  }, [messages]);
 
   // Check LLM health on component mount
   useEffect(() => {
     checkLLMHealth();
   }, []);
+  
+  // Load chat history from MongoDB on component mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/chat/history/get", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: "web_user",
+            session_id: sessionId,
+            limit: 50
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.chats && data.chats.length > 0) {
+            // Convert MongoDB chats to ChatMessage format
+            const loadedMessages: ChatMessage[] = data.chats.reverse().map((chat: any) => ([
+              {
+                id: `${chat._id}_user`,
+                type: "user" as const,
+                content: chat.user_message,
+                timestamp: new Date(chat.timestamp)
+              },
+              {
+                id: `${chat._id}_assistant`,
+                type: "assistant" as const,
+                content: chat.assistant_response,
+                timestamp: new Date(chat.timestamp)
+              }
+            ])).flat();
+            
+            setMessages(loadedMessages);
+            console.log(`✅ Loaded ${loadedMessages.length} messages from history`);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load chat history:", error);
+      }
+    };
+    
+    loadChatHistory();
+  }, [sessionId]);
 
   const checkLLMHealth = async () => {
     try {
@@ -361,7 +440,7 @@ const LLMChatPage: React.FC = () => {
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-      content: "Generating weekly summary with timestamps...",
+      content: "📊 Generating weekly energy report with timestamps...",
       timestamp: new Date(),
       isLoading: true,
     };
@@ -369,19 +448,48 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/reports/weekly", {
+      const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
-        body: JSON.stringify({ type: "executive", user_id: "web_user" })
+        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
+        body: JSON.stringify({ 
+          period: "weekly",
+          user_id: "web_user",
+          username: "Web User"
+        })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-      const summary = data.executive_summary || data.answer || "Weekly summary generated.";
-      const period = data.period || {};
-      const periodInfo = period.description ? `\n📅 Period: ${period.description}\n` : "";
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `📊 Weekly Summary${periodInfo}\n${summary}`, isLoading: false }) : m));
+      
+      // Format the response with energy data
+      const lines: string[] = [];
+      lines.push("📅 **WEEKLY ENERGY REPORT**\n");
+      
+      if (data.energy_data) {
+        const ed = data.energy_data;
+        lines.push("📊 Energy Summary:");
+        lines.push(`• Total: ${ed.total_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Average: ${ed.average_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2)} kWh`);
+        if (ed.period_start && ed.period_end) {
+          lines.push(`• Period: ${new Date(ed.period_start).toLocaleDateString()} - ${new Date(ed.period_end).toLocaleDateString()}\n`);
+        }
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
+      }
+      
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Weekly energy report", finalContent, "energy", "energy_analyst");
     } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      await saveChatToMongoDB("Weekly energy report", errorMsg, "energy", "energy_analyst", undefined, true);
     } finally {
       setIsLoading(false);
     }
@@ -393,7 +501,7 @@ const LLMChatPage: React.FC = () => {
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-      content: "Generating daily summary with timestamps...",
+      content: "📊 Generating daily energy report with timestamps...",
       timestamp: new Date(),
       isLoading: true,
     };
@@ -401,22 +509,48 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/ask", {
+      const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
+        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
-          query: "daily energy report",
+          period: "daily",
           user_id: "web_user",
-          username: "Web User",
-          session_id: `web_${Date.now()}`
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-      const answer = data.answer || "Daily energy report generated.";
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: answer, isLoading: false }) : m));
+      
+      // Format the response with energy data
+      const lines: string[] = [];
+      lines.push("📅 **DAILY ENERGY REPORT**\n");
+      
+      if (data.energy_data) {
+        const ed = data.energy_data;
+        lines.push("📊 Energy Summary:");
+        lines.push(`• Total: ${ed.total_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Average: ${ed.average_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2)} kWh`);
+        if (ed.period_start && ed.period_end) {
+          lines.push(`• Period: ${new Date(ed.period_start).toLocaleDateString()} - ${new Date(ed.period_end).toLocaleDateString()}\n`);
+        }
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
+      }
+      
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Daily energy report", finalContent, "energy", "energy_analyst");
     } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      await saveChatToMongoDB("Daily energy report", errorMsg, "energy", "energy_analyst", undefined, true);
     } finally {
       setIsLoading(false);
     }
@@ -428,7 +562,7 @@ const LLMChatPage: React.FC = () => {
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-      content: "Generating monthly summary with timestamps...",
+      content: "📊 Generating monthly energy report with timestamps...",
       timestamp: new Date(),
       isLoading: true,
     };
@@ -436,22 +570,48 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/ask", {
+      const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
+        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
-          query: "monthly energy report",
+          period: "monthly",
           user_id: "web_user",
-          username: "Web User",
-          session_id: `web_${Date.now()}`
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-      const answer = data.answer || "Monthly energy report generated.";
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: answer, isLoading: false }) : m));
+      
+      // Format the response with energy data
+      const lines: string[] = [];
+      lines.push("📅 **MONTHLY ENERGY REPORT**\n");
+      
+      if (data.energy_data) {
+        const ed = data.energy_data;
+        lines.push("📊 Energy Summary:");
+        lines.push(`• Total: ${ed.total_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Average: ${ed.average_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2)} kWh`);
+        if (ed.period_start && ed.period_end) {
+          lines.push(`• Period: ${new Date(ed.period_start).toLocaleDateString()} - ${new Date(ed.period_end).toLocaleDateString()}\n`);
+        }
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
+      }
+      
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Monthly energy report", finalContent, "energy", "energy_analyst");
     } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      await saveChatToMongoDB("Monthly energy report", errorMsg, "energy", "energy_analyst", undefined, true);
     } finally {
       setIsLoading(false);
     }
@@ -624,7 +784,7 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call maintenance prediction endpoint
-  const callMaintenancePredict = async () => {
+  const callMaintenancePredict = async (userQuery?: string) => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
@@ -641,7 +801,7 @@ const LLMChatPage: React.FC = () => {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
-          query: "Analyze equipment and suggest maintenance",
+          query: userQuery || "Analyze equipment and suggest maintenance",
           user_id: "web_user",
           username: "Web User"
         })
@@ -782,7 +942,7 @@ const LLMChatPage: React.FC = () => {
       
       if (queryType === "maintenance") {
         setMessages((prev) => [...prev, userMessage]);
-        await callMaintenancePredict();
+        await callMaintenancePredict(messageText);
         return;
       }
       
