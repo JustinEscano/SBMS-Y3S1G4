@@ -405,7 +405,7 @@ All user prompts and AI responses are saved to MongoDB Atlas for:
 
 ### Required Environment Variables (`.env`)
 ```bash
-MONGO_ATLAS_URI=mongodb+srv://smartiot:***@smartiot.pm14zxa.mongodb.net/LLM_logs?retryWrites=true&w=majority
+MONGO_ATLAS_URI= MAKE SURE TO USE YOUR OWN MONGO ATLAS DATABASE.
 MONGO_DB_NAME=LLM_logs
 ```
 
