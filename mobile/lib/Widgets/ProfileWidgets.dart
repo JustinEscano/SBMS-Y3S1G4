@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:mobile/Screens/HelpSupportScreen.dart';
 import 'package:mobile/Screens/PrivacyPolicyScreen.dart';
 import 'package:mobile/Screens/ProfileDetails.dart';
 import 'dart:io';
@@ -124,6 +125,13 @@ class ProfileWidgets {
                     ],
                   ),
                 ),
+                Text(
+                  "\n\n\n\n\n\n\n\n\nEdit Profile",
+                  style: GoogleFonts.poppins(
+                    fontSize: 8,
+                    color: Colors.grey,
+                  ),
+                ),
               ],
             ),
           ),
@@ -142,6 +150,7 @@ class ProfileWidgets {
     
   }) {
     return Card(
+      color: Colors.black,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Container(
@@ -280,6 +289,7 @@ class ProfileWidgets {
 
   static Widget buildOptionsCard(BuildContext context, String accessToken, String refreshToken) {
     return Card(
+      color: Colors.black,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
@@ -313,8 +323,11 @@ class ProfileWidgets {
               icon: Icons.help,
               title: 'Help & Support',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Help & Support feature coming soon!', style: GoogleFonts.poppins())),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Helpsupportscreen(),
+                  ),
                 );
               },
             ),
