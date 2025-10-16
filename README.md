@@ -550,7 +550,7 @@ On Linux: source myenv/bin/activate
 On Windows: myenv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements_llm.txt
 
 # Set up environment variables
 cp .env.example .env
