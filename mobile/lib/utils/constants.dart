@@ -4,8 +4,8 @@ class ApiConfig {
   static const String _environment = 'dev';
   static const String _prodBaseUrl = 'https://your-api-domain.com/api/';
   static String get _devBaseUrl => Platform.isAndroid
-      ? 'http://10.138.142.29:8000/api'
-      : 'http://10.138.142.29:8000/api';
+      ? 'http://192.168.0.28:8000/api'
+      : 'http://192.168.0.28:8000/api';
   static String get baseUrl => _environment == 'prod' ? _prodBaseUrl : _devBaseUrl;
 
   // LLM Direct Server (bypass Django API)
