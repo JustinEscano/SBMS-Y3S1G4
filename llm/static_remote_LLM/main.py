@@ -778,6 +778,26 @@ class RoomSpecificHandlers:
         self.db_adapter = db_adapter
         self.logger = logging.getLogger(__name__)
     
+    def get_available_rooms(self):
+        """Get list of available rooms from database"""
+        try:
+            if self.db_adapter:
+                # Query database for unique room identifiers
+                query = """
+                SELECT DISTINCT room_id, room_name 
+                FROM sensor_logs 
+                WHERE room_id IS NOT NULL 
+                ORDER BY room_id
+                LIMIT 50
+                """
+                result = self.db_adapter.execute_query(query)
+                if result:
+                    return [{"id": row[0], "name": row[1] or f"Room {row[0]}"} for row in result]
+            return []
+        except Exception as e:
+            self.logger.error(f"Error getting available rooms: {e}")
+            return []
+    
     def handle_room_specific_query(self, query):
         """Handle queries about specific rooms"""
         try:
@@ -1011,20 +1031,24 @@ class RoomLogAnalyzer:
     def _create_maintenance_document(self, row):
         """Create a document from maintenance request data"""
         try:
-            # Format dates properly
+            # Format dates properly, handling NaT (Not a Time) values
             requested_date = row['requested_date']
-            if hasattr(requested_date, 'strftime'):
+            if pd.notna(requested_date) and hasattr(requested_date, 'strftime'):
                 requested_date = requested_date.strftime("%Y-%m-%d")
+            else:
+                requested_date = "Not scheduled"
             
             resolved_date = row['resolved_date']
-            if resolved_date and hasattr(resolved_date, 'strftime'):
+            if pd.notna(resolved_date) and hasattr(resolved_date, 'strftime'):
                 resolved_date = resolved_date.strftime("%Y-%m-%d")
             else:
                 resolved_date = "Not resolved"
                 
             created_at = row['created_at']
-            if hasattr(created_at, 'strftime'):
+            if pd.notna(created_at) and hasattr(created_at, 'strftime'):
                 created_at = created_at.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                created_at = "Unknown"
 
             template = """
             Maintenance Request: {issue_description}
