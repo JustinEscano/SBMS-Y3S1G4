@@ -36,17 +36,14 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from main import RoomLogAnalyzer, ask
     from prompts_config import PromptsConfig
-    from advanced_llm_handlers import AdvancedLLMHandlers
 except ImportError as e:
-    print(f"DEBUG: Import error: {e}")
+    print(f"⚠️ Import warning: {e}")
     # Create fallback classes if imports fail
     class RoomLogAnalyzer:
         def __init__(self, *args, **kwargs):
             pass
         def load_and_process_data(self):
             return pd.DataFrame()
-    class AdvancedLLMHandlers:
-        pass
 
 # Setup logging with UTF-8 encoding
 log_file = 'apillm_enhanced.log'
@@ -381,6 +378,7 @@ def health_check():
 
 @app.route('/energy/report', methods=['POST', 'OPTIONS'])
 def energy_report():
+<<<<<<< HEAD
     """
     Generate energy report with LLM analysis for daily/weekly/monthly periods
     """
@@ -518,11 +516,213 @@ def llm_query():
     """
     Enhanced main LLM query endpoint with better error handling and analytics
     Accessible via /ask or /llmquery
+=======
+    """
+    Generate energy report with LLM analysis for daily/weekly/monthly periods
+>>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
     """
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
-    start_time = datetime.now(timezone.utc)
+    try:
+        data = request.get_json() or {}
+        period = data.get('period', 'weekly').lower()  # daily, weekly, monthly, yearly
+        user_id = data.get('user_id', 'anonymous')
+        username = data.get('username', 'anonymous')
+        
+        logger.info(f"Energy report request ({period}) from {username}")
+        
+        # Initialize analyzer first
+        analyzer = RoomLogAnalyzer(
+            use_database=True,
+            prompt_type="energy_insights",
+            document_template="energy_report"
+        )
+        
+        # Get recent data of this period type
+        # Limit based on period to get appropriate amount of recent data
+        limit_map = {
+            'daily': 7,      # Last 7 days
+            'weekly': 4,     # Last 4 weeks
+            'monthly': 3,    # Last 3 months
+            'yearly': 2      # Last 2 years
+        }
+        data_limit = limit_map.get(period, 10)
+        
+        all_data = analyzer.db_adapter.get_energy_summary_data(
+            period_type=period,
+            limit=data_limit
+        )
+        
+        if all_data is None or all_data.empty:
+            return jsonify({
+                "status": "success",
+                "answer": f"No {period} energy data available yet. Start collecting data to see insights.",
+                "period": period,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Sort by date to ensure we have the most recent data
+        all_data = all_data.sort_values('period_start', ascending=False)
+        
+        # Get actual date range from available data
+        actual_start = all_data['period_start'].min()
+        actual_end = all_data['period_end'].max()
+        
+        logger.info(f"Found {len(all_data)} {period} records from {actual_start.date()} to {actual_end.date()}")
+        
+        # Use the actual data we already fetched
+        energy_df = all_data
+        
+        if energy_df is None or energy_df.empty:
+            return jsonify({
+                "status": "success",
+                "answer": f"No {period} energy data available yet. Start collecting data to see insights.",
+                "period": period,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Calculate statistics with timestamps
+        total_energy = energy_df['total_energy'].sum()
+        avg_energy = energy_df['total_energy'].mean()
+        
+        # Get peak and lowest with their timestamps
+        peak_row = energy_df.loc[energy_df['total_energy'].idxmax()]
+        lowest_row = energy_df.loc[energy_df['total_energy'].idxmin()]
+        
+        max_energy = peak_row['total_energy']
+        min_energy = lowest_row['total_energy']
+        peak_time = peak_row['period_start'] if pd.notna(peak_row['period_start']) else None
+        lowest_time = lowest_row['period_start'] if pd.notna(lowest_row['period_start']) else None
+        
+        # Get period range
+        period_start = energy_df['period_start'].min() if 'period_start' in energy_df.columns else None
+        period_end = energy_df['period_end'].max() if 'period_end' in energy_df.columns else None
+        
+        # Get top consuming rooms
+        room_totals = {}
+        for _, row in energy_df.iterrows():
+            room = row.get('room_name', 'Unknown')
+            energy = row.get('total_energy', 0)
+            room_totals[room] = room_totals.get(room, 0) + energy
+        
+        top_rooms = sorted(room_totals.items(), key=lambda x: x[1], reverse=True)[:3]
+        
+        # Format dates for better readability
+        start_date_str = period_start.strftime('%B %d, %Y') if period_start and pd.notna(period_start) else 'Unknown'
+        end_date_str = period_end.strftime('%B %d, %Y') if period_end and pd.notna(period_end) else 'Unknown'
+        peak_time_str = peak_time.strftime('%B %d, %Y at %I:%M %p') if peak_time and pd.notna(peak_time) else 'Unknown'
+        current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        
+        # Calculate additional insights
+        energy_variance = energy_df['total_energy'].std() if len(energy_df) > 1 else 0
+        efficiency_score = (min_energy / avg_energy * 100) if avg_energy > 0 else 0
+        
+        # Prepare enhanced LLM context with timestamps and deeper analysis
+        llm_context = f"""You are an expert energy analyst with deep knowledge of building efficiency and sustainability. Analyze this {period} energy data and provide actionable, data-driven recommendations.
+
+📅 REPORTING PERIOD: {start_date_str} to {end_date_str}
+📊 Report Generated: {current_time}
+
+COMPREHENSIVE ENERGY DATA:
+- Period: {period.upper()}
+- Total consumption: {total_energy:.2f} kWh
+- Average: {avg_energy:.2f} kWh per period
+- Peak: {max_energy:.2f} kWh (occurred on {peak_time_str})
+- Lowest: {min_energy:.2f} kWh
+- Variance: {energy_variance:.2f} kWh (consistency indicator)
+- Efficiency Score: {efficiency_score:.1f}% (lower is better)
+- Data points analyzed: {len(energy_df)}
+
+TOP CONSUMING ROOMS (with percentage breakdown):
+"""
+        for i, (room, energy) in enumerate(top_rooms, 1):
+            percentage = (energy / total_energy * 100) if total_energy > 0 else 0
+            llm_context += f"{i}. {room}: {energy:.2f} kWh ({percentage:.1f}% of total)\n"
+        
+        llm_context += f"""\n\nProvide 3 DETAILED, ACTIONABLE recommendations using this format:
+
+**1. CONSUMPTION PATTERN ANALYSIS ({period.upper()} - {start_date_str} to {end_date_str}):**
+Analyze the energy consumption patterns during this period. Consider:
+- Peak vs. average consumption (is the {max_energy:.2f} kWh peak concerning?)
+- Room distribution (why is {top_rooms[0][0]} using {(top_rooms[0][1]/total_energy*100):.1f}%?)
+- Variance patterns (is {energy_variance:.2f} kWh variance normal?)
+- Time-based trends (what happened on {peak_time_str}?)
+
+**2. COST OPTIMIZATION STRATEGIES:**
+Provide specific, implementable cost-saving strategies:
+- Target the high-consumption rooms (especially {top_rooms[0][0]})
+- Suggest equipment upgrades or behavioral changes
+- Estimate potential savings (e.g., "reducing peak by 20% could save X kWh")
+- Consider efficiency improvements
+
+**3. IMMEDIATE ACTION ITEMS FOR NEXT {period.upper()}:**
+List 3-4 concrete actions with expected impact:
+- Specific rooms to monitor or optimize
+- Equipment to inspect or upgrade
+- Behavioral changes to implement
+- Measurable goals (e.g., "reduce {top_rooms[0][0]} consumption by 15%")
+
+Be specific, use the actual data provided, and make recommendations actionable with clear expected outcomes. Each section should be 3-4 sentences with concrete numbers and examples."""        
+        # Call LLM directly
+        try:
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            llm_analysis = llm.invoke(llm_context)
+            logger.info(f"LLM energy analysis generated for {username} ({period})")
+        except Exception as llm_error:
+            logger.warning(f"LLM call failed: {llm_error}")
+            llm_analysis = f"""**1. CONSUMPTION ANALYSIS:**
+Total {period} consumption is {total_energy:.2f} kWh with {top_rooms[0][0]} being the highest consumer.
+
+**2. COST OPTIMIZATION:**
+Focus on reducing consumption in {top_rooms[0][0]} which accounts for the majority of usage.
+
+**3. ACTION ITEMS:**
+Monitor peak usage times and implement energy-saving measures in high-consumption areas."""
+        
+        response = {
+            "status": "success",
+            "answer": llm_analysis,
+            "period": period,
+            "date_range": {
+                "start": actual_start.isoformat(),
+                "end": actual_end.isoformat(),
+                "description": f"{start_date_str} to {end_date_str}"
+            },
+            "energy_data": {
+                "total_kwh": float(total_energy),
+                "average_kwh": float(avg_energy),
+                "peak_kwh": float(max_energy),
+                "peak_time": peak_time.isoformat() if peak_time and pd.notna(peak_time) else None,
+                "lowest_kwh": float(min_energy),
+                "lowest_time": lowest_time.isoformat() if lowest_time and pd.notna(lowest_time) else None,
+                "period_start": period_start.isoformat() if period_start and pd.notna(period_start) else None,
+                "period_end": period_end.isoformat() if period_end and pd.notna(period_end) else None,
+                "data_points": len(energy_df),
+                "variance": float(energy_variance),
+                "efficiency_score": float(efficiency_score)
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"Energy report error: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"Energy report failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+# Removed: /ask and /insights/energy endpoints (replaced by specific endpoints)
+
+@app.route('/llmquery', methods=['POST', 'OPTIONS'])
+def llm_query():
+    """Enhanced general LLM chat with conversation history and smart routing"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
     
     try:
         data = request.get_json() or {}
@@ -538,194 +738,210 @@ def llm_query():
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }), 400
         
-        logger.info(f"Query from {username}: {query[:100]}...")
+        logger.info(f"💬 Chat query from {username}: {query[:100]}...")
         
-        # Use enhanced ask function with timeout
-        result = ask(
-            query=query,
-            user_id=user_id,
-            username=username,
-            session_id=session_id,
-            client_ip=request.remote_addr
-        )
-        
-        processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        
-        response = {
-            "status": "success",
-            "query": query,
-            "answer": result.get('answer', 'I apologize, but I could not generate a response for your query.'),
-            "sources": result.get('sources', []),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "metadata": {
-                "processing_time_seconds": round(processing_time, 2),
-                "sources_count": len(result.get('sources', [])),
-                "query_complexity": "high" if len(query.split()) > 15 else "medium" if len(query.split()) > 5 else "low"
-            }
+        # Smart query routing - detect if user wants specific analysis
+        query_lower = query.lower()
+        route_keywords = {
+            'energy': ['energy', 'power', 'consumption', 'kwh', 'electricity', 'usage'],
+            'maintenance': ['maintenance', 'repair', 'broken', 'issue', 'problem', 'fix'],
+            'anomaly': ['anomaly', 'unusual', 'strange', 'abnormal', 'weird', 'unexpected'],
+            'billing': ['billing', 'cost', 'rate', 'price', 'expense', 'payment']
         }
         
-        # Add any additional result fields
-        for key in ['metrics', 'anomalies', 'maintenance_alerts', 'insights']:
-            if key in result:
-                response[key] = result[key]
+        detected_intent = None
+        for intent, keywords in route_keywords.items():
+            if any(keyword in query_lower for keyword in keywords):
+                detected_intent = intent
+                break
         
-        logger.info(f"Query processed in {processing_time:.2f}s")
-        return jsonify(response)
+        # Get conversation history from MongoDB (last 5 messages)
+        conversation_history = []
+        try:
+            if mongo_chat_collection is not None:
+                history_docs = mongo_chat_collection.find(
+                    {'session_id': session_id}
+                ).sort('timestamp', -1).limit(5)
+                
+                conversation_history = list(reversed([
+                    f"{doc.get('role', 'user')}: {doc.get('content', '')}"
+                    for doc in history_docs
+                ]))
+        except Exception as e:
+            logger.warning(f"Could not fetch conversation history: {e}")
+        
+        # Build context from history
+        history_context = "\n".join(conversation_history) if conversation_history else "No previous conversation"
+        
+        # Get building status for context
+        building_context = ""
+        try:
+            if analyzer and analyzer.df is not None and not analyzer.df.empty:
+                df = analyzer.df
+                total_rooms = df['room_name'].nunique() if 'room_name' in df.columns else 0
+                avg_energy = df['energy_consumption_kwh'].mean() if 'energy_consumption_kwh' in df.columns else 0
+                building_context = f"""
+Current Building Status:
+- Active Rooms: {total_rooms}
+- Average Energy: {avg_energy:.2f} kWh/day
+- Data Points: {len(df)}
+"""
+        except Exception as e:
+            logger.warning(f"Could not get building context: {e}")
+        
+        # Enhanced system prompt with conversation awareness and better general responses
+        current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        system_prompt = f"""You are an intelligent building management assistant with deep expertise in energy, maintenance, and facility operations. You have access to real-time building data and can provide specific, actionable insights.
+
+Current Time: {current_time}
+
+{building_context}
+
+Previous Conversation:
+{history_context}
+
+YOUR CORE CAPABILITIES:
+1. **Energy Analysis**: Analyze consumption patterns, identify inefficiencies, generate detailed reports (daily/weekly/monthly/yearly)
+2. **Maintenance Management**: Predict equipment failures, track maintenance requests (can show 1-50 requests), prioritize repairs
+3. **Room Utilization**: Monitor occupancy, optimize space allocation, track usage patterns across all rooms
+4. **Cost Optimization**: Analyze billing rates, suggest energy-saving measures, estimate cost reductions
+5. **Anomaly Detection**: Identify unusual patterns in energy, occupancy, or equipment behavior
+6. **Conversational Help**: Answer questions about building data, provide insights, offer recommendations
+
+RESPONSE GUIDELINES:
+1. **Be Specific**: Always use actual building data (room names, numbers, equipment) in your responses
+2. **Be Actionable**: Provide concrete next steps, not vague suggestions
+3. **Be Engaging**: Use a friendly, conversational tone - you're a helpful expert, not a robot
+4. **Be Contextual**: Reference previous conversation naturally
+5. **Be Comprehensive**: For "what can you do" questions, give 4-5 specific examples with real data
+6. **Be Concise**: Keep responses to 2-3 paragraphs, but make them information-dense
+7. **Be Proactive**: Always end with a helpful question or suggestion for next steps
+
+WHEN ASKED "WHAT CAN YOU DO" OR SIMILAR:
+Provide 4-5 SPECIFIC examples using ACTUAL building data:
+- Example 1: Energy analysis with specific room names and consumption numbers
+- Example 2: Maintenance tracking with actual request counts
+- Example 3: Cost optimization with potential savings estimates
+- Example 4: Anomaly detection with specific patterns
+- Example 5: Custom analysis offer
+
+Format like this:
+"Great question! I'm currently monitoring [X] rooms with [Y] kWh average consumption. Here's what I can help with:
+
+1. **Energy Insights**: I can analyze which rooms consume the most (like [Room Name] using [X]% of total) and suggest optimization strategies. I can generate daily, weekly, monthly, or yearly reports with detailed breakdowns.
+
+2. **Maintenance Tracking**: I'm monitoring [X] maintenance requests right now. I can show you 1, 5, 10, or all requests, prioritize them by urgency, and predict potential equipment failures before they happen.
+
+3. **Cost Analysis**: I can review your billing rates, identify peak usage times, and estimate potential savings. For example, reducing [Room Name]'s consumption by 20% could save approximately [X] kWh per month.
+
+4. **Smart Monitoring**: I can detect unusual patterns - like sudden spikes in energy usage or equipment anomalies - and alert you before they become problems.
+
+Would you like me to dive into any of these areas? I can also generate a comprehensive report or analyze specific rooms!"
+
+WHEN ASKED ABOUT ROOMS OR BUILDING FEATURES:
+- List specific rooms from the building context with actual numbers
+- Explain what data we track for each room (energy, occupancy, equipment, maintenance)
+- Offer to analyze specific rooms in detail
+- Provide actionable insights based on current data
+- Suggest optimizations or improvements
+
+IMPORTANT: Always use the building context data to make your responses specific and relevant. Never give generic responses - always include actual room names, numbers, and equipment from the context.
+
+User Query: {query}
+
+
+Assistant:"""
+        
+        # Direct LLM call (bypass vector store for speed)
+        try:
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            response = llm.invoke(system_prompt)
+            
+            # Add suggestion if specific intent detected
+            if detected_intent:
+                suggestions = {
+                    'energy': '\n\n💡 Tip: Use `/energy/report` for detailed energy analysis.',
+                    'maintenance': '\n\n💡 Tip: Use `/maintenance/predict` for AI-powered maintenance predictions.',
+                    'anomaly': '\n\n💡 Tip: Use `/anomalies/detect` for comprehensive anomaly detection.',
+                    'billing': '\n\n💡 Tip: Use `/billing/rates` for detailed billing analysis.'
+                }
+                response += suggestions.get(detected_intent, '')
+            
+            # Save to conversation history
+            try:
+                if mongo_chat_collection is not None:
+                    mongo_chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'user',
+                        'content': query,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+                    mongo_chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'assistant',
+                        'content': response,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+            except Exception as e:
+                logger.warning(f"Could not save to conversation history: {e}")
+            
+            return jsonify({
+                "status": "success",
+                "query": query,
+                "answer": response,
+                "detected_intent": detected_intent,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            
+        except Exception as llm_error:
+            logger.error(f"LLM invocation failed: {llm_error}")
+            # Fallback to basic response
+            return jsonify({
+                "status": "success",
+                "query": query,
+                "answer": f"I'm here to help with building management. You asked: '{query}'. How can I assist you further?",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
         
     except Exception as e:
-        logger.error(f"Error processing query: {e}\n{traceback.format_exc()}")
+        logger.error(f"LLM query error: {e}\n{traceback.format_exc()}")
         return jsonify({
             "status": "error",
-            "error": f"Failed to process query: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "suggestions": [
-                "Try rephrasing your question",
-                "Check if your question is related to building data",
-                "Ensure the system has loaded relevant data"
-            ]
+            "error": f"Query failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
-@app.route('/insights/energy', methods=['POST', 'OPTIONS'])
-def energy_insights():
-    """
-    Enhanced energy insights with comprehensive pattern detection
-    """
+# Legacy endpoint redirects for frontend compatibility
+@app.route('/ask', methods=['POST', 'OPTIONS'])
+def ask_legacy():
+    """Legacy /ask endpoint - redirects to /llmquery"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    # Forward to /llmquery
+    return llm_query()
+
+@app.route('/reports/weekly', methods=['POST', 'OPTIONS'])
+def weekly_report_legacy():
+    """Legacy /reports/weekly endpoint - redirects to /energy/report with weekly period"""
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
     try:
         data = request.get_json() or {}
-        query = data.get('query', '').strip()
-        user_id = data.get('user_id', 'anonymous')
-        username = data.get('username', 'anonymous')
+        # Override period to weekly
+        data['period'] = 'weekly'
         
-        logger.info(f"Energy insights request from {username}")
-        
-        # Initialize analyzer for energy insights
-        energy_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="energy_insights",
-            document_template="energy_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = energy_analyzer.load_and_process_data()
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        energy_patterns = DataAnalyzer.detect_energy_patterns(df)
-
-        # Build enhanced trend metrics
-        trend = {}
-        try:
-            if not df.empty and 'timestamp' in df.columns and 'energy_consumption_kwh' in df.columns:
-                ts_df = df[['timestamp', 'room_name', 'energy_consumption_kwh']].dropna()
-                ts_df['timestamp'] = pd.to_datetime(ts_df['timestamp'], errors='coerce')
-                ts_df = ts_df.dropna()
-                if not ts_df.empty:
-                    ts_df['date'] = ts_df['timestamp'].dt.date
-                    daily = ts_df.groupby('date', as_index=False)['energy_consumption_kwh'].sum()
-                    daily = daily.sort_values('date')
-                    # Rolling averages
-                    daily['rolling_7'] = daily['energy_consumption_kwh'].rolling(7, min_periods=1).mean()
-                    daily['rolling_30'] = daily['energy_consumption_kwh'].rolling(30, min_periods=1).mean()
-                    # Period deltas (last 7 vs prev 7)
-                    last7 = daily.tail(7)['energy_consumption_kwh'].sum()
-                    prev7 = daily.tail(14).head(7)['energy_consumption_kwh'].sum() if len(daily) >= 14 else 0
-                    delta7 = ((last7 - prev7) / prev7 * 100) if prev7 > 0 else None
-                    # Top rooms (last 7 days)
-                    cutoff = daily['date'].max()
-                    last7_dates = set(daily['date'].tail(7).tolist()) if len(daily) >= 1 else set()
-                    recent = ts_df[ts_df['date'].isin(last7_dates)]
-                    top_rooms = []
-                    if 'room_name' in recent.columns:
-                        top_agg = recent.groupby('room_name', as_index=False)['energy_consumption_kwh'].sum()
-                        top_agg = top_agg.sort_values('energy_consumption_kwh', ascending=False).head(5)
-                        top_rooms = [
-                            {
-                                'room_name': r['room_name'] or 'Unknown',
-                                'energy_kwh': float(r['energy_consumption_kwh'])
-                            } for _, r in top_agg.iterrows()
-                        ]
-                    # Peak days
-                    peak_days = daily.sort_values('energy_consumption_kwh', ascending=False).head(5)
-                    peak_list = [
-                        {
-                            'date': str(r['date']),
-                            'energy_kwh': float(r['energy_consumption_kwh'])
-                        } for _, r in peak_days.iterrows()
-                    ]
-                    trend = {
-                        'summary': {
-                            'last7_total_kwh': float(last7),
-                            'prev7_total_kwh': float(prev7),
-                            'last7_vs_prev7_delta_pct': float(delta7) if delta7 is not None else None
-                        },
-                        'top_rooms_last7': top_rooms,
-                        'peak_days': peak_list,
-                        'series_daily': [
-                            {
-                                'date': str(r['date']),
-                                'kwh': float(r['energy_consumption_kwh']),
-                                'rolling_7': float(r['rolling_7']),
-                                'rolling_30': float(r['rolling_30'])
-                            } for _, r in daily.iterrows()
-                        ]
-                    }
-        except Exception as te:
-            logger.warning(f"Energy trend calc failed: {te}")
-        
-        # Process query or generate automatic insights
-        if query:
-            result = ask(
-                query=query,
-                user_id=user_id,
-                username=username,
-                session_id=f"energy_{datetime.now().timestamp()}",
-                client_ip=request.remote_addr
-            )
-            answer = result.get('answer', 'No specific energy insights available.')
-        else:
-            if energy_patterns:
-                insights = ["🔋 Energy Consumption Analysis:"]
-                for pattern in energy_patterns:
-                    insights.append(f"• {pattern['column']}: Avg {pattern['average']:.2f}, Trend: {pattern['trend']}")
-                    insights.append(f"  Range: {pattern['minimum']:.2f} - {pattern['maximum']:.2f}")
-                
-                insights.append(f"\n📊 Dataset: {data_quality['total_records']} records, {len(energy_patterns)} energy metrics")
-                answer = "\n".join(insights)
-            else:
-                answer = "No energy consumption patterns detected in the current dataset.\n\nAvailable data analysis:\n" + \
-                        f"• Total records: {data_quality['total_records']}\n" + \
-                        f"• Data quality: {data_quality['data_quality'].title()}\n" + \
-                        f"• Numeric columns: {data_quality['column_types']['numeric']}"
-        
-        response = {
-            "status": "success",
-            "query": query,
-            "answer": answer,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "energy_analysis": {
-                "patterns_detected": len(energy_patterns),
-                "data_quality": data_quality,
-                "detailed_patterns": energy_patterns,
-                "trend": trend
-            },
-            "recommendations": [
-                "Monitor high-consumption periods for optimization opportunities",
-                "Consider implementing energy-saving measures during peak usage",
-                "Regularly review energy patterns for anomalies"
-            ] if energy_patterns else [
-                "Ensure energy monitoring systems are properly configured",
-                "Verify sensor data collection for energy metrics",
-                "Check data connectivity for energy monitoring devices"
-            ]
-        }
-        
-        return jsonify(response)
+        # Forward to energy_report with modified data
+        request._cached_json = (data, data)
+        return energy_report()
         
     except Exception as e:
-        logger.error(f"Energy insights error: {e}\n{traceback.format_exc()}")
+        logger.error(f"Weekly report error: {e}")
         return jsonify({
-            "error": f"Energy analysis failed: {str(e)}",
+            "status": "error",
+            "error": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
@@ -754,8 +970,28 @@ def predict_maintenance():
         
         df = maintenance_analyzer.load_and_process_data()
         
+        # Extract number from query (e.g., "provide 3 maintenance requests", "give me 5 issues")
+        import re
+        limit = 50  # default
+        
+        # Check for specific numbers
+        number_match = re.search(r'\b(\d+)\b', query.lower())
+        if number_match:
+            limit = int(number_match.group(1))
+            limit = min(limit, 50)  # Cap at 50 for safety
+        elif 'one' in query.lower() or 'single' in query.lower():
+            limit = 1
+        elif 'two' in query.lower():
+            limit = 2
+        elif 'three' in query.lower():
+            limit = 3
+        elif 'five' in query.lower():
+            limit = 5
+        elif 'ten' in query.lower():
+            limit = 10
+        
         # Fetch actual maintenance requests from database
-        maintenance_requests_df = maintenance_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=50)
+        maintenance_requests_df = maintenance_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=limit)
         
         # Try advanced analysis first, fallback to basic if needed
         try:
@@ -1170,6 +1406,7 @@ Monitor alert trends and address root causes proactively."""
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
+<<<<<<< HEAD
 @app.route('/reports/weekly', methods=['POST', 'OPTIONS'])
 def generate_weekly_summary():
     """
@@ -2003,6 +2240,8 @@ def context_analysis():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
+=======
+>>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
 @app.route('/billing/rates', methods=['POST', 'OPTIONS'])
 def billing_rates():
     """Get billing rates with LLM-powered cost optimization suggestions"""
@@ -2408,13 +2647,10 @@ def require_role(required_role: str):
         return decorated_function
     return decorator
 
-# Apply enhanced role-based access control
+# Apply enhanced role-based access control (only for existing endpoints)
 predict_maintenance = require_role('maintenance')(predict_maintenance)
 detect_anomalies = require_role('anomalies')(detect_anomalies)
-generate_weekly_summary = require_role('reports')(generate_weekly_summary)
-energy_insights = require_role('energy')(energy_insights)
-room_utilization = require_role('utilization')(room_utilization)
-context_analysis = require_role('context')(context_analysis)
+# Removed decorators for deleted endpoints: generate_weekly_summary, energy_insights, room_utilization, context_analysis
 
 # Error handlers
 @app.errorhandler(404)
@@ -2469,28 +2705,31 @@ if __name__ == '__main__':
         
         print("\n📡 Available Endpoints:")
         endpoints = [
-            ("GET   /health", "System health with detailed analytics"),
-            ("POST  /llmquery", "Enhanced LLM queries with metadata"),
-            ("POST  /insights/energy", "Comprehensive energy analysis"),
-            ("POST  /maintenance/predict", "Predictive maintenance with fallbacks"),
-            ("POST  /anomalies/detect", "Multi-method anomaly detection"),
-            ("POST  /reports/weekly", "Detailed weekly summaries"),
-            ("POST  /rooms/utilization", "Advanced room usage analytics"),
-            ("POST  /context/analyze", "Context-aware system analysis"),
-            ("GET   /system/status", "Comprehensive system status")
+            ("GET   /health", "System health check"),
+            ("POST  /llmquery", "General LLM chat queries"),
+            ("POST  /energy/report", "Energy analysis (daily/weekly/monthly/yearly)"),
+            ("POST  /maintenance/predict", "Maintenance predictions with LLM"),
+            ("POST  /anomalies/detect", "Anomaly detection"),
+            ("POST  /billing/rates", "Billing analysis with LLM"),
+            ("POST  /kpi/heartbeat", "KPI monitoring"),
+            ("POST  /chat/history/save", "Save chat to MongoDB"),
+            ("POST  /chat/history/get", "Retrieve chat history"),
+            ("GET   /system/status", "System status"),
+            ("", ""),
+            ("POST  /ask", "Legacy: redirects to /llmquery"),
+            ("POST  /reports/weekly", "Legacy: redirects to /energy/report")
         ]
         
         for endpoint, description in endpoints:
-            print(f"  {endpoint:<25} {description}")
+            print(f"  {endpoint:<30} {description}")
         
-        print("\n🔐 Enhanced Role-Based Access:")
+        print("\n🔐 Role-Based Access:")
         roles = {
             'admin': 'Full system access',
-            'facility_manager': 'Maintenance, reports, anomalies, energy, utilization',
-            'energy_analyst': 'Energy analysis, reports, context',
+            'facility_manager': 'Maintenance, energy, anomalies, billing, KPI',
+            'energy_analyst': 'Energy analysis, billing, KPI',
             'technician': 'Maintenance and anomaly access', 
-            'viewer': 'Reports and utilization analysis',
-            'guest': 'Basic report access'
+            'viewer': 'Energy reports and KPI monitoring'
         }
         
         for role, access in roles.items():
