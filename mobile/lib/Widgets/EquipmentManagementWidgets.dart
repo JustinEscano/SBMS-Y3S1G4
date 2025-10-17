@@ -713,7 +713,7 @@ class EquipmentManagementWidgets {
                       ),
                     ),
                     Text(
-                      'Total Equipment',
+                      'Equipment',
                       style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
                     ),
                   ],

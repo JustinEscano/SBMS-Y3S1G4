@@ -626,7 +626,7 @@ class RoomManagementWidgets {
                       ),
                     ),
                     Text(
-                      'Total Capacity',
+                      'Capacity',
                       style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
                     ),
                   ],
