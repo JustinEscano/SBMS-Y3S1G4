@@ -440,11 +440,7 @@ const LLMChatPage: React.FC = () => {
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-<<<<<<< HEAD
-      content: "Generating weekly summary with timestamps...",
-=======
       content: "📊 Generating weekly energy report with timestamps...",
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
       timestamp: new Date(),
       isLoading: true,
     };
@@ -463,14 +459,6 @@ const LLMChatPage: React.FC = () => {
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-<<<<<<< HEAD
-      const summary = data.executive_summary || data.answer || "Weekly summary generated.";
-      const period = data.period || {};
-      const periodInfo = period.description ? `\n📅 Period: ${period.description}\n` : "";
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `📊 Weekly Summary${periodInfo}\n${summary}`, isLoading: false }) : m));
-    } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
-=======
       
       // Format the response with energy data
       const lines: string[] = [];
@@ -502,7 +490,6 @@ const LLMChatPage: React.FC = () => {
       const errorMsg = `Error: ${err.message || 'Unknown error'}`;
       setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
       await saveChatToMongoDB("Weekly energy report", errorMsg, "energy", "energy_analyst", undefined, true);
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
     } finally {
       setIsLoading(false);
     }
@@ -514,11 +501,7 @@ const LLMChatPage: React.FC = () => {
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-<<<<<<< HEAD
-      content: "Generating daily summary with timestamps...",
-=======
       content: "📊 Generating daily energy report with timestamps...",
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
       timestamp: new Date(),
       isLoading: true,
     };
@@ -526,16 +509,6 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-<<<<<<< HEAD
-      const response = await fetch("http://localhost:5000/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
-        body: JSON.stringify({ 
-          query: "daily energy report",
-          user_id: "web_user",
-          username: "Web User",
-          session_id: `web_${Date.now()}`
-=======
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
@@ -543,17 +516,10 @@ const LLMChatPage: React.FC = () => {
           period: "daily",
           user_id: "web_user",
           username: "Web User"
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-<<<<<<< HEAD
-      const answer = data.answer || "Daily energy report generated.";
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: answer, isLoading: false }) : m));
-    } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
-=======
       
       // Format the response with energy data
       const lines: string[] = [];
@@ -585,7 +551,6 @@ const LLMChatPage: React.FC = () => {
       const errorMsg = `Error: ${err.message || 'Unknown error'}`;
       setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
       await saveChatToMongoDB("Daily energy report", errorMsg, "energy", "energy_analyst", undefined, true);
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
     } finally {
       setIsLoading(false);
     }
@@ -597,11 +562,7 @@ const LLMChatPage: React.FC = () => {
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-<<<<<<< HEAD
-      content: "Generating monthly summary with timestamps...",
-=======
       content: "📊 Generating monthly energy report with timestamps...",
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
       timestamp: new Date(),
       isLoading: true,
     };
@@ -609,16 +570,6 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-<<<<<<< HEAD
-      const response = await fetch("http://localhost:5000/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
-        body: JSON.stringify({ 
-          query: "monthly energy report",
-          user_id: "web_user",
-          username: "Web User",
-          session_id: `web_${Date.now()}`
-=======
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
@@ -626,17 +577,10 @@ const LLMChatPage: React.FC = () => {
           period: "monthly",
           user_id: "web_user",
           username: "Web User"
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-<<<<<<< HEAD
-      const answer = data.answer || "Monthly energy report generated.";
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: answer, isLoading: false }) : m));
-    } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
-=======
       
       // Format the response with energy data
       const lines: string[] = [];
@@ -668,7 +612,6 @@ const LLMChatPage: React.FC = () => {
       const errorMsg = `Error: ${err.message || 'Unknown error'}`;
       setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
       await saveChatToMongoDB("Monthly energy report", errorMsg, "energy", "energy_analyst", undefined, true);
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
     } finally {
       setIsLoading(false);
     }
