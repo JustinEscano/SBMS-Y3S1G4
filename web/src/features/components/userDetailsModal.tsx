@@ -1,7 +1,7 @@
 // UserDetailsModal.tsx
 import React, { useState, useEffect } from "react";
 import type { User, Profile } from "../types/dashboardTypes";
-import "./Modal.css";
+import "./UserDetailsModal.css"; // Specific CSS for this modal
 
 interface UserDetailsModalProps {
   user: User | null;
@@ -34,13 +34,14 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [formData, setFormData] = useState<FormData>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => setCurrentMode(mode), [mode]);
 
   // Pre-fill form data including profile
   useEffect(() => {
     if ((currentMode === "edit" || currentMode === "view") && user) {
-      setFormData({
+      const newFormData = {
         username: user.username || "",
         email: user.email || "",
         role: user.role || "",
@@ -48,20 +49,41 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         organization: user.profile?.organization || "",
         address: user.profile?.address || "",
         profile_picture: user.profile?.profile_picture,
-      });
+      };
+      setFormData(newFormData);
+
+      // Set preview for existing image
+      if (user.profile?.profile_picture && typeof user.profile.profile_picture === "string") {
+        setPreviewUrl(user.profile.profile_picture);
+      }
     }
   }, [currentMode, user]);
+
+  // Cleanup preview URL on unmount or file change
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   if (!isOpen) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError(null); // Clear error on input
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setFormData((prev) => ({ ...prev, profile_picture: file }));
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setFormData((prev) => ({ ...prev, profile_picture: file }));
+    }
+    setError(null);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -82,8 +104,8 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       };
       await onUpdate(payload);
       onClose();
-    } catch {
-      setError("Failed to save user. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Failed to save user. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -96,105 +118,180 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       setError(null);
       await onDelete(user.id);
       onClose();
-    } catch {
-      setError("Failed to delete user. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Failed to delete user. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    if (currentMode === "edit" && user) {
-      onClose()
-      setError(null);
-    } else {
-      onClose();
-    }
+    setError(null);
+    onClose();
   };
 
+  const isViewMode = currentMode === "view";
+  const isEditMode = currentMode === "edit";
+  const isDeleteMode = currentMode === "delete";
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="user-modal-backdrop" onClick={handleCancel}>
+      <div className="user-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="user-modal-header">
           <h2>
-            {currentMode === "edit"
-              ? "Edit User"
-              : currentMode === "delete"
-              ? "Delete User"
-              : "User Details"}
+            {isEditMode ? "Edit User" : isDeleteMode ? "Delete User" : "User Details"}
           </h2>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+          <button className="user-modal-close" onClick={handleCancel} aria-label="Close modal">
+            &times;
+          </button>
         </div>
 
-        <div className="modal-content">
+        <div className="user-modal-content">
+          {isDeleteMode && user && (
+            <div className="user-delete-content">
+              <p className="user-delete-text">
+                Are you sure you want to delete user <strong>{user.username}</strong> ({user.email})? This action cannot be undone.
+              </p>
+            </div>
+          )}
 
-          {currentMode === "edit" && (
-            <form onSubmit={handleSave}>
-              <label>Username:
-                <input type="text" name="username" value={formData.username || ""} onChange={handleChange} required />
-              </label>
-              <label>Email:
-                <input type="email" name="email" value={formData.email || ""} onChange={handleChange} required />
-              </label>
-              <label>Role:
-                <select name="role" value={formData.role || ""} onChange={handleChange} required>
-                  <option value="">Select role</option>
-                  <option value="admin">Admin</option>
-                  <option value="client">Client</option>
-                </select>
-              </label>
-              <label>Full Name:
-                <input type="text" name="full_name" value={formData.full_name || ""} onChange={handleChange} />
-              </label>
-              <label>Organization:
-                <input type="text" name="organization" value={formData.organization || ""} onChange={handleChange} />
-              </label>
-              <label>Address:
-                <input type="text" name="address" value={formData.address || ""} onChange={handleChange} />
-              </label>
-              <label>Profile Picture:</label>
-              {formData.profile_picture && (
-                <img
-                  src={
-                    typeof formData.profile_picture === "string"
-                      ? formData.profile_picture
-                      : URL.createObjectURL(formData.profile_picture)
-                  }
-                  alt="Profile Preview"
-                  style={{ maxWidth: "100px", borderRadius: "50%", marginBottom: "10px" }}
-                />
-              )}
-              <input type="file" accept="image/*" onChange={handleFileChange} />
-              {error && <p className="field-error">{error}</p>}
+          {(isEditMode || isViewMode) && user && (
+            <form onSubmit={handleSave} className="user-form">
+              <div className="user-form-section user-form-section-profile">
+                <div className="user-profile-preview">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="Profile Preview"
+                      className="user-profile-img"
+                    />
+                  ) : (
+                    <div className="user-profile-placeholder">
+                      <span className="user-profile-placeholder-icon">👤</span>
+                      <span className="user-profile-placeholder-text">No Image</span>
+                    </div>
+                  )}
+                </div>
+                {isEditMode && (
+                  <div className="user-file-input-wrapper">
+                    <input
+                      id="profile_picture"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="user-file-input"
+                    />
+                    <label htmlFor="profile_picture" className="user-file-label">
+                      Choose File {formData.profile_picture ? `(1 file chosen)` : `No file chosen`}
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div className="user-form-grid">
+                <div className="user-form-group">
+                  <label htmlFor="username">Username:</label>
+                  <input
+                    id="username"
+                    type="text"
+                    name="username"
+                    value={formData.username || ""}
+                    onChange={handleChange}
+                    disabled={isViewMode}
+                    required={!isViewMode}
+                    aria-required={!isViewMode}
+                  />
+                </div>
+
+                <div className="user-form-group">
+                  <label htmlFor="email">Email:</label>
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email || ""}
+                    onChange={handleChange}
+                    disabled={isViewMode}
+                    required={!isViewMode}
+                    aria-required={!isViewMode}
+                  />
+                </div>
+
+                <div className="user-form-group">
+                  <label htmlFor="role">Role:</label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role || ""}
+                    onChange={handleChange}
+                    disabled={isViewMode}
+                    required={!isViewMode}
+                    aria-required={!isViewMode}
+                  >
+                    <option value="">Select role</option>
+                    <option value="admin">Admin</option>
+                    <option value="client">Client</option>
+                  </select>
+                </div>
+
+                <div className="user-form-group">
+                  <label htmlFor="organization">Organization:</label>
+                  <input
+                    id="organization"
+                    type="text"
+                    name="organization"
+                    value={formData.organization || ""}
+                    onChange={handleChange}
+                    disabled={isViewMode}
+                  />
+                </div>
+
+                <div className="user-form-group">
+                  <label htmlFor="address">Address:</label>
+                  <input
+                    id="address"
+                    type="text"
+                    name="address"
+                    value={formData.address || ""}
+                    onChange={handleChange}
+                    disabled={isViewMode}
+                  />
+                </div>
+              </div>
+
+              {error && <p className="user-form-error" role="alert">{error}</p>}
             </form>
           )}
+        </div>
 
-          {currentMode === "delete" && user && (
-            <p>
-              Are you sure you want to delete user <strong>{user.username}</strong> ({user.email})?
-            </p>
-          )}
-
-          <div className="modal-actions">
-
-          {currentMode === "edit" && (
+        <div className="user-modal-actions">
+          {isEditMode && (
             <>
-              <button type="button" onClick={handleCancel}>Cancel</button>
-              <button type="submit" onClick={handleSave} disabled={loading} className="add-btn">
-                {loading ? "Saving..." : "Save"}
+              <button type="button" onClick={handleCancel} disabled={loading}>
+                Cancel
+              </button>
+              <button type="submit" onClick={handleSave} disabled={loading} className="user-save-btn">
+                {loading ? "Saving..." : "Save Changes"}
               </button>
             </>
           )}
 
-          {currentMode === "delete" && user && (
+          {isDeleteMode && (
             <>
-              <button type="button" onClick={handleCancel}>Cancel</button>
-              <button type="button" onClick={handleDelete} disabled={loading} className="delete-btn">
+              <button type="button" onClick={handleCancel} disabled={loading}>
+                Cancel
+              </button>
+              <button type="button" onClick={handleDelete} disabled={loading} className="user-delete-btn">
                 {loading ? "Deleting..." : "Confirm Delete"}
               </button>
             </>
           )}
-        </div>
+
+          {isViewMode && (
+            <button type="button" onClick={handleCancel}>
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>

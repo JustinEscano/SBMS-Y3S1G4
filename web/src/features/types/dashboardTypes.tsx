@@ -1,3 +1,4 @@
+// src/types/dashboardTypes.ts - Updated
 // ✅ Strict equipment hardware types from backend
 export type EquipmentType =
   | "esp32"
@@ -55,10 +56,16 @@ export interface MaintenanceRequest {
   status: "pending" | "in_progress" | "resolved";
   scheduled_date: string;
   resolved_at?: string;
-  assigned_to?: string;
+  assigned_to?: string | null;
   comments?: string;
   attachments: Attachment[];
   response?: string;
+  created_at?: string; // Added
+  shared_with?: string[]; // Added (array of user IDs or usernames)
+  title?: string; // Added for compatibility
+  description?: string; // Added for compatibility
+  device?: string; // Added (alias for equipment)
+  location?: string; // Added
 }
 
 export interface User {

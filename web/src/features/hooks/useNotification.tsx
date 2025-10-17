@@ -6,34 +6,35 @@ export const useNotifications = (userId?: string, pollInterval = 30000) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Utility to normalize dates (fallback to now if invalid/missing)
+  // ✅ Normalize notification metadata
   const normalizeNotification = useCallback((notif: Notification): Notification => {
     const createdAt = notif.metadata?.created_at;
-    const date = createdAt ? new Date(createdAt) : new Date(); // Defaults to Oct 15, 2025
+    const date = createdAt ? new Date(createdAt) : new Date();
     return {
       ...notif,
       metadata: {
         user_name: notif.metadata?.user_name ?? "",
         category_display: notif.metadata?.category_display ?? "",
-        created_at: isNaN(date.getTime()) ? new Date().toISOString() : (createdAt ?? ""),
+        created_at: isNaN(date.getTime())
+          ? new Date().toISOString()
+          : (createdAt ?? ""),
       },
     };
   }, []);
 
+  // ✅ Fetch notifications
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const data = userId
         ? await notificationService.getByUserId(userId)
         : await notificationService.getAll();
-      
-      // Normalize dates and log (now accesses nested)
-      const normalizedData = data.map(normalizeNotification);+
-      
+
+      const normalizedData = data.map(normalizeNotification);
       setNotifications(normalizedData);
     } catch (err: any) {
       console.error(err);
-      setNotifications([]); // Fallback to empty on error
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -43,42 +44,55 @@ export const useNotifications = (userId?: string, pollInterval = 30000) => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, pollInterval);
     return () => clearInterval(interval);
-  }, [fetchNotifications, pollInterval, userId]); // Added userId dep
+  }, [fetchNotifications, pollInterval, userId]);
 
+  // ✅ Mark as read
   const markAsRead = useCallback(async (id: string) => {
     try {
       await notificationService.markAsRead(id);
       setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, read: true } : n)) // Preserves metadata
+        prev.map(n => (n.id === id ? { ...n, read: true } : n))
       );
     } catch (err: any) {
       console.error(`Failed to mark notification ${id} as read:`, err);
     }
   }, []);
 
+  // ✅ Mark as unread
   const markAsUnread = useCallback(async (id: string) => {
     try {
       await notificationService.markAsUnread(id);
       setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, read: false } : n)) // Preserves metadata
+        prev.map(n => (n.id === id ? { ...n, read: false } : n))
       );
     } catch (err: any) {
       console.error(`Failed to mark notification ${id} as unread:`, err);
     }
   }, []);
 
+  // ✅ Mark all as read
   const markAllAsRead = useCallback(async () => {
     try {
       const unread = notifications.filter(n => !n.read);
       await Promise.all(
         unread.map(n => notificationService.markAsRead(n.id).catch(console.error))
       );
-      setNotifications(prev => prev.map(n => ({ ...n, read: true }))); // Preserves metadata
-      fetchNotifications(); // Refetch to sync
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      fetchNotifications(); // Sync with backend
     } catch (err: any) {
       console.error("Failed to mark all notifications as read:", err);
     }
-  }, [notifications]);
+  }, [notifications, fetchNotifications]);
+
+  // ✅ Delete a single notification
+  const deleteNotification = useCallback(async (id: string) => {
+    try {
+      await notificationService.delete(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (err: any) {
+      console.error(`Failed to delete notification ${id}:`, err);
+    }
+  }, []);
 
   return {
     notifications,
@@ -87,5 +101,6 @@ export const useNotifications = (userId?: string, pollInterval = 30000) => {
     markAsRead,
     markAsUnread,
     markAllAsRead,
+    deleteNotification, // ✅ expose it
   };
 };
