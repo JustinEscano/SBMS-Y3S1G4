@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:mobile/Screens/HelpSupportScreen.dart';
 import 'package:mobile/Screens/PrivacyPolicyScreen.dart';
 import 'package:mobile/Screens/ProfileDetails.dart';
 import 'dart:io';
@@ -124,6 +125,13 @@ class ProfileWidgets {
                     ],
                   ),
                 ),
+                Text(
+                  "\n\n\n\n\n\n\n\n\nEdit Profile",
+                  style: GoogleFonts.poppins(
+                    fontSize: 8,
+                    color: Colors.grey,
+                  ),
+                ),
               ],
             ),
           ),
@@ -139,8 +147,10 @@ class ProfileWidgets {
     required TextEditingController organizationController,
     required TextEditingController addressController,
     required bool isEditing,
+    
   }) {
     return Card(
+      color: Colors.black,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Container(
@@ -157,7 +167,7 @@ class ProfileWidgets {
               validator: (value) => value!.isEmpty ? 'Username is required' : null,
               enabled: isEditing,
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, color: Colors.white24,),
             _buildTextField(
               controller: emailController,
               icon: Icons.email,
@@ -165,21 +175,21 @@ class ProfileWidgets {
               validator: (value) => value!.contains('@') ? null : 'Invalid email',
               enabled: isEditing,
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, color: Colors.white24,),
             _buildTextField(
               controller: fullNameController,
               icon: Icons.perm_identity_rounded,
               label: 'Full Name',
               enabled: isEditing,
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, color: Colors.white24,),
             _buildTextField(
               controller: organizationController,
               icon: Icons.business,
               label: 'Organization',
               enabled: isEditing,
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, color: Colors.white24,),
             _buildTextField(
               controller: addressController,
               icon: Icons.house,
@@ -279,6 +289,7 @@ class ProfileWidgets {
 
   static Widget buildOptionsCard(BuildContext context, String accessToken, String refreshToken) {
     return Card(
+      color: Colors.black,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
@@ -297,7 +308,7 @@ class ProfileWidgets {
                 );
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, color: Colors.white24,),
             _buildOptionTile(
               icon: Icons.info,
               title: 'About Us',
@@ -307,17 +318,20 @@ class ProfileWidgets {
                 );
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, color: Colors.white24,),
             _buildOptionTile(
               icon: Icons.help,
               title: 'Help & Support',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Help & Support feature coming soon!', style: GoogleFonts.poppins())),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Helpsupportscreen(),
+                  ),
                 );
               },
             ),
-            const Divider(height: 1),
+            const Divider(height: 1, color: Colors.white24,),
             _buildOptionTile(
               icon: Icons.privacy_tip,
               title: 'Privacy Policy',
@@ -325,7 +339,7 @@ class ProfileWidgets {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Privacypolicyscreen(accessToken: accessToken, refreshToken: refreshToken ?? '',),
+                    builder: (context) => Privacypolicyscreen(),
                   ),
                 );
               }
