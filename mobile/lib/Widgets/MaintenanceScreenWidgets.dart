@@ -24,7 +24,7 @@ class MaintenanceScreenWidgets {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.of(context).pop(false), // Return false to indicate cancel
+            onPressed: () => Navigator.of(context).pop(false),
             icon: const Icon(Icons.close, color: Colors.white70),
           ),
         ],
@@ -45,7 +45,7 @@ class MaintenanceScreenWidgets {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // Return false to indicate cancel
+            onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'Cancel',
               style: GoogleFonts.urbanist(
@@ -313,10 +313,13 @@ class MaintenanceScreenWidgets {
                           color: Colors.white,
                         ),
                       ),
-                      backgroundColor: statusColor.withOpacity(0.2),
+                      backgroundColor: Color.alphaBlend(
+                        statusColor.withOpacity(0.4),
+                        const Color(0xFF2A2A2E),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: statusColor.withOpacity(0.4)),
+                        side: BorderSide(color: statusColor.withOpacity(0.8)),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     ),
