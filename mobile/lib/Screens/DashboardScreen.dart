@@ -41,7 +41,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  // Fetch profile data for profile picture
   Future<void> _fetchProfile() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
@@ -56,7 +55,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // Helper method to determine the correct profile picture URL
   String _getProfilePictureUrl(String? picturePath) {
     if (picturePath == null || picturePath.isEmpty) {
       return '';
@@ -83,7 +81,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching user role: $e')),
+        SnackBar(
+          content: Text(
+            'Error fetching user role: $e',
+            style: GoogleFonts.urbanist(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -181,7 +185,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ));
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$systemType management coming soon!')),
+              SnackBar(
+                content: Text(
+                  '$systemType management coming soon!',
+                  style: GoogleFonts.urbanist(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
@@ -196,7 +206,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final esp32Count = provider.equipment.where((e) => e['type']?.toLowerCase() == 'esp32').length;
     final totalCapacity = provider.rooms.fold<int>(0, (sum, room) => sum + (room['capacity'] as int? ?? 0));
 
-    // Determine profile picture
     ImageProvider? profileImage;
     bool hasImage = false;
     String profilePictureUrl = _getProfilePictureUrl(_profileData?['profile']['profile_picture']);
@@ -208,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFF1F1E23),
+        backgroundColor: const Color(0xFF121822),
         title: Row(
           children: [
             GestureDetector(
@@ -236,7 +245,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(
               child: Text(
                 _profileData?['username'] ?? 'User',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.urbanist(
                   fontWeight: FontWeight.w600,
                   fontSize: 18,
                   color: Colors.white,
@@ -262,7 +271,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       backgroundColor: const Color(0xFF000000),
       body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
           : RefreshIndicator(
         onRefresh: () => provider.loadData(context: context),
         child: SingleChildScrollView(
@@ -270,13 +279,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Dashboard',
+                style: GoogleFonts.urbanist(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
               if (provider.errorMessage.isNotEmpty)
                 DashboardScreenWidgets.buildErrorBanner(provider.errorMessage),
-              DashboardScreenWidgets.buildWelcomeCard(),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Building Systems',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -337,9 +358,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Infrastructure Overview',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -388,9 +413,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Quick Actions',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: GoogleFonts.urbanist(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 12),
               Row(

@@ -1,97 +1,792 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class EquipmentManagementWidgets {
-  static Widget buildSummaryCards(BuildContext context, int totalCount, int onlineCount, int esp32Count) {
+  static Widget buildDialogHeader(
+      BuildContext context, {String title = '', IconData icon = Icons.devices}) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return IntrinsicHeight(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    color: const Color(0xFF1F1E23),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.devices, color: Colors.blue[700], size: 24),
-                          const SizedBox(height: 4),
-                          FittedBox(
-                            child: Text(
-                              '$totalCount',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ),
-                          const FittedBox(
-                            child: Text('Total Equipment', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    color: const Color(0xFF1F1E23),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.online_prediction, color: Colors.green[700], size: 24),
-                          const SizedBox(height: 4),
-                          FittedBox(
-                            child: Text(
-                              '$onlineCount',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ),
-                          const FittedBox(
-                            child: Text('Online', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Card(
-                    color: const Color(0xFF1F1E23),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.memory, color: Colors.purple[700], size: 24),
-                          const SizedBox(height: 4),
-                          FittedBox(
-                            child: Text(
-                              '$esp32Count',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ),
-                          const FittedBox(
-                            child: Text('ESP32 Devices', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1F1E23),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF184BFB), size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            icon: const Icon(Icons.close, color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildDialogFooter(
+      BuildContext context, {
+        required VoidCallback onAction,
+        String actionText = 'Save',
+        VoidCallback? onCancel,
+        String? secondaryActionText,
+        VoidCallback? onSecondaryAction,
+      }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.2))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: onCancel ?? () => Navigator.of(context).pop(false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          if (secondaryActionText != null && onSecondaryAction != null) ...[
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: onSecondaryAction,
+              child: Text(
+                secondaryActionText,
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white70,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: onAction,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF184BFB),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(
+              actionText,
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildAddEditEquipmentDialog(
+      BuildContext context, {
+        required bool isEditing,
+        required Map<String, dynamic>? equipmentItem,
+        required List<dynamic> rooms,
+        required List<Map<String, String>> equipmentTypeOptions,
+        required List<Map<String, String>> equipmentStatusOptions,
+        required Function(String?, String, String, String, String, String?, String) onSave,
+        required VoidCallback onCancel,
+      }) {
+    final nameController = TextEditingController(text: equipmentItem?['name'] ?? '');
+    final deviceIdController = TextEditingController(text: equipmentItem?['device_id'] ?? '');
+    final qrCodeController = TextEditingController(text: equipmentItem?['qr_code'] ?? '');
+    String selectedRoomId = equipmentItem?['room']?.toString() ?? '';
+    String selectedStatus = equipmentItem?['status'] ?? 'offline';
+    String selectedType = equipmentItem?['type'] ?? 'sensor';
+    String? nameError;
+    String? typeError;
+
+    if (!equipmentTypeOptions.any((option) => option['value'] == selectedType)) {
+      selectedType = 'sensor';
+    }
+
+    return Container(
+      width: double.infinity, // Ensure dialog takes full width within constraints
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxWidth: 400,
+        minWidth: 300, // Add minimum width to prevent collapse
+      ),
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          void validateInputs() {
+            setDialogState(() {
+              nameError = nameController.text.isEmpty ? 'Equipment name is required' : null;
+              typeError = selectedType.isEmpty ? 'Equipment type is required' : null;
+            });
+          }
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              buildDialogHeader(
+                context,
+                title: isEditing ? 'Edit Equipment' : 'Add Equipment',
+                icon: Icons.devices,
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360), // Constrain inner content width
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Equipment Details',
+                            style: GoogleFonts.urbanist(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: nameController,
+                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                            decoration: InputDecoration(
+                              labelText: 'Equipment Name *',
+                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                              filled: true,
+                              fillColor: const Color(0xFF121822),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                              ),
+                              errorText: nameError,
+                              errorStyle: GoogleFonts.urbanist(color: Colors.red, fontSize: 12),
+                              prefixIcon: const Icon(Icons.devices, color: Colors.white70),
+                            ),
+                            textInputAction: TextInputAction.next,
+                            onChanged: (_) => validateInputs(),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: selectedType,
+                            decoration: InputDecoration(
+                              labelText: 'Equipment Type *',
+                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                              filled: true,
+                              fillColor: const Color(0xFF121822),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                              ),
+                              errorText: typeError,
+                              errorStyle: GoogleFonts.urbanist(color: Colors.red, fontSize: 12),
+                              prefixIcon: const Icon(Icons.category, color: Colors.white70),
+                            ),
+                            dropdownColor: const Color(0xFF121822),
+                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                            isExpanded: true, // Ensure dropdown takes available width
+                            items: equipmentTypeOptions
+                                .map((option) => DropdownMenuItem(
+                              value: option['value'],
+                              child: Text(
+                                option['label']!,
+                                style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ))
+                                .toList(),
+                            onChanged: (value) {
+                              setDialogState(() {
+                                selectedType = value ?? 'sensor';
+                              });
+                              validateInputs();
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: deviceIdController,
+                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                            decoration: InputDecoration(
+                              labelText: 'Device ID',
+                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                              filled: true,
+                              fillColor: const Color(0xFF121822),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                              ),
+                              prefixIcon: const Icon(Icons.memory, color: Colors.white70),
+                              hintText: 'e.g., ESP32_001',
+                              hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                            ),
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: qrCodeController,
+                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                            decoration: InputDecoration(
+                              labelText: 'QR Code',
+                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                              filled: true,
+                              fillColor: const Color(0xFF121822),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                              ),
+                              prefixIcon: const Icon(Icons.qr_code, color: Colors.white70),
+                              hintText: 'QR code identifier',
+                              hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                            ),
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: selectedRoomId.isEmpty ? null : selectedRoomId,
+                            decoration: InputDecoration(
+                              labelText: 'Assign to Room',
+                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                              filled: true,
+                              fillColor: const Color(0xFF121822),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                              ),
+                              prefixIcon: const Icon(Icons.room, color: Colors.white70),
+                              hintText: 'Select a room (optional)',
+                              hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                            ),
+                            dropdownColor: const Color(0xFF121822),
+                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                            isExpanded: true,
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: '',
+                                child: Text('No room assigned'),
+                              ),
+                              ...rooms.map((room) => DropdownMenuItem<String>(
+                                value: room['id'].toString(),
+                                child: Text(
+                                  '${room['name']} (Floor ${room['floor']})',
+                                  style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ))
+                            ],
+                            onChanged: (value) {
+                              setDialogState(() {
+                                selectedRoomId = value ?? '';
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: selectedStatus,
+                            decoration: InputDecoration(
+                              labelText: 'Status',
+                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                              filled: true,
+                              fillColor: const Color(0xFF121822),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                              ),
+                              prefixIcon: const Icon(Icons.power_settings_new, color: Colors.white70),
+                            ),
+                            dropdownColor: const Color(0xFF121822),
+                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                            isExpanded: true,
+                            items: equipmentStatusOptions
+                                .map((option) => DropdownMenuItem(
+                              value: option['value'],
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(option['value']),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      option['label']!,
+                                      style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
+                                .toList(),
+                            onChanged: (value) {
+                              setDialogState(() {
+                                selectedStatus = value ?? 'offline';
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '* Required fields',
+                            style: GoogleFonts.urbanist(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              buildDialogFooter(
+                context,
+                actionText: isEditing ? 'Update' : 'Add',
+                onAction: () {
+                  validateInputs();
+                  if (nameError == null && typeError == null) {
+                    onSave(
+                      equipmentItem?['id']?.toString(),
+                      nameController.text,
+                      selectedType,
+                      deviceIdController.text,
+                      qrCodeController.text,
+                      selectedRoomId.isEmpty ? null : selectedRoomId,
+                      selectedStatus,
+                    );
+                  }
+                },
+                onCancel: onCancel,
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  static Widget buildFilterChips(BuildContext context, {
+  static Widget buildCustomFAB({
+    required VoidCallback? onPressed,
+    required String tooltip,
+    required bool isEnabled,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        transform: Matrix4.identity()..scale(isEnabled ? 1.0 : 0.95),
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: isEnabled
+                ? const LinearGradient(
+              colors: [Color(0xFF184BFB), Color(0xFF3B82F6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )
+                : const LinearGradient(
+              colors: [Colors.grey, Colors.grey],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Tooltip(
+            message: tooltip,
+            textStyle: GoogleFonts.urbanist(color: Colors.white, fontSize: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F1E23),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.add_circle,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget buildErrorBanner(String errorMessage) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error, color: Colors.red, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              errorMessage,
+              style: GoogleFonts.urbanist(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildEmptyState({
+    required VoidCallback onAddEquipment,
+    required bool hasEquipment,
+    required bool isRefreshingToken,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.devices_outlined, size: 64, color: Colors.white70),
+          const SizedBox(height: 16),
+          Text(
+            hasEquipment ? 'No Equipment Match Filters' : 'No Equipment Found',
+            style: GoogleFonts.urbanist(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasEquipment ? 'Try adjusting your filters' : 'Add your first equipment to get started',
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white70,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: isRefreshingToken ? null : onAddEquipment,
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: Text(
+              'Add Equipment',
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isRefreshingToken ? Colors.grey : const Color(0xFF184BFB),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildEquipmentList({
+    required List<Map<String, dynamic>> equipmentList,
+    required String Function(String?) getRoomName,
+    required String Function(String?) getTypeLabel,
+    required Color Function(String?) getStatusColor,
+    required Function(Map<String, dynamic>) onEdit,
+    required Function(String, String) onDelete,
+  }) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: equipmentList.length,
+      itemBuilder: (context, index) {
+        final equipment = equipmentList[index];
+        return Card(
+          color: const Color(0xFF121822),
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: CircleAvatar(
+                backgroundColor: getStatusColor(equipment['status']).withOpacity(0.2),
+                child: Icon(
+                  Icons.devices,
+                  color: getStatusColor(equipment['status']),
+                ),
+              ),
+              title: Text(
+                equipment['name'] ?? 'Unknown Equipment',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Type: ${getTypeLabel(equipment['type'])} • Room: ${getRoomName(equipment['room']?.toString())}',
+                    style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (equipment['device_id'] != null)
+                    Text(
+                      'Device ID: ${equipment['device_id']}',
+                      style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: getStatusColor(equipment['status']).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      equipment['status']?.toUpperCase() ?? 'UNKNOWN',
+                      style: GoogleFonts.urbanist(
+                        color: getStatusColor(equipment['status']),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              trailing: PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    onEdit(equipment);
+                  } else if (value == 'delete') {
+                    onDelete(equipment['id'].toString(), equipment['name'] ?? 'Unknown');
+                  }
+                },
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit, size: 20, color: Colors.white70),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Edit',
+                          style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete, size: 20, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Delete',
+                          style: GoogleFonts.urbanist(fontSize: 14, color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                color: const Color(0xFF1F1E23),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  static Widget buildSummaryCards({
+    required int equipmentCount,
+    required int onlineCount,
+    required int esp32Count,
+  }) {
+    return Container(
+      height: 120,
+      margin: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Card(
+              color: const Color(0xFF121822),
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.devices, color: Color(0xFF184BFB), size: 24),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$equipmentCount',
+                      style: GoogleFonts.urbanist(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Total Equipment',
+                      style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Card(
+              color: const Color(0xFF121822),
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.online_prediction, color: Color(0xFF184BFB), size: 24),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$onlineCount',
+                      style: GoogleFonts.urbanist(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Online',
+                      style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Card(
+              color: const Color(0xFF121822),
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.memory, color: Color(0xFF184BFB), size: 24),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$esp32Count',
+                      style: GoogleFonts.urbanist(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'ESP32 Devices',
+                      style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildFilterChips({
     required String filterRoom,
     required String filterType,
     required String Function(String?) getRoomName,
@@ -114,16 +809,34 @@ class EquipmentManagementWidgets {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
-                  label: Text('Room: ${filterRoom == 'unassigned' ? 'Unassigned' : getRoomName(filterRoom)}'),
-                  deleteIcon: const Icon(Icons.close, size: 16),
+                  label: Text(
+                    'Room: ${filterRoom == 'unassigned' ? 'Unassigned' : getRoomName(filterRoom)}',
+                    style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+                  ),
+                  backgroundColor: const Color(0xFF121822),
+                  deleteIcon: const Icon(Icons.close, size: 16, color: Colors.white70),
                   onDeleted: onRemoveRoomFilter,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                  ),
                 ),
               ),
             if (filterType != 'all')
               Chip(
-                label: Text('Type: ${getTypeLabel(filterType)}'),
-                deleteIcon: const Icon(Icons.close, size: 16),
+                label: Text(
+                  'Type: ${getTypeLabel(filterType)}',
+                  style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+                ),
+                backgroundColor: const Color(0xFF121822),
+                deleteIcon: const Icon(Icons.close, size: 16, color: Colors.white70),
                 onDeleted: onRemoveTypeFilter,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                ),
               ),
           ],
         ),
@@ -131,725 +844,205 @@ class EquipmentManagementWidgets {
     );
   }
 
-  static Widget buildErrorBanner(BuildContext context, String errorMessage) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.red[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error, color: Colors.red),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              errorMessage,
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Widget buildEmptyState(BuildContext context, {
-    required bool hasEquipment,
-    required VoidCallback onAddEquipment,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.devices_outlined, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              hasEquipment ? 'No Equipment Match Filters' : 'No Equipment Found',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              hasEquipment ? 'Try adjusting your filters' : 'Add your first equipment to get started',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: onAddEquipment,
-              icon: const Icon(Icons.add),
-              label: const Text('Add Equipment'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget buildEquipmentCard(BuildContext context, {
-    required Map<String, dynamic> equipment,
-    required String Function(String?) getRoomName,
-    required String Function(String?) getTypeLabel,
-    required Color Function(String?) getStatusColor,
-    required Function(Map<String, dynamic>) onEdit,
-    required Function(String, String) onDelete,
-  }) {
-    final statusColor = getStatusColor(equipment['status']);
-
-    return Card(
-      color: const Color(0xFF1F1E23),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.2),
-          child: Icon(
-            Icons.devices,
-            color: statusColor,
-          ),
-        ),
-        title: Text(
-          equipment['name'] ?? 'Unknown Equipment',
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Type: ${getTypeLabel(equipment['type'])} • Room: ${getRoomName(equipment['room']?.toString())}',
-              style: const TextStyle(color: Colors.white70),
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (equipment['device_id'] != null)
-              Text(
-                'Device ID: ${equipment['device_id']}',
-                overflow: TextOverflow.ellipsis,
-              ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                equipment['status']?.toUpperCase() ?? 'UNKNOWN',
-                style: TextStyle(
-                  color: statusColor,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == 'edit') {
-              onEdit(equipment);
-            } else if (value == 'delete') {
-              onDelete(equipment['id'], equipment['name']);
-            }
-          },
-          itemBuilder: (BuildContext context) => [
-            const PopupMenuItem<String>(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 20),
-                  SizedBox(width: 8),
-                  Text('Edit'),
-                ],
-              ),
-            ),
-            const PopupMenuItem<String>(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, size: 20, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        isThreeLine: true,
-      ),
-    );
-  }
-
-  static Widget buildEquipmentList(BuildContext context, {
-    required List<Map<String, dynamic>> equipmentList,
-    required String Function(String?) getRoomName,
-    required String Function(String?) getTypeLabel,
-    required Color Function(String?) getStatusColor,
-    required Function(Map<String, dynamic>) onEdit,
-    required Function(String, String) onDelete,
-    required Future<void> Function() onRefresh,
-  }) {
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: equipmentList.length,
-        itemBuilder: (context, index) {
-          final equipment = equipmentList[index];
-          return buildEquipmentCard(
-            context,
-            equipment: equipment,
-            getRoomName: getRoomName,
-            getTypeLabel: getTypeLabel,
-            getStatusColor: getStatusColor,
-            onEdit: onEdit,
-            onDelete: onDelete,
-          );
-        },
-      ),
-    );
-  }
-
-  static Widget buildDialogHeader(BuildContext context, {
-    required String title,
-    required IconData icon,
-    required VoidCallback onClose,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(4),
-          topRight: Radius.circular(4),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            onPressed: onClose,
-            icon: const Icon(Icons.close),
-            tooltip: 'Close',
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Widget buildDialogFooter(BuildContext context, {
-    required VoidCallback onCancel,
-    required VoidCallback onAction,
-    required String actionText,
-    String? secondaryActionText,
-    VoidCallback? onSecondaryAction,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(4),
-          bottomRight: Radius.circular(4),
-        ),
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: onCancel,
-            child: const Text('Cancel'),
-          ),
-          if (secondaryActionText != null && onSecondaryAction != null) ...[
-            const SizedBox(width: 8),
-            TextButton(
-              onPressed: onSecondaryAction,
-              child: Text(secondaryActionText),
-            ),
-          ],
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: onAction,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-            ),
-            child: Text(actionText),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static Widget buildAddEditEquipmentDialog(BuildContext context, {
-    required bool isEditing,
-    required Map<String, dynamic>? equipmentItem,
-    required List<dynamic> rooms,
-    required List<Map<String, String>> equipmentTypeOptions,
-    required List<Map<String, String>> equipmentStatusOptions,
-    required TextEditingController nameController,
-    required TextEditingController deviceIdController,
-    required TextEditingController qrCodeController,
-    required String selectedRoomId,
-    required String selectedStatus,
-    required String selectedType,
-    required ValueChanged<String> onRoomChanged,
-    required ValueChanged<String> onStatusChanged,
-    required ValueChanged<String> onTypeChanged,
-    required VoidCallback onSave,
-    required VoidCallback onCancel,
-  }) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      child: Container(
-        width: double.maxFinite,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-          maxWidth: 500,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            buildDialogHeader(
-              context,
-              title: isEditing ? 'Edit Equipment' : 'Add New Equipment',
-              icon: isEditing ? Icons.edit : Icons.add,
-              onClose: onCancel,
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Equipment Name *',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.devices),
-                        isDense: true,
-                      ),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-                    buildTypeDropdown(
-                      context,
-                      selectedType: selectedType,
-                      equipmentTypeOptions: equipmentTypeOptions,
-                      onTypeChanged: onTypeChanged,
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: deviceIdController,
-                      decoration: const InputDecoration(
-                        labelText: 'Device ID',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.memory),
-                        hintText: 'e.g., ESP32_001',
-                        isDense: true,
-                      ),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: qrCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'QR Code',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.qr_code),
-                        hintText: 'QR code identifier',
-                        isDense: true,
-                      ),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-                    buildRoomDropdown(
-                      context,
-                      selectedRoomId: selectedRoomId,
-                      rooms: rooms,
-                      onRoomChanged: onRoomChanged,
-                    ),
-                    const SizedBox(height: 16),
-                    buildStatusDropdown(
-                      context,
-                      selectedStatus: selectedStatus,
-                      equipmentStatusOptions: equipmentStatusOptions,
-                      onStatusChanged: onStatusChanged,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 14,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '* Required fields',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            buildDialogFooter(
-              context,
-              onCancel: onCancel,
-              onAction: onSave,
-              actionText: isEditing ? 'Update' : 'Add',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget buildTypeDropdown(BuildContext context, {
-    required String selectedType,
-    required List<Map<String, String>> equipmentTypeOptions,
-    required ValueChanged<String> onTypeChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: selectedType,
-      decoration: const InputDecoration(
-        labelText: 'Equipment Type *',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.category),
-        isDense: true,
-      ),
-      isExpanded: true,
-      items: equipmentTypeOptions.map((option) => DropdownMenuItem<String>(
-        value: option['value'],
-        child: Container(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                option['label']!,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              Text(
-                option['description']!,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[600],
-                  height: 1.2,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ],
-          ),
-        ),
-      )).toList(),
-      onChanged: (value) => onTypeChanged(value ?? 'sensor'),
-      selectedItemBuilder: (BuildContext context) {
-        return equipmentTypeOptions.map<Widget>((option) {
-          return Container(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              option['label']!,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          );
-        }).toList();
-      },
-    );
-  }
-
-  static Widget buildRoomDropdown(BuildContext context, {
-    required String selectedRoomId,
-    required List<dynamic> rooms,
-    required ValueChanged<String> onRoomChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: selectedRoomId.isEmpty ? null : selectedRoomId,
-      decoration: const InputDecoration(
-        labelText: 'Assign to Room',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.room),
-        isDense: true,
-      ),
-      hint: const Text('Select a room (optional)'),
-      isExpanded: true,
-      items: [
-        const DropdownMenuItem<String>(
-          value: '',
-          child: Text('No room assigned'),
-        ),
-        ...rooms.map((room) => DropdownMenuItem<String>(
-          value: room['id'].toString(),
-          child: Text(
-            '${room['name']} (Floor ${room['floor']})',
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        )).toList(),
-      ],
-      onChanged: (value) => onRoomChanged(value ?? ''),
-      selectedItemBuilder: (BuildContext context) {
-        return [
-          Container(
-            alignment: Alignment.centerLeft,
-            child: const Text(
-              'No room assigned',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-          ...rooms.map<Widget>((room) {
-            return Container(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${room['name']} (Floor ${room['floor']})',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            );
-          }).toList(),
-        ];
-      },
-    );
-  }
-
-  static Widget buildStatusDropdown(BuildContext context, {
-    required String selectedStatus,
-    required List<Map<String, String>> equipmentStatusOptions,
-    required ValueChanged<String> onStatusChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: selectedStatus,
-      decoration: const InputDecoration(
-        labelText: 'Status',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.power_settings_new),
-        isDense: true,
-      ),
-      isExpanded: true,
-      items: equipmentStatusOptions.map((option) => DropdownMenuItem<String>(
-        value: option['value'],
-        child: Container(
-          width: double.infinity,
-          child: Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: _getStatusColor(option['value']),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      option['label']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Text(
-                      option['description']!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                        height: 1.2,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      )).toList(),
-      onChanged: (value) => onStatusChanged(value ?? 'offline'),
-      selectedItemBuilder: (BuildContext context) {
-        return equipmentStatusOptions.map<Widget>((option) {
-          return Container(
-            alignment: Alignment.centerLeft,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(option['value']),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    option['label']!,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList();
-      },
-    );
-  }
-
-  static Widget buildFilterDialog(BuildContext context, {
-    required String currentFilterRoom,
-    required String currentFilterType,
-    required List<dynamic> rooms,
-    required List<Map<String, String>> equipmentTypeOptions,
-    required ValueChanged<String> onFilterRoomChanged,
-    required ValueChanged<String> onFilterTypeChanged,
-    required VoidCallback onApply,
-    required VoidCallback onClear,
-    required VoidCallback onCancel,
-  }) {
+  static Widget buildFilterDialog(
+      BuildContext context, {
+        required String currentFilterRoom,
+        required String currentFilterType,
+        required List<dynamic> rooms,
+        required List<Map<String, String>> equipmentTypeOptions,
+        required ValueChanged<String> onFilterRoomChanged,
+        required ValueChanged<String> onFilterTypeChanged,
+        required VoidCallback onApply,
+        required VoidCallback onClear,
+        required VoidCallback onCancel,
+      }) {
     String tempFilterRoom = currentFilterRoom;
     String tempFilterType = currentFilterType;
 
-    return Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      child: Container(
-        width: double.maxFinite,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.6,
-          maxWidth: 400,
-        ),
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
+        maxWidth: 400,
+        minWidth: 300,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildDialogHeader(
+            context,
+            title: 'Filter Equipment',
+            icon: Icons.filter_list,
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: tempFilterRoom,
+                        decoration: InputDecoration(
+                          labelText: 'Filter by Room',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          prefixIcon: const Icon(Icons.room, color: Colors.white70),
+                        ),
+                        dropdownColor: const Color(0xFF121822),
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        isExpanded: true,
+                        items: [
+                          DropdownMenuItem<String>(
+                            value: 'all',
+                            child: Text(
+                              'All Rooms',
+                              style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem<String>(
+                            value: 'unassigned',
+                            child: Text(
+                              'Unassigned',
+                              style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          ...rooms.map((room) => DropdownMenuItem<String>(
+                            value: room['id'].toString(),
+                            child: Text(
+                              room['name'],
+                              style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )),
+                        ],
+                        onChanged: (value) {
+                          tempFilterRoom = value ?? 'all';
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: tempFilterType,
+                        decoration: InputDecoration(
+                          labelText: 'Filter by Type',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          prefixIcon: const Icon(Icons.category, color: Colors.white70),
+                        ),
+                        dropdownColor: const Color(0xFF121822),
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        isExpanded: true,
+                        items: [
+                          DropdownMenuItem<String>(
+                            value: 'all',
+                            child: Text(
+                              'All Types',
+                              style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          ...equipmentTypeOptions.map((option) => DropdownMenuItem<String>(
+                            value: option['value'],
+                            child: Text(
+                              option['label']!,
+                              style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )),
+                        ],
+                        onChanged: (value) {
+                          tempFilterType = value ?? 'all';
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          buildDialogFooter(
+            context,
+            onCancel: onCancel,
+            onAction: () {
+              onFilterRoomChanged(tempFilterRoom);
+              onFilterTypeChanged(tempFilterType);
+              onApply();
+            },
+            actionText: 'Apply',
+            secondaryActionText: 'Clear',
+            onSecondaryAction: () {
+              onFilterRoomChanged('all');
+              onFilterTypeChanged('all');
+              onClear();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget buildDeleteConfirmationDialog({
+    required String equipmentName,
+    required VoidCallback onConfirm,
+  }) {
+    return Builder(
+      builder: (context) => Container(
+        width: double.infinity,
+        constraints: BoxConstraints(maxWidth: 400, minWidth: 300),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             buildDialogHeader(
               context,
-              title: 'Filter Equipment',
-              icon: Icons.filter_list,
-              onClose: onCancel,
+              title: 'Delete Equipment',
+              icon: Icons.delete,
             ),
-            Flexible(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      value: tempFilterRoom,
-                      decoration: const InputDecoration(
-                        labelText: 'Filter by Room',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem<String>(
-                          value: 'all',
-                          child: Text('All Rooms'),
-                        ),
-                        const DropdownMenuItem<String>(
-                          value: 'unassigned',
-                          child: Text('Unassigned'),
-                        ),
-                        ...rooms.map((room) => DropdownMenuItem<String>(
-                          value: room['id'].toString(),
-                          child: Text(
-                            room['name'],
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )).toList(),
-                      ],
-                      onChanged: (value) {
-                        tempFilterRoom = value ?? 'all';
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: tempFilterType,
-                      decoration: const InputDecoration(
-                        labelText: 'Filter by Type',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem<String>(
-                          value: 'all',
-                          child: Text('All Types'),
-                        ),
-                        ...equipmentTypeOptions.map((option) => DropdownMenuItem<String>(
-                          value: option['value'],
-                          child: Text(
-                            option['label']!,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )).toList(),
-                      ],
-                      onChanged: (value) {
-                        tempFilterType = value ?? 'all';
-                      },
-                    ),
-                  ],
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Are you sure you want to delete "$equipmentName"? This will also delete all sensor data associated with this equipment.',
+                style: GoogleFonts.urbanist(
+                  fontSize: 16,
+                  color: Colors.white70,
                 ),
               ),
             ),
             buildDialogFooter(
               context,
-              onCancel: onCancel,
+              actionText: 'Delete',
               onAction: () {
-                onFilterRoomChanged(tempFilterRoom);
-                onFilterTypeChanged(tempFilterType);
-                onApply();
-              },
-              actionText: 'Apply',
-              secondaryActionText: 'Clear',
-              onSecondaryAction: () {
-                onFilterRoomChanged('all');
-                onFilterTypeChanged('all');
-                onClear();
+                Navigator.of(context).pop();
+                onConfirm();
               },
             ),
           ],
@@ -858,34 +1051,93 @@ class EquipmentManagementWidgets {
     );
   }
 
-  static Widget buildDebugDialog(BuildContext context, {
-    required String baseUrl,
-    required int tokenLength,
-    required int equipmentCount,
-    required int roomsCount,
-    required String errorMessage,
-    required bool isLoading,
-    required bool isRefreshingToken,
-  }) {
-    return AlertDialog(
-      title: const Text('Debug Info'),
-      content: SingleChildScrollView(
-        child: Text(
-          'Base URL: $baseUrl\n'
-              'Token Length: $tokenLength\n'
-              'Equipment Count: $equipmentCount\n'
-              'Rooms Count: $roomsCount\n'
-              'Error Message: $errorMessage\n'
-              'Is Loading: $isLoading\n'
-              'Is Refreshing Token: $isRefreshingToken',
-        ),
+  static Widget buildDebugDialog(
+      BuildContext context, {
+        required String baseUrl,
+        required int tokenLength,
+        required int equipmentCount,
+        required int roomsCount,
+        required String errorMessage,
+        required bool isLoading,
+        required bool isRefreshingToken,
+        required VoidCallback onClose,
+      }) {
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(maxWidth: 400, minWidth: 300),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildDialogHeader(
+            context,
+            title: 'Debug Info',
+            icon: Icons.bug_report,
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Debug Information',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Base URL: $baseUrl',
+                        style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Token Length: $tokenLength',
+                        style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Equipment Count: $equipmentCount',
+                        style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Rooms Count: $roomsCount',
+                        style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Error Message: $errorMessage',
+                        style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                      ),
+                      Text(
+                        'Is Loading: $isLoading',
+                        style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Is Refreshing Token: $isRefreshingToken',
+                        style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white70),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          buildDialogFooter(
+            context,
+            actionText: 'Close',
+            onAction: onClose,
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
-      ],
     );
   }
 
