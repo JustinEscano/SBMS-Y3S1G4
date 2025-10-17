@@ -10103,3 +10103,228 @@ Latest sensor data requested
 Returning 4 sensor readings
 Successfully imported core.views.signals
 Successfully imported core.views.signals
+Successfully imported core.views.signals
+Profile updated for user justin
+Attachment upload requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+In-app notification created for justin (ID: 81a88eff-4300-442e-b4c7-e14b04da19de, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 81a88eff-4300-442e-b4c7-e14b04da19de, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: 7f2c29fc-4ff8-4fb4-938b-d59640ea3a4a, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: 7f2c29fc-4ff8-4fb4-938b-d59640ea3a4a, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 17227c49-6844-4d46-a3a7-fc558a014e7e, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 17227c49-6844-4d46-a3a7-fc558a014e7e, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 5f1b7322-17e6-4995-be1f-94bb10010ed8, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: 5f1b7322-17e6-4995-be1f-94bb10010ed8, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: 13d4ca74-54ac-4669-bc7d-7be32cfb356b, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 13d4ca74-54ac-4669-bc7d-7be32cfb356b, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Attachment uploaded: 81e256cc-9e91-4ea7-b962-150989e61b68 for e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Attachment upload requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Attachment uploaded: 2026a1aa-00cd-4734-b61f-0440db8d4963 for e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Attachment upload requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Attachment uploaded: e329e244-d465-4c03-8c5f-24e4a50a12b3 for e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Attachment upload requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Attachment uploaded: 437159e0-9652-4888-9da5-bf21d7c0e8e0 for e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Attachment upload requested for maintenance request 4c5cb59c-a5f4-48fd-b091-b1e4b767675b
+In-app notification created for justin (ID: f653a0a2-a75d-46ff-90d2-28d7421d062e, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: f653a0a2-a75d-46ff-90d2-28d7421d062e, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: 23cc5242-ae0e-430e-94b9-adb75f25ca60, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: 23cc5242-ae0e-430e-94b9-adb75f25ca60, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: fa14cde6-9a75-4ddb-a21f-2cc92be410cf, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Attachment upload requested for maintenance request 4c5cb59c-a5f4-48fd-b091-b1e4b767675b
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 82de648c-95a8-440a-a11a-fbaa9ad25798, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to stnp@example.com (Notification ID: fa14cde6-9a75-4ddb-a21f-2cc92be410cf, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: 01a487ee-c78b-41ae-adad-d3d6f525270f, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to dummy@example.com (Notification ID: 82de648c-95a8-440a-a11a-fbaa9ad25798, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Attachment uploaded: d6aa6b94-7bb5-4c8f-aff7-fb0ad493508e for 4c5cb59c-a5f4-48fd-b091-b1e4b767675b
+Email sent to acephilipgclass18@gmail.com (Notification ID: 01a487ee-c78b-41ae-adad-d3d6f525270f, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Attachment uploaded: f83d5611-ab38-45d3-9e54-ffdec18a31cd for 4c5cb59c-a5f4-48fd-b091-b1e4b767675b
+Attachment upload requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+In-app notification created for justin (ID: beb8d93a-2be0-4fb2-b9a9-eb70a835013e, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: beb8d93a-2be0-4fb2-b9a9-eb70a835013e, Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: bd522136-273f-4b62-a3e0-9412e7dec7d0, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: bd522136-273f-4b62-a3e0-9412e7dec7d0, Type: maintenance_attachment_uploaded, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 2485b974-6d00-42cd-ae46-ffd1a519c907, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 2485b974-6d00-42cd-ae46-ffd1a519c907, Type: maintenance_attachment_uploaded, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: a987c312-0621-46a1-9f46-9b63fee0e4dc, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: a987c312-0621-46a1-9f46-9b63fee0e4dc, Type: maintenance_attachment_uploaded, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: 353611e1-62ce-479b-93d5-a36b0e095558, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 353611e1-62ce-479b-93d5-a36b0e095558, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_attachment_uploaded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Attachment uploaded: 9666385a-bd15-440e-9879-af4d6579c993 for e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+In-app notification created for justin (ID: 2b318df0-342e-44bc-bd7d-88e725c651ef, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 2b318df0-342e-44bc-bd7d-88e725c651ef, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for testuser (ID: cce8bea0-981d-487a-a087-1d6100389a30, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Email sent to testuser@example.com (Notification ID: cce8bea0-981d-487a-a087-1d6100389a30, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+In-app notification created for justin (ID: 3ffecaf1-b0df-4b2d-992f-1db77a51fb54, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 3ffecaf1-b0df-4b2d-992f-1db77a51fb54, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for testuser (ID: 335991ac-3554-4056-b4d0-516d1d129aba, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Email sent to testuser@example.com (Notification ID: 335991ac-3554-4056-b4d0-516d1d129aba, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status in_progress
+In-app notification created for justin (ID: d09a6d26-22cb-4839-86a7-6ba2bc7a041c, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: d09a6d26-22cb-4839-86a7-6ba2bc7a041c, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: 59e60b18-198e-4f39-be3d-1959c27801fe, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: 59e60b18-198e-4f39-be3d-1959c27801fe, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 47669a53-ab5d-448b-a2c8-fbbc22d7f8da, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 47669a53-ab5d-448b-a2c8-fbbc22d7f8da, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: b964333f-14e7-47e2-b0f0-b628e8ef979d, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: b964333f-14e7-47e2-b0f0-b628e8ef979d, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: ded1a568-ef8a-4bda-b932-6f1d79ac9c17, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: ded1a568-ef8a-4bda-b932-6f1d79ac9c17, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status resolved
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status in_progress
+In-app notification created for justin (ID: b28b457a-3ad3-4b12-a02a-104965e9f2f6, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: b28b457a-3ad3-4b12-a02a-104965e9f2f6, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: d0fe79c1-5c43-4daf-a7af-dc81a711665d, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: d0fe79c1-5c43-4daf-a7af-dc81a711665d, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 9de2115f-fff0-44bf-a106-c4fd5acf3de1, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 9de2115f-fff0-44bf-a106-c4fd5acf3de1, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 62d42a4a-03b4-492e-a1ec-d7ecacf050e1, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: 62d42a4a-03b4-492e-a1ec-d7ecacf050e1, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: 79e11ea7-5ec3-48d8-b1f5-937e8a1f5224, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 79e11ea7-5ec3-48d8-b1f5-937e8a1f5224, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status in_progress
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status in_progress
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status in_progress
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status in_progress
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for aceadmin (Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Skipped duplicate notification for sirTaposNaPo (Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Skipped duplicate notification for dummy (Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status resolved
+In-app notification created for justin (ID: 826a75a3-6cb8-44f9-b339-1d0e73fb0b75, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 826a75a3-6cb8-44f9-b339-1d0e73fb0b75, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: 486e3665-5eed-4b5a-876e-45c6ff9f9a1a, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: 486e3665-5eed-4b5a-876e-45c6ff9f9a1a, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: 68072291-098a-4158-b225-6ea63263f9cc, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: 68072291-098a-4158-b225-6ea63263f9cc, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 2ffbbe3c-4ed2-457f-b4f2-7c08776dbd19, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: 2ffbbe3c-4ed2-457f-b4f2-7c08776dbd19, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: 631e0324-8d02-434d-86aa-bce78dfa5e59, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 631e0324-8d02-434d-86aa-bce78dfa5e59, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+In-app notification created for justin (ID: 1d14faf4-618b-437e-ad13-1be450be9459, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 1d14faf4-618b-437e-ad13-1be450be9459, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for testuser (ID: d2b5d7e0-5095-44f4-95d3-0710827eb208, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Email sent to testuser@example.com (Notification ID: d2b5d7e0-5095-44f4-95d3-0710827eb208, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Skipped duplicate notification for justin (Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for testuser (Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Skipped duplicate notification for justin (Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for testuser (Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+In-app notification created for justin (ID: 5394d367-1b30-49f8-9d87-aa5e95629d13, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 5394d367-1b30-49f8-9d87-aa5e95629d13, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for testuser (ID: a6788d8d-4008-4499-81a7-0d5e1be6675f, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Email sent to testuser@example.com (Notification ID: a6788d8d-4008-4499-81a7-0d5e1be6675f, Type: maintenance_request_responded, User ID: 9bb8c6c6-ca7c-45cb-8780-0a4925cbb2cb)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Skipped duplicate notification for justin (Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for ace (ID: 3633ba3d-6185-4fee-a7a0-bfde0704e8b3, Type: maintenance_request_responded, User ID: 9f2cd5cf-3a76-41b5-b7f4-8c165d686c9a)
+Email sent to ace@example.com (Notification ID: 3633ba3d-6185-4fee-a7a0-bfde0704e8b3, Type: maintenance_request_responded, User ID: 9f2cd5cf-3a76-41b5-b7f4-8c165d686c9a)
+In-app notification created for justin (ID: cf745045-0e0f-4966-9395-2bfcb35f0e46, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: cf745045-0e0f-4966-9395-2bfcb35f0e46, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: be4e7592-cc1c-48dd-a264-d41ec850ab51, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: be4e7592-cc1c-48dd-a264-d41ec850ab51, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: d10ab807-0036-40b5-8c29-5d418f082c0a, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: d10ab807-0036-40b5-8c29-5d418f082c0a, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: bea6eabf-d39b-424b-b6c6-ae1669d776c0, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: bea6eabf-d39b-424b-b6c6-ae1669d776c0, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: b808b488-fa56-41b9-8785-19579deb76d0, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: b808b488-fa56-41b9-8785-19579deb76d0, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for ace (ID: b47ea590-f944-4e33-8cc4-fdb2e5f755be, Type: maintenance_request_updated, User ID: 9f2cd5cf-3a76-41b5-b7f4-8c165d686c9a)
+Email sent to ace@example.com (Notification ID: b47ea590-f944-4e33-8cc4-fdb2e5f755be, Type: maintenance_request_updated, User ID: 9f2cd5cf-3a76-41b5-b7f4-8c165d686c9a)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+Skipped duplicate notification for justin (Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Skipped duplicate notification for ace (Type: maintenance_request_responded, User ID: 9f2cd5cf-3a76-41b5-b7f4-8c165d686c9a)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Response requested for maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8
+In-app notification created for justin (ID: 2fffa36d-5c3f-4027-b6e6-8088529f36ec, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 2fffa36d-5c3f-4027-b6e6-8088529f36ec, Type: maintenance_request_responded, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for ace (ID: 20d08d3f-3cc4-45b4-830e-d9e6edf73ad8, Type: maintenance_request_responded, User ID: 9f2cd5cf-3a76-41b5-b7f4-8c165d686c9a)
+Email sent to ace@example.com (Notification ID: 20d08d3f-3cc4-45b4-830e-d9e6edf73ad8, Type: maintenance_request_responded, User ID: 9f2cd5cf-3a76-41b5-b7f4-8c165d686c9a)
+Response added to maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by justin
+Updating maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 by user justin
+Updated maintenance request e5c565d4-709a-4e09-a4ce-99a6d45f92a8 with status in_progress
+In-app notification created for justin (ID: 83482388-bf32-4266-a9d8-b1ee233edd17, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Email sent to example@gmail.com (Notification ID: 83482388-bf32-4266-a9d8-b1ee233edd17, Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+In-app notification created for aceadmin (ID: 82b487c4-1ac9-493d-8b94-e4f9c67333d7, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+Email sent to aceadmin@example.com (Notification ID: 82b487c4-1ac9-493d-8b94-e4f9c67333d7, Type: maintenance_request_updated, User ID: 46dd9e2d-a26b-4a1e-b464-a5cb87f34a60)
+In-app notification created for sirTaposNaPo (ID: f84d4cab-b736-4c71-9fb3-1a829674aad4, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+Email sent to stnp@example.com (Notification ID: f84d4cab-b736-4c71-9fb3-1a829674aad4, Type: maintenance_request_updated, User ID: 8c37211d-58b9-4ddb-b18e-da841a7d2b54)
+In-app notification created for dummy (ID: 0faa7ddf-d345-4460-ad9c-ae360cff5617, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+Email sent to dummy@example.com (Notification ID: 0faa7ddf-d345-4460-ad9c-ae360cff5617, Type: maintenance_request_updated, User ID: 749b104b-1a2a-4d74-af0d-c245f3f7459b)
+In-app notification created for AceAdmin (ID: e7ae16a6-6a86-468c-af8a-8d02ebe43441, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: e7ae16a6-6a86-468c-af8a-8d02ebe43441, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)

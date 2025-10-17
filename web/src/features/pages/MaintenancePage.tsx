@@ -3,13 +3,13 @@ import PageLayout from "../pages/PageLayout";
 import Pagination from "../components/Pagination";
 import MaintenanceModal from "../components/maintenanceModal";
 import type { MaintenanceModalMode } from "../components/maintenanceModal";
-import MaintenanceViewModal from "../components/maintenanceViewModal";
 import { useMaintenanceRequests } from "../hooks/useMaintenance";
 import { useEquipment } from "../hooks/useEquipment";
 import { userService } from "../services/userService";
 import { maintenanceService } from "../services/maintenanceService";
 import { useAuth } from "../context/AuthContext"; // Adjust import to your auth hook/context
 import type { MaintenanceRequest, User } from "../types/dashboardTypes";
+import { useNavigate } from "react-router-dom";
 import "../pages/PageStyle.css";
 
 type MaintenanceFormData = Partial<MaintenanceRequest> & {
@@ -26,9 +26,10 @@ const STATUS_MAP: Record<string, "pending" | "in_progress" | "resolved"> = {
   resolved: "resolved",
 };
 
-type ModalType = MaintenanceModalMode | "view" | null;
+type ModalType = MaintenanceModalMode | null; // Removed "view" since it's now a separate page
 
 const MaintenancePage: React.FC = () => {
+  const navigate = useNavigate();
   const { requests, loading, error, updateRequest, deleteRequest, refetch } = useMaintenanceRequests();
   const { equipment } = useEquipment();
   const { currentUser } = useAuth(); // Add this: Pull current user from auth hook/context
@@ -69,7 +70,7 @@ const MaintenancePage: React.FC = () => {
     fetchUsers();
   }, []);
 
-  // Modal handlers
+  // Modal handlers (removed view handling)
   const openModal = useCallback((type: ModalType, request?: MaintenanceRequest) => {
     setModalType(type);
     setSelectedRequest(request ?? null);
@@ -81,6 +82,11 @@ const MaintenancePage: React.FC = () => {
     setSelectedRequest(null);
     setErrorMsg(null);
   }, []);
+
+  // View handler (new: navigate to view page with ID)
+  const handleView = useCallback((request: MaintenanceRequest) => {
+    navigate(`/maintenance/${request.id}`);
+  }, [navigate]);
 
   // Filtering + pagination
   const filteredRequests = useMemo(() => {
@@ -101,7 +107,7 @@ const MaintenancePage: React.FC = () => {
   );
 
   const getUser = useCallback(
-    (id?: string) => (id ? users.find((u) => u.id === id)?.username || id : "-"),
+    (id?: string | null) => (id ? users.find((u) => u.id === id)?.username || id : "-"),
     [users]
   );
   const getEquipment = useCallback(
@@ -125,7 +131,7 @@ const MaintenancePage: React.FC = () => {
       status: data.status ? STATUS_MAP[data.status.toLowerCase()] : "pending",
       scheduled_date: data.scheduled_date || new Date().toISOString().split("T")[0],
       resolved_at: data.resolved_at,
-      assigned_to: data.assigned_to,
+      assigned_to: data.assigned_to || null,
       comments: data.comments || "",
       attachments: []
     };
@@ -164,7 +170,7 @@ const MaintenancePage: React.FC = () => {
       status: data.status ? STATUS_MAP[data.status.toLowerCase()] : selectedRequest.status,
       scheduled_date: data.scheduled_date || selectedRequest.scheduled_date,
       resolved_at: data.resolved_at,
-      assigned_to: data.assigned_to,
+      assigned_to: data.assigned_to || null,
       comments: data.comments,
     };
 
@@ -275,7 +281,7 @@ const MaintenancePage: React.FC = () => {
                     <td>{formatDate(req.resolved_at) || "-"}</td>
                     <td>{getUser(req.assigned_to)}</td>
                     <td>
-                      <button className="view-btn" onClick={() => openModal("view", req)}>
+                      <button className="view-btn" onClick={() => handleView(req)}>
                         View
                       </button>
                       <button className="edt-btn" onClick={() => openModal("edit", req)}>
@@ -306,19 +312,10 @@ const MaintenancePage: React.FC = () => {
           showRange
         />
 
-        {/* Modals */}
-        {modalType === "view" && selectedRequest ? (
-          <MaintenanceViewModal
-            request={selectedRequest}
-            users={users}
-            currentUser={currentUser} // Add this line: Pass the current user
-            onClose={closeModal}
-            onRefresh={refetch}
-            updateRequest={updateRequest} 
-          />
-        ) : modalType ? (
+        {/* Modals (removed MaintenanceViewModal; only edit/add/delete modals) */}
+        {modalType ? (
           <MaintenanceModal
-            mode={modalType as MaintenanceModalMode}
+            mode={modalType}
             request={selectedRequest ?? undefined}
             equipments={equipment}
             users={users}

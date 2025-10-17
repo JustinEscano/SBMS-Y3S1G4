@@ -1,5 +1,5 @@
-// src/features/services/maintenanceService.ts
-import type { MaintenanceRequest, Attachment } from '../types/dashboardTypes.tsx';
+// src/features/services/maintenanceService.ts - Updated
+import type { MaintenanceRequest, Attachment } from '../types/dashboardTypes';
 import axiosInstance from "../../service/AppService.tsx";
 
 const inProgressCreates = new Set<string>();
@@ -18,6 +18,19 @@ export const maintenanceService = {
       return res.data;
     } catch (error: any) {
       console.error("Error fetching maintenance requests:", error.response?.data || error);
+      throw error;
+    }
+  },
+
+  // Get a single maintenance request by ID
+  getById: async (id: string): Promise<MaintenanceRequest> => {
+    console.log(`Fetching maintenance request ${id}...`);
+    try {
+      const res = await axiosInstance.get<MaintenanceRequest>(`${BASE_URL}${id}/`);
+      console.log(`Received request ${id}:`, res.data);
+      return res.data;
+    } catch (error: any) {
+      console.error(`Error fetching maintenance request ${id}:`, error.response?.data || error);
       throw error;
     }
   },

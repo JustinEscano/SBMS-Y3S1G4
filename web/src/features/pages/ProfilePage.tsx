@@ -108,13 +108,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ handleLogout }) => {
             <div className="profile-info">
               <h2>{user.username}</h2>
               <p>
-                Role: {user.role_display ?? "User"} | ID: {user.id}
+                Role: {user.role_display ?? "User"}
+              </p>
+              <p>
+                ID: {user.id}
               </p>
               <p className="profile-email">
                 Email: {user.email ?? "Not available"}
-              </p>
-              <p className="profile-last-login">
-                Last Login: {user.last_login || "Never"}
               </p>
             </div>
           </div>
