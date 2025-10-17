@@ -1,7 +1,7 @@
-// SettingsPage.tsx - Restored full profile update + separated OTP/Password + modals for OTP & Delete
+// SettingsPage.tsx - Updated to import new SettingsPage.css
 import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
-import "./ProfilePage.css"; // Reuse enhanced CSS
+import "./SettingsPage.css"; // New dedicated CSS
 import { useAuth } from "../context/AuthContext";
 import { userService } from "../services/userService";
 import { useUser } from "../hooks/useUser";
@@ -237,7 +237,7 @@ const SettingsPage: React.FC = () => {
             address: profileResponse.profile?.address || "",
             profile_picture: profileResponse.profile?.profile_picture || undefined,
           };
-          setProfileData({ ...apiUser, profile: fetchedProfile });
+          setProfileData({ ...(apiUser as User), profile: fetchedProfile } as UserWithProfile);
         } catch (err) {
           console.error("Failed to fetch profile:", err);
           const fallbackProfile: Profile = {
@@ -246,7 +246,7 @@ const SettingsPage: React.FC = () => {
             address: "",
             profile_picture: undefined,
           };
-          setProfileData({ ...apiUser, profile: fallbackProfile });
+          setProfileData({ ...(apiUser as User), profile: fallbackProfile } as UserWithProfile);
         }
       }
     };
@@ -409,110 +409,154 @@ const SettingsPage: React.FC = () => {
 
   return (
     <PageLayout initialSection={{ parent: "Settings" }}>
-      <div className="profile-page-container">
-        <h2 className="text-xl font-semibold text-white mb-4">Settings</h2>
-        {error && <p className="text-red-400 text-sm mb-2">{error}</p>}
-        {success && <p className="text-green-400 text-sm mb-2">{success}</p>}
+      <div className="settings-container">
+        <h2 className="settings-title">Settings</h2>
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
 
         {/* Profile Section */}
         <div className="settings-section">
-          <button type="button" className="profile-option w-full text-left" onClick={() => toggleSection("profile")}>
-            <span className="option-icon">👤</span> <span className="option-label">Profile</span>
-            <span className="toggle-icon">{expandedSection === "profile" ? "▲" : "▼"}</span>
+          <button type="button" className="section-toggle" onClick={() => toggleSection("profile")}>
+            <span className="toggle-icon">👤</span>
+            <span className="toggle-label">Profile</span>
+            <span className="toggle-arrow">{expandedSection === "profile" ? "▲" : "▼"}</span>
           </button>
           {expandedSection === "profile" && (
-            <div className="settings-form mt-3 p-3 bg-gray-800 rounded-lg">
-              <label className="block text-sm text-gray-400 mb-1">Username</label>
-              <input
-                type="text"
-                value={profileData.username || ""}
-                onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                className="w-full p-2 bg-gray-700 text-white rounded mb-2"
-                placeholder="Enter username"
-              />
-              <label className="block text-sm text-gray-400 mb-1">Email</label>
-              <input
-                type="email"
-                value={profileData.email || ""}
-                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                className="w-full p-2 bg-gray-700 text-white rounded mb-2"
-                placeholder="Enter email"
-              />
-              <label className="block text-sm text-gray-400 mb-1">Full Name</label>
-              <input
-                type="text"
-                value={p.full_name || profileData.username || ""}
-                onChange={(e) => setProfileData({ ...profileData, profile: { ...p, full_name: e.target.value } })}
-                className="w-full p-2 bg-gray-700 text-white rounded mb-2"
-                placeholder="Enter full name"
-              />
-              <label className="block text-sm text-gray-400 mb-1">Organization</label>
-              <input
-                type="text"
-                value={p.organization || ""}
-                onChange={(e) => setProfileData({ ...profileData, profile: { ...p, organization: e.target.value } })}
-                className="w-full p-2 bg-gray-700 text-white rounded mb-2"
-                placeholder="Enter organization"
-              />
-              <label className="block text-sm text-gray-400 mb-1">Address</label>
-              <input
-                type="text"
-                value={p.address || ""}
-                onChange={(e) => setProfileData({ ...profileData, profile: { ...p, address: e.target.value } })}
-                className="w-full p-2 bg-gray-700 text-white rounded mb-2"
-                placeholder="Enter address"
-              />
-              <label className="block text-sm text-gray-400 mb-1">Profile Picture</label>
-              {p.profile_picture && typeof p.profile_picture === "string" && (
-                <div className="current-picture-preview mb-2">
-                  <img
-                    src={p.profile_picture}
-                    alt="Current Profile Picture"
-                    className="profile-picture-preview"
-                    style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "50%", objectFit: "cover" }}
-                  />
-                  <p className="text-gray-400 text-sm">Current picture. Choose new to replace.</p>
+            <div className="profile-form-card">
+              {/* Profile Picture */}
+              <div className="profile-picture-section">
+                <div className="avatar-container">
+                  {p.profile_picture ? (
+                    typeof p.profile_picture === "string" ? (
+                      <img src={p.profile_picture} alt="Profile picture" className="avatar-image" />
+                    ) : (
+                      <img src={URL.createObjectURL(p.profile_picture as File)} alt="Profile picture preview" className="avatar-image" />
+                    )
+                  ) : (
+                    <div className="avatar-placeholder">
+                      <span className="placeholder-icon">👤</span>
+                      <p className="placeholder-text">No image</p>
+                    </div>
+                  )}
                 </div>
-              )}
-              {p.profile_picture && typeof p.profile_picture !== "string" && (
-                <div className="new-picture-preview mb-2">
-                  <img
-                    src={URL.createObjectURL(p.profile_picture as File)}
-                    alt="New Profile Picture Preview"
-                    className="profile-picture-preview"
-                    style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "50%", objectFit: "cover" }}
+
+                <br></br>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setProfileData({ ...profileData, profile: { ...p, profile_picture: file } });
+                    }
+                  }}
+                  className="file-input"
+                  id="profile-picture-input"
+                />
+                <label htmlFor="profile-picture-input" className="file-input-label">
+                  Choose File {p.profile_picture ? (typeof p.profile_picture === "string" ? "" : `(${(p.profile_picture as File).name})`) : "No file chosen"}
+                </label>
+              </div>
+
+              {/* Form Fields */}
+              <div className="form-fields">
+                <div className="form-group">
+                  <label className="form-label">Username:</label>
+                  <input
+                    type="text"
+                    value={profileData.username || ""}
+                    onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
+                    className="form-input"
+                    placeholder="Enter username"
                   />
-                  <p className="text-green-400 text-sm">Preview: {(p.profile_picture as File).name}</p>
                 </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setProfileData({ ...profileData, profile: { ...p, profile_picture: file } });
-                  }
-                }}
-                className="w-full p-2 bg-gray-700 text-white rounded mb-2"
-              />
-              <button
-                type="button"
-                onClick={handleUpdateProfile}
-                disabled={loading}
-                className="profile-option w-full"
-              >
-                {loading ? "Saving..." : "Update Profile"}
-              </button>
+                <div className="form-group">
+                  <label className="form-label">Email:</label>
+                  <input
+                    type="email"
+                    value={profileData.email || ""}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    className="form-input"
+                    placeholder="Enter email"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Full Name:</label>
+                  <input
+                    type="text"
+                    value={p.full_name || profileData.username || ""}
+                    onChange={(e) => setProfileData({ ...profileData, profile: { ...p, full_name: e.target.value } })}
+                    className="form-input"
+                    placeholder="Enter full name"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Role:</label>
+                  <select
+                    value={profileData.role || "client"} // Assuming role from apiUser or profile; adjust if needed
+                    onChange={(e) => setProfileData({ ...profileData, role: e.target.value })}
+                    className="form-input form-select"
+                  >
+                    <option value="client">Client</option>
+                    <option value="admin">Admin</option>
+                    {/* Add more roles as needed */}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Organization:</label>
+                  <input
+                    type="text"
+                    value={p.organization || ""}
+                    onChange={(e) => setProfileData({ ...profileData, profile: { ...p, organization: e.target.value } })}
+                    className="form-input"
+                    placeholder="Enter organization"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Address:</label>
+                  <input
+                    type="text"
+                    value={p.address || ""}
+                    onChange={(e) => setProfileData({ ...profileData, profile: { ...p, address: e.target.value } })}
+                    className="form-input"
+                    placeholder="Enter address"
+                  />
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="form-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Reset to original data on cancel
+                    setProfileData({ ...(apiUser as User), profile: p } as UserWithProfile);
+                    setExpandedSection(null);
+                  }}
+                  disabled={loading}
+                  className="action-btn cancel-btn"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUpdateProfile}
+                  disabled={loading}
+                  className="action-btn save-btn"
+                >
+                  {loading ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
             </div>
           )}
         </div>
 
         {/* Security Section */}
         <div className="settings-section">
-          <button type="button" className="profile-option w-full text-left" onClick={() => toggleSection("security")}>
-            <span className="option-icon">🔒</span> <span className="option-label">Security</span>
-            <span className="toggle-icon">{expandedSection === "security" ? "▲" : "▼"}</span>
+          <button type="button" className="section-toggle" onClick={() => toggleSection("security")}>
+            <span className="toggle-icon">🔒</span>
+            <span className="toggle-label">Security</span>
+            <span className="toggle-arrow">{expandedSection === "security" ? "▲" : "▼"}</span>
           </button>
           {expandedSection === "security" && (
             <div className="settings-form mt-3 p-3 bg-gray-800 rounded-lg">
