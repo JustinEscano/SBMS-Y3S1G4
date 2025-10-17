@@ -43,16 +43,16 @@ class LLMService {
    */
   getSuggestedQueries(): string[] {
     return [
+      "Show me all rooms",
+      "List all available rooms",
+      "Check for maintenance",
+      "Show energy report for this week",
       "What is the average temperature?",
       "Show me the highest energy consumption",
       "How many sensor records do we have?",
-      "What was the temperature at 2024-01-15 10:30:00?",
       "Which rooms have motion detected?",
       "Compare energy usage between different rooms",
-      "Show me temperature trends over time",
-      "What is the lowest humidity recorded?",
-      "List all equipment that is offline",
-      "What are the power consumption patterns?"
+      "Show me temperature trends over time"
     ];
   }
 
@@ -72,6 +72,32 @@ class LLMService {
    */
   generateMessageId(): string {
     return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Get list of all rooms with detailed information
+   */
+  async getRoomsList(): Promise<any> {
+    try {
+      // Call the LLM server's /rooms/list endpoint
+      const response = await fetch('http://localhost:5000/rooms/list', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Rooms List Response:", data);
+      return data;
+    } catch (error: any) {
+      console.error("Rooms List Error:", error);
+      throw new Error(error.message || "Failed to fetch rooms list");
+    }
   }
 }
 

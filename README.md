@@ -405,25 +405,59 @@ All user prompts and AI responses are saved to MongoDB Atlas for:
 
 ### Required Environment Variables (`.env`)
 ```bash
-MONGO_ATLAS_URI=mongodb+srv://smartiot:***@smartiot.pm14zxa.mongodb.net/LLM_logs?retryWrites=true&w=majority
+MONGO_ATLAS_URI=mongodb+srv://username:password@cluster.mongodb.net/LLM_logs?retryWrites=true&w=majority
 MONGO_DB_NAME=LLM_logs
 ```
 
-### Required Python Packages
+### Python Version Requirement
+**CRITICAL**: Must use **Python 3.11**
+- ✅ Python 3.11.x works
+- ❌ Python 3.12 may have compatibility issues
+- ❌ Python 3.10 missing required features
+
+### Virtual Environment Required
+**CRITICAL**: Must use a virtual environment
 ```bash
-pip install python-dotenv pymongo langchain-ollama pandas numpy flask flask-cors
+# Create with Python 3.11
+py -3.11 -m venv myenv
+
+# Activate before running
+myenv\Scripts\activate  # Windows
+source myenv/bin/activate  # Linux/Mac
 ```
+
+### Required Python Packages
+All packages are in `requirements_llm.txt`:
+```bash
+pip install -r requirements_llm.txt
+```
+
+Key packages:
+- Flask 3.0
+- SQLAlchemy
+- pandas
+- langchain-ollama
+- pymongo
+- psycopg2
 
 ---
 
 ## 🚀 Usage
 
-### Starting the Server
+### Starting the LLM Server
+
+**Step 1**: Activate virtual environment
 ```bash
-python apillm.py
+cd llm/static_remote_LLM
+myenv\Scripts\activate  # Windows
 ```
 
-### Server Output
+**Step 2**: Run server
+```bash
+python apillm.py runserver 0.0.0.0:5000
+```
+
+### Expected Server Output
 ```
 🚀 INITIALIZING ENHANCED ADVANCED LLM API SERVER
 ============================================================
@@ -431,7 +465,32 @@ python apillm.py
 ✅ System initialized successfully
 📊 System Health: healthy
 📈 Data Quality: good
+🗂️  Records Loaded: 10
+
+📡 Available Endpoints:
+  GET   /health
+  POST  /llmquery
+  GET   /rooms/list
+  POST  /energy/report
+  POST  /maintenance/predict
+  ...
+
+🌐 Starting enhanced server on http://localhost:5000
 ```
+
+### Troubleshooting
+
+**Error: "No module named 'flask'"**
+- Solution: Activate virtual environment first
+
+**Error: "Python version mismatch"**
+- Solution: Use Python 3.11 specifically
+
+**Error: "MongoDB connection failed"**
+- Solution: Check `.env` file has correct MongoDB URI
+
+**Error: "PostgreSQL connection failed"**
+- Solution: Ensure PostgreSQL is running on localhost:5432
 
 ---
 
@@ -499,15 +558,18 @@ python apillm.py
 
 ## 📊 Available Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/energy/report` | POST | Energy consumption reports with AI analysis |
-| `/kpi/heartbeat` | POST | System health KPIs with AI insights |
-| `/billing/rates` | POST | Billing rate analysis with AI recommendations |
-| `/maintenance/predict` | POST | Maintenance request analysis with AI prioritization |
-| `/anomalies/detect` | POST | Anomaly detection with AI pattern analysis |
-| `/chat/history/save` | POST | Save chat to MongoDB |
-| `/health` | GET | System health check |
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|--------|
+| `/health` | GET | System health check | ✅ |
+| `/llmquery` | POST | General LLM chat | ✅ |
+| `/energy/report` | POST | Energy analysis (daily/weekly/monthly/yearly) | ✅ |
+| `/maintenance/predict` | POST | Maintenance with timestamps & AI | ✅ Enhanced |
+| `/anomalies/detect` | POST | Anomaly detection with AI | ✅ Enhanced |
+| `/billing/rates` | POST | Billing analysis with AI | ✅ |
+| `/kpi/heartbeat` | POST | KPI monitoring | ✅ |
+| `/chat/history/save` | POST | Save chat to MongoDB | ✅ |
+| `/chat/history/get` | POST | Get chat history | ✅ |
+| `/system/status` | GET | System status | ✅ |
 
 ---
 
@@ -531,38 +593,75 @@ python apillm.py
 ## 🚀 Quick Start
 
 ### Prerequisites
-```bash
-# Python 3.11
-# PostgreSQL database with building management data
-# MongoDB Atlas account
-# Ollama with incept5/llama3.1-claude:latest model
-```
+
+**IMPORTANT**: This LLM server **requires Python 3.11** and a virtual environment.
+
+- ✅ Python 3.11 (not 3.12 or 3.10)
+- ✅ PostgreSQL database running
+- ✅ MongoDB Atlas account
+- ✅ Ollama with `incept5/llama3.1-claude:latest` model
 
 ### Installation
-```bash
-# Clone repository
-git clone https://github.com/yourusername/SBMS-Y3S1G4.git
-cd SBMS-Y3S1G4/llm/static_remote_LLM
 
-# Create virtual environment
+#### 1. Clone Repository
+```bash
+git clone https://github.com/yourusername/SBMS-Y3S1G4.git
+cd SBMS-Y3S1G4
+```
+
+#### 2. Set Up LLM Server
+```bash
+cd llm/static_remote_LLM
+
+# Create virtual environment with Python 3.11
 py -3.11 -m venv myenv
-On Linux: source myenv/bin/activate 
-On Windows: myenv\Scripts\activate
+
+# Activate virtual environment
+# On Windows:
+myenv\Scripts\activate
+# On Linux/Mac:
+source myenv/bin/activate
 
 # Install dependencies
 pip install -r requirements_llm.txt
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your MongoDB Atlas URI and database credentials
 ```
 
-### Running the Server
+#### 3. Configure Environment
 ```bash
-python apillm.py
+# Create .env file
+cp .env.example .env
+
+# Edit .env with your credentials:
+# MONGO_ATLAS_URI=mongodb+srv://...
+# MONGO_DB_NAME=LLM_logs
 ```
 
-Server will start on `http://localhost:5000`
+#### 4. Start LLM Server
+```bash
+# Make sure virtual environment is activated (myenv)
+python apillm.py runserver 0.0.0.0:5000
+```
+
+**Expected Output**:
+```
+🚀 INITIALIZING ENHANCED ADVANCED LLM API SERVER
+============================================================
+✅ MongoDB connected - Chat history will be saved
+✅ System initialized successfully
+📊 System Health: healthy
+```
+
+Server runs on `http://localhost:5000`
+
+#### 5. Start Frontend (Optional)
+```bash
+# In a new terminal
+cd web
+npm install
+npm run dev
+```
+
+Frontend runs on `http://localhost:3000` (or your configured port)
 
 ---
 
@@ -620,6 +719,34 @@ For issues, questions, or suggestions:
 
 ---
 
-*Last Updated: October 16, 2025*  
-*Version: 2.0*  
+---
+
+## 🆕 Recent Updates (October 17, 2025)
+
+### New Features
+- ✅ **Enhanced Anomaly Detection**: Improved alert display with formatted details
+  - Shows all alerts with severity indicators
+  - Equipment information and timestamps
+  - AI pattern analysis and recommendations
+  - Better keyword detection ("alert", "warning", "anomaly")
+- ✅ **Enhanced Maintenance**: Full timestamps, complete descriptions, status grouping
+
+### Bug Fixes
+- ✅ Fixed JSON syntax error in `advanced_prompts.json`
+- ✅ Fixed RoomSpecificHandlers missing method
+- ✅ Fixed NaT strftime errors in maintenance documents
+- ✅ Fixed pandas SQLAlchemy warnings (11 query locations)
+
+### Improvements
+- ✅ All database queries now use SQLAlchemy engine
+- ✅ Maintenance requests show formatted timestamps
+- ✅ Anomaly detection displays formatted alert details
+- ✅ Better error handling across all endpoints
+
+**See `IMPROVEMENTS.md` for detailed changelog**
+
+---
+
+*Last Updated: October 17, 2025*  
+*Version: 2.1*  
 *Documentation: Comprehensive AI Features Guide*
