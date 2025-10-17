@@ -12,7 +12,7 @@
   padding: 0 20px;
   border-bottom: 1px solid #444;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: 100060000000;
   transition: left 0.3s ease, width 0.3s ease;
   box-sizing: border-box;
 }
