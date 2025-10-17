@@ -615,17 +615,10 @@ class DatabaseAdapter:
             """
             params = []
             if start_date:
-<<<<<<< HEAD
-                query += " AND period_start >= %s"
-                params.append(start_date)
-            if end_date:
-                query += " AND period_end <= %s"
-=======
                 query += " AND period_end >= %s"
                 params.append(start_date)
             if end_date:
                 query += " AND period_start <= %s"
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
                 params.append(end_date)
             if room_id:
                 query += " AND room_id = %s"

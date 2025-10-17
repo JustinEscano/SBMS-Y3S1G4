@@ -1,41 +1,15 @@
-<<<<<<< HEAD
-# Django API dependencies
-=======
 # Copy your existing requirements but remove or comment out hnswlib
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
 Django==5.2.4
 psycopg2-binary==2.9.9
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.4.0
 django-cors-headers==4.4.0
-<<<<<<< HEAD
-
-# Flask LLM service dependencies
 Flask==3.0.3
 flask-cors==5.0.0
-
-# LLM and AI dependencies
-=======
-Flask==3.0.3
-flask-cors==5.0.0
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
 langchain==0.3.4
 langchain-community==0.3.3
 langchain-core==0.3.13
 langchain-ollama==0.2.0
-<<<<<<< HEAD
-langchain-chroma==0.1.2
-pymongo==4.10.1
-chromadb==0.5.13
-ollama==0.3.3
-
-# Embeddings and vector stores
-sentence-transformers==3.0.1
-faiss-cpu==1.8.0.post1
-hnswlib==0.8.0
-
-# Data processing dependencies
-=======
 langchain-chroma==0.1.4
 pymongo==4.10.1
 chromadb==0.5.13
@@ -43,31 +17,10 @@ ollama==0.3.3
 sentence-transformers==3.0.1
 faiss-cpu==1.8.0.post1
 # hnswlib==0.8.0  # Commented out - requires build tools
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
 pandas==2.2.3
 numpy==1.26.4
 fuzzywuzzy==0.18.0
 python-Levenshtein==0.26.0
-<<<<<<< HEAD
-
-# Authentication and security
-pyjwt==2.8.0
-cryptography==42.0.8
-
-# Utilities
-python-dotenv==1.0.1
-requests==2.31.0
-tiktoken==0.7.0
-openai==1.30.1
-
-# Web server
-uvicorn==0.30.1
-gunicorn==22.0.0
-
-# Additional langchain components
-langchain-text-splitters==0.3.0
-langchain-openai==0.1.7
-=======
 pyjwt==2.8.0
 cryptography==42.0.8
 python-dotenv==1.0.1
@@ -78,4 +31,3 @@ uvicorn==0.30.1
 gunicorn==22.0.0
 langchain-text-splitters==0.3.0
 langchain-openai==0.2.0
->>>>>>> 2ea06833730776ed5f07ffd449226523df298f68
