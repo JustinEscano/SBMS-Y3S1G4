@@ -139,6 +139,39 @@
   transform: translateY(0);
 }
 
+/* Policy Page Specific Styles */
+.profile-info section {
+  margin-bottom: 2rem;
+}
+
+.profile-info h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f8fafc;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #475569;
+  padding-bottom: 0.5rem;
+}
+
+.profile-info p {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.profile-info ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  color: #cbd5e1;
+}
+
+.profile-info ul li {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 0.25rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .profile-page-container {
