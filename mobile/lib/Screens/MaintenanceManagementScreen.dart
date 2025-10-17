@@ -51,11 +51,10 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   void initState() {
     super.initState();
     AuthService().setTokens(widget.accessToken, widget.refreshToken);
-    developer.log('User Role in MaintenanceManagementScreen: ${widget.userRole}', name: 'MaintenanceManagementScreen');
+    developer.log('User Role: ${widget.userRole}', name: 'MaintenanceManagementScreen');
     try {
       Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
       developer.log('Token Payload: $payload', name: 'MaintenanceManagementScreen');
-      developer.log('Token Role: ${payload['role']}', name: 'MaintenanceManagementScreen');
       _currentUserId = payload['user_id']?.toString();
     } catch (e) {
       developer.log('Error decoding token: $e', name: 'MaintenanceManagementScreen');
@@ -77,14 +76,12 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       setState(() {
         _errorMessage = 'Failed to refresh session. Please log in again.';
       });
-      developer.log('Token refresh failed', name: 'MaintenanceScreen.Auth');
       return false;
     } catch (e, stackTrace) {
       setState(() {
         _errorMessage = 'Error refreshing session: $e';
       });
-      developer.log('Token refresh error: $e', name: 'MaintenanceScreen.Auth');
-      developer.log('Stack trace: $stackTrace', name: 'MaintenanceScreen.Auth');
+      developer.log('Token refresh error: $e\nStack trace: $stackTrace', name: 'MaintenanceScreen.Auth');
       return false;
     } finally {
       setState(() {
@@ -117,6 +114,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         final maintenanceData = json.decode(responses[0].body);
         setState(() {
           maintenanceRequests = maintenanceData is List ? maintenanceData : [];
+          developer.log('Loaded ${maintenanceRequests.length} maintenance requests: $maintenanceData', name: 'MaintenanceScreen.LoadData');
         });
       } else {
         setState(() {
@@ -128,6 +126,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         final equipmentData = json.decode(responses[1].body);
         setState(() {
           equipment = equipmentData is List ? equipmentData : [];
+          developer.log('Loaded ${equipment.length} equipment items', name: 'MaintenanceScreen.LoadData');
         });
       } else {
         setState(() {
@@ -139,6 +138,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         final usersData = json.decode(responses[2].body);
         setState(() {
           users = usersData is List ? usersData : [];
+          developer.log('Loaded ${users.length} users', name: 'MaintenanceScreen.LoadData');
         });
       } else {
         setState(() {
@@ -146,29 +146,23 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         });
       }
     } catch (e, stackTrace) {
-      developer.log('Error: $e', name: 'MaintenanceScreen.LoadData');
-      developer.log('Stack trace: $stackTrace', name: 'MaintenanceScreen.LoadData');
+      developer.log('Error: $e\nStack trace: $stackTrace', name: 'MaintenanceScreen.LoadData');
       setState(() {
         _errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
       });
     } finally {
       setState(() {
         isLoading = false;
+        developer.log('isLoading set to false, isRefreshingToken: $isRefreshingToken', name: 'MaintenanceScreen.LoadData');
       });
     }
   }
 
   Future<http.Response> _makeHttpRequest(String url, Map<String, String> headers, String requestName) async {
-    developer.log('--- $requestName REQUEST START ---', name: 'MaintenanceScreen.HTTP');
-    developer.log('URL: $url', name: 'MaintenanceScreen.HTTP');
-    developer.log('Headers: $headers', name: 'MaintenanceScreen.HTTP');
-
+    developer.log('--- $requestName REQUEST START --- URL: $url, Headers: $headers', name: 'MaintenanceScreen.HTTP');
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
-      developer.log('--- $requestName RESPONSE ---', name: 'MaintenanceScreen.HTTP');
-      developer.log('Status Code: ${response.statusCode}', name: 'MaintenanceScreen.HTTP');
-      developer.log('Response Body Length: ${response.body.length}', name: 'MaintenanceScreen.HTTP');
-
+      developer.log('--- $requestName RESPONSE --- Status: ${response.statusCode}, Body Length: ${response.body.length}', name: 'MaintenanceScreen.HTTP');
       if (response.statusCode >= 400) {
         developer.log('ERROR RESPONSE BODY: ${response.body}', name: 'MaintenanceScreen.HTTP');
         if (response.statusCode == 401) {
@@ -183,40 +177,44 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       }
       return response;
     } catch (e, stackTrace) {
-      developer.log('--- $requestName REQUEST FAILED ---', name: 'MaintenanceScreen.HTTP');
-      developer.log('Error: $e', name: 'MaintenanceScreen.HTTP');
-      developer.log('Stack Trace: $stackTrace', name: 'MaintenanceScreen.HTTP');
+      developer.log('--- $requestName REQUEST FAILED --- Error: $e\nStack Trace: $stackTrace', name: 'MaintenanceScreen.HTTP');
       rethrow;
     }
   }
 
   List<dynamic> get filteredRequests {
-    return maintenanceRequests.where((request) => _filterStatus == 'all' || request['status'] == _filterStatus).toList();
+    final filtered = maintenanceRequests.where((request) => _filterStatus == 'all' || (request['status'] as String?) == _filterStatus).toList();
+    developer.log('Filtered requests: ${filtered.length}', name: 'MaintenanceScreen.Filter');
+    return filtered;
   }
 
   List<dynamic> get paginatedRequests {
     final filtered = filteredRequests;
     final startIndex = (_currentPage - 1) * _itemsPerPage;
     final endIndex = startIndex + _itemsPerPage;
-    return filtered.sublist(startIndex, endIndex.clamp(0, filtered.length));
+    final paginated = filtered.sublist(startIndex, endIndex.clamp(0, filtered.length));
+    developer.log('Paginated requests: ${paginated.length}, page: $_currentPage', name: 'MaintenanceScreen.Pagination');
+    return paginated;
   }
 
   int get totalPages {
-    return (filteredRequests.length / _itemsPerPage).ceil();
+    final pages = (filteredRequests.length / _itemsPerPage).ceil();
+    developer.log('Total pages: $pages', name: 'MaintenanceScreen.Pagination');
+    return pages;
   }
 
   String _getEquipmentName(String? equipmentId) {
-    final eq = equipment.firstWhere((e) => e['id'].toString() == equipmentId?.toString(), orElse: () => null);
-    return eq?['name'] ?? 'Unknown Equipment';
+    final eq = equipment.firstWhere((e) => e['id']?.toString() == equipmentId, orElse: () => null);
+    return eq?['name'] as String? ?? 'Unknown Equipment';
   }
 
   String _getUserName(String? userId) {
-    final user = users.firstWhere((u) => u['id'].toString() == userId?.toString(), orElse: () => null);
-    return user?['username'] ?? 'Unknown User';
+    final user = users.firstWhere((u) => u['id']?.toString() == userId, orElse: () => null);
+    return user?['username'] as String? ?? 'Unknown User';
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
       case 'pending':
         return Colors.orange;
       case 'in_progress':
@@ -255,30 +253,42 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     ).then((_) => _loadData());
   }
 
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return MaintenanceScreenWidgets.buildFilterDialog(
-          context,
-          currentFilterStatus: _filterStatus,
-          statusOptions: MAINTENANCE_STATUS_OPTIONS,
-          onFilterChanged: (value) {
-            setState(() {
-              _filterStatus = value;
-              _currentPage = 1;
-            });
-            Navigator.of(context).pop();
-          },
-          onClearFilter: () {
-            setState(() {
-              _filterStatus = 'all';
-              _currentPage = 1;
-            });
-            Navigator.of(context).pop();
-          },
-        );
-      },
+  Widget _buildFilterSelector() {
+    final allCount = maintenanceRequests.length;
+    final pendingCount = maintenanceRequests.where((r) => r['status'] == 'pending').length;
+    final inProgressCount = maintenanceRequests.where((r) => r['status'] == 'in_progress').length;
+    final resolvedCount = maintenanceRequests.where((r) => r['status'] == 'resolved').length;
+    developer.log('Filter counts - All: $allCount, Pending: $pendingCount, In Progress: $inProgressCount, Resolved: $resolvedCount', name: 'MaintenanceScreen.Filter');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            MaintenanceScreenWidgets.buildFilterChip(
+              label: 'All ($allCount)',
+              isSelected: _filterStatus == 'all',
+              onSelected: () => setState(() {
+                _filterStatus = 'all';
+                _currentPage = 1;
+              }),
+            ),
+            const SizedBox(width: 8),
+            ...MAINTENANCE_STATUS_OPTIONS.map((option) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: MaintenanceScreenWidgets.buildFilterChip(
+                label: '${option['label']} (${option['value'] == 'pending' ? pendingCount : option['value'] == 'in_progress' ? inProgressCount : resolvedCount})',
+                isSelected: _filterStatus == option['value'],
+                onSelected: () => setState(() {
+                  _filterStatus = option['value']!;
+                  _currentPage = 1;
+                }),
+              ),
+            )),
+          ],
+        ),
+      ),
     );
   }
 
@@ -286,29 +296,23 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
   Widget build(BuildContext context) {
     final filtered = filteredRequests;
     final paginated = paginatedRequests;
-    final pendingCount = maintenanceRequests.where((r) => r['status'] == 'pending').length;
-    final inProgressCount = maintenanceRequests.where((r) => r['status'] == 'in_progress').length;
-    final resolvedCount = maintenanceRequests.where((r) => r['status'] == 'resolved').length;
+    developer.log('Building screen - isLoading: $isLoading, isRefreshingToken: $isRefreshingToken, filtered: ${filtered.length}', name: 'MaintenanceScreen.Build');
 
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: Text('Maintenance Requests',
-        style: GoogleFonts.urbanist(
+        title: Text(
+          'Maintenance Requests',
+          style: GoogleFonts.urbanist(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
-          ),),
+          ),
+        ),
         backgroundColor: const Color(0xFF1F1E23),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
-            tooltip: 'Filter',
-            color: Colors.white70,
-          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: isRefreshingToken ? null : _loadData,
@@ -319,42 +323,39 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       ),
       body: Column(
         children: [
-          MaintenanceScreenWidgets.buildSummaryCards(context, pendingCount, inProgressCount, resolvedCount),
-          if (_errorMessage.isNotEmpty)
-            MaintenanceScreenWidgets.buildErrorBanner(context, _errorMessage),
-          if (_filterStatus != 'all')
-            MaintenanceScreenWidgets.buildFilterChip(
-              context,
-              filterStatus: _filterStatus,
-              getStatusLabel: _getStatusLabel,
-              getStatusColor: _getStatusColor,
-              onRemoveFilter: () => setState(() {
-                _filterStatus = 'all';
-                _currentPage = 1;
-              }),
-            ),
           Expanded(
             child: isLoading || isRefreshingToken
                 ? const Center(child: CircularProgressIndicator())
-                : filtered.isEmpty
-                ? MaintenanceScreenWidgets.buildEmptyState(
-              context,
-              hasRequests: maintenanceRequests.isNotEmpty,
-              canCreateRequest: users.isNotEmpty && equipment.isNotEmpty,
-              onCreateRequest: () => _showAddEditMaintenanceDialog(),
-            )
-                : MaintenanceScreenWidgets.buildMaintenanceRequestListWithPagination(
-              context,
-              requests: paginated.cast<Map<String, dynamic>>(),
-              currentPage: _currentPage,
-              totalPages: totalPages,
-              getEquipmentName: _getEquipmentName,
-              getUserName: _getUserName,
-              getStatusLabel: _getStatusLabel,
-              getStatusColor: _getStatusColor,
-              onRequestTap: (request) => _showAddEditMaintenanceDialog(request: request),
-              onPreviousPage: () => setState(() => _currentPage--),
-              onNextPage: () => setState(() => _currentPage++),
+                : ListView(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              children: [
+                _buildFilterSelector(),
+                if (_errorMessage.isNotEmpty)
+                  MaintenanceScreenWidgets.buildErrorBanner(context, _errorMessage),
+                filtered.isEmpty
+                    ? Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: MaintenanceScreenWidgets.buildEmptyState(
+                    context,
+                    hasRequests: maintenanceRequests.isNotEmpty,
+                    canCreateRequest: users.isNotEmpty && equipment.isNotEmpty,
+                    onCreateRequest: () => _showAddEditMaintenanceDialog(),
+                  ),
+                )
+                    : MaintenanceScreenWidgets.buildMaintenanceRequestListWithPagination(
+                  context,
+                  requests: paginated.cast<Map<String, dynamic>>(),
+                  currentPage: _currentPage,
+                  totalPages: totalPages,
+                  getEquipmentName: _getEquipmentName,
+                  getUserName: _getUserName,
+                  getStatusLabel: _getStatusLabel,
+                  getStatusColor: _getStatusColor,
+                  onRequestTap: (request) => _showAddEditMaintenanceDialog(request: request),
+                  onPreviousPage: () => setState(() => _currentPage--),
+                  onNextPage: () => setState(() => _currentPage++),
+                ),
+              ],
             ),
           ),
         ],
@@ -392,7 +393,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
               );
               break;
             case 'maintenance_requests':
-            // Already on maintenance requests screen
               break;
             case 'orb_chat':
               Navigator.pushReplacement(
@@ -404,8 +404,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
                   ),
                 ),
               );
-              break;
-            default:
               break;
           }
         },

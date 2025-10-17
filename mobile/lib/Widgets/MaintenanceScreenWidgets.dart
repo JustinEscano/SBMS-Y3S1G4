@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MaintenanceScreenWidgets {
   static Widget buildDialogHeader(BuildContext context, {String title = '', IconData icon = Icons.edit}) {
@@ -6,19 +7,26 @@ class MaintenanceScreenWidgets {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
-          IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close)),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close, color: Colors.white70),
+          ),
         ],
       ),
     );
@@ -30,13 +38,23 @@ class MaintenanceScreenWidgets {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.2))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.white70,
+              ),
+            ),
+          ),
           if (extraAction != null) ...[
             const SizedBox(width: 8),
             extraAction,
@@ -45,48 +63,20 @@ class MaintenanceScreenWidgets {
           ElevatedButton(
             onPressed: onAction,
             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF184BFB),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text(actionText),
+            child: Text(
+              actionText,
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  static Widget buildSummaryCards(BuildContext context, int pendingCount, int inProgressCount, int resolvedCount) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          buildSummaryCard(context, 'Pending', pendingCount, Icons.pending, Colors.orange[700]!),
-          const SizedBox(width: 12),
-          buildSummaryCard(context, 'In Progress', inProgressCount, Icons.work, Colors.blue[700]!),
-          const SizedBox(width: 12),
-          buildSummaryCard(context, 'Resolved', resolvedCount, Icons.check_circle, Colors.green[700]!),
-        ],
-      ),
-    );
-  }
-
-  static Widget buildSummaryCard(BuildContext context, String title, int count, IconData icon, Color color) {
-    return Expanded(
-      child: Card(
-        color: const Color(0xFF1F1E23),
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 8),
-              Text('$count', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.white)),
-              Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -100,7 +90,8 @@ class MaintenanceScreenWidgets {
     String tempFilterStatus = currentFilterStatus;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      backgroundColor: const Color(0xFF1E1E1E),
       child: Container(
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5, maxWidth: 400),
         child: Column(
@@ -113,24 +104,21 @@ class MaintenanceScreenWidgets {
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: DropdownButtonFormField<String>(
-                value: tempFilterStatus,
-                decoration: InputDecoration(
-                  labelText: 'Filter by Status',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  prefixIcon: const Icon(Icons.filter_alt),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                ),
-                isExpanded: true,
-                items: [
-                  const DropdownMenuItem<String>(value: 'all', child: Text('All Statuses')),
-                  ...statusOptions.map((option) => DropdownMenuItem<String>(
-                    value: option['value'],
-                    child: Text(option['label']!),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  buildFilterChip(
+                    label: 'All',
+                    isSelected: tempFilterStatus == 'all',
+                    onSelected: () => tempFilterStatus = 'all',
+                  ),
+                  ...statusOptions.map((option) => buildFilterChip(
+                    label: option['label']!,
+                    isSelected: tempFilterStatus == option['value'],
+                    onSelected: () => tempFilterStatus = option['value']!,
                   )),
                 ],
-                onChanged: (value) => tempFilterStatus = value ?? 'all',
               ),
             ),
             buildDialogFooter(
@@ -139,7 +127,14 @@ class MaintenanceScreenWidgets {
               actionText: 'Apply',
               extraAction: TextButton(
                 onPressed: onClearFilter,
-                child: const Text('Clear'),
+                child: Text(
+                  'Clear',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                  ),
+                ),
               ),
             ),
           ],
@@ -148,76 +143,148 @@ class MaintenanceScreenWidgets {
     );
   }
 
+  static Widget buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onSelected,
+  }) {
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: GoogleFonts.urbanist(
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          color: isSelected ? Colors.white : Colors.white70,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) => onSelected(),
+      selectedColor: const Color(0xFF184BFB),
+      backgroundColor: const Color(0xFF1F1E1E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Colors.white.withOpacity(0.2)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      checkmarkColor: Colors.white,
+    );
+  }
+
   static Widget buildMaintenanceRequestCard(BuildContext context, {
     required Map<String, dynamic> request,
     required String Function(String?) getEquipmentName,
     required String Function(String?) getUserName,
     required String Function(String?) getStatusLabel,
-    required Color Function(String) getStatusColor,
+    required Color Function(String?) getStatusColor,
     required VoidCallback onTap,
   }) {
-    final statusColor = getStatusColor(request['status'] ?? '');
+    final status = request['status'] as String?;
+    final statusColor = getStatusColor(status);
 
     return Card(
-      color: const Color(0xFF1F1E23),
+      color: const Color(0xFF1E1E1E),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.2),
-          child: Icon(Icons.build, color: statusColor),
-        ),
-        title: Text(
-          getEquipmentName(request['equipment']?.toString()),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            Text(
-              request['issue'] ?? 'No description',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    getStatusLabel(request['status']),
-                    style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'By: ${getUserName(request['user']?.toString())}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            if (request['scheduled_date'] != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Scheduled: ${DateTime.parse(request['scheduled_date']).day}/${DateTime.parse(request['scheduled_date']).month}/${DateTime.parse(request['scheduled_date']).year}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-              ),
           ],
         ),
-        onTap: onTap,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: statusColor.withOpacity(0.2),
+                      child: Icon(Icons.build, color: statusColor, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        getEquipmentName(request['equipment']?.toString()),
+                        style: GoogleFonts.urbanist(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  request['issue'] as String? ?? 'No description',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.urbanist(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Chip(
+                      label: Text(
+                        getStatusLabel(status),
+                        style: GoogleFonts.urbanist(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: statusColor.withOpacity(0.2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: statusColor.withOpacity(0.4)),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'By: ${getUserName(request['user']?.toString())}',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white70,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                if (request['scheduled_date'] != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Scheduled: ${DateTime.tryParse(request['scheduled_date'] as String? ?? '')?.toString().split(' ')[0] ?? 'Unknown'}',
+                      style: GoogleFonts.urbanist(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -231,25 +298,41 @@ class MaintenanceScreenWidgets {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.build_outlined, size: 64, color: Colors.grey[400]),
+          Icon(Icons.build_outlined, size: 64, color: Colors.white70),
           const SizedBox(height: 16),
           Text(
             hasRequests ? 'No Requests Match Filters' : 'No Maintenance Requests',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: GoogleFonts.urbanist(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             hasRequests ? 'Try adjusting your filters' : 'Create your first maintenance request',
-            style: TextStyle(color: Colors.grey[600]),
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white70,
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: canCreateRequest ? onCreateRequest : null,
-            icon: const Icon(Icons.add),
-            label: const Text('Create Request'),
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: Text(
+              'Create Request',
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF184BFB),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ],
@@ -258,36 +341,28 @@ class MaintenanceScreenWidgets {
   }
 
   static Widget buildErrorBanner(BuildContext context, String errorMessage) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.red[100], borderRadius: BorderRadius.circular(12)),
-        child: Row(
-          children: [
-            const Icon(Icons.error, color: Colors.red),
-            const SizedBox(width: 8),
-            Expanded(child: Text(errorMessage, style: const TextStyle(color: Colors.red))),
-          ],
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFCDD2),
+        borderRadius: BorderRadius.circular(12),
       ),
-    );
-  }
-
-  static Widget buildFilterChip(BuildContext context, {
-    required String filterStatus,
-    required String Function(String?) getStatusLabel,
-    required Color Function(String) getStatusColor,
-    required VoidCallback onRemoveFilter,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Chip(
-        label: Text('Status: ${getStatusLabel(filterStatus)}', style: const TextStyle(fontWeight: FontWeight.w500)),
-        backgroundColor: getStatusColor(filterStatus).withOpacity(0.1),
-        deleteIcon: const Icon(Icons.close, size: 16),
-        onDeleted: onRemoveFilter,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          const Icon(Icons.error, color: Colors.red, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              errorMessage,
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -304,18 +379,20 @@ class MaintenanceScreenWidgets {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(Icons.chevron_left, color: Colors.white70),
             onPressed: currentPage > 1 ? onPreviousPage : null,
-            color: Colors.white,
           ),
           Text(
             'Page $currentPage of $totalPages',
-            style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(Icons.chevron_right, color: Colors.white70),
             onPressed: currentPage < totalPages ? onNextPage : null,
-            color: Colors.white,
           ),
         ],
       ),
@@ -327,14 +404,13 @@ class MaintenanceScreenWidgets {
     required String Function(String?) getEquipmentName,
     required String Function(String?) getUserName,
     required String Function(String?) getStatusLabel,
-    required Color Function(String) getStatusColor,
+    required Color Function(String?) getStatusColor,
     required Function(Map<String, dynamic>) onRequestTap,
   }) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: requests.length,
-      itemBuilder: (context, index) {
-        final request = requests[index];
+    return Column(
+      children: requests.asMap().entries.map((entry) {
+        final index = entry.key;
+        final request = entry.value;
         return buildMaintenanceRequestCard(
           context,
           request: request,
@@ -344,7 +420,7 @@ class MaintenanceScreenWidgets {
           getStatusColor: getStatusColor,
           onTap: () => onRequestTap(request),
         );
-      },
+      }).toList(),
     );
   }
 
@@ -355,23 +431,21 @@ class MaintenanceScreenWidgets {
     required String Function(String?) getEquipmentName,
     required String Function(String?) getUserName,
     required String Function(String?) getStatusLabel,
-    required Color Function(String) getStatusColor,
+    required Color Function(String?) getStatusColor,
     required Function(Map<String, dynamic>) onRequestTap,
     required VoidCallback onPreviousPage,
     required VoidCallback onNextPage,
   }) {
     return Column(
       children: [
-        Expanded(
-          child: buildMaintenanceRequestList(
-            context,
-            requests: requests,
-            getEquipmentName: getEquipmentName,
-            getUserName: getUserName,
-            getStatusLabel: getStatusLabel,
-            getStatusColor: getStatusColor,
-            onRequestTap: onRequestTap,
-          ),
+        buildMaintenanceRequestList(
+          context,
+          requests: requests,
+          getEquipmentName: getEquipmentName,
+          getUserName: getUserName,
+          getStatusLabel: getStatusLabel,
+          getStatusColor: getStatusColor,
+          onRequestTap: onRequestTap,
         ),
         if (totalPages > 1)
           buildPaginationControls(
