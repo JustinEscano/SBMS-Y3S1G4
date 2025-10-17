@@ -10079,3 +10079,25 @@ Successfully imported core.views.signals
 Successfully imported core.views.signals
 Successfully imported core.views.signals
 OTP sent to acephilipgclass18@gmail.com for user AceAdmin
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-16T00:00:00.000Z'], 'period_end': ['2025-10-16T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-16T00:00:00+00:00, period_end=2025-10-17T00:00:00+00:00
+Latest sensor data requested
+Returning 4 sensor readings
+Latest sensor data requested
+Returning 4 sensor readings
