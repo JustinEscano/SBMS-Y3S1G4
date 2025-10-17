@@ -11,6 +11,7 @@ __pycache__/
 venv/
 .env/
 .venv/
+myenv/
 
 # SQLite databases
 *.sqlite3
