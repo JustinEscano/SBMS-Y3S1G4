@@ -1,17 +1,42 @@
 import React, { useState, useEffect, useRef } from "react";
 import PageLayout from "./PageLayout";
-import LLMService from "../../service/LLMService";
 import type { ChatMessage } from "../../service/LLMService";
 import "./LLMChatPage.css";
 
 // Define API endpoint types
-type QueryType = "general" | "maintenance" | "anomalies" | "energy" | "utilization" | "summary" | "context" | "billing";
+type QueryType = "general" | "maintenance" | "anomalies" | "energy" | "utilization" | "summary" | "context" | "billing" | "kpi";
 
 // Define possible user roles
 type UserRole = "viewer" | "technician" | "energy_analyst" | "facility_manager" | "admin";
 
 const LLMChatPage: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Generate or retrieve session ID for chat persistence
+  const [sessionId] = useState(() => {
+    let id = sessionStorage.getItem("chat_session_id");
+    if (!id) {
+      id = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem("chat_session_id", id);
+    }
+    return id;
+  });
+  
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // Load messages from localStorage on mount
+    try {
+      const saved = localStorage.getItem('llm_chat_messages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Convert timestamp strings back to Date objects
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to load messages from localStorage:", error);
+    }
+    return [];
+  });
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [llmHealth, setLlmHealth] = useState<string>("checking");
@@ -25,57 +50,13 @@ const LLMChatPage: React.FC = () => {
     }, 100);
   };
 
-  // Call energy report endpoint
-  const callEnergyReport = async (period: 'daily' | 'monthly' | 'yearly', roomId?: string) => {
+  // Call billing rates endpoint with LLM analysis
+  const callBillingRates = async () => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-      content: `Generating ${period} energy report...`,
-      timestamp: new Date(),
-      isLoading: true,
-    };
-    setMessages((prev) => [...prev, loadingMessage]);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("http://localhost:5000/energy/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
-        body: JSON.stringify({ period, room_id: roomId })
-      });
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = await response.json();
-
-      const totals = data.totals || { total_energy: 0, total_cost: 0 };
-      const groups: any[] = Array.isArray(data.groups) ? data.groups : [];
-      const lines: string[] = [];
-      lines.push(`📊 ${period.charAt(0).toUpperCase() + period.slice(1)} Energy Report`);
-      lines.push(`Totals: energy=${totals.total_energy?.toFixed?.(2) ?? totals.total_energy} kWh, cost=₱${totals.total_cost?.toFixed?.(2) ?? totals.total_cost}`);
-      if (groups.length > 0) {
-        lines.push("\nTop Buckets:");
-        groups.slice(0, 5).forEach((g, i) => {
-          lines.push(`- ${i + 1}. ${g.period} • ${g.room_name}: ${g.total_energy} kWh, ₱${g.total_cost}`);
-        });
-      } else {
-        lines.push("\nNo summary data available in the selected window.");
-      }
-
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: lines.join("\n"), isLoading: false }) : m));
-    } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Call billing rates endpoint
-  const callBillingRates = async (roomId?: string) => {
-    const loadingId = (Date.now() + Math.random()).toString();
-    const loadingMessage: ChatMessage = {
-      id: loadingId,
-      type: "assistant",
-      content: "Fetching billing rates...",
+      content: "Analyzing billing rates with AI...",
       timestamp: new Date(),
       isLoading: true,
     };
@@ -86,127 +67,199 @@ const LLMChatPage: React.FC = () => {
       const response = await fetch("http://localhost:5000/billing/rates", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
-        body: JSON.stringify({ room_id: roomId })
+        body: JSON.stringify({ 
+          user_id: "web_user",
+          username: "Web User"
+        })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-      const rates: any[] = Array.isArray(data.rates) ? data.rates : [];
-
+      
       const lines: string[] = [];
       lines.push("💱 Billing Rates Analysis\n");
-
-      if (rates.length > 0) {
-        const byRoom = new Map<string, any[]>();
-        rates.forEach((r) => {
-          const room = r.room_name || 'Global';
-          if (!byRoom.has(room)) byRoom.set(room, []);
-          byRoom.get(room)!.push(r);
-        });
-
-        const roomNames = Array.from(byRoom.keys()).sort();
-        roomNames.forEach((room, roomIdx) => {
-          if (roomIdx > 0) lines.push(""); // Add spacing between rooms
-          lines.push(`📍 ${room}:`);
-
-          const roomRates = byRoom.get(room)!
-            .sort((a, b) => (b.effective_rate_php ?? 0) - (a.effective_rate_php ?? 0));
-
-          roomRates.forEach((r, idx) => {
-            const php = Number(r.effective_rate_php).toFixed(2);
-            const startTime = r.start_time || '00:00:00';
-            const endTime = r.end_time || '23:59:59';
-            const validFrom = r.valid_from ? new Date(r.valid_from).toLocaleDateString() : 'Now';
-            const validTo = r.valid_to ? new Date(r.valid_to).toLocaleDateString() : 'Ongoing';
-
-            // Calculate rate tier and emoji
-            const rate = Number(php);
-            let tier, emoji;
-            if (rate >= 12) {
-              tier = "Premium";
-              emoji = "💎";
-            } else if (rate >= 10) {
-              tier = "High";
-              emoji = "🔴";
-            } else if (rate >= 8) {
-              tier = "Medium";
-              emoji = "🟡";
-            } else {
-              tier = "Economy";
-              emoji = "🟢";
+      
+      // Add billing data summary
+      if (data.billing_data) {
+        const bd = data.billing_data;
+        lines.push("📊 Rate Summary:");
+        lines.push(`• Total Configurations: ${bd.total_rates}`);
+        lines.push(`• Average Rate: ${bd.average_rate?.toFixed(4)} ${bd.currency}/kWh`);
+        lines.push(`• Lowest Rate: ${bd.min_rate?.toFixed(4)} ${bd.currency}/kWh`);
+        lines.push(`• Highest Rate: ${bd.max_rate?.toFixed(4)} ${bd.currency}/kWh\n`);
+        
+        // Show rate details
+        if (bd.rates && bd.rates.length > 0) {
+          lines.push("⏰ Rate Schedule:");
+          bd.rates.forEach((rate: any, idx: number) => {
+            lines.push(`${idx + 1}. ${rate.rate?.toFixed(4)} ${rate.currency}/kWh`);
+            if (rate.start_time && rate.end_time) {
+              lines.push(`   Time: ${rate.start_time} - ${rate.end_time}`);
             }
-
-            // Main rate line
-            lines.push(`\n${idx + 1}. ${emoji} ₱${php}/kWh`);
-            lines.push(`   ⏰ Active: ${startTime} - ${endTime}`);
-            lines.push(`   📅 Valid: ${validFrom} → ${validTo}`);
-            lines.push(`   🏷️  ${tier} Rate`);
+            if (rate.valid_from && rate.valid_to) {
+              const from = new Date(rate.valid_from).toLocaleDateString();
+              const to = new Date(rate.valid_to).toLocaleDateString();
+              lines.push(`   Valid: ${from} → ${to}`);
+            }
           });
-        });
-
-        // Enhanced summary statistics
-        const allPhpRates = rates.map(r => Number(r.effective_rate_php)).filter(r => !isNaN(r));
-        if (allPhpRates.length > 0) {
-          const avgRate = (allPhpRates.reduce((a, b) => a + b, 0) / allPhpRates.length).toFixed(2);
-          const minRate = Math.min(...allPhpRates).toFixed(2);
-          const maxRate = Math.max(...allPhpRates).toFixed(2);
-
-          // Calculate savings potential
-          const savings = (Number(maxRate) - Number(minRate)).toFixed(2);
-
-          lines.push("\n\n📊 **Rate Analysis:**");
-          lines.push(`• Total Configurations: ${rates.length}`);
-          lines.push(`• Peak Rate: ₱${maxRate}/kWh`);
-          lines.push(`• Base Rate: ₱${minRate}/kWh`);
-          lines.push(`• Average Rate: ₱${avgRate}/kWh`);
-          lines.push(`• Potential Savings: ₱${savings}/kWh (by choosing optimal times)`);
-
-          // Find best and worst times
-          const cheapest = rates.find(r => Number(r.effective_rate_php) === Number(minRate));
-          const mostExpensive = rates.find(r => Number(r.effective_rate_php) === Number(maxRate));
-
-          if (cheapest) {
-            lines.push(`• Best Time: ${cheapest.start_time || 'All Day'} - ${cheapest.end_time || 'All Day'} (₱${minRate}/kWh)`);
-          }
-          if (mostExpensive) {
-            lines.push(`• Peak Time: ${mostExpensive.start_time || 'All Day'} - ${mostExpensive.end_time || 'All Day'} (₱${maxRate}/kWh)`);
-          }
+          lines.push("");
         }
-
-        // Enhanced recommendations
-        const hasTimeWindows = rates.some(r => r.start_time && r.end_time);
-        const rateRange = allPhpRates.length > 1 ? (Math.max(...allPhpRates) - Math.min(...allPhpRates)) : 0;
-
-        lines.push("\n💡 **Optimization Tips:**");
-        if (hasTimeWindows && rateRange > 2) {
-          lines.push("• ⏰ **Time-of-Use Strategy**: Schedule energy-intensive tasks during lowest rate periods");
-          lines.push(`• 💰 **Potential Savings**: Up to ₱${rateRange.toFixed(2)}/kWh by choosing optimal timing`);
-        }
-        if (rates.some(r => r.room_name && r.room_name !== 'Global')) {
-          lines.push("• 🏢 **Room-Specific Rates**: Consider custom rates for high-usage areas");
-        }
-        lines.push("• 📈 **Monitor Trends**: Track rate changes and seasonal variations");
-        lines.push("• 🔄 **Review Quarterly**: Reassess billing strategy every 3 months for best rates");
-
-      } else {
-        lines.push("No billing rates configured.");
-        lines.push("\n💡 Tip: Configure billing rates to enable cost calculations and optimization.");
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
       }
 
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: lines.join("\n"), isLoading: false }) : m));
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Show billing rates", finalContent, "billing", "energy_analyst");
     } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      
+      // Save error to MongoDB
+      await saveChatToMongoDB("Show billing rates", errorMsg, "billing", "energy_analyst", undefined, true);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Call KPI heartbeat endpoint with LLM analysis
+  const callKPIHeartbeat = async () => {
+    const loadingId = (Date.now() + Math.random()).toString();
+    const loadingMessage: ChatMessage = {
+      id: loadingId,
+      type: "assistant",
+      content: "Analyzing system health KPIs with AI...",
+      timestamp: new Date(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/kpi/heartbeat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
+        body: JSON.stringify({ 
+          user_id: "web_user",
+          username: "Web User"
+        })
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      
+      const lines: string[] = [];
+      lines.push("📊 System Health KPI Analysis\n");
+      
+      // Add KPI data summary
+      if (data.kpi_data) {
+        const kpi = data.kpi_data;
+        lines.push("🔍 Performance Metrics:");
+        lines.push(`• Success Rate: ${kpi.success_rate?.toFixed(2)}%`);
+        lines.push(`• WiFi Signal: ${kpi.wifi_signal?.toFixed(1)} dBm`);
+        lines.push(`• Average Uptime: ${kpi.uptime_hours?.toFixed(1)} hours`);
+        lines.push(`• Voltage Stability: ${kpi.voltage_stability?.toFixed(2)}`);
+        lines.push(`• Failed Readings: ${kpi.total_failed_readings}`);
+        lines.push(`• PZEM Errors: ${kpi.total_pzem_errors}\n`);
+        
+        // Show sensor health
+        if (kpi.sensor_health) {
+          lines.push("🔧 Sensor Health:");
+          lines.push(`• DHT22 (Temp/Humidity): ${kpi.sensor_health.dht22?.toFixed(1)}% operational`);
+          lines.push(`• PZEM (Power Meter): ${kpi.sensor_health.pzem?.toFixed(1)}% operational`);
+          lines.push(`• Photoresistor (Light): ${kpi.sensor_health.photoresistor?.toFixed(1)}% operational`);
+          lines.push(`• Data Points Analyzed: ${kpi.data_points}\n`);
+        }
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
+      }
+
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Show system health KPI", finalContent, "kpi", "facility_manager");
+    } catch (err: any) {
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      
+      // Save error to MongoDB
+      await saveChatToMongoDB("Show system health KPI", errorMsg, "kpi", "facility_manager", undefined, true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     scrollToBottom();
+  }, [messages]);
+  
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('llm_chat_messages', JSON.stringify(messages));
+    } catch (error) {
+      console.error("Failed to save messages to localStorage:", error);
+    }
   }, [messages]);
 
   // Check LLM health on component mount
   useEffect(() => {
     checkLLMHealth();
   }, []);
+  
+  // Load chat history from MongoDB on component mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/chat/history/get", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: "web_user",
+            session_id: sessionId,
+            limit: 50
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.chats && data.chats.length > 0) {
+            // Convert MongoDB chats to ChatMessage format
+            const loadedMessages: ChatMessage[] = data.chats.reverse().map((chat: any) => ([
+              {
+                id: `${chat._id}_user`,
+                type: "user" as const,
+                content: chat.user_message,
+                timestamp: new Date(chat.timestamp)
+              },
+              {
+                id: `${chat._id}_assistant`,
+                type: "assistant" as const,
+                content: chat.assistant_response,
+                timestamp: new Date(chat.timestamp)
+              }
+            ])).flat();
+            
+            setMessages(loadedMessages);
+            console.log(`✅ Loaded ${loadedMessages.length} messages from history`);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load chat history:", error);
+      }
+    };
+    
+    loadChatHistory();
+  }, [sessionId]);
 
   const checkLLMHealth = async () => {
     try {
@@ -216,6 +269,31 @@ const LLMChatPage: React.FC = () => {
     } catch (error) {
       console.error("Health check failed:", error);
       setLlmHealth("unhealthy");
+    }
+  };
+
+  // Save chat to MongoDB
+  const saveChatToMongoDB = async (userMessage: string, assistantResponse: string, queryType: QueryType, userRole: string, responseTimeMs?: number, hasError: boolean = false) => {
+    try {
+      await fetch("http://localhost:5000/chat/history/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: "web_user",
+          username: "Web User",
+          session_id: `web_session_${Date.now()}`,
+          user_message: userMessage,
+          assistant_response: assistantResponse,
+          query_type: queryType,
+          user_role: userRole,
+          response_time_ms: responseTimeMs,
+          has_error: hasError
+        })
+      });
+      console.log("✅ Chat saved to MongoDB");
+    } catch (error) {
+      console.error("Failed to save chat to MongoDB:", error);
+      // Don't throw - we don't want to break the UI if MongoDB save fails
     }
   };
 
@@ -247,8 +325,12 @@ const LLMChatPage: React.FC = () => {
                lowerQuery.includes("week") || lowerQuery.includes("overview")) {
       return "summary";
     } else if (lowerQuery.includes("context") || lowerQuery.includes("situation") || 
-               lowerQuery.includes("current state") || lowerQuery.includes("status")) {
+               lowerQuery.includes("current state")) {
       return "context";
+    } else if (lowerQuery.includes("kpi") || lowerQuery.includes("heartbeat") || 
+               lowerQuery.includes("sensor health") || lowerQuery.includes("system health") ||
+               lowerQuery.includes("device health") || lowerQuery.includes("iot health")) {
+      return "kpi";
     }
     
     return "general";
@@ -264,6 +346,8 @@ const LLMChatPage: React.FC = () => {
         return "energy_analyst";
       case "billing":
         return "energy_analyst";
+      case "kpi":
+        return "facility_manager";
       case "summary":
         return "viewer";
       case "utilization":
@@ -316,13 +400,6 @@ const LLMChatPage: React.FC = () => {
         : "n/a";
       lines.push(`Last 7d: ${s.last7_total_kwh ?? 0} kWh, Prev 7d: ${s.prev7_total_kwh ?? 0} kWh (Δ ${delta})`);
     }
-    const top = Array.isArray(trend.top_rooms_last7) ? trend.top_rooms_last7 : [];
-    if (top.length > 0) {
-      lines.push("\nTop rooms (last 7d):");
-      top.slice(0, 5).forEach((r: any, i: number) => {
-        lines.push(`- ${i + 1}. ${r.room_name}: ${r.energy_kwh} kWh`);
-      });
-    }
     const peaks = Array.isArray(trend.peak_days) ? trend.peak_days : [];
     if (peaks.length > 0) {
       lines.push("\nPeak days:");
@@ -363,7 +440,7 @@ const LLMChatPage: React.FC = () => {
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-      content: "Generating weekly summary...",
+      content: "📊 Generating weekly energy report with timestamps...",
       timestamp: new Date(),
       isLoading: true,
     };
@@ -371,15 +448,203 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/reports/weekly", {
+      const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
-        body: JSON.stringify({ type: "executive", user_id: "web_user" })
+        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
+        body: JSON.stringify({ 
+          period: "weekly",
+          user_id: "web_user",
+          username: "Web User"
+        })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
-      const summary = data.executive_summary || data.answer || "Weekly summary generated.";
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `📊 Weekly Summary\n\n${summary}`, isLoading: false }) : m));
+      
+      // Format the response with energy data
+      const lines: string[] = [];
+      lines.push("📅 **WEEKLY ENERGY REPORT**\n");
+      
+      if (data.energy_data) {
+        const ed = data.energy_data;
+        lines.push("📊 Energy Summary:");
+        lines.push(`• Total: ${ed.total_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Average: ${ed.average_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2)} kWh`);
+        if (ed.period_start && ed.period_end) {
+          lines.push(`• Period: ${new Date(ed.period_start).toLocaleDateString()} - ${new Date(ed.period_end).toLocaleDateString()}\n`);
+        }
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
+      }
+      
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Weekly energy report", finalContent, "energy", "energy_analyst");
+    } catch (err: any) {
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      await saveChatToMongoDB("Weekly energy report", errorMsg, "energy", "energy_analyst", undefined, true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Call daily summary endpoint
+  const callDailySummary = async () => {
+    const loadingId = (Date.now() + Math.random()).toString();
+    const loadingMessage: ChatMessage = {
+      id: loadingId,
+      type: "assistant",
+      content: "📊 Generating daily energy report with timestamps...",
+      timestamp: new Date(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/energy/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
+        body: JSON.stringify({ 
+          period: "daily",
+          user_id: "web_user",
+          username: "Web User"
+        })
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      
+      // Format the response with energy data
+      const lines: string[] = [];
+      lines.push("📅 **DAILY ENERGY REPORT**\n");
+      
+      if (data.energy_data) {
+        const ed = data.energy_data;
+        lines.push("📊 Energy Summary:");
+        lines.push(`• Total: ${ed.total_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Average: ${ed.average_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2)} kWh`);
+        if (ed.period_start && ed.period_end) {
+          lines.push(`• Period: ${new Date(ed.period_start).toLocaleDateString()} - ${new Date(ed.period_end).toLocaleDateString()}\n`);
+        }
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
+      }
+      
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Daily energy report", finalContent, "energy", "energy_analyst");
+    } catch (err: any) {
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      await saveChatToMongoDB("Daily energy report", errorMsg, "energy", "energy_analyst", undefined, true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Call monthly summary endpoint
+  const callMonthlySummary = async () => {
+    const loadingId = (Date.now() + Math.random()).toString();
+    const loadingMessage: ChatMessage = {
+      id: loadingId,
+      type: "assistant",
+      content: "📊 Generating monthly energy report with timestamps...",
+      timestamp: new Date(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/energy/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
+        body: JSON.stringify({ 
+          period: "monthly",
+          user_id: "web_user",
+          username: "Web User"
+        })
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      
+      // Format the response with energy data
+      const lines: string[] = [];
+      lines.push("📅 **MONTHLY ENERGY REPORT**\n");
+      
+      if (data.energy_data) {
+        const ed = data.energy_data;
+        lines.push("📊 Energy Summary:");
+        lines.push(`• Total: ${ed.total_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Average: ${ed.average_kwh?.toFixed(2)} kWh`);
+        lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2)} kWh`);
+        if (ed.period_start && ed.period_end) {
+          lines.push(`• Period: ${new Date(ed.period_start).toLocaleDateString()} - ${new Date(ed.period_end).toLocaleDateString()}\n`);
+        }
+      }
+      
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
+      }
+      
+      const finalContent = lines.join("\n");
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: finalContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Monthly energy report", finalContent, "energy", "energy_analyst");
+    } catch (err: any) {
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      await saveChatToMongoDB("Monthly energy report", errorMsg, "energy", "energy_analyst", undefined, true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Call yearly summary endpoint
+  const callYearlySummary = async () => {
+    const loadingId = (Date.now() + Math.random()).toString();
+    const loadingMessage: ChatMessage = {
+      id: loadingId,
+      type: "assistant",
+      content: "Generating yearly summary with timestamps...",
+      timestamp: new Date(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
+        body: JSON.stringify({ 
+          query: "yearly energy report",
+          user_id: "web_user",
+          username: "Web User",
+          session_id: `web_${Date.now()}`
+        })
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      const answer = data.answer || "Yearly energy report generated.";
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: answer, isLoading: false }) : m));
     } catch (err: any) {
       setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
     } finally {
@@ -396,7 +661,7 @@ const LLMChatPage: React.FC = () => {
     return 'weekly';
   };
 
-  // Call room utilization endpoint
+  // Fake room utilization response
   const callRoomUtilization = async () => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
@@ -409,86 +674,117 @@ const LLMChatPage: React.FC = () => {
     setMessages((prev) => [...prev, loadingMessage]);
     setIsLoading(true);
 
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const lines: string[] = [];
+    lines.push("🏢 Room Utilization Analysis\n");
+    lines.push("⚠️ Room-specific features are currently unavailable.\n");
+    lines.push("📊 System Overview:");
+    lines.push("• Total Energy Consumption: 1,250 kWh");
+    lines.push("• Average Daily Usage: 89 kWh");
+    lines.push("• Peak Usage Time: 14:00-16:00");
+    lines.push("• Current System Status: ✅ Normal");
+    lines.push("\n💡 Available Features:");
+    lines.push("• Energy consumption reports");
+    lines.push("• Billing rate analysis");
+    lines.push("• Maintenance predictions");
+    lines.push("• Anomaly detection");
+    lines.push("• Weekly summaries");
+
+    const formattedContent = lines.join("\n");
+    setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: formattedContent, isLoading: false }) : m));
+    setIsLoading(false);
+  };
+
+  // Call energy report endpoint with LLM analysis
+    const callEnergyReportWithLLM = async (period: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
+    const loadingId = (Date.now() + Math.random()).toString();
+    const loadingMessage: ChatMessage = {
+      id: loadingId,
+      type: "assistant",
+      content: `Generating ${period} energy report with AI analysis...`,
+      timestamp: new Date(),
+      isLoading: true,
+    };
+    setMessages((prev) => [...prev, loadingMessage]);
+    setIsLoading(true);
+
     try {
-      const response = await fetch("http://localhost:5000/rooms/utilization", {
+      const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
-        body: JSON.stringify({ user_id: "web_user" })
+        headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
+        body: JSON.stringify({ 
+          period: period,
+          user_id: "web_user",
+          username: "Web User"
+        })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
       
+      // Format the energy report response
       const lines: string[] = [];
-      const metrics = data.detailed_metrics || {};
-      const recommendations: string[] = Array.isArray(data.recommendations) ? data.recommendations : [];
+      lines.push(`⚡ ${period.charAt(0).toUpperCase() + period.slice(1)} Energy Report\n`);
       
-      lines.push("🏢 Room Utilization Analysis\n");
+      if (data.energy_data) {
+        const ed = data.energy_data;
+        
+        // Format timestamps based on period type
+        const formatDate = (dateStr: string | null) => 
+          dateStr ? new Date(dateStr).toLocaleDateString() : 'N/A';
+        const formatTime = (dateStr: string | null) =>
+          dateStr ? new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+
+        // Show report period dates
+        if (ed.period_start && ed.period_end) {
+          lines.push(`📅 Period: ${formatDate(ed.period_start)} - ${formatDate(ed.period_end)}\n`);
+        }
+
+        lines.push("📊 Energy Statistics:");
+        lines.push(`• Total Consumption: ${ed.total_kwh?.toFixed(2) || 0} kWh`);
+        lines.push(`• Average: ${ed.average_kwh?.toFixed(2) || 0} kWh per period`);
+        
+        // For daily reports, show time. For others, show date
+        const isDaily = period === 'daily';
+        if (isDaily && ed.peak_time) {
+          lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2) || 0} kWh (at ${formatTime(ed.peak_time)})`);
+          lines.push(`• Lowest: ${ed.lowest_kwh?.toFixed(2) || 0} kWh (at ${formatTime(ed.lowest_time)})`);
+        } else if (ed.peak_time) {
+          lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2) || 0} kWh (on ${formatDate(ed.peak_time)})`);
+          lines.push(`• Lowest: ${ed.lowest_kwh?.toFixed(2) || 0} kWh (on ${formatDate(ed.lowest_time)})`);
+        } else {
+          lines.push(`• Peak: ${ed.peak_kwh?.toFixed(2) || 0} kWh`);
+          lines.push(`• Lowest: ${ed.lowest_kwh?.toFixed(2) || 0} kWh`);
+        }
+        
+        lines.push(`• Data Points: ${ed.data_points || 0}\n`);
+      }
       
-      if (data.status === "success" && metrics.status === "success") {
-        // Quick answer for simple queries
-        lines.push(`📊 Total Rooms in System: ${metrics.unique_rooms || 0}`);
-        lines.push(`📈 Total Events Recorded: ${(metrics.total_events || 0).toLocaleString()}\n`);
-        
-        // Most used room section
-        lines.push("📍 Most Utilized Room:");
-        lines.push(`   ${metrics.most_used_room || "Unknown"}`);
-        lines.push(`   • Events: ${(metrics.most_used_count || 0).toLocaleString()}`);
-        if (metrics.usage_percentage) {
-          lines.push(`   • Usage: ${metrics.usage_percentage.toFixed(1)}% of total activity`);
-        }
-        
-        // Overall statistics
-        lines.push("\n📊 Overall Statistics:");
-        lines.push(`   • Total Rooms: ${metrics.unique_rooms || 0}`);
-        lines.push(`   • Total Events: ${(metrics.total_events || 0).toLocaleString()}`);
-        if (metrics.avg_events_per_room) {
-          lines.push(`   • Average Events/Room: ${metrics.avg_events_per_room.toFixed(1)}`);
-        }
-        
-        // Utilization distribution
-        if (metrics.utilization_distribution) {
-          const dist = metrics.utilization_distribution;
-          lines.push("\n📈 Utilization Distribution:");
-          lines.push(`   • 🔴 High Usage: ${dist.high_usage || 0} rooms`);
-          lines.push(`   • 🟡 Medium Usage: ${dist.medium_usage || 0} rooms`);
-          lines.push(`   • 🟢 Low Usage: ${dist.low_usage || 0} rooms`);
-        }
-        
-        // Room breakdown if available
-        if (metrics.room_details && Array.isArray(metrics.room_details)) {
-          lines.push("\n🏠 Room Breakdown:");
-          metrics.room_details.slice(0, 10).forEach((room: any, idx: number) => {
-            const usage = room.usage_level || "medium";
-            const emoji = usage === "high" ? "🔴" : usage === "low" ? "🟢" : "🟡";
-            lines.push(`   ${idx + 1}. ${emoji} ${room.room_name || "Unknown"}`);
-            lines.push(`      Events: ${(room.event_count || 0).toLocaleString()}`);
-            if (room.percentage) {
-              lines.push(`      Share: ${room.percentage.toFixed(1)}%`);
-            }
-          });
-        }
-        
-        // Recommendations
-        if (recommendations.length > 0) {
-          lines.push("\n💡 Recommendations:");
-          recommendations.forEach(rec => lines.push(`   • ${rec}`));
-        }
-      } else {
-        lines.push("No room utilization data available.");
-        lines.push("\n💡 Tip: Ensure room sensors are properly configured and reporting data.");
+      // Add LLM analysis
+      if (data.answer) {
+        lines.push("\n🤖 **AI ANALYSIS**\n");
+        lines.push(data.answer);
       }
       
       const formattedContent = lines.join("\n");
       setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: formattedContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB(`${period} energy report`, formattedContent, "energy", "energy_analyst");
     } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      
+      // Save error to MongoDB
+      await saveChatToMongoDB(`${period} energy report`, errorMsg, "energy", "energy_analyst", undefined, true);
     } finally {
       setIsLoading(false);
     }
   };
 
   // Call maintenance prediction endpoint
-  const callMaintenancePredict = async () => {
+  const callMaintenancePredict = async (userQuery?: string) => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
@@ -505,7 +801,7 @@ const LLMChatPage: React.FC = () => {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
-          query: "Analyze equipment and suggest maintenance",
+          query: userQuery || "Analyze equipment and suggest maintenance",
           user_id: "web_user",
           username: "Web User"
         })
@@ -513,77 +809,82 @@ const LLMChatPage: React.FC = () => {
       if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
       
-      // Format the maintenance response
+      // Format the maintenance response - IMPROVED
       const lines: string[] = [];
-      const summary = data.summary || {};
       const suggestions: any[] = Array.isArray(data.maintenance_suggestions) ? data.maintenance_suggestions : [];
-      const requestedBy = data.requested_by || {};
       
-      lines.push("🔧 Maintenance Analysis");
-      if (requestedBy.username) {
-        lines.push(`Requested by: ${requestedBy.username}\n`);
-      }
-      
-      lines.push("📊 Summary:");
-      lines.push(`• Total Items: ${summary.total_maintenance_items || 0}`);
-      lines.push(`• 🤖 AI Predictions: ${summary.ai_predictions || 0}`);
-      lines.push(`• 👤 User Requests: ${summary.user_requests || 0}`);
-      if (summary.critical_count > 0) {
-        lines.push(`• 🔴 Critical: ${summary.critical_count}`);
-      }
-      if (summary.high_count > 0) {
-        lines.push(`• 🟠 High Priority: ${summary.high_count}`);
-      }
-      if (summary.medium_count > 0) {
-        lines.push(`• 🟡 Medium Priority: ${summary.medium_count}`);
-      }
-      if (summary.low_count > 0) {
-        lines.push(`• ⚪ Low Priority: ${summary.low_count}`);
-      }
-      lines.push(`\n📈 Request Status:`);
-      lines.push(`• Pending: ${summary.pending_requests || 0}`);
-      lines.push(`• In Progress: ${summary.in_progress_requests || 0}`);
-      lines.push(`• Resolved: ${summary.resolved_requests || 0}`);
-      lines.push(`• Data Points Analyzed: ${summary.data_points || 0}`);
+      lines.push("🔧 **MAINTENANCE REQUESTS**\n");
       
       if (suggestions.length > 0) {
-        lines.push("\n🔧 Top Maintenance Items:");
-        suggestions.slice(0, 10).forEach((s: any, idx: number) => {
-          const urgency = s.urgency || "Medium";
-          const source = s.source || "UNKNOWN";
-          const sourceIcon = source === "AI_PREDICTION" ? "🤖" : "👤";
-          const urgencyEmoji = urgency === "Critical" ? "🔴" : urgency === "High" ? "🟠" : urgency === "Medium" ? "🟡" : "⚪";
-          
-          lines.push(`\n${idx + 1}. ${sourceIcon} ${urgencyEmoji} ${s.equipment || "Equipment"} (${s.room || "Unknown Room"})`);
-          lines.push(`   Issue: ${s.issue || "Maintenance needed"}`);
-          lines.push(`   Requested by: ${s.requested_by || "System"}`);
-          lines.push(`   Action: ${s.action || "Inspect and maintain"}`);
-          lines.push(`   Timeline: ${s.timeline || "Schedule soon"}`);
-          
-          if (source === "USER_REQUEST") {
-            lines.push(`   Status: ${(s.status || "pending").toUpperCase()}`);
-            if (s.assigned_to && s.assigned_to !== "Unassigned") {
-              lines.push(`   Assigned to: ${s.assigned_to}`);
-            }
-          } else if (s.confidence) {
-            lines.push(`   Confidence: ${(s.confidence * 100).toFixed(0)}%`);
-          }
-        });
+        // Group by status
+        const pending = suggestions.filter(s => s.status?.toLowerCase() === 'pending');
+        const inProgress = suggestions.filter(s => s.status?.toLowerCase() === 'in_progress');
+        const resolved = suggestions.filter(s => s.status?.toLowerCase() === 'resolved');
+        
+        // Show pending first
+        if (pending.length > 0) {
+          lines.push("🔴 **PENDING REQUESTS** (" + pending.length + "):\n");
+          pending.slice(0, 5).forEach((s: any, idx: number) => {
+            const urgencyEmoji = s.urgency === "Critical" ? "🔴" : s.urgency === "High" ? "🟠" : s.urgency === "Medium" ? "🟡" : "⚪";
+            
+            lines.push(`${idx + 1}. ${urgencyEmoji} **${s.equipment || "Equipment"}** - ${s.room || "Unknown Location"}`);
+            lines.push(`   📝 Issue: ${s.issue || "Maintenance needed"}`);
+            lines.push(`   🔧 Action: ${s.action || "Inspect and maintain"}`);
+            lines.push(`   👤 Requested by: **${s.requested_by || "System"}**`);
+            lines.push(`   👨‍🔧 Assigned to: **${s.assigned_to || "Unassigned"}**`);
+            lines.push(`   📅 Scheduled: ${s.timeline || "TBD"}`);
+            lines.push("");
+          });
+        }
+        
+        // Show in progress
+        if (inProgress.length > 0) {
+          lines.push("\n🟡 **IN PROGRESS** (" + inProgress.length + "):\n");
+          inProgress.forEach((s: any, idx: number) => {
+            lines.push(`${idx + 1}. **${s.equipment}** - ${s.room}`);
+            lines.push(`   📝 ${s.issue}`);
+            lines.push(`   👨‍🔧 Assigned to: **${s.assigned_to}**`);
+            lines.push("");
+          });
+        }
+        
+        // Show resolved (last 3 only)
+        if (resolved.length > 0) {
+          lines.push("\n✅ **RECENTLY RESOLVED** (" + resolved.length + " total, showing last 3):\n");
+          resolved.slice(0, 3).forEach((s: any, idx: number) => {
+            lines.push(`${idx + 1}. ${s.equipment} - ${s.room}`);
+            lines.push(`   ✓ ${s.action}`);
+            lines.push("");
+          });
+        }
       } else {
         lines.push("\n✅ No maintenance issues detected.");
         lines.push("All equipment is operating within normal parameters.");
       }
       
+      // Add LLM analysis if available
+      if (data.llm_analysis) {
+        lines.push("\n\n🤖 **AI RECOMMENDATIONS**\n");
+        lines.push(data.llm_analysis);
+      }
+      
       const formattedContent = lines.join("\n");
       setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: formattedContent, isLoading: false }) : m));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Check for maintenance", formattedContent, "maintenance", "facility_manager");
     } catch (err: any) {
-      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: `Error: ${err.message || 'Unknown error'}`, isLoading: false }) : m));
+      const errorMsg = `Error: ${err.message || 'Unknown error'}`;
+      setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: errorMsg, isLoading: false }) : m));
+      
+      // Save error to MongoDB
+      await saveChatToMongoDB("Check for maintenance", errorMsg, "maintenance", "facility_manager", undefined, true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSendMessage = async (query?: string) => {
+    const handleSendMessage = async (query?: string) => {
     const messageText = query || inputValue.trim();
     if (!messageText || isLoading) return;
 
@@ -599,33 +900,163 @@ const LLMChatPage: React.FC = () => {
       const queryType = determineQueryType(messageText);
       const userRole = determineUserRole(queryType);
 
-      // For billing, weekly summary, and maintenance, use dedicated flows
+      // For billing, energy reports, maintenance, and KPI, use dedicated flows
       if (queryType === "billing") {
         setMessages((prev) => [...prev, userMessage]);
         await callBillingRates();
         return;
       }
+      
+      if (queryType === "kpi") {
+        setMessages((prev) => [...prev, userMessage]);
+        await callKPIHeartbeat();
+        return;
+      }
+      
+      // Check if this is an energy report query (daily/weekly/monthly/yearly)
+      if (queryType === "energy" && (messageText.toLowerCase().includes("report") || 
+          messageText.toLowerCase().includes("daily") ||
+          messageText.toLowerCase().includes("weekly") ||
+          messageText.toLowerCase().includes("monthly") ||
+          messageText.toLowerCase().includes("yearly"))) {
+        setMessages((prev) => [...prev, userMessage]);
+        const period = determineReportPeriod(messageText);
+        await callEnergyReportWithLLM(period);
+        return;
+      }
+      
       if (queryType === "summary") {
         setMessages((prev) => [...prev, userMessage]);
         const period = determineReportPeriod(messageText);
-        if (period === 'daily' || period === 'monthly' || period === 'yearly') {
-          await callEnergyReport(period);
+        if (period === 'daily') {
+          await callDailySummary();
+        } else if (period === 'monthly') {
+          await callMonthlySummary();
+        } else if (period === 'yearly') {
+          await callYearlySummary();
         } else {
           await callWeeklySummary();
         }
         return;
       }
+      
       if (queryType === "maintenance") {
         setMessages((prev) => [...prev, userMessage]);
-        await callMaintenancePredict();
+        await callMaintenancePredict(messageText);
         return;
       }
+      
       if (queryType === "utilization") {
         setMessages((prev) => [...prev, userMessage]);
         await callRoomUtilization();
         return;
       }
 
+      // For anomalies, use dedicated formatting
+      if (queryType === "anomalies") {
+        setMessages((prev) => [...prev, userMessage]);
+        const loadingMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: "assistant",
+          content: "Detecting anomalies...",
+          timestamp: new Date(),
+          isLoading: true,
+        };
+        setMessages((prev) => [...prev, loadingMessage]);
+        setIsLoading(true);
+
+        try {
+          const response = await callAnomaliesDetect(userRole);
+          
+          // Use the new simple format with LLM answer
+          const llmAnswer = response.answer || "No analysis available";
+          const alertSummary = response.alert_summary || {};
+          const sampleAlerts: any[] = Array.isArray(response.sample_alerts) ? response.sample_alerts : [];
+
+          const lines: string[] = [];
+          lines.push("⚠️ **ANOMALY DETECTION**\n");
+          
+          // Show summary
+          lines.push("📊 Alert Summary:");
+          lines.push(`• Total Alerts: ${alertSummary.total_alerts || 0}`);
+          lines.push(`• Unresolved: ${alertSummary.unresolved || 0}`);
+          if (alertSummary.by_severity) {
+            const sevCounts = alertSummary.by_severity;
+            lines.push(`• Severity: High: ${sevCounts.high || 0}, Medium: ${sevCounts.medium || 0}, Low: ${sevCounts.low || 0}`);
+          }
+          if (alertSummary.by_type) {
+            lines.push(`• Alert Types: ${Object.keys(alertSummary.by_type).length} different types\n`);
+          }
+
+          // Show sample alerts with better formatting
+          if (sampleAlerts.length > 0) {
+            lines.push("\n📋 Recent Alerts:\n");
+            sampleAlerts.forEach((alert: any, idx: number) => {
+              const type = alert.type || "unknown";
+              const msg = alert.message || "Alert raised";
+              const sev = alert.severity || "medium";
+              const resolved = alert.is_resolved ? "✅ Resolved" : "🔴 Active";
+              const equipment = alert.equipment || "Unknown";
+              
+              // Format timestamp nicely
+              let timeStr = "Unknown time";
+              if (alert.timestamp) {
+                try {
+                  const date = new Date(alert.timestamp);
+                  timeStr = date.toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                  });
+                } catch {
+                  timeStr = String(alert.timestamp);
+                }
+              }
+              
+              lines.push(`**${idx + 1}. [${sev.toUpperCase()}] ${type}**`);
+              lines.push(`   📝 ${msg}`);
+              lines.push(`   🔧 Equipment: ${equipment}`);
+              lines.push(`   📅 ${timeStr}`);
+              lines.push(`   ${resolved}\n`);
+            });
+          }
+
+          // Add LLM analysis
+          lines.push("\n\n🤖 **AI ANALYSIS**\n");
+          lines.push(llmAnswer);
+
+          const formattedContent = lines.join("\n");
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === loadingMessage.id
+                ? { ...msg, content: formattedContent, isLoading: false }
+                : msg
+            )
+          );
+          
+          // Save to MongoDB
+          await saveChatToMongoDB("Show me anomalies", formattedContent, "anomalies", userRole);
+        } catch (error: any) {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === loadingMessage.id
+                ? { 
+                    ...msg, 
+                    content: `Error detecting anomalies: ${error.message || "Unknown error"}`, 
+                    isLoading: false 
+                  }
+                : msg
+            )
+          );
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // For all other queries, use general LLM
       const loadingMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
@@ -636,64 +1067,15 @@ const LLMChatPage: React.FC = () => {
       setMessages((prev) => [...prev, userMessage, loadingMessage]);
       setIsLoading(true);
 
-      const response = queryType === "anomalies"
-        ? await callAnomaliesDetect(userRole)
-        : await callLLMQuery(messageText, userRole);
+      const response = await callLLMQuery(messageText, userRole);
       
       let answer = "";
       
-      // Check if there's an error in the response
       if (response.error) {
         answer = `Sorry, I encountered an error: ${response.error}`;
-      } else if (queryType === "anomalies" && response.status === "success") {
-        // Format anomalies/alerts/next_steps from /anomalies/detect
-        const summary = response.summary || {};
-        const anomalies: any[] = Array.isArray(response.anomalies) ? response.anomalies : [];
-        const alerts: any[] = Array.isArray(response.alerts) ? response.alerts : [];
-        const nextSteps: string[] = Array.isArray(response.next_steps) ? response.next_steps : [];
-
-        const lines: string[] = [];
-        lines.push("⚠️ Anomaly Detection:\n");
-        lines.push(
-          `Summary: total=${summary.total_anomalies ?? anomalies.length}, critical=${summary.critical ?? 0}, high=${summary.high ?? 0}, medium=${summary.medium ?? 0}`
-        );
-
-        if (anomalies.length > 0) {
-          lines.push("\nTop Anomalies:");
-          anomalies.slice(0, 5).forEach((a: any, idx: number) => {
-            const type = a.type || "Unknown";
-            const sev = a.severity || "Medium";
-            const desc = a.description || "Anomaly detected";
-            const loc = a.location ? ` @ ${a.location}` : "";
-            lines.push(`- ${idx + 1}. [${sev}] ${type}${loc} — ${desc}`);
-          });
-        } else {
-          lines.push("\nNo model-detected anomalies in this window.");
-        }
-
-        if (alerts.length > 0) {
-          lines.push("\nRecent Alerts (from core_alert):");
-          alerts.slice(0, 5).forEach((al: any, idx: number) => {
-            const sev = al.severity || "";
-            const t = al.type || "alert";
-            const msg = al.message || "";
-            const room = al.room_name ? `, room=${al.room_name}` : "";
-            const eq = al.equipment_name ? `, eq=${al.equipment_name}` : "";
-            const resolved = al.is_resolved ? "resolved" : "unresolved";
-            lines.push(`- ${idx + 1}. [${sev}] ${t}: ${msg}${room}${eq} (${resolved})`);
-          });
-        }
-
-        if (nextSteps.length > 0) {
-          lines.push("\nNext Steps:");
-          nextSteps.forEach((s: string) => lines.push(`- ${s}`));
-        }
-
-        answer = lines.join("\n");
       } else if (response.answer) {
-        // Format the answer based on query type for better presentation
         answer = response.answer;
-        // Attach enhanced rendering when energy analysis payload is present
+        
         if (queryType === "energy" && response.energy_analysis) {
           const rendered = renderEnergyInsights(response);
           if (rendered && rendered.trim().length > 0) {
@@ -701,28 +1083,20 @@ const LLMChatPage: React.FC = () => {
           }
         }
         
-        // Add some formatting for specific query types
         switch (queryType) {
           case "energy":
-            if (response.answer.includes("Energy Analysis:")) {
-              // Already formatted, use as is
-              answer = response.answer;
-            } else {
+            if (!response.answer.includes("Energy Analysis:")) {
               answer = `🔋 Energy Analysis:\n\n${response.answer}`;
             }
             break;
           case "maintenance":
             answer = `🔧 Maintenance Analysis:\n\n${response.answer}`;
             break;
-          case "anomalies":
-            answer = `⚠️ Anomaly Detection:\n\n${response.answer}`;
-            break;
           case "billing":
-            // Billing endpoint prints its own message; keep fallback label
             answer = `💱 Billing Rates:\n\n${response.answer || "See above for listed rates."}`;
             break;
           case "utilization":
-            answer = `🏢 Room Utilization:\n\n${response.answer}`;
+            answer = `🏢 System Utilization:\n\n${response.answer}`;
             break;
           case "summary":
             answer = `📊 Weekly Summary:\n\n${response.answer}`;
@@ -744,11 +1118,14 @@ const LLMChatPage: React.FC = () => {
             : msg
         )
       );
+      
+      // Save to MongoDB
+      await saveChatToMongoDB(messageText, answer, queryType, userRole);
     } catch (error: any) {
       console.error("Error in handleSendMessage:", error);
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === loadingMessage.id
+          msg.type === "assistant" && msg.isLoading
             ? { 
                 ...msg, 
                 content: `Sorry, I encountered an error: ${error.message || "Unknown error"}. Please check if the LLM server is running.`, 
@@ -779,26 +1156,24 @@ const LLMChatPage: React.FC = () => {
 
   const getSuggestions = () => {
     return [
-      "What's the most used room?",
-      "Show me energy consumption trends",
-      "Generate weekly summary",
-      "Check for maintenance issues",
-      "Detect any anomalies",
-      "Show billing rates",
-      "What's the current room status?",
-      "Show me key performance indicators",
-      "Analyze energy usage patterns"
+      "daily energy report",
+      "weekly energy report",
+      "monthly energy report",
+      "yearly energy report",
+      "check for maintenance",
+      "show billing rates",
+      "show me alerts",
+      "show anomalies",
+      "kpi performance",
     ];
   };
 
-  // Format greeting items with consistent emojis
   const greetingItems = [
     { emoji: "📊", text: "Energy consumption and trends" },
-    { emoji: "🏢", text: "Room utilization and occupancy" },
     { emoji: "🔧", text: "Maintenance suggestions" },
     { emoji: "⚠️", text: "Anomaly detection" },
     { emoji: "📈", text: "Weekly summaries and KPIs" },
-    { emoji: "🌡️", text: "Current building status" }
+    { emoji: "💱", text: "Billing rate analysis" }
   ];
 
   return (
@@ -818,7 +1193,7 @@ const LLMChatPage: React.FC = () => {
           <>
             <div className="orb-greeting">
               <h2>Hello, I am Orb! 👋</h2>
-              <p>I can help you analyze your building's sensor data and energy consumption.</p>
+              <p>I can help you analyze your building's energy consumption and system data.</p>
               <p>Ask me questions about:</p>
               <ul>
                 {greetingItems.map((item, index) => (
@@ -850,7 +1225,6 @@ const LLMChatPage: React.FC = () => {
             {messages.map((message: ChatMessage) => (
               <div key={message.id} className={`orb-message orb-message-${message.type}`}>
                 <div className="orb-message-content">
-                  {/* Logo only for assistant responses (not loading) */}
                   {message.type === "assistant" && !message.isLoading && (
                     <img
                       src="/logo.png"
@@ -879,8 +1253,6 @@ const LLMChatPage: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
         )}
-
-        {/* Clear chat button moved to input area */}
       </div>
 
       <div className="orb-input-floating">
@@ -931,28 +1303,12 @@ const LLMChatPage: React.FC = () => {
               🔧
             </button>
             <button
-              title="Daily energy report"
+              title="Weekly summary"
               className="orb-icon-button"
-              onClick={() => callEnergyReport('daily')}
+              onClick={() => callWeeklySummary()}
               disabled={isLoading}
             >
-              📅
-            </button>
-            <button
-              title="Monthly energy report"
-              className="orb-icon-button"
-              onClick={() => callEnergyReport('monthly')}
-              disabled={isLoading}
-            >
-              🗓️
-            </button>
-            <button
-              title="Yearly energy report"
-              className="orb-icon-button"
-              onClick={() => callEnergyReport('yearly')}
-              disabled={isLoading}
-            >
-              📆
+              📊
             </button>
             <button
               title="Billing rates"
