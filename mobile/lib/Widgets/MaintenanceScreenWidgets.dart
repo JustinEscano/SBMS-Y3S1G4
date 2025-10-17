@@ -5,13 +5,13 @@ class MaintenanceScreenWidgets {
   static Widget buildDialogHeader(BuildContext context, {String title = '', IconData icon = Icons.edit}) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1F1E23),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
+          Icon(icon, color: const Color(0xFF184BFB), size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -24,7 +24,7 @@ class MaintenanceScreenWidgets {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(false), // Return false to indicate cancel
             icon: const Icon(Icons.close, color: Colors.white70),
           ),
         ],
@@ -37,7 +37,7 @@ class MaintenanceScreenWidgets {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: const Color(0xFF1E1E1E),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
         border: Border(top: BorderSide(color: Colors.white.withOpacity(0.2))),
       ),
@@ -45,7 +45,7 @@ class MaintenanceScreenWidgets {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(false), // Return false to indicate cancel
             child: Text(
               'Cancel',
               style: GoogleFonts.urbanist(
@@ -112,11 +112,13 @@ class MaintenanceScreenWidgets {
                     label: 'All',
                     isSelected: tempFilterStatus == 'all',
                     onSelected: () => tempFilterStatus = 'all',
+                    description: 'Show all maintenance requests',
                   ),
                   ...statusOptions.map((option) => buildFilterChip(
                     label: option['label']!,
                     isSelected: tempFilterStatus == option['value'],
                     onSelected: () => tempFilterStatus = option['value']!,
+                    description: option['description'],
                   )),
                 ],
               ),
@@ -147,15 +149,31 @@ class MaintenanceScreenWidgets {
     required String label,
     required bool isSelected,
     required VoidCallback onSelected,
+    String? description,
   }) {
     return ChoiceChip(
-      label: Text(
-        label,
-        style: GoogleFonts.urbanist(
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          color: isSelected ? Colors.white : Colors.white70,
-        ),
+      label: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.urbanist(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? Colors.white : Colors.white70,
+            ),
+          ),
+          if (description != null)
+            Text(
+              description,
+              style: GoogleFonts.urbanist(
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
+                color: isSelected ? Colors.white70 : Colors.white54,
+              ),
+              textAlign: TextAlign.center,
+            ),
+        ],
       ),
       selected: isSelected,
       onSelected: (selected) => onSelected(),
@@ -165,8 +183,61 @@ class MaintenanceScreenWidgets {
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Colors.white.withOpacity(0.2)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       checkmarkColor: Colors.white,
+    );
+  }
+
+  static Widget buildCustomFAB({
+    required VoidCallback? onPressed,
+    required String tooltip,
+    required bool isEnabled,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        transform: Matrix4.identity()..scale(isEnabled ? 1.0 : 0.95),
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: isEnabled
+                ? const LinearGradient(
+              colors: [Color(0xFF184BFB), Color(0xFF3B82F6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )
+                : const LinearGradient(
+              colors: [Colors.grey, Colors.grey],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Tooltip(
+            message: tooltip,
+            textStyle: GoogleFonts.urbanist(color: Colors.white, fontSize: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F1E23),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.add_circle,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -182,20 +253,14 @@ class MaintenanceScreenWidgets {
     final statusColor = getStatusColor(status);
 
     return Card(
-      color: const Color(0xFF1E1E1E),
+      color: const Color(0xFF1F1E23),
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: Colors.white.withOpacity(0.2)),
         ),
         child: InkWell(
           onTap: onTap,
@@ -310,7 +375,9 @@ class MaintenanceScreenWidgets {
           ),
           const SizedBox(height: 8),
           Text(
-            hasRequests ? 'Try adjusting your filters' : 'Create your first maintenance request',
+            hasRequests
+                ? 'Try adjusting your filters or create a new request'
+                : 'Create your first maintenance request',
             style: GoogleFonts.urbanist(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -330,7 +397,7 @@ class MaintenanceScreenWidgets {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF184BFB),
+              backgroundColor: canCreateRequest ? const Color(0xFF184BFB) : Colors.grey,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -345,8 +412,9 @@ class MaintenanceScreenWidgets {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFCDD2),
+        color: Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red),
       ),
       child: Row(
         children: [
@@ -356,7 +424,7 @@ class MaintenanceScreenWidgets {
             child: Text(
               errorMessage,
               style: GoogleFonts.urbanist(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.red,
               ),
@@ -409,7 +477,6 @@ class MaintenanceScreenWidgets {
   }) {
     return Column(
       children: requests.asMap().entries.map((entry) {
-        final index = entry.key;
         final request = entry.value;
         return buildMaintenanceRequestCard(
           context,

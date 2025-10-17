@@ -56,11 +56,10 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   void initState() {
     super.initState();
     AuthService().setTokens(widget.accessToken, widget.refreshToken);
-    developer.log('User Role in MaintenanceDetailsScreen: ${widget.userRole}', name: 'MaintenanceDetailsScreen');
+    developer.log('User Role: ${widget.userRole}', name: 'MaintenanceDetailsScreen');
     try {
       Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
       developer.log('Token Payload: $payload', name: 'MaintenanceDetailsScreen');
-      developer.log('Token Role: ${payload['role']}', name: 'MaintenanceDetailsScreen');
       setState(() {
         _verifiedUserRole = payload['role']?.toString();
         _currentUserId = widget.currentUserId ?? payload['user_id']?.toString();
@@ -100,6 +99,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       if (response.statusCode == 200) {
         setState(() {
           _requestData = json.decode(response.body);
+          developer.log('Loaded request details: $_requestData', name: 'MaintenanceDetailsScreen');
         });
       } else if (response.statusCode == 401) {
         if (await _refreshToken()) {
@@ -110,8 +110,8 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       } else {
         throw Exception('Failed to load request details: ${response.statusCode}');
       }
-    } catch (e) {
-      developer.log('Error refreshing details: $e', name: 'MaintenanceDetailsScreen');
+    } catch (e, stackTrace) {
+      developer.log('Error refreshing details: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading details: $e'), backgroundColor: Colors.red),
       );
@@ -138,8 +138,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       );
       return false;
     } catch (e, stackTrace) {
-      developer.log('Token refresh error: $e', name: 'MaintenanceDetailsScreen.Auth');
-      developer.log('Stack trace: $stackTrace', name: 'MaintenanceDetailsScreen.Auth');
+      developer.log('Token refresh error: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen.Auth');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error refreshing session: $e'), backgroundColor: Colors.red),
       );
@@ -152,13 +151,10 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   }
 
   String _getAttachmentUrl(String? filePath) {
-    if (filePath == null || filePath.isEmpty) {
-      return '';
-    }
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      return filePath;
-    }
-    return ApiConfig.getMediaUrl(filePath);
+    if (filePath == null || filePath.isEmpty) return '';
+    return filePath.startsWith('http://') || filePath.startsWith('https://')
+        ? filePath
+        : ApiConfig.getMediaUrl(filePath);
   }
 
   Future<Uint8List?> _fetchImageData(String url) async {
@@ -178,8 +174,8 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
         }
       }
       return null;
-    } catch (e) {
-      developer.log('Error fetching image data: $e', name: 'MaintenanceDetailsScreen.Image');
+    } catch (e, stackTrace) {
+      developer.log('Error fetching image: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen.Image');
       return null;
     }
   }
@@ -218,8 +214,8 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           SnackBar(content: Text('Failed to download $fileName: ${response.statusCode}'), backgroundColor: Colors.red),
         );
       }
-    } catch (e) {
-      developer.log('Error opening attachment: $e', name: 'MaintenanceDetailsScreen.Attachment');
+    } catch (e, stackTrace) {
+      developer.log('Error opening attachment: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen.Attachment');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening $fileName: $e'), backgroundColor: Colors.red),
       );
@@ -231,17 +227,22 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Maintenance Request'),
-          content: Text('Are you sure you want to delete this request?\n\n"${issue.length > 100 ? '${issue.substring(0, 100)}...' : issue}"'),
+          backgroundColor: const Color(0xFF1E1E1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Text('Delete Maintenance Request', style: GoogleFonts.urbanist(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Text(
+            'Are you sure you want to delete this request?\n\n"${issue.length > 100 ? '${issue.substring(0, 100)}...' : issue}"',
+            style: GoogleFonts.urbanist(color: Colors.white70),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text('Cancel', style: GoogleFonts.urbanist(color: Colors.white70)),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
+              child: Text('Delete', style: GoogleFonts.urbanist(color: Colors.red)),
             ),
           ],
         );
@@ -275,7 +276,8 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
             SnackBar(content: Text('Failed to delete: ${response.statusCode}'), backgroundColor: Colors.red),
           );
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
+        developer.log('Error deleting request: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error deleting request: $e'), backgroundColor: Colors.red),
         );
@@ -296,6 +298,9 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       );
 
       if (result != null && result.files.single.path != null) {
+        setState(() {
+          isLoadingDetails = true;
+        });
         final file = result.files.single;
         final request = http.MultipartRequest('POST', Uri.parse(ApiConfig.maintenanceRequestUploadAttachment(requestId)));
         request.headers.addAll(headers);
@@ -320,14 +325,25 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           );
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      developer.log('Error uploading attachment: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error uploading attachment: $e'), backgroundColor: Colors.red),
       );
+    } finally {
+      setState(() {
+        isLoadingDetails = false;
+      });
     }
   }
 
   Future<void> _respondToMaintenanceRequest(String requestId, String responseText, String? assignedToId) async {
+    if (responseText.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Comment cannot be empty'), backgroundColor: Colors.red),
+      );
+      return;
+    }
     try {
       if (!(await AuthService().ensureValidToken())) {
         throw Exception('Session expired. Please log in again.');
@@ -338,6 +354,9 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
         body['assigned_to'] = assignedToId;
       }
 
+      setState(() {
+        isLoadingDetails = true;
+      });
       final response = await http.post(
         Uri.parse(ApiConfig.maintenanceRequestRespond(requestId)),
         headers: headers,
@@ -367,10 +386,15 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           SnackBar(content: Text('Failed to add comment: ${errorData['error'] ?? 'Status ${response.statusCode}'}'), backgroundColor: Colors.red),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      developer.log('Error adding comment: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error adding comment: $e'), backgroundColor: Colors.red),
       );
+    } finally {
+      setState(() {
+        isLoadingDetails = false;
+      });
     }
   }
 
@@ -417,6 +441,9 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
 
       final url = isEditing ? ApiConfig.maintenanceRequestDetail(requestId!) : ApiConfig.maintenanceRequest;
 
+      setState(() {
+        isLoadingDetails = true;
+      });
       final response = isEditing
           ? await http.put(Uri.parse(url), headers: headers, body: json.encode(requestBody))
           : await http.post(Uri.parse(url), headers: headers, body: json.encode(requestBody));
@@ -451,10 +478,15 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           SnackBar(content: Text('Failed to ${isEditing ? 'update' : 'create'} request: ${errorData['error'] ?? response.statusCode}'), backgroundColor: Colors.red),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      developer.log('Error saving request: $e\nStack trace: $stackTrace', name: 'MaintenanceDetailsScreen');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error ${isEditing ? 'updating' : 'creating'} request: $e'), backgroundColor: Colors.red),
       );
+    } finally {
+      setState(() {
+        isLoadingDetails = false;
+      });
     }
   }
 
@@ -473,17 +505,17 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   }
 
   String _getEquipmentName(String? equipmentId) {
-    final eq = widget.equipment.firstWhere((e) => e['id'].toString() == equipmentId?.toString(), orElse: () => null);
-    return eq?['name'] ?? 'Unknown Equipment';
+    final eq = widget.equipment.firstWhere((e) => e['id']?.toString() == equipmentId, orElse: () => {});
+    return eq['name'] as String? ?? 'Unknown Equipment';
   }
 
   String _getUserName(String? userId) {
-    final user = widget.users.firstWhere((u) => u['id'].toString() == userId?.toString(), orElse: () => null);
-    return user?['username'] ?? 'Unknown User';
+    final user = widget.users.firstWhere((u) => u['id']?.toString() == userId, orElse: () => {});
+    return user['username'] as String? ?? 'Unknown User';
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
       case 'pending':
         return Colors.orange;
       case 'in_progress':
@@ -504,30 +536,30 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   }
 
   List<Map<String, String>> get paginatedComments {
-    final comments = _parseComments(_requestData['comments']);
+    final comments = _parseComments(_requestData['comments'] as String?);
     final startIndex = (_currentCommentPage - 1) * _commentsPerPage;
     final endIndex = startIndex + _commentsPerPage;
     return comments.sublist(startIndex, endIndex.clamp(0, comments.length));
   }
 
   int get totalCommentPages {
-    final comments = _parseComments(_requestData['comments']);
+    final comments = _parseComments(_requestData['comments'] as String?);
     return (comments.length / _commentsPerPage).ceil();
   }
 
   void _showAddEditMaintenanceDialog() {
     final isEditing = widget.request != null;
-    final issueController = TextEditingController(text: _requestData['issue'] ?? '');
+    final issueController = TextEditingController(text: _requestData['issue'] as String? ?? '');
     String selectedUserId = widget.userRole == 'client' && !isEditing
         ? _currentUserId ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '')
         : _requestData['user']?.toString() ?? (widget.users.isNotEmpty ? widget.users.first['id'].toString() : '');
     String selectedEquipmentId = _requestData['equipment']?.toString() ?? (widget.equipment.isNotEmpty ? widget.equipment.first['id'].toString() : '');
-    String selectedStatus = _requestData['status'] ?? 'pending';
+    String selectedStatus = _requestData['status'] as String? ?? 'pending';
     DateTime selectedDate = _requestData['scheduled_date'] != null
-        ? DateTime.parse(_requestData['scheduled_date'])
+        ? DateTime.tryParse(_requestData['scheduled_date'] as String? ?? '') ?? DateTime.now().add(const Duration(days: 1))
         : DateTime.now().add(const Duration(days: 1));
     DateTime? resolvedDate = _requestData['resolved_at'] != null
-        ? DateTime.parse(_requestData['resolved_at'])
+        ? DateTime.tryParse(_requestData['resolved_at'] as String? ?? '')
         : null;
 
     if (widget.users.isEmpty || widget.equipment.isEmpty) {
@@ -576,7 +608,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
               onResolvedDateChanged: (value) => setDialogState(() => resolvedDate = value),
               onSave: () {
                 _saveMaintenanceRequest(
-                  requestId: widget.request?['id'],
+                  requestId: widget.request?['id']?.toString(),
                   userId: selectedUserId,
                   equipmentId: selectedEquipmentId,
                   issue: issueController.text,
@@ -596,143 +628,143 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     if (widget.request == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: const Color(0xFF000000),
+        body: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
       );
     }
 
     if (isLoadingDetails) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: const Color(0xFF000000),
+        body: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
       );
     }
 
-    final statusColor = _getStatusColor(_requestData['status'] ?? '');
+    final statusColor = _getStatusColor(_requestData['status'] as String?);
     final attachments = _requestData['attachments'] as List<dynamic>? ?? [];
     final effectiveRole = _verifiedUserRole ?? widget.userRole;
     final canComment = effectiveRole == 'admin' ||
         effectiveRole == 'superadmin' ||
         ((effectiveRole == 'employee' || effectiveRole == 'client') &&
             (_currentUserId != null &&
-                (_requestData['user'] != null && _currentUserId == _requestData['user']?.toString() ||
-                    _requestData['assigned_to'] != null && _currentUserId == _requestData['assigned_to']?.toString())));
+                (_requestData['user']?.toString() == _currentUserId || _requestData['assigned_to']?.toString() == _currentUserId)));
+    final canEdit = effectiveRole == 'admin' || effectiveRole == 'superadmin' || (effectiveRole == 'client' && _requestData['user']?.toString() == _currentUserId);
+    final canDelete = effectiveRole == 'admin' || effectiveRole == 'superadmin';
 
-    developer.log('Can Comment: $canComment', name: 'MaintenanceDetailsScreen');
+    developer.log('Can Comment: $canComment, Can Edit: $canEdit, Can Delete: $canDelete', name: 'MaintenanceDetailsScreen');
     developer.log('Effective Role: $effectiveRole, Current User ID: $_currentUserId', name: 'MaintenanceDetailsScreen');
-    developer.log('Request User: ${_requestData['user']?.toString()}, Assigned To: ${_requestData['assigned_to']?.toString()}', name: 'MaintenanceDetailsScreen');
 
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: Text(_getEquipmentName(_requestData['equipment']?.toString()),
+        title: Text(
+          _getEquipmentName(_requestData['equipment']?.toString()),
           style: GoogleFonts.urbanist(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
-          ),),
-        backgroundColor: const Color(0xFF1F1E23),      
+          ),
+        ),
+        backgroundColor: const Color(0xFF1F1E23),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => _showAddEditMaintenanceDialog(),
-            tooltip: 'Edit Request',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteMaintenanceRequest(widget.request!['id'].toString(), _requestData['issue'] ?? ''),
-            tooltip: 'Delete Request',
-          ),
+          if (canEdit)
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.white70),
+              onPressed: _showAddEditMaintenanceDialog,
+              tooltip: 'Edit Request',
+            ),
+          if (canDelete)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _deleteMaintenanceRequest(widget.request!['id'].toString(), _requestData['issue'] as String? ?? ''),
+              tooltip: 'Delete Request',
+            ),
         ],
       ),
-      body: isRefreshingToken
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-        onRefresh: _refreshDetails,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MaintenanceDetailsWidgets.buildRequestDetailsCard(
-                context,
-                requestData: _requestData,
-                getEquipmentName: _getEquipmentName,
-                getUserName: _getUserName,
-                getStatusLabel: _getStatusLabel,
-                getStatusColor: _getStatusColor,
-              ),
-              const SizedBox(height: 16),
-              MaintenanceDetailsWidgets.buildCommentSection(
-                context,
-                comments: paginatedComments,
-                currentPage: _currentCommentPage,
-                totalPages: totalCommentPages,
-                onPreviousPage: () => setState(() => _currentCommentPage--),
-                onNextPage: () => setState(() => _currentCommentPage++),
-              ),
-              const SizedBox(height: 32),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Divider(
-                  color: Theme.of(context).colorScheme.primary,
-                  thickness: 3,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Post a New Comment',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+      body: Column(
+        children: [
+          Expanded(
+            child: isRefreshingToken
+                ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
+                : RefreshIndicator(
+              onRefresh: _refreshDetails,
+              color: Theme.of(context).colorScheme.primary,
+              backgroundColor: const Color(0xFF1F1E1E),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  MaintenanceDetailsWidgets.buildRequestDetailsCard(
+                    context,
+                    requestData: _requestData,
+                    getEquipmentName: _getEquipmentName,
+                    getUserName: _getUserName,
+                    getStatusLabel: _getStatusLabel,
+                    getStatusColor: _getStatusColor,
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              MaintenanceDetailsWidgets.buildCommentInputSection(
-                context,
-                responseController: _responseController,
-                canComment: canComment,
-                effectiveRole: effectiveRole,
-                onAddComment: () => _respondToMaintenanceRequest(
-                  widget.request!['id'].toString(),
-                  _responseController.text,
-                  _selectedAssignedToId,
-                ),
-                selectedAssignedToId: _selectedAssignedToId,
-                users: widget.users,
-                onAssignedToChanged: (value) => setState(() => _selectedAssignedToId = value),
-                isRefreshingToken: isRefreshingToken,
-              ),
-              const SizedBox(height: 16),
-              MaintenanceDetailsWidgets.buildAttachmentSection(
-                context,
-                attachments: attachments,
-                getAttachmentUrl: _getAttachmentUrl,
-                fetchImageData: _fetchImageData,
-                openAttachment: _openAttachment,
-                getUserName: _getUserName,
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ElevatedButton.icon(
-                  onPressed: isRefreshingToken ? null : () => _uploadAttachment(widget.request!['id'].toString()),
-                  icon: const Icon(Icons.attach_file),
-                  label: const Text('Add Attachment'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(height: 16),
+                  MaintenanceDetailsWidgets.buildCommentSection(
+                    context,
+                    comments: paginatedComments,
+                    currentPage: _currentCommentPage,
+                    totalPages: totalCommentPages,
+                    onPreviousPage: () => setState(() => _currentCommentPage--),
+                    onNextPage: () => setState(() => _currentCommentPage++),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  MaintenanceDetailsWidgets.buildCommentInputSection(
+                    context,
+                    responseController: _responseController,
+                    canComment: canComment,
+                    effectiveRole: effectiveRole,
+                    onAddComment: () => _respondToMaintenanceRequest(
+                      widget.request!['id'].toString(),
+                      _responseController.text,
+                      _selectedAssignedToId,
+                    ),
+                    selectedAssignedToId: _selectedAssignedToId,
+                    users: widget.users,
+                    onAssignedToChanged: (value) => setState(() => _selectedAssignedToId = value),
+                    isRefreshingToken: isRefreshingToken,
+                  ),
+                  const SizedBox(height: 16),
+                  MaintenanceDetailsWidgets.buildAttachmentSection(
+                    context,
+                    attachments: attachments,
+                    getAttachmentUrl: _getAttachmentUrl,
+                    fetchImageData: _fetchImageData,
+                    openAttachment: _openAttachment,
+                    getUserName: _getUserName,
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ElevatedButton.icon(
+                      onPressed: isRefreshingToken ? null : () => _uploadAttachment(widget.request!['id'].toString()),
+                      icon: const Icon(Icons.attach_file, color: Colors.white),
+                      label: Text(
+                        'Add Attachment',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF184BFB),
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
               ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

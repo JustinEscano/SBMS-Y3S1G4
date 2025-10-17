@@ -1,25 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:typed_data';
 
 class MaintenanceDetailsWidgets {
   static Widget buildDialogHeader(BuildContext context, {required String title, required IconData icon}) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1F1E23),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
+          Icon(icon, color: const Color(0xFF184BFB), size: 28),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
-          IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close)),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close, color: Colors.white70),
+          ),
         ],
       ),
     );
@@ -30,14 +38,24 @@ class MaintenanceDetailsWidgets {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+        color: const Color(0xFF1E1E1E),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.2))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.white70,
+              ),
+            ),
+          ),
           if (extraAction != null) ...[
             const SizedBox(width: 8),
             extraAction,
@@ -46,10 +64,18 @@ class MaintenanceDetailsWidgets {
           ElevatedButton(
             onPressed: onAction,
             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF184BFB),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text(actionText),
+            child: Text(
+              actionText,
+              style: GoogleFonts.urbanist(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),
@@ -57,28 +83,38 @@ class MaintenanceDetailsWidgets {
   }
 
   static Widget buildDetailRow(BuildContext context, String label, String value, IconData icon, [Color? color]) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: color ?? Theme.of(context).colorScheme.primary, size: 20),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: color ?? Colors.white,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color ?? const Color(0xFF184BFB), size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.urbanist(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  value,
+                  style: GoogleFonts.urbanist(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: color ?? Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -89,7 +125,7 @@ class MaintenanceDetailsWidgets {
       decoration: BoxDecoration(
         color: const Color(0xFF1F1E23),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,19 +135,29 @@ class MaintenanceDetailsWidgets {
               Expanded(
                 child: Text(
                   '${comment['user'] ?? 'Unknown'} (${comment['role'] ?? 'Unknown'})',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                  style: GoogleFonts.urbanist(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               Text(
                 comment['timestamp'] ?? 'No timestamp',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
+                style: GoogleFonts.urbanist(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             comment['text'] ?? 'No comment text',
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              color: Colors.white,
+            ),
           ),
         ],
       ),
@@ -125,15 +171,19 @@ class MaintenanceDetailsWidgets {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left),
+            icon: const Icon(Icons.chevron_left, color: Colors.white70),
             onPressed: currentPage > 1 ? onPrevious : null,
           ),
           Text(
             'Page $currentPage of $totalPages',
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: GoogleFonts.urbanist(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
           ),
           IconButton(
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(Icons.chevron_right, color: Colors.white70),
             onPressed: currentPage < totalPages ? onNext : null,
           ),
         ],
@@ -151,18 +201,28 @@ class MaintenanceDetailsWidgets {
     return Card(
       color: const Color(0xFF1F1E23),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Comments', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+            Text(
+              'Comments',
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             const SizedBox(height: 16),
             if (comments.isEmpty)
               Text(
                 'No comments yet',
-                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                style: GoogleFonts.urbanist(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
               ),
             if (comments.isNotEmpty)
               ListView.builder(
@@ -202,11 +262,15 @@ class MaintenanceDetailsWidgets {
           child: Row(
             children: [
               Icon(Icons.lock, color: Colors.yellow[700]),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Commenting is restricted to Admins, Superadmins, or owners/assigned Employees/Clients. Your role: $effectiveRole',
-                  style: TextStyle(color: Colors.yellow[900], fontSize: 14, fontStyle: FontStyle.italic),
+                  'Commenting is restricted to Admins, Superadmins, or owners/assigned users. Your role: $effectiveRole',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 14,
+                    color: Colors.yellow[900],
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ],
@@ -216,84 +280,126 @@ class MaintenanceDetailsWidgets {
     }
 
     return Card(
-      elevation: 5,
+      color: const Color(0xFF1F1E23),
+      elevation: 3,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: const Color(0xFF184BFB), width: 1),
       ),
-      surfaceTintColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Add Comment', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Add Comment',
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: responseController,
               decoration: InputDecoration(
                 labelText: 'Comment',
                 hintText: 'Enter your comment...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                prefixIcon: const Icon(Icons.comment),
+                labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                hintStyle: GoogleFonts.urbanist(color: Colors.white54),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                ),
+                prefixIcon: const Icon(Icons.comment, color: Colors.white70),
                 filled: true,
-                fillColor: Colors.grey[50],
-                errorText: responseController.text.isEmpty && responseController.text.trim().isEmpty
+                fillColor: const Color(0xFF2A2A2E),
+                errorText: responseController.text.trim().isEmpty && responseController.text.isNotEmpty
                     ? 'Comment cannot be empty'
                     : null,
               ),
+              style: GoogleFonts.urbanist(color: Colors.white),
               maxLines: 3,
               textInputAction: TextInputAction.newline,
-            ),            
+            ),
             if (effectiveRole == 'admin' || effectiveRole == 'superadmin') ...[
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: selectedAssignedToId,
                 decoration: InputDecoration(
                   labelText: 'Assign To (Optional)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  prefixIcon: const Icon(Icons.person_add),
+                  labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                  ),
+                  prefixIcon: const Icon(Icons.person_add, color: Colors.white70),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: const Color(0xFF2A2A2E),
                 ),
                 isExpanded: true,
+                dropdownColor: const Color(0xFF1F1E23),
                 items: [
-                  const DropdownMenuItem<String>(
+                  DropdownMenuItem<String>(
                     value: null,
-                    child: Text('None', overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      'None',
+                      style: GoogleFonts.urbanist(color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   ...users
                       .where((user) => user['role'] == 'employee' || user['role'] == 'admin')
                       .map((user) => DropdownMenuItem<String>(
                     value: user['id'].toString(),
-                    child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      '${user['username']} (${user['email']})',
+                      style: GoogleFonts.urbanist(color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   )),
                 ],
                 onChanged: onAssignedToChanged,
               ),
-              const SizedBox(height: 12),
+            ],
+            const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerRight,
-              child: Tooltip(
-                message: 'Post your comment',
-                child: ElevatedButton.icon(
-                  onPressed: responseController.text.isEmpty || isRefreshingToken
-                      ? null
-                      : onAddComment,
-                  icon: const Icon(Icons.send, size: 20),
-                  label: const Text('Add Comment'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: ElevatedButton.icon(
+                onPressed: responseController.text.trim().isEmpty || isRefreshingToken ? null : onAddComment,
+                icon: const Icon(Icons.send, color: Colors.white, size: 20),
+                label: Text(
+                  'Add Comment',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF184BFB),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
-            ],
           ],
         ),
       ),
@@ -310,98 +416,110 @@ class MaintenanceDetailsWidgets {
     if (attachments.isEmpty) return const SizedBox.shrink();
 
     return Card(
+      color: const Color(0xFF1F1E23),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Attachments', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Attachments',
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             const SizedBox(height: 16),
             ...attachments.map((attachment) {
-              final mediaUrl = getAttachmentUrl(attachment['file']);
-              final isImage = attachment['file_type'].startsWith('image');
+              final mediaUrl = getAttachmentUrl(attachment['file'] as String?);
+              final isImage = (attachment['file_type'] as String?)?.startsWith('image') ?? false;
 
-              return isImage
-                  ? FutureBuilder<Uint8List?>(
-                future: fetchImageData(attachment['file']),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (snapshot.hasError || snapshot.data == null) {
-                    return ListTile(
-                      leading: const Icon(Icons.error, color: Colors.red),
-                      title: Text(
-                        attachment['file_name'],
-                        style: const TextStyle(fontSize: 14),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        'Failed to load image',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                      onTap: () => openAttachment(attachment['file'], attachment['file_name']),
-                    );
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () => openAttachment(attachment['file'], attachment['file_name']),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.memory(
-                            snapshot.data!,
-                            width: double.infinity,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return ListTile(
-                                leading: const Icon(Icons.error, color: Colors.red),
-                                title: Text(
-                                  attachment['file_name'],
-                                  style: const TextStyle(fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  'Failed to load image',
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                ),
-                              );
-                            },
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: isImage
+                    ? FutureBuilder<Uint8List?>(
+                  future: fetchImageData(attachment['file'] as String? ?? ''),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError || snapshot.data == null) {
+                      return ListTile(
+                        leading: const Icon(Icons.error, color: Colors.red),
+                        title: Text(
+                          attachment['file_name'] as String? ?? 'Unknown',
+                          style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          'Failed to load image',
+                          style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                        ),
+                        onTap: () => openAttachment(attachment['file'] as String? ?? '', attachment['file_name'] as String? ?? 'Unknown'),
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: () => openAttachment(attachment['file'] as String? ?? '', attachment['file_name'] as String? ?? 'Unknown'),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.memory(
+                              snapshot.data!,
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return ListTile(
+                                  leading: const Icon(Icons.error, color: Colors.red),
+                                  title: Text(
+                                    attachment['file_name'] as String? ?? 'Unknown',
+                                    style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Text(
+                                    'Failed to load image',
+                                    style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 8),
-                        child: Text(
-                          'Uploaded by ${getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Uploaded by ${getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.tryParse(attachment['uploaded_at'] as String? ?? '')?.toLocal().toString().split('.')[0] ?? 'Unknown'}',
+                            style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-              )
-                  : ListTile(
-                leading: Icon(
-                  attachment['file_type'].startsWith('image') ? Icons.image : Icons.picture_as_pdf,
-                  color: Colors.blue,
+                      ],
+                    );
+                  },
+                )
+                    : ListTile(
+                  leading: Icon(
+                    (attachment['file_type'] as String?)?.startsWith('image') ?? false ? Icons.image : Icons.picture_as_pdf,
+                    color: const Color(0xFF184BFB),
+                  ),
+                  title: Text(
+                    attachment['file_name'] as String? ?? 'Unknown',
+                    style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    'Uploaded by ${getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.tryParse(attachment['uploaded_at'] as String? ?? '')?.toLocal().toString().split('.')[0] ?? 'Unknown'}',
+                    style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                  ),
+                  onTap: () => openAttachment(attachment['file'] as String? ?? '', attachment['file_name'] as String? ?? 'Unknown'),
                 ),
-                title: Text(
-                  attachment['file_name'],
-                  style: const TextStyle(fontSize: 14),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  'Uploaded by ${getUserName(attachment['uploaded_by']?.toString())} at ${DateTime.parse(attachment['uploaded_at']).toLocal()}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-                onTap: () => openAttachment(attachment['file'], attachment['file_name']),
               );
             }),
           ],
@@ -415,45 +533,69 @@ class MaintenanceDetailsWidgets {
     required String Function(String?) getEquipmentName,
     required String Function(String?) getUserName,
     required String Function(String?) getStatusLabel,
-    required Color Function(String) getStatusColor,
+    required Color Function(String?) getStatusColor,
   }) {
-    final statusColor = getStatusColor(requestData['status'] ?? '');
+    final statusColor = getStatusColor(requestData['status'] as String?);
 
     return Card(
       color: const Color(0xFF1F1E23),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Request Details', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+            Text(
+              'Request Details',
+              style: GoogleFonts.urbanist(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             const SizedBox(height: 16),
-            buildDetailRow(context, 'Issue', requestData['issue'] ?? 'No description', Icons.description),
+            buildDetailRow(
+              context,
+              'Issue',
+              requestData['issue'] as String? ?? 'No description',
+              Icons.description,
+            ),
             const SizedBox(height: 12),
-            buildDetailRow(context, 'Status', getStatusLabel(requestData['status']), Icons.assignment, statusColor),
+            buildDetailRow(
+              context,
+              'Status',
+              getStatusLabel(requestData['status'] as String?),
+              Icons.assignment,
+              statusColor,
+            ),
             const SizedBox(height: 12),
-            buildDetailRow(context, 'Requested By', getUserName(requestData['user']?.toString()), Icons.person),
+            buildDetailRow(
+              context,
+              'Requested By',
+              getUserName(requestData['user']?.toString()),
+              Icons.person,
+            ),
             const SizedBox(height: 12),
             buildDetailRow(
               context,
               'Scheduled Date',
               requestData['scheduled_date'] != null
-                  ? '${DateTime.parse(requestData['scheduled_date']).day}/${DateTime.parse(requestData['scheduled_date']).month}/${DateTime.parse(requestData['scheduled_date']).year}'
+                  ? DateTime.tryParse(requestData['scheduled_date'] as String? ?? '')?.toString().split(' ')[0] ?? 'Not scheduled'
                   : 'Not scheduled',
               Icons.calendar_today,
             ),
-            if (requestData['resolved_at'] != null) ...[
-              const SizedBox(height: 12),
-              buildDetailRow(
-                context,
-                'Resolved At',
-                '${DateTime.parse(requestData['resolved_at']).day}/${DateTime.parse(requestData['resolved_at']).month}/${DateTime.parse(requestData['resolved_at']).year} ${DateTime.parse(requestData['resolved_at']).hour.toString().padLeft(2, '0')}:${DateTime.parse(requestData['resolved_at']).minute.toString().padLeft(2, '0')}',
-                Icons.check_circle,
-                Colors.green,
+            if (requestData['resolved_at'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: buildDetailRow(
+                  context,
+                  'Resolved At',
+                  DateTime.tryParse(requestData['resolved_at'] as String? ?? '')?.toString().split('.')[0] ?? 'Unknown',
+                  Icons.check_circle,
+                  Colors.green,
+                ),
               ),
-            ],
           ],
         ),
       ),
@@ -482,7 +624,8 @@ class MaintenanceDetailsWidgets {
     required VoidCallback onSave,
   }) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      backgroundColor: const Color(0xFF1E1E1E),
       child: Container(
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85, maxWidth: 500),
         child: Column(
@@ -493,170 +636,275 @@ class MaintenanceDetailsWidgets {
               title: isEditing ? 'Edit Maintenance Request' : 'New Maintenance Request',
               icon: isEditing ? Icons.edit : Icons.add,
             ),
-            Flexible(
-              child: SingleChildScrollView(
+            Expanded(
+              child: ListView(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (userRole == 'admin' || userRole == 'superadmin' || isEditing) ...[
-                      DropdownButtonFormField<String>(
-                        value: selectedUserId.isEmpty ? null : selectedUserId,
-                        decoration: InputDecoration(
-                          labelText: 'User *',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.person),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                        ),
-                        isExpanded: true,
-                        items: users.map((user) => DropdownMenuItem<String>(
-                          value: user['id'].toString(),
-                          child: Text('${user['username']} (${user['email']})', overflow: TextOverflow.ellipsis),
-                        )).toList(),
-                        onChanged: userRole == 'client' ? null : (value) => onUserIdChanged(value ?? ''),
-                        disabledHint: Text(userRole == 'client' ? 'You (Client)' : 'Select user'),
-                      ),
-                    ] else ...[
-                      Text(
-                        'Requested by: You (${userRole})',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
+                children: [
+                  if (userRole == 'admin' || userRole == 'superadmin' || isEditing) ...[
                     DropdownButtonFormField<String>(
-                      value: selectedEquipmentId.isEmpty ? null : selectedEquipmentId,
+                      value: selectedUserId.isEmpty ? null : selectedUserId,
                       decoration: InputDecoration(
-                        labelText: 'Equipment *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: const Icon(Icons.devices),
+                        labelText: 'User *',
+                        labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                        ),
+                        prefixIcon: const Icon(Icons.person, color: Colors.white70),
                         filled: true,
-                        fillColor: Colors.grey[50],
+                        fillColor: const Color(0xFF2A2A2E),
+                        errorText: selectedUserId.isEmpty ? 'Please select a user' : null,
                       ),
                       isExpanded: true,
-                      items: equipment.map((eq) => DropdownMenuItem<String>(
-                        value: eq['id'].toString(),
-                        child: Text('${eq['name']} (${eq['type']})', overflow: TextOverflow.ellipsis),
-                      )).toList(),
-                      onChanged: (value) => onEquipmentIdChanged(value ?? ''),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: issueController,
-                      decoration: InputDecoration(
-                        labelText: 'Issue Description *',
-                        hintText: 'Describe the maintenance issue...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: const Icon(Icons.description),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                      ),
-                      maxLines: 3,
-                      textInputAction: TextInputAction.newline,
-                    ),
-                    const SizedBox(height: 16),
-                    if (userRole == 'admin' || userRole == 'superadmin') ...[
-                      DropdownButtonFormField<String>(
-                        value: selectedStatus,
-                        decoration: InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.assignment),
-                          filled: true,
-                          fillColor: Colors.grey[50],
+                      dropdownColor: const Color(0xFF1F1E23),
+                      items: users.map((user) => DropdownMenuItem<String>(
+                        value: user['id'].toString(),
+                        child: Text(
+                          '${user['username']} (${user['email']})',
+                          style: GoogleFonts.urbanist(color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        isExpanded: true,
-                        items: statusOptions.map((option) => DropdownMenuItem<String>(
-                          value: option['value'],
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(color: _getStatusColor(option['value']!), shape: BoxShape.circle),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(option['label']!),
-                            ],
-                          ),
-                        )).toList(),
-                        onChanged: (value) => onStatusChanged(value ?? 'pending'),
+                      )).toList(),
+                      onChanged: userRole == 'client' ? null : (value) => onUserIdChanged(value ?? ''),
+                      disabledHint: Text(
+                        userRole == 'client' ? 'You (Client)' : 'Select user',
+                        style: GoogleFonts.urbanist(color: Colors.white70),
                       ),
-                      const SizedBox(height: 16),
-                    ],
+                    ),
+                  ] else ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        'Requested by: You (${userRole})',
+                        style: GoogleFonts.urbanist(fontSize: 16, color: Colors.white70),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedEquipmentId.isEmpty ? null : selectedEquipmentId,
+                    decoration: InputDecoration(
+                      labelText: 'Equipment *',
+                      labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                      ),
+                      prefixIcon: const Icon(Icons.devices, color: Colors.white70),
+                      filled: true,
+                      fillColor: const Color(0xFF2A2A2E),
+                      errorText: selectedEquipmentId.isEmpty ? 'Please select equipment' : null,
+                    ),
+                    isExpanded: true,
+                    dropdownColor: const Color(0xFF1F1E23),
+                    items: equipment.map((eq) => DropdownMenuItem<String>(
+                      value: eq['id'].toString(),
+                      child: Text(
+                        '${eq['name']} (${eq['type']})',
+                        style: GoogleFonts.urbanist(color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )).toList(),
+                    onChanged: (value) => onEquipmentIdChanged(value ?? ''),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: issueController,
+                    decoration: InputDecoration(
+                      labelText: 'Issue Description *',
+                      hintText: 'Describe the maintenance issue...',
+                      labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                      hintStyle: GoogleFonts.urbanist(color: Colors.white54),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                      ),
+                      prefixIcon: const Icon(Icons.description, color: Colors.white70),
+                      filled: true,
+                      fillColor: const Color(0xFF2A2A2E),
+                      errorText: issueController.text.trim().isEmpty ? 'Issue description is required' : null,
+                    ),
+                    style: GoogleFonts.urbanist(color: Colors.white),
+                    maxLines: 3,
+                    textInputAction: TextInputAction.newline,
+                  ),
+                  const SizedBox(height: 16),
+                  if (userRole == 'admin' || userRole == 'superadmin') ...[
+                    DropdownButtonFormField<String>(
+                      value: selectedStatus,
+                      decoration: InputDecoration(
+                        labelText: 'Status',
+                        labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                        ),
+                        prefixIcon: const Icon(Icons.assignment, color: Colors.white70),
+                        filled: true,
+                        fillColor: const Color(0xFF2A2A2E),
+                      ),
+                      isExpanded: true,
+                      dropdownColor: const Color(0xFF1F1E23),
+                      items: statusOptions.map((option) => DropdownMenuItem<String>(
+                        value: option['value'],
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(color: _getStatusColor(option['value']!), shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              option['label']!,
+                              style: GoogleFonts.urbanist(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      )).toList(),
+                      onChanged: (value) => onStatusChanged(value ?? 'pending'),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) onDateChanged(picked);
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Scheduled Date *',
+                        labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                        ),
+                        prefixIcon: const Icon(Icons.calendar_today, color: Colors.white70),
+                        filled: true,
+                        fillColor: const Color(0xFF2A2A2E),
+                        errorText: selectedDate == null ? 'Please select a date' : null,
+                      ),
+                      child: Text(
+                        selectedDate != null
+                            ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
+                            : 'Select date',
+                        style: GoogleFonts.urbanist(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  if ((userRole == 'admin' || userRole == 'superadmin') && (selectedStatus == 'resolved' || resolvedDate != null)) ...[
+                    const SizedBox(height: 16),
                     InkWell(
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: context,
-                          initialDate: selectedDate,
+                          initialDate: resolvedDate ?? DateTime.now(),
                           firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate: DateTime.now().add(const Duration(days: 1)),
                         );
-                        if (picked != null) onDateChanged(picked);
+                        if (picked != null) {
+                          final timePicked = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.fromDateTime(resolvedDate ?? DateTime.now()),
+                          );
+                          if (timePicked != null) {
+                            onResolvedDateChanged(DateTime(
+                              picked.year,
+                              picked.month,
+                              picked.day,
+                              timePicked.hour,
+                              timePicked.minute,
+                            ));
+                          }
+                        }
                       },
                       child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: 'Scheduled Date *',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.calendar_today),
+                          labelText: 'Resolved At ${selectedStatus == 'resolved' ? '*' : ''}',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          prefixIcon: const Icon(Icons.check_circle, color: Colors.white70),
                           filled: true,
-                          fillColor: Colors.grey[50],
+                          fillColor: const Color(0xFF2A2A2E),
+                          suffixIcon: resolvedDate != null
+                              ? IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.white70),
+                            onPressed: () => onResolvedDateChanged(null),
+                          )
+                              : null,
+                          errorText: selectedStatus == 'resolved' && resolvedDate == null ? 'Please select resolved date' : null,
                         ),
-                        child: Text(selectedDate != null
-                            ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
-                            : 'Select date'),
+                        child: Text(
+                          resolvedDate != null
+                              ? '${resolvedDate.day}/${resolvedDate.month}/${resolvedDate.year} ${resolvedDate.hour.toString().padLeft(2, '0')}:${resolvedDate.minute.toString().padLeft(2, '0')}'
+                              : 'Select date and time',
+                          style: GoogleFonts.urbanist(color: Colors.white),
+                        ),
                       ),
                     ),
-                    if ((userRole == 'admin' || userRole == 'superadmin') && (selectedStatus == 'resolved' || resolvedDate != null)) ...[
-                      const SizedBox(height: 16),
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: resolvedDate ?? DateTime.now(),
-                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                            lastDate: DateTime.now().add(const Duration(days: 1)),
-                          );
-                          if (picked != null) {
-                            final timePicked = await showTimePicker(
-                              context: context,
-                              initialTime: TimeOfDay.fromDateTime(resolvedDate ?? DateTime.now()),
-                            );
-                            if (timePicked != null) {
-                              onResolvedDateChanged(DateTime(
-                                picked.year,
-                                picked.month,
-                                picked.day,
-                                timePicked.hour,
-                                timePicked.minute,
-                              ));
-                            }
-                          }
-                        },
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: 'Resolved At ${selectedStatus == 'resolved' ? '*' : ''}',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            prefixIcon: const Icon(Icons.calendar_today),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                            suffixIcon: resolvedDate != null
-                                ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () => onResolvedDateChanged(null),
-                            )
-                                : null,
-                          ),
-                          child: Text(resolvedDate != null
-                              ? '${resolvedDate!.day}/${resolvedDate!.month}/${resolvedDate!.year} ${resolvedDate!.hour.toString().padLeft(2, '0')}:${resolvedDate!.minute.toString().padLeft(2, '0')}'
-                              : 'Select date and time'),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    Text('* Required fields', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                   ],
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '* Required fields',
+                    style: GoogleFonts.urbanist(fontSize: 12, color: Colors.white70),
+                  ),
+                ],
               ),
             ),
             buildDialogFooter(
