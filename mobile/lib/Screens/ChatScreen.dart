@@ -36,12 +36,13 @@ class _ChatScreenState extends State<ChatScreen> {
   Map<String, dynamic>? _profileData;
 
   final List<String> suggestions = [
-    "What's the most used room?",
-    "Any energy consumption trends?",
-    "Show me weekly summary",
-    "Check for maintenance issues",
-    "Detect anomalies",
-    "Analyze energy usage patterns",
+    "daily energy report",
+    "weekly energy report",
+    "check for maintenance",
+    "show anomalies",
+    "show billing rates",
+    "kpi performance",
+    "show me rooms",
   ];
 
   @override
@@ -148,26 +149,49 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!(await AuthService().ensureValidToken())) {
         throw Exception('Session expired. Please log in again.');
       }
-      final response = await _llmService.queryLLM(
-        message,
-        userId: null,
-      );
+
+      // Determine query type and route to appropriate endpoint
+      final queryType = _llmService.determineQueryType(message);
+      String formattedResponse = '';
+
+      // Route to specialized endpoints
+      if (queryType == 'maintenance') {
+        formattedResponse = await _handleMaintenanceQuery(message);
+      } else if (queryType == 'anomalies') {
+        formattedResponse = await _handleAnomaliesQuery();
+      } else if (queryType == 'energy' || queryType == 'summary') {
+        formattedResponse = await _handleEnergyQuery(message);
+      } else if (queryType == 'billing') {
+        formattedResponse = await _handleBillingQuery();
+      } else if (queryType == 'kpi') {
+        formattedResponse = await _handleKpiQuery();
+      } else if (queryType == 'utilization') {
+        formattedResponse = await _handleRoomsQuery(message);
+      } else {
+        // General query
+        final response = await _llmService.queryLLM(message, userId: null);
+        formattedResponse = response['answer'] ?? 'No response received';
+      }
 
       final assistantMessage = ChatMessage(
         id: _llmService.generateMessageId(),
-        content: response['answer'] ?? 'No response received',
+        content: formattedResponse,
         type: 'assistant',
-        timestamp: DateTime.parse(response['timestamp'] ?? DateTime.now().toIso8601String()),
+        timestamp: DateTime.now(),
         conversationId: chatProvider.currentConversationId,
-        sources: response['sources'] != null
-            ? List<Source>.from(response['sources'].map((x) => Source.fromJson(x)))
-            : null,
       );
 
       chatProvider.addMessage(assistantMessage);
-      chatProvider.setConversationId(response['conversation_id'] ?? chatProvider.currentConversationId);
       chatProvider.setLoading(false);
       _scrollToBottom();
+
+      // Save to MongoDB
+      await _llmService.saveChatToMongoDB(
+        userMessage: message,
+        assistantResponse: formattedResponse,
+        queryType: queryType,
+        userRole: _getUserRole(queryType),
+      );
     } catch (e) {
       chatProvider.setLoading(false);
       chatProvider.setError(e.toString());
@@ -180,6 +204,138 @@ class _ChatScreenState extends State<ChatScreen> {
       ));
       _scrollToBottom();
     }
+  }
+
+  String _getUserRole(String queryType) {
+    switch (queryType) {
+      case 'maintenance':
+      case 'anomalies':
+      case 'kpi':
+        return 'facility_manager';
+      case 'energy':
+      case 'billing':
+        return 'energy_analyst';
+      default:
+        return 'viewer';
+    }
+  }
+
+  Future<String> _handleMaintenanceQuery(String query) async {
+    final data = await _llmService.predictMaintenance(query: query);
+    final lines = <String>[];
+    final suggestions = data['maintenance_suggestions'] as List? ?? [];
+
+    lines.add('🔧 MAINTENANCE REQUESTS\n');
+
+    if (suggestions.isNotEmpty) {
+      final pending = suggestions.where((s) => s['status']?.toLowerCase() == 'pending').toList();
+      final inProgress = suggestions.where((s) => s['status']?.toLowerCase() == 'in_progress').toList();
+
+      if (pending.isNotEmpty) {
+        lines.add('🔴 PENDING REQUESTS (${pending.length}):\n');
+        for (var i = 0; i < pending.length && i < 5; i++) {
+          final s = pending[i];
+          final urgencyEmoji = s['urgency'] == 'Critical' ? '🔴' : s['urgency'] == 'High' ? '🟠' : '🟡';
+          lines.add('${i + 1}. $urgencyEmoji ${s['equipment'] ?? 'Equipment'} - ${s['room'] ?? 'Unknown'}');
+          lines.add('   📝 ${s['issue'] ?? 'Maintenance needed'}');
+          lines.add('   🔧 ${s['action'] ?? 'Inspect and maintain'}');
+          lines.add('   📅 ${s['timeline'] ?? 'TBD'}\n');
+        }
+      }
+
+      if (inProgress.isNotEmpty) {
+        lines.add('\n🟡 IN PROGRESS (${inProgress.length})\n');
+      }
+    } else {
+      lines.add('\n✅ No maintenance issues detected.');
+    }
+
+    if (data['llm_analysis'] != null) {
+      lines.add('\n\n🤖 AI RECOMMENDATIONS\n');
+      lines.add(data['llm_analysis']);
+    }
+
+    return lines.join('\n');
+  }
+
+  Future<String> _handleAnomaliesQuery() async {
+    final data = await _llmService.detectAnomalies();
+    return data['answer'] ?? 'No anomalies detected.';
+  }
+
+  Future<String> _handleEnergyQuery(String query) async {
+    final period = _llmService.determineReportPeriod(query);
+    final data = await _llmService.getEnergyReport(period);
+    final lines = <String>[];
+
+    lines.add('⚡ ${period.toUpperCase()} ENERGY REPORT\n');
+
+    if (data['energy_data'] != null) {
+      final ed = data['energy_data'];
+      lines.add('📊 Energy Statistics:');
+      lines.add('• Total: ${ed['total_kwh']?.toStringAsFixed(2) ?? '0'} kWh');
+      lines.add('• Average: ${ed['average_kwh']?.toStringAsFixed(2) ?? '0'} kWh');
+      lines.add('• Peak: ${ed['peak_kwh']?.toStringAsFixed(2) ?? '0'} kWh');
+      lines.add('• Data Points: ${ed['data_points'] ?? 0}\n');
+    }
+
+    if (data['answer'] != null) {
+      lines.add('\n🤖 AI ANALYSIS\n');
+      lines.add(data['answer']);
+    }
+
+    return lines.join('\n');
+  }
+
+  Future<String> _handleBillingQuery() async {
+    final data = await _llmService.getBillingRates();
+    final lines = <String>[];
+
+    lines.add('💱 BILLING RATES ANALYSIS\n');
+
+    if (data['billing_data'] != null) {
+      final bd = data['billing_data'];
+      lines.add('📊 Rate Summary:');
+      lines.add('• Total Configurations: ${bd['total_rates']}');
+      lines.add('• Average Rate: ${bd['average_rate']?.toStringAsFixed(4) ?? '0'} ${bd['currency']}/kWh');
+      lines.add('• Lowest: ${bd['min_rate']?.toStringAsFixed(4) ?? '0'} ${bd['currency']}/kWh');
+      lines.add('• Highest: ${bd['max_rate']?.toStringAsFixed(4) ?? '0'} ${bd['currency']}/kWh\n');
+    }
+
+    if (data['answer'] != null) {
+      lines.add('\n🤖 AI ANALYSIS\n');
+      lines.add(data['answer']);
+    }
+
+    return lines.join('\n');
+  }
+
+  Future<String> _handleKpiQuery() async {
+    final data = await _llmService.getKpiHeartbeat();
+    final lines = <String>[];
+
+    lines.add('📊 SYSTEM HEALTH KPI ANALYSIS\n');
+
+    if (data['kpi_data'] != null) {
+      final kpi = data['kpi_data'];
+      lines.add('🔍 Performance Metrics:');
+      lines.add('• Success Rate: ${kpi['success_rate']?.toStringAsFixed(2) ?? '0'}%');
+      lines.add('• WiFi Signal: ${kpi['wifi_signal']?.toStringAsFixed(1) ?? '0'} dBm');
+      lines.add('• Avg Uptime: ${kpi['uptime_hours']?.toStringAsFixed(1) ?? '0'} hours');
+      lines.add('• Failed Readings: ${kpi['total_failed_readings']}\n');
+    }
+
+    if (data['answer'] != null) {
+      lines.add('\n🤖 AI ANALYSIS\n');
+      lines.add(data['answer']);
+    }
+
+    return lines.join('\n');
+  }
+
+  Future<String> _handleRoomsQuery(String userQuery) async {
+    final data = await _llmService.getRoomsList(query: userQuery);
+    return data['summary_text'] ?? 'No rooms found.';
   }
 
   Future<void> _checkLLMHealth() async {

@@ -15,10 +15,10 @@ pymongo==4.10.1
 chromadb==0.5.13
 ollama==0.3.3
 sentence-transformers==3.0.1
-faiss-cpu==1.8.0.post1
+# faiss-cpu>=1.7.0,<1.8.0
 # hnswlib==0.8.0  # Commented out - requires build tools
-pandas==2.2.3
-numpy==1.26.4
+pandas>=1.5.0,<2.2.0  # Changed to compatible version range
+numpy==1.24.3
 fuzzywuzzy==0.18.0
 python-Levenshtein==0.26.0
 pyjwt==2.8.0
