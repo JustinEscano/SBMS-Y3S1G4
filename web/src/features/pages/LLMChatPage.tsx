@@ -318,7 +318,9 @@ const LLMChatPage: React.FC = () => {
       return "billing";
     } else if (lowerQuery.includes("room") || lowerQuery.includes("utilization") || 
                lowerQuery.includes("usage") || lowerQuery.includes("occupied") ||
-               lowerQuery.includes("most used")) {
+               lowerQuery.includes("most used") || lowerQuery.includes("available") ||
+               lowerQuery.includes("space") || lowerQuery.includes("floor") ||
+               lowerQuery.includes("capacity") || lowerQuery.includes("analyze specific")) {
       return "utilization";
     } else if (lowerQuery.includes("report") || lowerQuery.includes("summary") ||
                lowerQuery.includes("weekly") || lowerQuery.includes("daily") ||
@@ -663,7 +665,7 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call room utilization endpoint with AI analysis
-  const callRoomUtilization = async () => {
+  const callRoomUtilization = async (userQuery: string = "") => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
@@ -677,8 +679,13 @@ const LLMChatPage: React.FC = () => {
 
     try {
       const response = await fetch("http://localhost:5000/rooms/list", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: userQuery,
+          user_id: "web_user",
+          username: "Web User"
+        })
       });
       
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -966,7 +973,7 @@ const LLMChatPage: React.FC = () => {
       
       if (queryType === "utilization") {
         setMessages((prev) => [...prev, userMessage]);
-        await callRoomUtilization();
+        await callRoomUtilization(messageText);  // Pass the user's query
         return;
       }
 

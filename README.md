@@ -203,6 +203,63 @@ and implement automated load scheduling based on rate windows.
 
 ---
 
+## 🏢 Room Directory
+
+### Endpoint
+`GET /rooms/list` or `POST /rooms/list`
+
+### Description
+Displays comprehensive room directory with real-time data and context-aware AI analysis based on your specific query.
+
+### Features
+- **Real-Time Data**: Room info, equipment counts, temperature, humidity, energy usage
+- **Context-Aware AI**: Different responses based on your query type
+- **Smart Analysis**: Availability, detailed analysis, floor-specific, or general overview
+
+### Query Types
+
+**1. Availability Queries**
+- "what rooms are available"
+- "which rooms can I book"
+- AI focuses on: Immediate availability, best rooms for different uses, scheduling optimization
+
+**2. Detailed Analysis**
+- "analyze specific rooms"
+- "room analysis"
+- AI focuses on: Energy efficiency analysis, equipment infrastructure, optimization opportunities
+
+**3. Floor-Specific**
+- "show me floor 2"
+- "what's on floor 1"
+- AI focuses on: Floor overview, floor optimization, floor-specific recommendations
+
+**4. General Overview**
+- "show me rooms"
+- "list all rooms"
+- AI focuses on: Energy optimization, space utilization, equipment management
+
+### Example Response
+```
+🏢 **ROOM DIRECTORY**
+
+📊 **Total Rooms**: 5
+
+**Floor 1:**
+📍 **Conference Room A**
+   • Type: Meeting
+   • Capacity: 20 people
+   • Equipment: 2 devices
+   • Current Temp: 23.8°C
+   • Humidity: 52.5%
+   • Avg Energy: 8.85 kWh
+   • Pattern: weekdays 9-5
+
+🤖 **AI RECOMMENDATIONS**
+[Context-aware recommendations based on your query]
+```
+
+---
+
 ## 🔧 Maintenance Requests
 
 ### Endpoint
@@ -502,6 +559,7 @@ python apillm.py runserver 0.0.0.0:5000
 
 | Feature | Data Source | AI Analysis | MongoDB Logging | Time Range | Output Format |
 |---------|-------------|-------------|-----------------|------------|---------------|
+| **Room Directory** | `core_room` + joins | ✅ Context-aware insights | ✅ All queries saved | Real-time | Room list + AI recommendations |
 | **Energy Reports** | `core_energylog` | ✅ 3-part recommendations | ✅ All queries saved | Daily/Weekly/Monthly/Yearly | Statistics + AI insights |
 | **KPI Monitoring** | `core_heartbeatlog` | ✅ Health assessment | ✅ All queries saved | Last 100 records | Performance metrics + AI |
 | **Billing Rates** | `core_billingrate` | ✅ Cost optimization | ✅ All queries saved | All active rates | Rate schedule + AI |
@@ -566,6 +624,7 @@ python apillm.py runserver 0.0.0.0:5000
 |----------|--------|-------------|--------|
 | `/health` | GET | System health check | ✅ |
 | `/llmquery` | POST | General LLM chat | ✅ |
+| `/rooms/list` | GET/POST | Room directory with context-aware AI | ✅ NEW |
 | `/energy/report` | POST | Energy analysis (daily/weekly/monthly/yearly) | ✅ |
 | `/maintenance/predict` | POST | Maintenance with timestamps & AI | ✅ Enhanced |
 | `/anomalies/detect` | POST | Anomaly detection with AI | ✅ Enhanced |
@@ -728,6 +787,11 @@ For issues, questions, or suggestions:
 ## 🆕 Recent Updates (October 17, 2025)
 
 ### New Features
+- ✅ **Room Directory with Context-Aware AI**: New `/rooms/list` endpoint
+  - Real-time room data with equipment and sensor information
+  - Context-aware AI responses based on query type
+  - Supports: availability queries, detailed analysis, floor-specific, general overview
+  - Different AI recommendations for different query types
 - ✅ **Enhanced Anomaly Detection**: Improved alert display with formatted details
   - Shows all alerts with severity indicators
   - Equipment information and timestamps
@@ -740,12 +804,15 @@ For issues, questions, or suggestions:
 - ✅ Fixed RoomSpecificHandlers missing method
 - ✅ Fixed NaT strftime errors in maintenance documents
 - ✅ Fixed pandas SQLAlchemy warnings (11 query locations)
+- ✅ Fixed f-string formatting error in room LLM context (was preventing LLM from running)
 
 ### Improvements
 - ✅ All database queries now use SQLAlchemy engine
 - ✅ Maintenance requests show formatted timestamps
 - ✅ Anomaly detection displays formatted alert details
+- ✅ Room queries now context-aware (different AI responses for different query types)
 - ✅ Better error handling across all endpoints
+- ✅ Enhanced frontend keyword detection for room queries
 
 **See `IMPROVEMENTS.md` for detailed changelog**
 
