@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:mobile/Screens/HelpSupportScreen.dart';
 import 'package:mobile/Screens/PrivacyPolicyScreen.dart';
+import 'package:mobile/Screens/ChangePasswordScreen.dart';
+import 'package:mobile/Screens/AboutScreen.dart';
 import 'dart:io';
 import 'dart:developer' as developer;
 import '../utils/constants.dart';
@@ -291,7 +293,11 @@ class ProfileWidgets {
     );
   }
 
-  static Widget buildOptionsCard(BuildContext context, String accessToken, String refreshToken) {
+  static Widget buildOptionsCard(
+      BuildContext context,
+      String accessToken,
+      String refreshToken,
+      ) {
     return Card(
       color: Colors.black,
       elevation: 4,
@@ -304,11 +310,17 @@ class ProfileWidgets {
         child: Column(
           children: [
             _buildOptionTile(
-              icon: Icons.settings,
-              title: 'Settings',
+              icon: Icons.lock,
+              title: 'Change Password',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Settings feature coming soon!', style: GoogleFonts.urbanist())),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChangePasswordScreen(
+                      accessToken: accessToken,
+                      refreshToken: refreshToken,
+                    ),
+                  ),
                 );
               },
             ),
@@ -317,8 +329,11 @@ class ProfileWidgets {
               icon: Icons.info,
               title: 'About Us',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('About Us feature coming soon!', style: GoogleFonts.urbanist())),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AboutScreen(),
+                  ),
                 );
               },
             ),
