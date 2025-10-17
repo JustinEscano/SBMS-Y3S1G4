@@ -11,6 +11,8 @@ import '../utils/constants.dart';
 import '../Services/auth_service.dart';
 import './LoginScreen.dart';
 import './ProfileDetails.dart';
+import './ChangePasswordScreen.dart';
+import './AboutScreen.dart';
 import '../Widgets/ProfileWidgets.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -257,7 +259,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 15),
-                    ProfileWidgets.buildOptionsCard(context, widget.accessToken, authService.refreshToken ?? ''),
+                    ProfileWidgets.buildOptionsCard(
+                      context,
+                      widget.accessToken,
+                      authService.refreshToken ?? '',
+                    ),
                     const SizedBox(height: 15),
                     ProfileWidgets.buildLogoutButton(
                       context: context,
