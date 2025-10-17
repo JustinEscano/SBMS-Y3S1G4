@@ -1203,14 +1203,19 @@ Be specific and actionable."""
 def list_rooms():
     """
     Get list of all rooms with detailed information
-    Supports queries like: "what rooms are available", "show me all rooms", "analyze specific rooms"
+    Accepts optional 'query' parameter to customize LLM response
     """
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
     try:
-        data = request.get_json() or {}
-        user_query = data.get('query', '').lower()  # Get user's original query
+        # Get optional query parameter to customize response
+        user_query = None
+        if request.method == 'POST':
+            data = request.get_json() or {}
+            user_query = data.get('query', '').lower()
+        else:
+            user_query = request.args.get('query', '').lower()
         
         from database_adapter import DatabaseAdapter
         db_adapter = DatabaseAdapter()
@@ -1219,10 +1224,14 @@ def list_rooms():
         rooms_df = db_adapter.get_rooms_detailed()
         
         if rooms_df is None or rooms_df.empty:
+            logger.warning("No rooms found in database")
+            fallback_summary = "🏢 **ROOM DIRECTORY**\n\n❌ No rooms found in the system.\n\nPlease ensure:\n• Rooms are configured in the database\n• Database connection is working\n• Room data has been populated"
             return jsonify({
                 "status": "success",
                 "rooms": [],
                 "total_rooms": 0,
+                "summary_text": fallback_summary,
+                "llm_analysis": "No rooms available for analysis.",
                 "message": "No rooms found in the system",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             })
@@ -1296,126 +1305,62 @@ def list_rooms():
                 highest_energy = ("Unknown", 0)
                 lowest_energy = ("Unknown", 0)
             
-            # Determine user intent and customize prompt
-            if "available" in user_query:
-                # Focus on availability and booking
-                llm_context = f"""You are a building management expert. The user asked: "{user_query}"
-
-AVAILABLE ROOMS ({len(rooms_list)} total):
-{chr(10).join([f"- {r['name']} (Floor {r['floor']}): {r['type']}, {r['capacity']} people capacity, Pattern: {r.get('occupancy_pattern', 'N/A')}" for r in rooms_list[:10]])}
-
-Provide 3 recommendations focused on AVAILABILITY:
-
-**1. IMMEDIATE AVAILABILITY:**
-Which rooms are currently available for booking? List specific room names and their capacities.
-
-**2. BEST ROOMS FOR DIFFERENT USES:**
-Recommend which rooms are best for meetings, work sessions, and breaks based on capacity and type.
-
-**3. SCHEDULING OPTIMIZATION:**
-Based on occupancy patterns, suggest optimal booking times for each room type.
-
-Be specific with room names and practical booking advice."""
+            # Determine query intent and customize LLM prompt
+            is_availability_query = user_query and any(word in user_query for word in ['available', 'list', 'show', 'what rooms'])
             
-            elif "analyze" in user_query or "specific" in user_query:
-                # Detailed analysis mode
-                llm_context = f"""You are a building management expert performing detailed room analysis. User query: "{user_query}"
+            if is_availability_query:
+                # For "what rooms are available" - focus on room listing
+                llm_context = f"""User asked about available rooms. Provide a brief summary of the {len(rooms_list)} rooms.
 
-DETAILED ROOM DATA:
-{chr(10).join([f"- {r['name']} (Floor {r['floor']}): {r['type']}, {r['capacity']} people, {r['equipment_count']} devices, {(r['avg_energy_usage'] if r['avg_energy_usage'] else 0):.2f} kWh, Temp: {r.get('avg_temperature', 'N/A')}°C" for r in rooms_list[:10]])}
+ROOMS ({len(rooms_list)} total across {len(floors)} floors):
+{chr(10).join([f"• {r['name']} (Floor {r['floor']}, {r['type']}, {r['capacity']} capacity)" for r in rooms_list])}
 
-STATISTICS:
-- Highest Energy: {highest_energy[0]} ({highest_energy[1]:.2f} kWh)
-- Lowest Energy: {lowest_energy[0]} ({lowest_energy[1]:.2f} kWh)
-- Total Equipment: {total_equipment} devices
-
-Provide DETAILED ANALYSIS with 3 recommendations:
-
-**1. ENERGY EFFICIENCY ANALYSIS:**
-Analyze energy consumption patterns. Which specific rooms are inefficient and why? Include actual numbers.
-
-**2. EQUIPMENT & INFRASTRUCTURE:**
-Evaluate equipment distribution and identify rooms needing upgrades. Be specific about which rooms and what equipment.
-
-**3. OPTIMIZATION OPPORTUNITIES:**
-Identify specific improvement opportunities for each room type (meeting rooms, offices, labs, etc.).
-
-Use actual room names, numbers, and be very specific in your analysis."""
-            
-            elif "floor" in user_query:
-                # Floor-specific information
-                floor_num = None
-                for word in user_query.split():
-                    if word.isdigit():
-                        floor_num = int(word)
-                        break
-                
-                if floor_num:
-                    floor_rooms = [r for r in rooms_list if r['floor'] == floor_num]
-                    llm_context = f"""User asked about Floor {floor_num}. 
-
-FLOOR {floor_num} ROOMS ({len(floor_rooms)} rooms):
-{chr(10).join([f"- {r['name']}: {r['type']}, {r['capacity']} people, {(r['avg_energy_usage'] if r['avg_energy_usage'] else 0):.2f} kWh" for r in floor_rooms])}
-
-Provide 3 recommendations for FLOOR {floor_num}:
-
-**1. FLOOR {floor_num} OVERVIEW:**
-Summarize what's on this floor and how it's being used.
-
-**2. FLOOR {floor_num} OPTIMIZATION:**
-Specific improvements for this floor's rooms.
-
-**3. FLOOR {floor_num} RECOMMENDATIONS:**
-Best practices for managing this floor's spaces."""
-                else:
-                    llm_context = f"""Provide floor-by-floor breakdown with recommendations for each floor."""
-            
+Give ONE sentence summary (max 20 words) highlighting room variety and availability."""
             else:
-                # General overview
-                llm_context = f"""You are a building management expert. User query: "{user_query if user_query else 'Show me all rooms'}"
+                # For general queries - provide optimization recommendations
+                llm_context = f"""Building management AI. Analyze room data. Give 3 SHORT recommendations (max 15 words each).
 
-ROOM STATISTICS:
-- Total Rooms: {len(rooms_list)} across {len(floors)} floors
-- Total Equipment: {total_equipment} devices
-- Average Temperature: {avg_temp:.1f}°C
-- Total Energy: {total_energy:.2f} kWh
-- Highest Energy: {highest_energy[0]} ({highest_energy[1]:.2f} kWh)
-- Lowest Energy: {lowest_energy[0]} ({lowest_energy[1]:.2f} kWh)
+DATA:
+• {len(rooms_list)} rooms, {len(floors)} floors, {total_equipment} devices
+• Highest energy: {highest_energy[0]} ({highest_energy[1]:.2f} kWh)
+• Lowest energy: {lowest_energy[0]} ({lowest_energy[1]:.2f} kWh)
 
-ROOMS:
-{chr(10).join([f"- {r['name']} (Floor {r['floor']}): {r['type']}, {r['capacity']} people, {(r['avg_energy_usage'] if r['avg_energy_usage'] else 0):.2f} kWh" for r in rooms_list[:10]])}
+TOP 5 ROOMS:
+{chr(10).join([f"• {r['name']} (F{r['floor']}): {(r['avg_energy_usage'] if r['avg_energy_usage'] is not None else 0.0):.2f} kWh" for r in rooms_list[:5]])}
 
-Provide 3 GENERAL recommendations:
+Format (MAX 15 WORDS PER RECOMMENDATION):
 
 **1. ENERGY OPTIMIZATION:**
-Which rooms need energy optimization? Use specific room names and numbers.
+[Target room + one action, max 15 words]
 
 **2. SPACE UTILIZATION:**
-How to better use our {len(rooms_list)} rooms across {len(floors)} floors? Be specific about room types.
+[One specific improvement, max 15 words]
 
 **3. EQUIPMENT MANAGEMENT:**
-What equipment maintenance or upgrades are needed? Prioritize specific rooms.
+[One priority, max 15 words]
 
-Be concise and use actual data."""
+RULES: Use room names. Be specific. Stay under 15 words each."""
 
             # Call LLM directly
+            logger.info("Calling Ollama LLM for room analysis...")
             from langchain_ollama import OllamaLLM
-            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
-            logger.info(f"Calling LLM for room analysis...")
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.1)  # Very low temp for concise responses
+            logger.info("LLM initialized, sending context...")
             llm_analysis = llm.invoke(llm_context)
-            logger.info(f"LLM room analysis generated successfully: {len(llm_analysis)} chars")
+            logger.info(f"✅ LLM room analysis generated successfully")
             
         except Exception as llm_error:
-            logger.error(f"LLM analysis failed: {llm_error}", exc_info=True)
-            logger.warning(f"Using fallback recommendations")
+            logger.error(f"❌ LLM analysis failed: {type(llm_error).__name__}: {llm_error}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             llm_analysis = f"""**1. ENERGY OPTIMIZATION:**
-Focus on {highest_energy[0]} which consumes {highest_energy[1]:.2f} kWh. Review HVAC settings and equipment usage patterns to reduce consumption.
+Target {highest_energy[0]} ({highest_energy[1]:.2f} kWh) - install occupancy sensors and LED lighting.
 
 **2. SPACE UTILIZATION:**
-With {len(rooms_list)} rooms across {len(floors)} floors, consider consolidating underutilized spaces and optimizing high-traffic areas.
+Implement hot-desking across {len(floors)} floors to maximize {len(rooms_list)} room utilization.
 
 **3. EQUIPMENT MANAGEMENT:**
-{total_equipment} devices need regular maintenance. Prioritize high-energy rooms and schedule preventive maintenance quarterly."""
+Schedule quarterly maintenance for {total_equipment} devices, prioritize high-energy rooms."""
         
         # Add LLM analysis to summary
         summary_text += f"\n🤖 **AI RECOMMENDATIONS**\n\n{llm_analysis}\n"
@@ -1459,7 +1404,6 @@ def detect_anomalies():
         data = request.get_json() or {}
         user_id = data.get('user_id', 'anonymous')
         username = data.get('username', 'anonymous')
-        query = data.get('query', '').lower()  # Get the user's query for context
         
         logger.info(f"Anomaly detection request from {username}")
         

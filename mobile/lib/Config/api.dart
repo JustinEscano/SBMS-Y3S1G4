@@ -4,17 +4,27 @@ class ApiConfig {
   static const String _environment = 'dev';
   static const String _prodBaseUrl = 'https://your-api-domain.com/api/';
   static String get _devBaseUrl => Platform.isAndroid
-      ? 'http://192.168.0.28:8000/api'
-      : 'http://192.168.0.28:8000/api';
+      ? 'http://192.168.1.38:8000/api'
+      : 'http://192.168.1.38:8000/api';
   static String get baseUrl => _environment == 'prod' ? _prodBaseUrl : _devBaseUrl;
 
   // LLM Direct Server (bypass Django API)
   static String get _llmDevBaseUrl => Platform.isAndroid
-      ? 'http://192.168.0.28:5000'  // Adjust IP if needed (e.g., 10.0.2.2 for Android emulator)
+      ? 'http://192.168.1.38:5000'  // Updated to match current network
       : 'http://localhost:5000';
   static String get llmBaseUrl => _environment == 'prod' ? 'https://your-llm-domain.com' : _llmDevBaseUrl;
+
+  // LLM Endpoints
   static String get llmQueryDirect => '$llmBaseUrl/llmquery';
   static String get llmHealthDirect => '$llmBaseUrl/health';
+  static String get llmMaintenancePredict => '$llmBaseUrl/maintenance/predict';
+  static String get llmAnomaliesDetect => '$llmBaseUrl/anomalies/detect';
+  static String get llmEnergyReport => '$llmBaseUrl/energy/report';
+  static String get llmBillingRates => '$llmBaseUrl/billing/rates';
+  static String get llmKpiHeartbeat => '$llmBaseUrl/kpi/heartbeat';
+  static String get llmRoomsList => '$llmBaseUrl/rooms/list';
+  static String get llmChatHistorySave => '$llmBaseUrl/chat/history/save';
+  static String get llmChatHistoryGet => '$llmBaseUrl/chat/history/get';
 
   // Construct media URLs correctly
   static String getMediaUrl(String relativePath) {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import PageLayout from "./PageLayout";
 import type { ChatMessage } from "../../service/LLMService";
-import { userService } from "../services/userService";
 import "./LLMChatPage.css";
 
 // Define API endpoint types
@@ -11,39 +10,12 @@ type QueryType = "general" | "maintenance" | "anomalies" | "energy" | "utilizati
 type UserRole = "viewer" | "technician" | "energy_analyst" | "facility_manager" | "admin";
 
 const LLMChatPage: React.FC = () => {
-  // Get logged-in user info
-  const [currentUser, setCurrentUser] = useState<{id: string, username: string} | null>(null);
-  
-  useEffect(() => {
-    const loadUserInfo = async () => {
-      try {
-        const userId = localStorage.getItem('user_id');
-        if (userId) {
-          const user = await userService.getById(userId);
-          setCurrentUser({
-            id: userId,
-            username: user.username || user.email || 'User'
-          });
-        }
-      } catch (error) {
-        console.error("Failed to load user info:", error);
-        // Fallback to user_id if username fetch fails
-        const userId = localStorage.getItem('user_id');
-        if (userId) {
-          setCurrentUser({ id: userId, username: `User_${userId.slice(0, 8)}` });
-        }
-      }
-    };
-    loadUserInfo();
-  }, []);
-
-  // Generate or retrieve session ID for chat persistence (survives logout)
+  // Generate or retrieve session ID for chat persistence
   const [sessionId] = useState(() => {
-    // Use localStorage instead of sessionStorage so it persists even after logout
-    let id = localStorage.getItem("chat_session_id");
+    let id = sessionStorage.getItem("chat_session_id");
     if (!id) {
       id = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem("chat_session_id", id);
+      sessionStorage.setItem("chat_session_id", id);
     }
     return id;
   });
@@ -68,8 +40,22 @@ const LLMChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [llmHealth, setLlmHealth] = useState<string>("checking");
+  const [currentUser, setCurrentUser] = useState<{id: string, username: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Get user info helper
+  const getUserInfo = () => {
+    if (currentUser) {
+      return { user_id: currentUser.id, username: currentUser.username };
+    }
+    // Fallback to localStorage
+    const userId = localStorage.getItem('user_id');
+    return {
+      user_id: userId || 'anonymous',
+      username: userId || 'User'
+    };
+  };
 
   // Scroll to bottom when new messages are added
   const scrollToBottom = () => {
@@ -92,13 +78,12 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/billing/rates", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
-          user_id,
-          username
+          user_id: "web_user",
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -170,13 +155,12 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/kpi/heartbeat", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
-          user_id,
-          username
+          user_id: "web_user",
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -241,6 +225,36 @@ const LLMChatPage: React.FC = () => {
     }
   }, [messages]);
 
+  // Load user info on component mount
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+          // Try to fetch full user details
+          const response = await fetch(`http://localhost:8000/api/users/${userId}/`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setCurrentUser({
+              id: userId,
+              username: userData.username || userData.email || userId
+            });
+          } else {
+            // Fallback to just user ID
+            setCurrentUser({ id: userId, username: userId });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user info:', error);
+      }
+    };
+    loadUserInfo();
+  }, []);
+
   // Check LLM health on component mount
   useEffect(() => {
     checkLLMHealth();
@@ -302,25 +316,16 @@ const LLMChatPage: React.FC = () => {
     }
   };
 
-  // Helper to get current user info
-  const getUserInfo = () => {
-    return {
-      user_id: currentUser?.id || localStorage.getItem('user_id') || 'anonymous',
-      username: currentUser?.username || 'User'
-    };
-  };
-
   // Save chat to MongoDB
   const saveChatToMongoDB = async (userMessage: string, assistantResponse: string, queryType: QueryType, userRole: string, responseTimeMs?: number, hasError: boolean = false) => {
     try {
-      const { user_id, username } = getUserInfo();
       await fetch("http://localhost:5000/chat/history/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id,
-          username,
-          session_id: `${user_id}_${sessionId}`,
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
+          session_id: `web_session_${Date.now()}`,
           user_message: userMessage,
           assistant_response: assistantResponse,
           query_type: queryType,
@@ -357,9 +362,7 @@ const LLMChatPage: React.FC = () => {
       return "billing";
     } else if (lowerQuery.includes("room") || lowerQuery.includes("utilization") || 
                lowerQuery.includes("usage") || lowerQuery.includes("occupied") ||
-               lowerQuery.includes("most used") || lowerQuery.includes("available") ||
-               lowerQuery.includes("space") || lowerQuery.includes("floor") ||
-               lowerQuery.includes("capacity") || lowerQuery.includes("analyze specific")) {
+               lowerQuery.includes("most used")) {
       return "utilization";
     } else if (lowerQuery.includes("report") || lowerQuery.includes("summary") ||
                lowerQuery.includes("weekly") || lowerQuery.includes("daily") ||
@@ -411,8 +414,9 @@ const LLMChatPage: React.FC = () => {
         },
         body: JSON.stringify({
           query: query,
-          ...getUserInfo(),
-          session_id: sessionId,
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
+          session_id: "web_session",
           client_ip: "127.0.0.1"
         })
       });
@@ -460,7 +464,7 @@ const LLMChatPage: React.FC = () => {
         },
         body: JSON.stringify({
           sensitivity,
-          ...getUserInfo()
+          user_id: getUserInfo().user_id
         })
       });
 
@@ -489,14 +493,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: "weekly",
-          user_id,
-          username
+          user_id: "web_user",
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -551,14 +554,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: "daily",
-          user_id,
-          username
+          user_id: "web_user",
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -613,14 +615,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: "monthly",
-          user_id,
-          username
+          user_id: "web_user",
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -675,14 +676,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
         body: JSON.stringify({ 
           query: "yearly energy report",
-          user_id,
-          username,
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
           session_id: `web_${Date.now()}`
         })
       });
@@ -720,14 +720,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/rooms/list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: userQuery,
-          user_id,
-          username
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
+          query: userQuery
         })
       });
       
@@ -779,14 +778,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: period,
-          user_id,
-          username
+          user_id: "web_user",
+          username: "Web User"
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -866,14 +864,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/maintenance/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
           query: userQuery || "Analyze equipment and suggest maintenance",
-          user_id,
-          username
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -1018,13 +1015,11 @@ const LLMChatPage: React.FC = () => {
       
       if (queryType === "utilization") {
         setMessages((prev) => [...prev, userMessage]);
-        await callRoomUtilization(messageText);  // Pass the user's query
+        await callRoomUtilization(messageText);
         return;
       }
-
-      // For anomalies, use dedicated formatting
+      
       if (queryType === "anomalies") {
-        setMessages((prev) => [...prev, userMessage]);
         const loadingMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: "assistant",
@@ -1032,7 +1027,7 @@ const LLMChatPage: React.FC = () => {
           timestamp: new Date(),
           isLoading: true,
         };
-        setMessages((prev) => [...prev, loadingMessage]);
+        setMessages((prev) => [...prev, userMessage, loadingMessage]);
         setIsLoading(true);
 
         try {
@@ -1164,21 +1159,6 @@ const LLMChatPage: React.FC = () => {
 
   const clearChat = () => {
     setMessages([]);
-    // Optionally clear localStorage messages
-    localStorage.removeItem('llm_chat_messages');
-  };
-  
-  const startNewSession = () => {
-    // Clear current chat
-    setMessages([]);
-    localStorage.removeItem('llm_chat_messages');
-    
-    // Generate new session ID
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem("chat_session_id", newSessionId);
-    
-    // Reload page to use new session
-    window.location.reload();
   };
 
   const getSuggestions = () => {

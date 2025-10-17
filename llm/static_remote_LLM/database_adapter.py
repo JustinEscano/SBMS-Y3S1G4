@@ -78,7 +78,7 @@ class DatabaseAdapter:
                 sl.temperature as "environmental_data.temperature_celsius",
                 sl.humidity as "environmental_data.humidity_percent",
                 e.name as equipment_name,
-                r.name as room_name
+                COALESCE(r.name, CONCAT('Equipment ', e.id, ' Location')) as room_name
             FROM core_sensorlog sl
             JOIN core_equipment e ON sl.equipment_id = e.id
             LEFT JOIN core_room r ON e.room_id = r.id
@@ -547,21 +547,23 @@ class DatabaseAdapter:
         try:
             query = """
             SELECT 
-                id,
-                period_start,
-                period_end,
-                period_type,
-                total_energy,
-                avg_power,
-                peak_power,
-                reading_count,
-                anomaly_count,
-                created_at,
-                component_id,
-                room_id,
-                currency,
-                total_cost
-            FROM core_energysummary
+                es.id,
+                es.period_start,
+                es.period_end,
+                es.period_type,
+                es.total_energy,
+                es.avg_power,
+                es.peak_power,
+                es.reading_count,
+                es.anomaly_count,
+                es.created_at,
+                es.component_id,
+                es.room_id,
+                es.currency,
+                es.total_cost,
+                COALESCE(r.name, CONCAT('Room ', es.room_id)) as room_name
+            FROM core_energysummary es
+            LEFT JOIN core_room r ON es.room_id = r.id
             WHERE 1=1
             """
             params = []
@@ -597,21 +599,23 @@ class DatabaseAdapter:
         try:
             query = """
             SELECT 
-                id,
-                period_start,
-                period_end,
-                period_type,
-                total_energy,
-                avg_power,
-                peak_power,
-                reading_count,
-                anomaly_count,
-                created_at,
-                component_id,
-                room_id,
-                currency,
-                total_cost
-            FROM core_energysummary
+                es.id,
+                es.period_start,
+                es.period_end,
+                es.period_type,
+                es.total_energy,
+                es.avg_power,
+                es.peak_power,
+                es.reading_count,
+                es.anomaly_count,
+                es.created_at,
+                es.component_id,
+                es.room_id,
+                es.currency,
+                es.total_cost,
+                COALESCE(r.name, CONCAT('Room ', es.room_id)) as room_name
+            FROM core_energysummary es
+            LEFT JOIN core_room r ON es.room_id = r.id
             WHERE 1=1
             """
             params = []
