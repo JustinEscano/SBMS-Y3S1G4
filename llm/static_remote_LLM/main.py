@@ -1257,7 +1257,6 @@ class RoomLogAnalyzer:
                         if new_documents:
                             self.logger.info(f"Adding {len(new_documents)} new documents to existing vector store")
                             vector_store.add_documents(new_documents)
-                            vector_store.persist()
                         else:
                             self.logger.info("No new documents to add to vector store")
                     
@@ -1272,7 +1271,6 @@ class RoomLogAnalyzer:
                             persist_directory=self.chroma_dir,
                             collection_name="room_logs"
                         )
-                        vector_store.persist()
                         self.vector_store = vector_store
                     else:
                         self.logger.error("No documents provided and cannot load existing vector store")
@@ -1287,7 +1285,6 @@ class RoomLogAnalyzer:
                         persist_directory=self.chroma_dir,
                         collection_name="room_logs"
                     )
-                    vector_store.persist()
                     self.vector_store = vector_store
                 else:
                     self.logger.error("No documents provided for new vector store")
@@ -2513,7 +2510,6 @@ Be specific to the data. Only reference what's explicitly shown above."""
                     self.initialize_vector_store(documents)
                 else:
                     self.vector_store.add_documents(documents)
-                    self.vector_store.persist()
                 self._save_processed_hashes()
             else:
                 self.logger.info("No new documents to add to vector store - using existing knowledge")
