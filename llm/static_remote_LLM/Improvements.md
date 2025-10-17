@@ -2,20 +2,46 @@
 
 Intelligent building management API powered by LLM for energy analysis, maintenance prediction, and conversational building insights.
 
-## Latest Updates (v4.0 - October 17, 2025)
+## Latest Updates (v5.0 - October 17, 2025)
 
-**Major Fixes:**
-- Fixed energy report date filtering using overlapping period logic
-- Smart date detection - automatically finds available data in database
-- Dynamic maintenance requests - supports any number (e.g., "provide 3 maintenance requests")
-- Enhanced LLM analysis with variance and efficiency metrics
-- Improved general responses with specific building context
+**🎉 Major New Features:**
+- ✅ **Room Directory with LLM Analysis** - New `/rooms/list` endpoint
+  - Real-time room data from database
+  - AI-powered energy optimization recommendations
+  - Space utilization insights
+  - Equipment management priorities
+- ✅ **100% LLM Coverage** - All 6 major endpoints now use AI
+- ✅ **Enhanced Maintenance Display** - Full timestamps, complete descriptions
+- ✅ **Smart Query Routing** - "show me rooms" auto-routes to room endpoint
+
+**🐛 Critical Bug Fixes:**
+- ✅ Fixed JSON syntax error in `advanced_prompts.json`
+- ✅ Fixed RoomSpecificHandlers missing `get_available_rooms()` method
+- ✅ Fixed NaT strftime errors (10 locations in maintenance documents)
+- ✅ Fixed pandas SQLAlchemy warnings (11 query locations)
+- ✅ Converted all database params from lists to tuples
+
+**🔧 System Improvements:**
+- ✅ SQLAlchemy engine integration for all database queries
+- ✅ Maintenance requests show formatted timestamps ("Oct 17, 2025 12:30 PM")
+- ✅ Room data displays real-time sensor information
+- ✅ Better error handling across all endpoints
+- ✅ Clean startup - zero errors, zero warnings
+
+**📚 Documentation:**
+- ✅ Updated README.md with Python 3.11 requirements
+- ✅ Added comprehensive IMPROVEMENTS.md changelog
+- ✅ Created room functionality guide
+- ✅ Added troubleshooting section
 
 **What's Working:**
-- Daily/Weekly/Monthly/Yearly energy reports with actual database dates
-- Maintenance requests with flexible count (1-50)
-- "What can you do?" queries with specific examples
-- All endpoints with proper date handling
+- All 6 endpoints with LLM-powered insights
+- Room directory with AI recommendations
+- Daily/Weekly/Monthly/Yearly energy reports
+- Maintenance tracking with status grouping
+- Anomaly detection with pattern analysis
+- Billing analysis with cost optimization
+- KPI monitoring with health assessment
 
 ## Requirements
 
@@ -48,7 +74,45 @@ Server runs on: `http://localhost:5000`
 }
 ```
 
-### 2. Energy Reports
+### 2. Room Directory (NEW!)
+`GET /rooms/list` or `POST /rooms/list`
+```json
+{
+  "user_id": "user123",
+  "username": "John Doe"
+}
+```
+
+**Features:**
+- Real-time room data with sensor information
+- Equipment counts per room
+- Temperature, humidity, energy usage
+- **AI provides 3 recommendations:**
+  1. Energy Optimization - which rooms to optimize first
+  2. Space Utilization - how to better use rooms across floors
+  3. Equipment Management - maintenance/upgrade priorities
+
+**Example Response:**
+```
+🏢 **ROOM DIRECTORY**
+
+📊 **Total Rooms**: 6
+
+[Room listings with details...]
+
+🤖 **AI RECOMMENDATIONS**
+
+**1. ENERGY OPTIMIZATION:**
+Focus on Break Room D which consumes 11.50 kWh...
+
+**2. SPACE UTILIZATION:**
+With 6 rooms across 4 floors, consolidate...
+
+**3. EQUIPMENT MANAGEMENT:**
+10 devices need regular maintenance...
+```
+
+### 3. Energy Reports
 `POST /energy/report`
 ```json
 {
@@ -58,7 +122,7 @@ Server runs on: `http://localhost:5000`
 }
 ```
 
-### 3. Maintenance Predictions
+### 4. Maintenance Predictions
 `POST /maintenance/predict`
 ```json
 {
@@ -74,13 +138,13 @@ Supports dynamic counts:
 - "show 10 requests" → Shows 10
 - "show maintenance" → Shows all (max 50)
 
-### 4. Anomaly Detection
+### 5. Anomaly Detection
 `POST /anomalies/detect`
 
-### 5. Billing Analysis
+### 6. Billing Analysis
 `POST /billing/rates`
 
-### 6. System Health
+### 7. System Health
 `GET /health`
 
 ## Key Features
@@ -209,6 +273,59 @@ TOP CONSUMING ROOMS:
 
 ## Version History
 
+**v5.0** (October 17, 2025 - Production Release)
+
+**🎉 Major Features:**
+- ✅ **Room Directory with LLM** - New `/rooms/list` endpoint
+  - Real-time room data from `core_room` table
+  - AI-powered energy optimization recommendations
+  - Space utilization insights
+  - Equipment management priorities
+  - Calculates statistics: total equipment, avg temp, energy usage
+  - Identifies highest/lowest energy consumers
+- ✅ **100% LLM Coverage** - All 6 major endpoints now use AI
+- ✅ **Enhanced Maintenance** - Full timestamps, complete descriptions, status grouping
+- ✅ **Smart Query Routing** - "show me rooms" auto-routes to room endpoint
+
+**🐛 Critical Bug Fixes:**
+- ✅ Fixed JSON syntax error in `advanced_prompts.json` (missing comma)
+- ✅ Fixed RoomSpecificHandlers missing `get_available_rooms()` method
+- ✅ Fixed NaT strftime errors (10 locations in maintenance document creation)
+- ✅ Fixed pandas SQLAlchemy warnings (11 query locations)
+- ✅ Converted all database query params from lists to tuples
+- ✅ Fixed room utilization showing placeholder message
+
+**🔧 System Improvements:**
+- ✅ SQLAlchemy engine integration for all database queries
+- ✅ Maintenance timestamps formatted as "Oct 17, 2025 12:30 PM"
+- ✅ Room data displays real-time sensor information
+- ✅ Better error handling with fallback recommendations
+- ✅ Clean startup - zero errors, zero warnings
+- ✅ MongoDB integration for room queries
+
+**📚 Documentation:**
+- ✅ Updated README.md with Python 3.11 requirements
+- ✅ Added comprehensive IMPROVEMENTS.md changelog
+- ✅ Created ROOM_FUNCTIONALITY_GUIDE.md
+- ✅ Added FRONTEND_ROOM_UPDATE.md
+- ✅ Updated troubleshooting section
+
+**Frontend Updates:**
+- ✅ Enhanced `callRoomUtilization()` to display LLM analysis
+- ✅ Added MongoDB saving for room queries
+- ✅ Statistics logging to console
+- ✅ Better loading messages ("🏢 Loading room directory with AI insights...")
+- ✅ Error handling with user-friendly messages
+
+**Files Modified:**
+- `apillm.py` - Added room endpoint with LLM analysis
+- `database_adapter.py` - Added `get_rooms_detailed()` method, SQLAlchemy fixes
+- `main.py` - Fixed NaT strftime errors, added room handler
+- `advanced_prompts.json` - Fixed JSON syntax
+- `LLMChatPage.tsx` - Enhanced room display with AI
+- `README.md` - Updated documentation
+- `Improvements.md` - This file
+
 **v4.0** (October 17, 2025 - Late Night Update)
 
 **Backend Improvements:**
@@ -255,4 +372,41 @@ TOP CONSUMING ROOMS:
 ## License
 
 MIT License - See LICENSE file for details
+
+---
+
+## 📊 Current Status (v5.0)
+
+### All Endpoints with LLM
+| Endpoint | LLM Model | Analysis Type | Status |
+|----------|-----------|---------------|--------|
+| `/rooms/list` | incept5/llama3.1-claude:latest | Utilization insights | ✅ NEW |
+| `/energy/report` | incept5/llama3.1-claude:latest | Consumption analysis | ✅ Working |
+| `/maintenance/predict` | incept5/llama3.1-claude:latest | Prioritization | ✅ Enhanced |
+| `/anomalies/detect` | incept5/llama3.1-claude:latest | Pattern analysis | ✅ Working |
+| `/billing/rates` | incept5/llama3.1-claude:latest | Cost optimization | ✅ Working |
+| `/kpi/heartbeat` | incept5/llama3.1-claude:latest | Health assessment | ✅ Working |
+
+### System Health
+- ✅ **Zero Startup Errors**
+- ✅ **Zero Warnings**
+- ✅ **All Endpoints Operational**
+- ✅ **MongoDB Connected**
+- ✅ **PostgreSQL Optimized**
+- ✅ **LLM Integration Complete**
+
+### Production Ready
+- ✅ Error handling with fallbacks
+- ✅ MongoDB chat history
+- ✅ Comprehensive documentation
+- ✅ Python 3.11 compatible
+- ✅ Frontend integration complete
+
+**Status**: PRODUCTION READY 🚀
+
+---
+
+*Last Updated: October 17, 2025*
+*Version: 5.0*
+*All Endpoints: LLM-Powered ✅*
 
