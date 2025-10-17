@@ -40,8 +40,22 @@ const LLMChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [llmHealth, setLlmHealth] = useState<string>("checking");
+  const [currentUser, setCurrentUser] = useState<{id: string, username: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Get user info helper
+  const getUserInfo = () => {
+    if (currentUser) {
+      return { user_id: currentUser.id, username: currentUser.username };
+    }
+    // Fallback to localStorage
+    const userId = localStorage.getItem('user_id');
+    return {
+      user_id: userId || 'anonymous',
+      username: userId || 'User'
+    };
+  };
 
   // Scroll to bottom when new messages are added
   const scrollToBottom = () => {
@@ -211,6 +225,36 @@ const LLMChatPage: React.FC = () => {
     }
   }, [messages]);
 
+  // Load user info on component mount
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+          // Try to fetch full user details
+          const response = await fetch(`http://localhost:8000/api/users/${userId}/`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setCurrentUser({
+              id: userId,
+              username: userData.username || userData.email || userId
+            });
+          } else {
+            // Fallback to just user ID
+            setCurrentUser({ id: userId, username: userId });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user info:', error);
+      }
+    };
+    loadUserInfo();
+  }, []);
+
   // Check LLM health on component mount
   useEffect(() => {
     checkLLMHealth();
@@ -224,7 +268,7 @@ const LLMChatPage: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id: "web_user",
+            user_id: getUserInfo().user_id,
             session_id: sessionId,
             limit: 50
           })
@@ -279,8 +323,8 @@ const LLMChatPage: React.FC = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: "web_user",
-          username: "Web User",
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
           session_id: `web_session_${Date.now()}`,
           user_message: userMessage,
           assistant_response: assistantResponse,
@@ -370,8 +414,8 @@ const LLMChatPage: React.FC = () => {
         },
         body: JSON.stringify({
           query: query,
-          user_id: "web_user",
-          username: "Web User",
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
           session_id: "web_session",
           client_ip: "127.0.0.1"
         })
@@ -420,7 +464,7 @@ const LLMChatPage: React.FC = () => {
         },
         body: JSON.stringify({
           sensitivity,
-          user_id: "web_user"
+          user_id: getUserInfo().user_id
         })
       });
 
@@ -637,8 +681,8 @@ const LLMChatPage: React.FC = () => {
         headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
         body: JSON.stringify({ 
           query: "yearly energy report",
-          user_id: "web_user",
-          username: "Web User",
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
           session_id: `web_${Date.now()}`
         })
       });
@@ -663,7 +707,7 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call room utilization endpoint with AI analysis
-  const callRoomUtilization = async () => {
+  const callRoomUtilization = async (userQuery: string = "") => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
@@ -677,8 +721,13 @@ const LLMChatPage: React.FC = () => {
 
     try {
       const response = await fetch("http://localhost:5000/rooms/list", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username,
+          query: userQuery
+        })
       });
       
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -820,8 +869,8 @@ const LLMChatPage: React.FC = () => {
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
           query: userQuery || "Analyze equipment and suggest maintenance",
-          user_id: "web_user",
-          username: "Web User"
+          user_id: getUserInfo().user_id,
+          username: getUserInfo().username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -966,13 +1015,11 @@ const LLMChatPage: React.FC = () => {
       
       if (queryType === "utilization") {
         setMessages((prev) => [...prev, userMessage]);
-        await callRoomUtilization();
+        await callRoomUtilization(messageText);
         return;
       }
-
-      // For anomalies, use dedicated formatting
+      
       if (queryType === "anomalies") {
-        setMessages((prev) => [...prev, userMessage]);
         const loadingMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: "assistant",
@@ -980,7 +1027,7 @@ const LLMChatPage: React.FC = () => {
           timestamp: new Date(),
           isLoading: true,
         };
-        setMessages((prev) => [...prev, loadingMessage]);
+        setMessages((prev) => [...prev, userMessage, loadingMessage]);
         setIsLoading(true);
 
         try {

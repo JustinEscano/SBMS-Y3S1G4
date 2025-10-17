@@ -1203,11 +1203,20 @@ Be specific and actionable."""
 def list_rooms():
     """
     Get list of all rooms with detailed information
+    Accepts optional 'query' parameter to customize LLM response
     """
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
     try:
+        # Get optional query parameter to customize response
+        user_query = None
+        if request.method == 'POST':
+            data = request.get_json() or {}
+            user_query = data.get('query', '').lower()
+        else:
+            user_query = request.args.get('query', '').lower()
+        
         from database_adapter import DatabaseAdapter
         db_adapter = DatabaseAdapter()
         
@@ -1215,10 +1224,14 @@ def list_rooms():
         rooms_df = db_adapter.get_rooms_detailed()
         
         if rooms_df is None or rooms_df.empty:
+            logger.warning("No rooms found in database")
+            fallback_summary = "🏢 **ROOM DIRECTORY**\n\n❌ No rooms found in the system.\n\nPlease ensure:\n• Rooms are configured in the database\n• Database connection is working\n• Room data has been populated"
             return jsonify({
                 "status": "success",
                 "rooms": [],
                 "total_rooms": 0,
+                "summary_text": fallback_summary,
+                "llm_analysis": "No rooms available for analysis.",
                 "message": "No rooms found in the system",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             })
@@ -1292,50 +1305,62 @@ def list_rooms():
                 highest_energy = ("Unknown", 0)
                 lowest_energy = ("Unknown", 0)
             
-            # Prepare LLM context
-            llm_context = f"""You are a building management expert analyzing room utilization data. Provide actionable insights.
+            # Determine query intent and customize LLM prompt
+            is_availability_query = user_query and any(word in user_query for word in ['available', 'list', 'show', 'what rooms'])
+            
+            if is_availability_query:
+                # For "what rooms are available" - focus on room listing
+                llm_context = f"""User asked about available rooms. Provide a brief summary of the {len(rooms_list)} rooms.
 
-ROOM STATISTICS:
-- Total Rooms: {len(rooms_list)}
-- Total Floors: {len(floors)}
-- Total Equipment: {total_equipment} devices
-- Average Temperature: {avg_temp:.1f}°C
-- Total Energy Usage: {total_energy:.2f} kWh
-- Highest Energy Consumer: {highest_energy[0]} ({highest_energy[1]:.2f} kWh)
-- Lowest Energy Consumer: {lowest_energy[0]} ({lowest_energy[1]:.2f} kWh)
+ROOMS ({len(rooms_list)} total across {len(floors)} floors):
+{chr(10).join([f"• {r['name']} (Floor {r['floor']}, {r['type']}, {r['capacity']} capacity)" for r in rooms_list])}
 
-ROOM BREAKDOWN:
-{chr(10).join([f"- {r['name']} (Floor {r['floor']}): {r['equipment_count']} devices, {r['avg_energy_usage']:.2f if r['avg_energy_usage'] else 0} kWh" for r in rooms_list[:10]])}
+Give ONE sentence summary (max 20 words) highlighting room variety and availability."""
+            else:
+                # For general queries - provide optimization recommendations
+                llm_context = f"""Building management AI. Analyze room data. Give 3 SHORT recommendations (max 15 words each).
 
-Provide 3 SPECIFIC, ACTIONABLE recommendations using this exact format:
+DATA:
+• {len(rooms_list)} rooms, {len(floors)} floors, {total_equipment} devices
+• Highest energy: {highest_energy[0]} ({highest_energy[1]:.2f} kWh)
+• Lowest energy: {lowest_energy[0]} ({lowest_energy[1]:.2f} kWh)
+
+TOP 5 ROOMS:
+{chr(10).join([f"• {r['name']} (F{r['floor']}): {(r['avg_energy_usage'] if r['avg_energy_usage'] is not None else 0.0):.2f} kWh" for r in rooms_list[:5]])}
+
+Format (MAX 15 WORDS PER RECOMMENDATION):
 
 **1. ENERGY OPTIMIZATION:**
-Which rooms should we optimize first and why? Use actual room names and numbers.
+[Target room + one action, max 15 words]
 
 **2. SPACE UTILIZATION:**
-How can we better utilize our {len(rooms_list)} rooms across {len(floors)} floors? Be specific.
+[One specific improvement, max 15 words]
 
 **3. EQUIPMENT MANAGEMENT:**
-With {total_equipment} devices across all rooms, what maintenance or upgrades should we prioritize?
+[One priority, max 15 words]
 
-Be concise (2-3 sentences each) and use the actual data provided."""
+RULES: Use room names. Be specific. Stay under 15 words each."""
 
             # Call LLM directly
+            logger.info("Calling Ollama LLM for room analysis...")
             from langchain_ollama import OllamaLLM
-            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.1)  # Very low temp for concise responses
+            logger.info("LLM initialized, sending context...")
             llm_analysis = llm.invoke(llm_context)
-            logger.info(f"LLM room analysis generated successfully")
+            logger.info(f"✅ LLM room analysis generated successfully")
             
         except Exception as llm_error:
-            logger.warning(f"LLM analysis failed: {llm_error}, using fallback")
+            logger.error(f"❌ LLM analysis failed: {type(llm_error).__name__}: {llm_error}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             llm_analysis = f"""**1. ENERGY OPTIMIZATION:**
-Focus on {highest_energy[0]} which consumes {highest_energy[1]:.2f} kWh. Review HVAC settings and equipment usage patterns to reduce consumption.
+Target {highest_energy[0]} ({highest_energy[1]:.2f} kWh) - install occupancy sensors and LED lighting.
 
 **2. SPACE UTILIZATION:**
-With {len(rooms_list)} rooms across {len(floors)} floors, consider consolidating underutilized spaces and optimizing high-traffic areas.
+Implement hot-desking across {len(floors)} floors to maximize {len(rooms_list)} room utilization.
 
 **3. EQUIPMENT MANAGEMENT:**
-{total_equipment} devices need regular maintenance. Prioritize high-energy rooms and schedule preventive maintenance quarterly."""
+Schedule quarterly maintenance for {total_equipment} devices, prioritize high-energy rooms."""
         
         # Add LLM analysis to summary
         summary_text += f"\n🤖 **AI RECOMMENDATIONS**\n\n{llm_analysis}\n"

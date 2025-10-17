@@ -2,24 +2,32 @@
 
 Intelligent building management API powered by LLM for energy analysis, maintenance prediction, and conversational building insights.
 
-## Latest Updates (v5.0 - October 17, 2025)
+## Latest Updates (v6.0 - October 18, 2025)
 
 **🎉 Major New Features:**
-- ✅ **Room Directory with LLM Analysis** - New `/rooms/list` endpoint
-  - Real-time room data from database
-  - AI-powered energy optimization recommendations
-  - Space utilization insights
-  - Equipment management priorities
-- ✅ **100% LLM Coverage** - All 6 major endpoints now use AI
-- ✅ **Enhanced Maintenance Display** - Full timestamps, complete descriptions
-- ✅ **Smart Query Routing** - "show me rooms" auto-routes to room endpoint
+- ✅ **Context-Aware Rooms Endpoint** - `/rooms/list` adapts to user intent
+  - "show me available rooms" → Simple listing summary
+  - "room utilization" → Detailed optimization recommendations
+  - Query parameter passed from frontend for context
+  - Temperature 0.1 for ultra-concise responses (15 words max per recommendation)
+- ✅ **Mobile LLM Feature Parity** - Complete implementation
+  - All 6 endpoints implemented in Flutter mobile app
+  - Smart query routing matching web frontend
+  - MongoDB integration with user tracking
+  - Rich formatted responses with emojis
+- ✅ **Actual User Tracking** - Both web and mobile
+  - Mobile: Fetches real user ID and username from profile API
+  - Web: Loads user info from localStorage and API
+  - MongoDB logs with actual user credentials (not "web_user" or "mobile_user")
+  - Session IDs include user ID for better tracking
 
 **🐛 Critical Bug Fixes:**
-- ✅ Fixed JSON syntax error in `advanced_prompts.json`
-- ✅ Fixed RoomSpecificHandlers missing `get_available_rooms()` method
-- ✅ Fixed NaT strftime errors (10 locations in maintenance documents)
-- ✅ Fixed pandas SQLAlchemy warnings (11 query locations)
-- ✅ Converted all database params from lists to tuples
+- ✅ Fixed database schema issues (sensor_logs → core_sensorlog)
+- ✅ Fixed room_id column errors (proper JOINs from core_room)
+- ✅ Fixed f-string format specifier errors in LLM prompts
+- ✅ Fixed mobile app using hardcoded "mobile_user"
+- ✅ Fixed web app using hardcoded "web_user"
+- ✅ Fixed LLM always using fallback (syntax errors prevented LLM calls)
 
 **🔧 System Improvements:**
 - ✅ SQLAlchemy engine integration for all database queries

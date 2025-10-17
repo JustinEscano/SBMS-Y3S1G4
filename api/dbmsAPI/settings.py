@@ -28,7 +28,8 @@ ALLOWED_HOSTS = [
     '192.168.0.12',
     '192.168.0.28',
     '192.168.1.1',
-    '0.0.0.0',  # For development only
+    '0.0.0.0',
+    '192.168.1.38',  # For development only
 ]
 
 # Application definition
