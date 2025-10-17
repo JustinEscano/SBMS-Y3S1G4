@@ -12,26 +12,24 @@ import '../Services/auth_service.dart';
 import './LoginScreen.dart';
 import '../Widgets/ProfileWidgets.dart';
 
-class Profiledetails extends StatefulWidget {
+class ProfileDetails extends StatefulWidget {
   final String accessToken;
   final String refreshToken;
 
-  const Profiledetails({
+  const ProfileDetails({
     super.key,
     required this.accessToken,
     required this.refreshToken,
   });
 
   @override
-  _ProfiledetailsState createState() => _ProfiledetailsState();
+  _ProfileDetailsState createState() => _ProfileDetailsState();
 }
 
-class _ProfiledetailsState extends State<Profiledetails> {
-  // SharedPreferences keys
+class _ProfileDetailsState extends State<ProfileDetails> {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
 
-  // Form controllers
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _fullNameController = TextEditingController();
@@ -39,7 +37,6 @@ class _ProfiledetailsState extends State<Profiledetails> {
   final _addressController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // Profile data and state
   Map<String, dynamic>? _profileData;
   File? _profilePicture;
   bool _isLoading = false;
@@ -52,7 +49,6 @@ class _ProfiledetailsState extends State<Profiledetails> {
     _fetchProfile();
   }
 
-  // Refresh token
   Future<bool> _refreshToken() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
@@ -65,12 +61,11 @@ class _ProfiledetailsState extends State<Profiledetails> {
       }
       return false;
     } catch (e) {
-      developer.log('Token refresh failed: $e', name: 'Profiledetails.Token');
+      developer.log('Token refresh failed: $e', name: 'ProfileDetails.Token');
       return false;
     }
   }
 
-  // Helper method to determine the correct profile picture URL
   String _getProfilePictureUrl(String? picturePath) {
     if (picturePath == null || picturePath.isEmpty) {
       return '';
@@ -81,14 +76,13 @@ class _ProfiledetailsState extends State<Profiledetails> {
     return ApiConfig.getMediaUrl(picturePath);
   }
 
-  // Fetch profile data from backend
   Future<void> _fetchProfile() async {
-    if (!mounted) return; // Check if widget is mounted
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final profileData = await authService.apiService.fetchProfile();
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() {
           _profileData = profileData;
           _usernameController.text = _profileData?['username'] ?? '';
@@ -101,10 +95,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
       }
       final profilePictureUrl = _getProfilePictureUrl(_profileData?['profile']['profile_picture']);
       if (profilePictureUrl.isNotEmpty) {
-        developer.log(
-          'Profile picture URL: $profilePictureUrl',
-          name: 'Profiledetails.Image',
-        );
+        developer.log('Profile picture URL: $profilePictureUrl', name: 'ProfileDetails.Image');
       }
     } catch (e) {
       if (e.toString().contains('401')) {
@@ -113,7 +104,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
           try {
             final authService = Provider.of<AuthService>(context, listen: false);
             final profileData = await authService.apiService.fetchProfile();
-            if (mounted) { // Check before setState
+            if (mounted) {
               setState(() {
                 _profileData = profileData;
                 _usernameController.text = _profileData?['username'] ?? '';
@@ -126,26 +117,26 @@ class _ProfiledetailsState extends State<Profiledetails> {
             }
             final profilePictureUrl = _getProfilePictureUrl(_profileData?['profile']['profile_picture']);
             if (profilePictureUrl.isNotEmpty) {
-              developer.log(
-                'Profile picture URL after retry: $profilePictureUrl',
-                name: 'Profiledetails.Image',
-              );
+              developer.log('Profile picture URL after retry: $profilePictureUrl', name: 'ProfileDetails.Image');
             }
             return;
           } catch (retryError) {
-            if (mounted) { // Check before navigation and SnackBar
+            if (mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
               );
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error fetching profile after retry: $retryError'), backgroundColor: Colors.red),
+                SnackBar(
+                  content: Text('Error fetching profile after retry: $retryError', style: GoogleFonts.urbanist()),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           }
         }
-        if (mounted) { // Check before navigation
+        if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -153,32 +144,33 @@ class _ProfiledetailsState extends State<Profiledetails> {
           );
         }
       }
-      if (mounted) { // Check before SnackBar
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching profile: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error fetching profile: $e', style: GoogleFonts.urbanist()),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  // Pick profile picture
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null && mounted) { // Check before setState
+    if (pickedFile != null && mounted) {
       setState(() => _profilePicture = File(pickedFile.path));
     }
   }
 
-  // Update profile data
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!mounted) return; // Check if widget is mounted
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
@@ -190,7 +182,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
         address: _addressController.text,
         profilePicture: _profilePicture,
       );
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() {
           _profileData = profileData;
           _profilePicture = null;
@@ -199,9 +191,12 @@ class _ProfiledetailsState extends State<Profiledetails> {
       }
       imageCache.clear();
       imageCache.clearLiveImages();
-      if (mounted) { // Check before SnackBar
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
+          SnackBar(
+            content: Text('Profile updated successfully', style: GoogleFonts.urbanist()),
+            backgroundColor: Color(0xFF184BFB),
+          ),
         );
       }
       await _fetchProfile();
@@ -219,7 +214,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
               address: _addressController.text,
               profilePicture: _profilePicture,
             );
-            if (mounted) { // Check before setState
+            if (mounted) {
               setState(() {
                 _profileData = profileData;
                 _profilePicture = null;
@@ -228,27 +223,33 @@ class _ProfiledetailsState extends State<Profiledetails> {
             }
             imageCache.clear();
             imageCache.clearLiveImages();
-            if (mounted) { // Check before SnackBar
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated successfully')),
+                SnackBar(
+                  content: Text('Profile updated successfully', style: GoogleFonts.urbanist()),
+                  backgroundColor: Color(0xFF184BFB),
+                ),
               );
             }
             await _fetchProfile();
             return;
           } catch (retryError) {
-            if (mounted) { // Check before navigation and SnackBar
+            if (mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
               );
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error updating profile after retry: $retryError'), backgroundColor: Colors.red),
+                SnackBar(
+                  content: Text('Error updating profile after retry: $retryError', style: GoogleFonts.urbanist()),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           }
         }
-        if (mounted) { // Check before navigation
+        if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -256,23 +257,25 @@ class _ProfiledetailsState extends State<Profiledetails> {
           );
         }
       }
-      if (mounted) { // Check before SnackBar
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating profile: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error updating profile: $e', style: GoogleFonts.urbanist()),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  // Create new profile
   Future<void> _createProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!mounted) return; // Check if widget is mounted
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
@@ -282,7 +285,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
         address: _addressController.text,
         profilePicture: _profilePicture,
       );
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() {
           _profileData = profileData;
           _profilePicture = null;
@@ -292,9 +295,12 @@ class _ProfiledetailsState extends State<Profiledetails> {
       }
       imageCache.clear();
       imageCache.clearLiveImages();
-      if (mounted) { // Check before SnackBar
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile created successfully')),
+          SnackBar(
+            content: Text('Profile created successfully', style: GoogleFonts.urbanist()),
+            backgroundColor: Color(0xFF184BFB),
+          ),
         );
       }
       await _fetchProfile();
@@ -310,7 +316,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
               address: _addressController.text,
               profilePicture: _profilePicture,
             );
-            if (mounted) { // Check before setState
+            if (mounted) {
               setState(() {
                 _profileData = profileData;
                 _profilePicture = null;
@@ -320,27 +326,33 @@ class _ProfiledetailsState extends State<Profiledetails> {
             }
             imageCache.clear();
             imageCache.clearLiveImages();
-            if (mounted) { // Check before SnackBar
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile created successfully')),
+                SnackBar(
+                  content: Text('Profile created successfully', style: GoogleFonts.urbanist()),
+                  backgroundColor: Color(0xFF184BFB),
+                ),
               );
             }
             await _fetchProfile();
             return;
           } catch (retryError) {
-            if (mounted) { // Check before navigation and SnackBar
+            if (mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
               );
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error creating profile after retry: $retryError'), backgroundColor: Colors.red),
+                SnackBar(
+                  content: Text('Error creating profile after retry: $retryError', style: GoogleFonts.urbanist()),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           }
         }
-        if (mounted) { // Check before navigation
+        if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -348,26 +360,28 @@ class _ProfiledetailsState extends State<Profiledetails> {
           );
         }
       }
-      if (mounted) { // Check before SnackBar
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating profile: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error creating profile: $e', style: GoogleFonts.urbanist()),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  // Delete profile
   Future<void> _deleteProfile() async {
-    if (!mounted) return; // Check if widget is mounted
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.apiService.deleteProfile();
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() {
           _profileData = null;
           _profilePicture = null;
@@ -379,9 +393,12 @@ class _ProfiledetailsState extends State<Profiledetails> {
       }
       imageCache.clear();
       imageCache.clearLiveImages();
-      if (mounted) { // Check before SnackBar
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile deleted successfully')),
+          SnackBar(
+            content: Text('Profile deleted successfully', style: GoogleFonts.urbanist()),
+            backgroundColor: Color(0xFF184BFB),
+          ),
         );
       }
     } catch (e) {
@@ -391,7 +408,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
           try {
             final authService = Provider.of<AuthService>(context, listen: false);
             await authService.apiService.deleteProfile();
-            if (mounted) { // Check before setState
+            if (mounted) {
               setState(() {
                 _profileData = null;
                 _profilePicture = null;
@@ -403,26 +420,32 @@ class _ProfiledetailsState extends State<Profiledetails> {
             }
             imageCache.clear();
             imageCache.clearLiveImages();
-            if (mounted) { // Check before SnackBar
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile deleted successfully')),
+                SnackBar(
+                  content: Text('Profile deleted successfully', style: GoogleFonts.urbanist()),
+                  backgroundColor: Color(0xFF184BFB),
+                ),
               );
             }
             return;
           } catch (retryError) {
-            if (mounted) { // Check before navigation and SnackBar
+            if (mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
               );
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error deleting profile after retry: $retryError'), backgroundColor: Colors.red),
+                SnackBar(
+                  content: Text('Error deleting profile after retry: $retryError', style: GoogleFonts.urbanist()),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           }
         }
-        if (mounted) { // Check before navigation
+        if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -430,38 +453,40 @@ class _ProfiledetailsState extends State<Profiledetails> {
           );
         }
       }
-      if (mounted) { // Check before SnackBar
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting profile: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error deleting profile: $e', style: GoogleFonts.urbanist()),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
-      if (mounted) { // Check before setState
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  // Show delete confirmation dialog
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('Delete Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-          content: Text('Are you sure you want to delete your profile? This action cannot be undone.', style: GoogleFonts.poppins()),
+          title: Text('Delete Profile', style: GoogleFonts.urbanist(fontWeight: FontWeight.w600)),
+          content: Text('Are you sure you want to delete your profile? This action cannot be undone.', style: GoogleFonts.urbanist()),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey)),
+              child: Text('Cancel', style: GoogleFonts.urbanist(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _deleteProfile();
               },
-              child: Text('Delete', style: GoogleFonts.poppins(color: Colors.red)),
+              child: Text('Delete', style: GoogleFonts.urbanist(color: Colors.red)),
             ),
           ],
         );
@@ -482,13 +507,13 @@ class _ProfiledetailsState extends State<Profiledetails> {
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 'My Profile',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.urbanist(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
               background: Container(
-                color: Color.fromRGBO(31, 30, 35, 100),
+                color: Color(0xFF1F1E23),
               ),
             ),
             actions: [
@@ -500,7 +525,7 @@ class _ProfiledetailsState extends State<Profiledetails> {
               ).animate().fadeIn(duration: 300.ms),
             ],
             foregroundColor: Colors.white,
-            backgroundColor: Color.fromRGBO(31, 30, 35, 100),
+            backgroundColor: Color(0xFF1F1E23),
           ),
           SliverToBoxAdapter(
             child: _isLoading
@@ -512,6 +537,16 @@ class _ProfiledetailsState extends State<Profiledetails> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    ProfileWidgets.buildProfileHeader(
+                      context: context,
+                      profileData: _profileData,
+                      profilePicture: _profilePicture,
+                      isEditing: _isEditing,
+                      isProfileDeleted: _isProfileDeleted,
+                      onPickImage: _pickImage,
+                      onCardTap: null,
+                    ),
+                    const SizedBox(height: 15),
                     if (!_isProfileDeleted)
                       ProfileWidgets.buildProfileFields(
                         usernameController: _usernameController,

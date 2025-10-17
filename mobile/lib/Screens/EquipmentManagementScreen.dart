@@ -138,8 +138,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           _errorMessage = 'No internet connection detected. Backend ping failed. Check emulator network or backend server.';
           isLoading = false;
         });
-        // TEMPORARY BYPASS: Comment out to force API calls even if check fails
-        // return;
+        return;
       }
 
       if (!(await AuthService().ensureValidToken())) {
@@ -323,20 +322,11 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Equipment'),
-          content: Text('Are you sure you want to delete "$equipmentName"?\n\nThis will also delete all sensor data associated with this equipment.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Delete'),
-            ),
-          ],
+        return EquipmentManagementWidgets.buildDeleteConfirmationDialog(
+          equipmentName: equipmentName,
+          onConfirm: () {
+            Navigator.of(context).pop(true);
+          },
         );
       },
     );
@@ -364,8 +354,13 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           developer.log('Equipment deleted successfully', name: 'EquipmentScreen.Delete');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Equipment "$equipmentName" deleted successfully'),
+              content: Text(
+                'Equipment "$equipmentName" deleted successfully',
+                style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+              ),
               backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           );
           _loadData();
@@ -379,8 +374,13 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           developer.log('Delete failed with status: ${response.statusCode}', name: 'EquipmentScreen.Delete');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to delete equipment. Status: ${response.statusCode}'),
+              content: Text(
+                'Failed to delete equipment. Status: ${response.statusCode}',
+                style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+              ),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -389,8 +389,13 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
         developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.Delete');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error deleting equipment: $e'),
+            content: Text(
+              'Error deleting equipment: $e',
+              style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       }
@@ -406,64 +411,43 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       developer.log('Equipment item: $equipmentItem', name: 'EquipmentScreen.Dialog');
     }
 
-    final isEditing = equipmentItem != null;
-    final nameController = TextEditingController(text: equipmentItem?['name'] ?? '');
-    final deviceIdController = TextEditingController(text: equipmentItem?['device_id'] ?? '');
-    final qrCodeController = TextEditingController(text: equipmentItem?['qr_code'] ?? '');
-
-    String selectedRoomId = equipmentItem?['room']?.toString() ?? '';
-    String selectedStatus = equipmentItem?['status'] ?? 'offline';
-    String selectedType = equipmentItem?['type'] ?? 'sensor';
-
-    if (!EQUIPMENT_TYPE_OPTIONS.any((option) => option['value'] == selectedType)) {
-      developer.log('Invalid type "$selectedType", defaulting to "sensor"', name: 'EquipmentScreen.Dialog');
-      selectedType = 'sensor';
-    }
-
-    developer.log('Dialog initial values:', name: 'EquipmentScreen.Dialog');
-    developer.log('  - Room ID: $selectedRoomId', name: 'EquipmentScreen.Dialog');
-    developer.log('  - Status: $selectedStatus', name: 'EquipmentScreen.Dialog');
-    developer.log('  - Type: $selectedType', name: 'EquipmentScreen.Dialog');
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return EquipmentManagementWidgets.buildAddEditEquipmentDialog(
-              context,
-              isEditing: isEditing,
-              equipmentItem: equipmentItem,
-              rooms: rooms,
-              equipmentTypeOptions: EQUIPMENT_TYPE_OPTIONS,
-              equipmentStatusOptions: EQUIPMENT_STATUS_OPTIONS,
-              nameController: nameController,
-              deviceIdController: deviceIdController,
-              qrCodeController: qrCodeController,
-              selectedRoomId: selectedRoomId,
-              selectedStatus: selectedStatus,
-              selectedType: selectedType,
-              onRoomChanged: (value) => setDialogState(() => selectedRoomId = value),
-              onStatusChanged: (value) => setDialogState(() => selectedStatus = value),
-              onTypeChanged: (value) => setDialogState(() => selectedType = value),
-              onSave: () {
-                _saveEquipment(
-                  equipmentId: equipmentItem?['id'],
-                  name: nameController.text,
-                  type: selectedType,
-                  deviceId: deviceIdController.text,
-                  qrCode: qrCodeController.text,
-                  roomId: selectedRoomId.isEmpty ? null : selectedRoomId,
-                  status: selectedStatus,
-                  isEditing: isEditing,
-                );
-                Navigator.of(context).pop();
-              },
-              onCancel: () => Navigator.of(context).pop(),
-            );
-          },
-        );
-      },
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF1E1E1E),
+          child: EquipmentManagementWidgets.buildAddEditEquipmentDialog(
+            context,
+            isEditing: equipmentItem != null,
+            equipmentItem: equipmentItem,
+            rooms: rooms,
+            equipmentTypeOptions: EQUIPMENT_TYPE_OPTIONS,
+            equipmentStatusOptions: EQUIPMENT_STATUS_OPTIONS,
+            onSave: (equipmentId, name, type, deviceId, qrCode, roomId, status) => _saveEquipment(
+              equipmentId: equipmentId,
+              name: name,
+              type: type,
+              deviceId: deviceId,
+              qrCode: qrCode,
+              roomId: roomId,
+              status: status,
+              isEditing: equipmentItem != null,
+            ),
+            onCancel: () => Navigator.of(context).pop(),
+          ),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
     );
   }
 
@@ -490,9 +474,14 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     if (name.isEmpty || type.isEmpty) {
       developer.log('Validation failed: missing required fields', name: 'EquipmentScreen.Save');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in required fields (Name and Type)'),
+        SnackBar(
+          content: Text(
+            'Please fill in required fields (Name and Type)',
+            style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       return;
@@ -544,8 +533,13 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
         developer.log('Equipment saved successfully', name: 'EquipmentScreen.Save');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditing ? 'Equipment updated successfully' : 'Equipment added successfully'),
+            content: Text(
+              isEditing ? 'Equipment updated successfully' : 'Equipment added successfully',
+              style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+            ),
             backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
         _loadData();
@@ -576,16 +570,26 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(errorMessage),
+              content: Text(
+                errorMessage,
+                style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+              ),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           );
         } catch (e) {
           developer.log('Failed to parse error response: $e', name: 'EquipmentScreen.Save');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to ${isEditing ? 'update' : 'add'} equipment. Status: ${response.statusCode}'),
+              content: Text(
+                'Failed to ${isEditing ? 'update' : 'add'} equipment. Status: ${response.statusCode}',
+                style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+              ),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -595,8 +599,13 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       developer.log('Stack trace: $stackTrace', name: 'EquipmentScreen.Save');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error ${isEditing ? 'updating' : 'adding'} equipment: $e'),
+          content: Text(
+            'Error ${isEditing ? 'updating' : 'adding'} equipment: $e',
+            style: GoogleFonts.urbanist(fontSize: 14, color: Colors.white),
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -620,10 +629,10 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   String _getRoomName(String? roomId) {
     if (roomId == null) return 'Unassigned';
     final room = rooms.firstWhere(
-          (r) => r['id'].toString() == roomId.toString(),
+          (r) => r['id']?.toString() == roomId.toString(),
       orElse: () => null,
     );
-    return room != null ? room['name'] : 'Unknown Room';
+    return room != null ? (room['name'] ?? 'Unknown Room') : 'Unknown Room';
   }
 
   Color _getStatusColor(String? status) {
@@ -646,26 +655,76 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           (option) => option['value'] == type,
       orElse: () => {'value': type ?? '', 'label': type ?? 'Unknown'},
     );
-    return option['label']!;
+    return option['label'] ?? 'Unknown';
   }
 
   void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return EquipmentManagementWidgets.buildFilterDialog(
-          context,
-          currentFilterRoom: _filterRoom,
-          currentFilterType: _filterType,
-          rooms: rooms,
-          equipmentTypeOptions: EQUIPMENT_TYPE_OPTIONS,
-          onFilterRoomChanged: (value) => _filterRoom = value,
-          onFilterTypeChanged: (value) => _filterType = value,
-          onApply: () => Navigator.of(context).pop(),
-          onClear: () => Navigator.of(context).pop(),
-          onCancel: () => Navigator.of(context).pop(),
-        );
-      },
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF1E1E1E),
+          child: EquipmentManagementWidgets.buildFilterDialog(
+            context,
+            currentFilterRoom: _filterRoom,
+            currentFilterType: _filterType,
+            rooms: rooms,
+            equipmentTypeOptions: EQUIPMENT_TYPE_OPTIONS,
+            onFilterRoomChanged: (value) => setState(() => _filterRoom = value ?? 'all'),
+            onFilterTypeChanged: (value) => setState(() => _filterType = value ?? 'all'),
+            onApply: () => Navigator.of(context).pop(),
+            onClear: () => setState(() {
+              _filterRoom = 'all';
+              _filterType = 'all';
+            }),
+            onCancel: () => Navigator.of(context).pop(),
+          ),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  void _showDebugDialog() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF1E1E1E),
+          child: EquipmentManagementWidgets.buildDebugDialog(
+            context,
+            baseUrl: ApiConfig.baseUrl,
+            tokenLength: AuthService().accessToken?.length ?? widget.accessToken.length,
+            equipmentCount: equipment.length,
+            roomsCount: rooms.length,
+            errorMessage: _errorMessage,
+            isLoading: isLoading,
+            isRefreshingToken: isRefreshingToken,
+            onClose: () => Navigator.of(context).pop(),
+          ),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
     );
   }
 
@@ -680,41 +739,29 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: Text('Equipment Management',
+        title: Text(
+          'Equipment Management',
           style: GoogleFonts.urbanist(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
-          ),),
+          ),
+        ),
         backgroundColor: const Color(0xFF1F1E23),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => EquipmentManagementWidgets.buildDebugDialog(
-                  context,
-                  baseUrl: ApiConfig.baseUrl,
-                  tokenLength: AuthService().accessToken?.length ?? widget.accessToken.length,
-                  equipmentCount: equipment.length,
-                  roomsCount: rooms.length,
-                  errorMessage: _errorMessage,
-                  isLoading: isLoading,
-                  isRefreshingToken: isRefreshingToken,
-                ),
-              );
-            },
+            icon: const Icon(Icons.bug_report, color: Colors.white70),
+            onPressed: _showDebugDialog,
             tooltip: 'Debug Info',
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list, color: Colors.white70),
             onPressed: _showFilterDialog,
             tooltip: 'Filter',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white70),
             onPressed: isRefreshingToken ? null : _loadData,
             tooltip: 'Refresh',
           ),
@@ -722,44 +769,51 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       ),
       body: Column(
         children: [
-          EquipmentManagementWidgets.buildSummaryCards(context, equipment.length, onlineCount, esp32Count),
-          EquipmentManagementWidgets.buildFilterChips(
-            context,
-            filterRoom: _filterRoom,
-            filterType: _filterType,
-            getRoomName: _getRoomName,
-            getTypeLabel: _getTypeLabel,
-            onRemoveRoomFilter: () => setState(() => _filterRoom = 'all'),
-            onRemoveTypeFilter: () => setState(() => _filterType = 'all'),
+          EquipmentManagementWidgets.buildSummaryCards(
+            equipmentCount: equipment.length,
+            onlineCount: onlineCount,
+            esp32Count: esp32Count,
           ),
           if (_errorMessage.isNotEmpty)
-            EquipmentManagementWidgets.buildErrorBanner(context, _errorMessage),
-          Expanded(
-            child: isLoading || isRefreshingToken
-                ? const Center(child: CircularProgressIndicator())
-                : filtered.isEmpty
-                ? EquipmentManagementWidgets.buildEmptyState(
-              context,
-              hasEquipment: equipment.isNotEmpty,
-              onAddEquipment: () => _showAddEditEquipmentDialog(),
-            )
-                : EquipmentManagementWidgets.buildEquipmentList(
-              context,
-              equipmentList: filtered.cast<Map<String, dynamic>>(),
+            EquipmentManagementWidgets.buildErrorBanner(_errorMessage),
+          if (_filterRoom != 'all' || _filterType != 'all')
+            EquipmentManagementWidgets.buildFilterChips(
+              filterRoom: _filterRoom,
+              filterType: _filterType,
               getRoomName: _getRoomName,
               getTypeLabel: _getTypeLabel,
-              getStatusColor: _getStatusColor,
-              onEdit: (equipment) => _showAddEditEquipmentDialog(equipmentItem: equipment),
-              onDelete: (equipmentId, equipmentName) => _deleteEquipment(equipmentId, equipmentName),
+              onRemoveRoomFilter: () => setState(() => _filterRoom = 'all'),
+              onRemoveTypeFilter: () => setState(() => _filterType = 'all'),
+            ),
+          Expanded(
+            child: isLoading || isRefreshingToken
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
+                : RefreshIndicator(
               onRefresh: _loadData,
+              color: const Color(0xFF184BFB),
+              backgroundColor: const Color(0xFF1F1E23),
+              child: filtered.isEmpty
+                  ? EquipmentManagementWidgets.buildEmptyState(
+                onAddEquipment: () => _showAddEditEquipmentDialog(),
+                hasEquipment: equipment.isNotEmpty,
+                isRefreshingToken: isRefreshingToken,
+              )
+                  : EquipmentManagementWidgets.buildEquipmentList(
+                equipmentList: filtered.cast<Map<String, dynamic>>(),
+                getRoomName: _getRoomName,
+                getTypeLabel: _getTypeLabel,
+                getStatusColor: _getStatusColor,
+                onEdit: (equipment) => _showAddEditEquipmentDialog(equipmentItem: equipment),
+                onDelete: (equipmentId, equipmentName) => _deleteEquipment(equipmentId, equipmentName),
+              ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditEquipmentDialog(),
+      floatingActionButton: EquipmentManagementWidgets.buildCustomFAB(
+        onPressed: isRefreshingToken ? null : () => _showAddEditEquipmentDialog(),
         tooltip: 'Add Equipment',
-        child: const Icon(Icons.add),
+        isEnabled: !isRefreshingToken,
       ),
     );
   }
