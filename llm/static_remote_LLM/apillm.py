@@ -16,6 +16,12 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Any, Optional
 import json
+from pymongo import MongoClient, DESCENDING
+from bson import ObjectId
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Set DJANGO_SETTINGS_MODULE
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dbmsAPI.settings')
@@ -30,17 +36,14 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from main import RoomLogAnalyzer, ask
     from prompts_config import PromptsConfig
-    from advanced_llm_handlers import AdvancedLLMHandlers
 except ImportError as e:
-    print(f"DEBUG: Import error: {e}")
+    print(f"⚠️ Import warning: {e}")
     # Create fallback classes if imports fail
     class RoomLogAnalyzer:
         def __init__(self, *args, **kwargs):
             pass
         def load_and_process_data(self):
             return pd.DataFrame()
-    class AdvancedLLMHandlers:
-        pass
 
 # Setup logging with UTF-8 encoding
 log_file = 'apillm_enhanced.log'
@@ -296,6 +299,38 @@ def safe_analyzer_operation(operation_name: str, fallback_response: Dict[str, An
         return wrapper
     return decorator
 
+# MongoDB Connection for Chat History
+mongo_client = None
+chat_db = None
+chat_collection = None
+
+def initialize_mongodb():
+    """Initialize MongoDB connection for chat history"""
+    global mongo_client, chat_db, chat_collection
+    try:
+        # Get MongoDB connection from .env file
+        mongo_uri = os.getenv('MONGO_ATLAS_URI', 'mongodb://localhost:27017/')
+        db_name = os.getenv('MONGO_DB_NAME', 'LLM_logs')
+        
+        mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        
+        # Test connection
+        mongo_client.server_info()
+        
+        # Select database and collection from .env
+        chat_db = mongo_client[db_name]
+        chat_collection = chat_db['chat_history']
+        
+        # Create indexes for better query performance
+        chat_collection.create_index([("user_id", 1), ("timestamp", DESCENDING)])
+        chat_collection.create_index([("session_id", 1)])
+        
+        logger.info("✅ MongoDB connected successfully for chat history")
+        return True
+    except Exception as e:
+        logger.warning(f"⚠️ MongoDB connection failed: {e}. Chat history will not be saved.")
+        return False
+
 @app.route('/health', methods=['GET', 'OPTIONS'])
 def health_check():
     """Enhanced health check endpoint with detailed system status"""
@@ -341,15 +376,213 @@ def health_check():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
-@app.route('/llmquery', methods=['POST', 'OPTIONS'])
-def llm_query():
+@app.route('/energy/report', methods=['POST', 'OPTIONS'])
+def energy_report():
     """
-    Enhanced main LLM query endpoint with better error handling and analytics
+    Generate energy report with LLM analysis for daily/weekly/monthly periods
     """
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
-    start_time = datetime.now(timezone.utc)
+    try:
+        data = request.get_json() or {}
+        period = data.get('period', 'weekly').lower()  # daily, weekly, monthly, yearly
+        user_id = data.get('user_id', 'anonymous')
+        username = data.get('username', 'anonymous')
+        
+        logger.info(f"Energy report request ({period}) from {username}")
+        
+        # Initialize analyzer first
+        analyzer = RoomLogAnalyzer(
+            use_database=True,
+            prompt_type="energy_insights",
+            document_template="energy_report"
+        )
+        
+        # Get recent data of this period type
+        # Limit based on period to get appropriate amount of recent data
+        limit_map = {
+            'daily': 7,      # Last 7 days
+            'weekly': 4,     # Last 4 weeks
+            'monthly': 3,    # Last 3 months
+            'yearly': 2      # Last 2 years
+        }
+        data_limit = limit_map.get(period, 10)
+        
+        all_data = analyzer.db_adapter.get_energy_summary_data(
+            period_type=period,
+            limit=data_limit
+        )
+        
+        if all_data is None or all_data.empty:
+            return jsonify({
+                "status": "success",
+                "answer": f"No {period} energy data available yet. Start collecting data to see insights.",
+                "period": period,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Sort by date to ensure we have the most recent data
+        all_data = all_data.sort_values('period_start', ascending=False)
+        
+        # Get actual date range from available data
+        actual_start = all_data['period_start'].min()
+        actual_end = all_data['period_end'].max()
+        
+        logger.info(f"Found {len(all_data)} {period} records from {actual_start.date()} to {actual_end.date()}")
+        
+        # Use the actual data we already fetched
+        energy_df = all_data
+        
+        if energy_df is None or energy_df.empty:
+            return jsonify({
+                "status": "success",
+                "answer": f"No {period} energy data available yet. Start collecting data to see insights.",
+                "period": period,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Calculate statistics with timestamps
+        total_energy = energy_df['total_energy'].sum()
+        avg_energy = energy_df['total_energy'].mean()
+        
+        # Get peak and lowest with their timestamps
+        peak_row = energy_df.loc[energy_df['total_energy'].idxmax()]
+        lowest_row = energy_df.loc[energy_df['total_energy'].idxmin()]
+        
+        max_energy = peak_row['total_energy']
+        min_energy = lowest_row['total_energy']
+        peak_time = peak_row['period_start'] if pd.notna(peak_row['period_start']) else None
+        lowest_time = lowest_row['period_start'] if pd.notna(lowest_row['period_start']) else None
+        
+        # Get period range
+        period_start = energy_df['period_start'].min() if 'period_start' in energy_df.columns else None
+        period_end = energy_df['period_end'].max() if 'period_end' in energy_df.columns else None
+        
+        # Get top consuming rooms
+        room_totals = {}
+        for _, row in energy_df.iterrows():
+            room = row.get('room_name', 'Unknown')
+            energy = row.get('total_energy', 0)
+            room_totals[room] = room_totals.get(room, 0) + energy
+        
+        top_rooms = sorted(room_totals.items(), key=lambda x: x[1], reverse=True)[:3]
+        
+        # Format dates for better readability
+        start_date_str = period_start.strftime('%B %d, %Y') if period_start and pd.notna(period_start) else 'Unknown'
+        end_date_str = period_end.strftime('%B %d, %Y') if period_end and pd.notna(period_end) else 'Unknown'
+        peak_time_str = peak_time.strftime('%B %d, %Y at %I:%M %p') if peak_time and pd.notna(peak_time) else 'Unknown'
+        current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        
+        # Calculate additional insights
+        energy_variance = energy_df['total_energy'].std() if len(energy_df) > 1 else 0
+        efficiency_score = (min_energy / avg_energy * 100) if avg_energy > 0 else 0
+        
+        # Prepare enhanced LLM context with timestamps and deeper analysis
+        llm_context = f"""You are an expert energy analyst with deep knowledge of building efficiency and sustainability. Analyze this {period} energy data and provide actionable, data-driven recommendations.
+
+📅 REPORTING PERIOD: {start_date_str} to {end_date_str}
+📊 Report Generated: {current_time}
+
+COMPREHENSIVE ENERGY DATA:
+- Period: {period.upper()}
+- Total consumption: {total_energy:.2f} kWh
+- Average: {avg_energy:.2f} kWh per period
+- Peak: {max_energy:.2f} kWh (occurred on {peak_time_str})
+- Lowest: {min_energy:.2f} kWh
+- Variance: {energy_variance:.2f} kWh (consistency indicator)
+- Efficiency Score: {efficiency_score:.1f}% (lower is better)
+- Data points analyzed: {len(energy_df)}
+
+TOP CONSUMING ROOMS (with percentage breakdown):
+"""
+        for i, (room, energy) in enumerate(top_rooms, 1):
+            percentage = (energy / total_energy * 100) if total_energy > 0 else 0
+            llm_context += f"{i}. {room}: {energy:.2f} kWh ({percentage:.1f}% of total)\n"
+        
+        llm_context += f"""\n\nProvide 3 DETAILED, ACTIONABLE recommendations using this format:
+
+**1. CONSUMPTION PATTERN ANALYSIS ({period.upper()} - {start_date_str} to {end_date_str}):**
+Analyze the energy consumption patterns during this period. Consider:
+- Peak vs. average consumption (is the {max_energy:.2f} kWh peak concerning?)
+- Room distribution (why is {top_rooms[0][0]} using {(top_rooms[0][1]/total_energy*100):.1f}%?)
+- Variance patterns (is {energy_variance:.2f} kWh variance normal?)
+- Time-based trends (what happened on {peak_time_str}?)
+
+**2. COST OPTIMIZATION STRATEGIES:**
+Provide specific, implementable cost-saving strategies:
+- Target the high-consumption rooms (especially {top_rooms[0][0]})
+- Suggest equipment upgrades or behavioral changes
+- Estimate potential savings (e.g., "reducing peak by 20% could save X kWh")
+- Consider efficiency improvements
+
+**3. IMMEDIATE ACTION ITEMS FOR NEXT {period.upper()}:**
+List 3-4 concrete actions with expected impact:
+- Specific rooms to monitor or optimize
+- Equipment to inspect or upgrade
+- Behavioral changes to implement
+- Measurable goals (e.g., "reduce {top_rooms[0][0]} consumption by 15%")
+
+Be specific, use the actual data provided, and make recommendations actionable with clear expected outcomes. Each section should be 3-4 sentences with concrete numbers and examples."""        
+        # Call LLM directly
+        try:
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            llm_analysis = llm.invoke(llm_context)
+            logger.info(f"LLM energy analysis generated for {username} ({period})")
+        except Exception as llm_error:
+            logger.warning(f"LLM call failed: {llm_error}")
+            llm_analysis = f"""**1. CONSUMPTION ANALYSIS:**
+Total {period} consumption is {total_energy:.2f} kWh with {top_rooms[0][0]} being the highest consumer.
+
+**2. COST OPTIMIZATION:**
+Focus on reducing consumption in {top_rooms[0][0]} which accounts for the majority of usage.
+
+**3. ACTION ITEMS:**
+Monitor peak usage times and implement energy-saving measures in high-consumption areas."""
+        
+        response = {
+            "status": "success",
+            "answer": llm_analysis,
+            "period": period,
+            "date_range": {
+                "start": actual_start.isoformat(),
+                "end": actual_end.isoformat(),
+                "description": f"{start_date_str} to {end_date_str}"
+            },
+            "energy_data": {
+                "total_kwh": float(total_energy),
+                "average_kwh": float(avg_energy),
+                "peak_kwh": float(max_energy),
+                "peak_time": peak_time.isoformat() if peak_time and pd.notna(peak_time) else None,
+                "lowest_kwh": float(min_energy),
+                "lowest_time": lowest_time.isoformat() if lowest_time and pd.notna(lowest_time) else None,
+                "period_start": period_start.isoformat() if period_start and pd.notna(period_start) else None,
+                "period_end": period_end.isoformat() if period_end and pd.notna(period_end) else None,
+                "data_points": len(energy_df),
+                "variance": float(energy_variance),
+                "efficiency_score": float(efficiency_score)
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"Energy report error: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"Energy report failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+# Removed: /ask and /insights/energy endpoints (replaced by specific endpoints)
+
+@app.route('/llmquery', methods=['POST', 'OPTIONS'])
+def llm_query():
+    """Enhanced general LLM chat with conversation history and smart routing"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
     
     try:
         data = request.get_json() or {}
@@ -365,194 +598,210 @@ def llm_query():
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }), 400
         
-        logger.info(f"Query from {username}: {query[:100]}...")
+        logger.info(f"💬 Chat query from {username}: {query[:100]}...")
         
-        # Use enhanced ask function with timeout
-        result = ask(
-            query=query,
-            user_id=user_id,
-            username=username,
-            session_id=session_id,
-            client_ip=request.remote_addr
-        )
-        
-        processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        
-        response = {
-            "status": "success",
-            "query": query,
-            "answer": result.get('answer', 'I apologize, but I could not generate a response for your query.'),
-            "sources": result.get('sources', []),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "metadata": {
-                "processing_time_seconds": round(processing_time, 2),
-                "sources_count": len(result.get('sources', [])),
-                "query_complexity": "high" if len(query.split()) > 15 else "medium" if len(query.split()) > 5 else "low"
-            }
+        # Smart query routing - detect if user wants specific analysis
+        query_lower = query.lower()
+        route_keywords = {
+            'energy': ['energy', 'power', 'consumption', 'kwh', 'electricity', 'usage'],
+            'maintenance': ['maintenance', 'repair', 'broken', 'issue', 'problem', 'fix'],
+            'anomaly': ['anomaly', 'unusual', 'strange', 'abnormal', 'weird', 'unexpected'],
+            'billing': ['billing', 'cost', 'rate', 'price', 'expense', 'payment']
         }
         
-        # Add any additional result fields
-        for key in ['metrics', 'anomalies', 'maintenance_alerts', 'insights']:
-            if key in result:
-                response[key] = result[key]
+        detected_intent = None
+        for intent, keywords in route_keywords.items():
+            if any(keyword in query_lower for keyword in keywords):
+                detected_intent = intent
+                break
         
-        logger.info(f"Query processed in {processing_time:.2f}s")
-        return jsonify(response)
+        # Get conversation history from MongoDB (last 5 messages)
+        conversation_history = []
+        try:
+            if mongo_chat_collection is not None:
+                history_docs = mongo_chat_collection.find(
+                    {'session_id': session_id}
+                ).sort('timestamp', -1).limit(5)
+                
+                conversation_history = list(reversed([
+                    f"{doc.get('role', 'user')}: {doc.get('content', '')}"
+                    for doc in history_docs
+                ]))
+        except Exception as e:
+            logger.warning(f"Could not fetch conversation history: {e}")
+        
+        # Build context from history
+        history_context = "\n".join(conversation_history) if conversation_history else "No previous conversation"
+        
+        # Get building status for context
+        building_context = ""
+        try:
+            if analyzer and analyzer.df is not None and not analyzer.df.empty:
+                df = analyzer.df
+                total_rooms = df['room_name'].nunique() if 'room_name' in df.columns else 0
+                avg_energy = df['energy_consumption_kwh'].mean() if 'energy_consumption_kwh' in df.columns else 0
+                building_context = f"""
+Current Building Status:
+- Active Rooms: {total_rooms}
+- Average Energy: {avg_energy:.2f} kWh/day
+- Data Points: {len(df)}
+"""
+        except Exception as e:
+            logger.warning(f"Could not get building context: {e}")
+        
+        # Enhanced system prompt with conversation awareness and better general responses
+        current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        system_prompt = f"""You are an intelligent building management assistant with deep expertise in energy, maintenance, and facility operations. You have access to real-time building data and can provide specific, actionable insights.
+
+Current Time: {current_time}
+
+{building_context}
+
+Previous Conversation:
+{history_context}
+
+YOUR CORE CAPABILITIES:
+1. **Energy Analysis**: Analyze consumption patterns, identify inefficiencies, generate detailed reports (daily/weekly/monthly/yearly)
+2. **Maintenance Management**: Predict equipment failures, track maintenance requests (can show 1-50 requests), prioritize repairs
+3. **Room Utilization**: Monitor occupancy, optimize space allocation, track usage patterns across all rooms
+4. **Cost Optimization**: Analyze billing rates, suggest energy-saving measures, estimate cost reductions
+5. **Anomaly Detection**: Identify unusual patterns in energy, occupancy, or equipment behavior
+6. **Conversational Help**: Answer questions about building data, provide insights, offer recommendations
+
+RESPONSE GUIDELINES:
+1. **Be Specific**: Always use actual building data (room names, numbers, equipment) in your responses
+2. **Be Actionable**: Provide concrete next steps, not vague suggestions
+3. **Be Engaging**: Use a friendly, conversational tone - you're a helpful expert, not a robot
+4. **Be Contextual**: Reference previous conversation naturally
+5. **Be Comprehensive**: For "what can you do" questions, give 4-5 specific examples with real data
+6. **Be Concise**: Keep responses to 2-3 paragraphs, but make them information-dense
+7. **Be Proactive**: Always end with a helpful question or suggestion for next steps
+
+WHEN ASKED "WHAT CAN YOU DO" OR SIMILAR:
+Provide 4-5 SPECIFIC examples using ACTUAL building data:
+- Example 1: Energy analysis with specific room names and consumption numbers
+- Example 2: Maintenance tracking with actual request counts
+- Example 3: Cost optimization with potential savings estimates
+- Example 4: Anomaly detection with specific patterns
+- Example 5: Custom analysis offer
+
+Format like this:
+"Great question! I'm currently monitoring [X] rooms with [Y] kWh average consumption. Here's what I can help with:
+
+1. **Energy Insights**: I can analyze which rooms consume the most (like [Room Name] using [X]% of total) and suggest optimization strategies. I can generate daily, weekly, monthly, or yearly reports with detailed breakdowns.
+
+2. **Maintenance Tracking**: I'm monitoring [X] maintenance requests right now. I can show you 1, 5, 10, or all requests, prioritize them by urgency, and predict potential equipment failures before they happen.
+
+3. **Cost Analysis**: I can review your billing rates, identify peak usage times, and estimate potential savings. For example, reducing [Room Name]'s consumption by 20% could save approximately [X] kWh per month.
+
+4. **Smart Monitoring**: I can detect unusual patterns - like sudden spikes in energy usage or equipment anomalies - and alert you before they become problems.
+
+Would you like me to dive into any of these areas? I can also generate a comprehensive report or analyze specific rooms!"
+
+WHEN ASKED ABOUT ROOMS OR BUILDING FEATURES:
+- List specific rooms from the building context with actual numbers
+- Explain what data we track for each room (energy, occupancy, equipment, maintenance)
+- Offer to analyze specific rooms in detail
+- Provide actionable insights based on current data
+- Suggest optimizations or improvements
+
+IMPORTANT: Always use the building context data to make your responses specific and relevant. Never give generic responses - always include actual room names, numbers, and equipment from the context.
+
+User Query: {query}
+
+
+Assistant:"""
+        
+        # Direct LLM call (bypass vector store for speed)
+        try:
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            response = llm.invoke(system_prompt)
+            
+            # Add suggestion if specific intent detected
+            if detected_intent:
+                suggestions = {
+                    'energy': '\n\n💡 Tip: Use `/energy/report` for detailed energy analysis.',
+                    'maintenance': '\n\n💡 Tip: Use `/maintenance/predict` for AI-powered maintenance predictions.',
+                    'anomaly': '\n\n💡 Tip: Use `/anomalies/detect` for comprehensive anomaly detection.',
+                    'billing': '\n\n💡 Tip: Use `/billing/rates` for detailed billing analysis.'
+                }
+                response += suggestions.get(detected_intent, '')
+            
+            # Save to conversation history
+            try:
+                if mongo_chat_collection is not None:
+                    mongo_chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'user',
+                        'content': query,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+                    mongo_chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'assistant',
+                        'content': response,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+            except Exception as e:
+                logger.warning(f"Could not save to conversation history: {e}")
+            
+            return jsonify({
+                "status": "success",
+                "query": query,
+                "answer": response,
+                "detected_intent": detected_intent,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            
+        except Exception as llm_error:
+            logger.error(f"LLM invocation failed: {llm_error}")
+            # Fallback to basic response
+            return jsonify({
+                "status": "success",
+                "query": query,
+                "answer": f"I'm here to help with building management. You asked: '{query}'. How can I assist you further?",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
         
     except Exception as e:
-        logger.error(f"Error processing query: {e}\n{traceback.format_exc()}")
+        logger.error(f"LLM query error: {e}\n{traceback.format_exc()}")
         return jsonify({
             "status": "error",
-            "error": f"Failed to process query: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "suggestions": [
-                "Try rephrasing your question",
-                "Check if your question is related to building data",
-                "Ensure the system has loaded relevant data"
-            ]
+            "error": f"Query failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
-@app.route('/insights/energy', methods=['POST', 'OPTIONS'])
-def energy_insights():
-    """
-    Enhanced energy insights with comprehensive pattern detection
-    """
+# Legacy endpoint redirects for frontend compatibility
+@app.route('/ask', methods=['POST', 'OPTIONS'])
+def ask_legacy():
+    """Legacy /ask endpoint - redirects to /llmquery"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    # Forward to /llmquery
+    return llm_query()
+
+@app.route('/reports/weekly', methods=['POST', 'OPTIONS'])
+def weekly_report_legacy():
+    """Legacy /reports/weekly endpoint - redirects to /energy/report with weekly period"""
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
     try:
         data = request.get_json() or {}
-        query = data.get('query', '').strip()
-        user_id = data.get('user_id', 'anonymous')
-        username = data.get('username', 'anonymous')
+        # Override period to weekly
+        data['period'] = 'weekly'
         
-        logger.info(f"Energy insights request from {username}")
-        
-        # Initialize analyzer for energy insights
-        energy_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="energy_insights",
-            document_template="energy_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = energy_analyzer.load_and_process_data()
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        energy_patterns = DataAnalyzer.detect_energy_patterns(df)
-
-        # Build enhanced trend metrics
-        trend = {}
-        try:
-            if not df.empty and 'timestamp' in df.columns and 'energy_consumption_kwh' in df.columns:
-                ts_df = df[['timestamp', 'room_name', 'energy_consumption_kwh']].dropna()
-                ts_df['timestamp'] = pd.to_datetime(ts_df['timestamp'], errors='coerce')
-                ts_df = ts_df.dropna()
-                if not ts_df.empty:
-                    ts_df['date'] = ts_df['timestamp'].dt.date
-                    daily = ts_df.groupby('date', as_index=False)['energy_consumption_kwh'].sum()
-                    daily = daily.sort_values('date')
-                    # Rolling averages
-                    daily['rolling_7'] = daily['energy_consumption_kwh'].rolling(7, min_periods=1).mean()
-                    daily['rolling_30'] = daily['energy_consumption_kwh'].rolling(30, min_periods=1).mean()
-                    # Period deltas (last 7 vs prev 7)
-                    last7 = daily.tail(7)['energy_consumption_kwh'].sum()
-                    prev7 = daily.tail(14).head(7)['energy_consumption_kwh'].sum() if len(daily) >= 14 else 0
-                    delta7 = ((last7 - prev7) / prev7 * 100) if prev7 > 0 else None
-                    # Top rooms (last 7 days)
-                    cutoff = daily['date'].max()
-                    last7_dates = set(daily['date'].tail(7).tolist()) if len(daily) >= 1 else set()
-                    recent = ts_df[ts_df['date'].isin(last7_dates)]
-                    top_rooms = []
-                    if 'room_name' in recent.columns:
-                        top_agg = recent.groupby('room_name', as_index=False)['energy_consumption_kwh'].sum()
-                        top_agg = top_agg.sort_values('energy_consumption_kwh', ascending=False).head(5)
-                        top_rooms = [
-                            {
-                                'room_name': r['room_name'] or 'Unknown',
-                                'energy_kwh': float(r['energy_consumption_kwh'])
-                            } for _, r in top_agg.iterrows()
-                        ]
-                    # Peak days
-                    peak_days = daily.sort_values('energy_consumption_kwh', ascending=False).head(5)
-                    peak_list = [
-                        {
-                            'date': str(r['date']),
-                            'energy_kwh': float(r['energy_consumption_kwh'])
-                        } for _, r in peak_days.iterrows()
-                    ]
-                    trend = {
-                        'summary': {
-                            'last7_total_kwh': float(last7),
-                            'prev7_total_kwh': float(prev7),
-                            'last7_vs_prev7_delta_pct': float(delta7) if delta7 is not None else None
-                        },
-                        'top_rooms_last7': top_rooms,
-                        'peak_days': peak_list,
-                        'series_daily': [
-                            {
-                                'date': str(r['date']),
-                                'kwh': float(r['energy_consumption_kwh']),
-                                'rolling_7': float(r['rolling_7']),
-                                'rolling_30': float(r['rolling_30'])
-                            } for _, r in daily.iterrows()
-                        ]
-                    }
-        except Exception as te:
-            logger.warning(f"Energy trend calc failed: {te}")
-        
-        # Process query or generate automatic insights
-        if query:
-            result = ask(
-                query=query,
-                user_id=user_id,
-                username=username,
-                session_id=f"energy_{datetime.now().timestamp()}",
-                client_ip=request.remote_addr
-            )
-            answer = result.get('answer', 'No specific energy insights available.')
-        else:
-            if energy_patterns:
-                insights = ["🔋 Energy Consumption Analysis:"]
-                for pattern in energy_patterns:
-                    insights.append(f"• {pattern['column']}: Avg {pattern['average']:.2f}, Trend: {pattern['trend']}")
-                    insights.append(f"  Range: {pattern['minimum']:.2f} - {pattern['maximum']:.2f}")
-                
-                insights.append(f"\n📊 Dataset: {data_quality['total_records']} records, {len(energy_patterns)} energy metrics")
-                answer = "\n".join(insights)
-            else:
-                answer = "No energy consumption patterns detected in the current dataset.\n\nAvailable data analysis:\n" + \
-                        f"• Total records: {data_quality['total_records']}\n" + \
-                        f"• Data quality: {data_quality['data_quality'].title()}\n" + \
-                        f"• Numeric columns: {data_quality['column_types']['numeric']}"
-        
-        response = {
-            "status": "success",
-            "query": query,
-            "answer": answer,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "energy_analysis": {
-                "patterns_detected": len(energy_patterns),
-                "data_quality": data_quality,
-                "detailed_patterns": energy_patterns,
-                "trend": trend
-            },
-            "recommendations": [
-                "Monitor high-consumption periods for optimization opportunities",
-                "Consider implementing energy-saving measures during peak usage",
-                "Regularly review energy patterns for anomalies"
-            ] if energy_patterns else [
-                "Ensure energy monitoring systems are properly configured",
-                "Verify sensor data collection for energy metrics",
-                "Check data connectivity for energy monitoring devices"
-            ]
-        }
-        
-        return jsonify(response)
+        # Forward to energy_report with modified data
+        request._cached_json = (data, data)
+        return energy_report()
         
     except Exception as e:
-        logger.error(f"Energy insights error: {e}\n{traceback.format_exc()}")
+        logger.error(f"Weekly report error: {e}")
         return jsonify({
-            "error": f"Energy analysis failed: {str(e)}",
+            "status": "error",
+            "error": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
@@ -581,8 +830,28 @@ def predict_maintenance():
         
         df = maintenance_analyzer.load_and_process_data()
         
+        # Extract number from query (e.g., "provide 3 maintenance requests", "give me 5 issues")
+        import re
+        limit = 50  # default
+        
+        # Check for specific numbers
+        number_match = re.search(r'\b(\d+)\b', query.lower())
+        if number_match:
+            limit = int(number_match.group(1))
+            limit = min(limit, 50)  # Cap at 50 for safety
+        elif 'one' in query.lower() or 'single' in query.lower():
+            limit = 1
+        elif 'two' in query.lower():
+            limit = 2
+        elif 'three' in query.lower():
+            limit = 3
+        elif 'five' in query.lower():
+            limit = 5
+        elif 'ten' in query.lower():
+            limit = 10
+        
         # Fetch actual maintenance requests from database
-        maintenance_requests_df = maintenance_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=50)
+        maintenance_requests_df = maintenance_analyzer.db_adapter.get_maintenance_requests_as_dataframe(limit=limit)
         
         # Try advanced analysis first, fallback to basic if needed
         try:
@@ -680,18 +949,81 @@ def predict_maintenance():
         medium_count = all_urgencies.count('Medium')
         low_count = all_urgencies.count('Low')
         
+        # Use LLM to generate intelligent maintenance insights
+        llm_analysis = ""
+        try:
+            # Prepare maintenance data for LLM
+            pending_count = len([r for r in actual_requests if r.get('status') == 'pending'])
+            in_progress_count = len([r for r in actual_requests if r.get('status') == 'in_progress'])
+            
+            # Analyze patterns in the data
+            room_issues = {}
+            equipment_issues = {}
+            for s in formatted_suggestions:
+                room = s.get('room', 'Unknown')
+                equipment = s.get('equipment', 'Unknown')
+                if s.get('status') == 'pending':
+                    room_issues[room] = room_issues.get(room, 0) + 1
+                    equipment_issues[equipment] = equipment_issues.get(equipment, 0) + 1
+            
+            most_problematic_room = max(room_issues.items(), key=lambda x: x[1])[0] if room_issues else 'None'
+            most_problematic_equipment = max(equipment_issues.items(), key=lambda x: x[1])[0] if equipment_issues else 'None'
+            
+            maintenance_context = f"""You are a maintenance manager. {pending_count} maintenance requests are pending. {most_problematic_room} has {room_issues.get(most_problematic_room, 0)} issues. {most_problematic_equipment} appears {equipment_issues.get(most_problematic_equipment, 0)} times.
+
+Provide 3 recommendations using this exact format:
+
+**1. PRIORITY RECOMMENDATION:**
+Which room should we fix first and why?
+
+**2. RESOURCE ESTIMATE:**
+How many technicians needed for {pending_count} requests (2-3 hours each)?
+
+**3. PATTERN ANALYSIS:**
+Should we replace {most_problematic_equipment} instead of repairing it again?
+
+Use the exact headers shown above. Be concise (2-3 sentences each)."""            
+            # Call LLM directly for better analysis (bypass vector store)
+            try:
+                from langchain_ollama import OllamaLLM
+                llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+                llm_analysis = llm.invoke(maintenance_context)
+                logger.info(f"LLM maintenance analysis generated for {username} (direct call)")
+            except Exception as llm_error:
+                logger.warning(f"Direct LLM call failed: {llm_error}, trying ask()")
+                llm_result = ask(
+                    query=maintenance_context,
+                    user_id=user_id,
+                    username=username,
+                    session_id=f"maintenance_{datetime.now().timestamp()}",
+                    client_ip=request.remote_addr
+                )
+                llm_analysis = llm_result.get('answer', '')
+                logger.info(f"LLM maintenance analysis generated for {username} (fallback)")
+        except Exception as e:
+            logger.warning(f"LLM analysis failed, using fallback: {e}")
+            llm_analysis = f"""**PRIORITY ACTIONS**:
+• Address {critical_count + high_count} high-priority items first
+• Review pending requests: {len([r for r in actual_requests if r.get('status') == 'pending'])} items
+
+**RESOURCE ALLOCATION**:
+• Assign technicians to critical issues immediately
+• Schedule maintenance windows for medium-priority items
+
+**PREVENTIVE MEASURES**:
+• Implement regular inspection schedules
+• Monitor equipment performance trends
+• Keep maintenance logs updated
+"""
+        
         summary_text += f"📊 **Summary:**\n"
         summary_text += f"• Total Items: {total_items}\n"
         summary_text += f"• 🤖 AI Predictions: {ai_predictions}\n"
         summary_text += f"• 👤 User Requests: {user_requests}\n"
-        if critical_count > 0:
-            summary_text += f"• 🔴 Critical: {critical_count}\n"
-        if high_count > 0:
-            summary_text += f"• 🟠 High Priority: {high_count}\n"
-        if medium_count > 0:
-            summary_text += f"• 🟡 Medium Priority: {medium_count}\n"
-        if low_count > 0:
-            summary_text += f"• ⚪ Low Priority: {low_count}\n"
+        summary_text += f"• 🔴 Critical: {critical_count}\n"
+        summary_text += f"• 🟠 High Priority: {high_count}\n"
+        summary_text += f"• 🟡 Medium Priority: {medium_count}\n"
+        summary_text += f"• ⚪ Low Priority: {low_count}\n"
         
         if formatted_suggestions:
             summary_text += f"\n**Top Maintenance Items:**\n"
@@ -712,10 +1044,40 @@ def predict_maintenance():
         else:
             summary_text += "\n✅ No maintenance issues detected.\n"
             summary_text += "All equipment is operating within normal parameters.\n\n"
-            summary_text += "💡 **Recommendations:**\n"
-            summary_text += "• Continue regular monitoring\n"
-            summary_text += "• Schedule preventive maintenance as planned\n"
-            summary_text += "• Keep maintenance logs updated\n"
+            # Use LLM for preventive recommendations even when no issues
+            try:
+                preventive_query = f"""No maintenance issues detected. Provide preventive maintenance recommendations for a building management system.
+
+Provide:
+1. **PREVENTIVE SCHEDULE**: What to check regularly
+2. **MONITORING TIPS**: Key metrics to track
+3. **BEST PRACTICES**: Maintenance optimization
+
+Be specific and actionable."""
+                llm_result = ask(
+                    query=preventive_query,
+                    user_id=user_id,
+                    username=username,
+                    session_id=f"maintenance_preventive_{datetime.now().timestamp()}",
+                    client_ip=request.remote_addr
+                )
+                llm_analysis = llm_result.get('answer', '')
+            except:
+                llm_analysis = """**PREVENTIVE SCHEDULE**:
+• Weekly: Visual inspections
+• Monthly: Performance checks
+• Quarterly: Deep maintenance
+
+**MONITORING TIPS**:
+• Track energy consumption patterns
+• Monitor equipment runtime hours
+• Log all maintenance activities
+
+**BEST PRACTICES**:
+• Maintain detailed records
+• Train staff on early warning signs
+• Keep spare parts inventory updated
+"""
         
         response = {
             "status": "success",
@@ -741,6 +1103,7 @@ def predict_maintenance():
                 "resolved_requests": len([r for r in actual_requests if r.get('status') == 'resolved'])
             },
             "summary_text": summary_text,
+            "llm_analysis": llm_analysis,
             "anomalies": [
                 {
                     "type": getattr(a, 'anomaly_type', 'Unknown'),
@@ -775,66 +1138,91 @@ def predict_maintenance():
 @app.route('/anomalies/detect', methods=['POST', 'OPTIONS'])
 def detect_anomalies():
     """
-    Enhanced anomaly detection with statistical analysis
+    Anomaly detection with LLM-powered analysis
     """
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     
     try:
         data = request.get_json() or {}
-        sensitivity = float(data.get('sensitivity', 0.8))
         user_id = data.get('user_id', 'anonymous')
+        username = data.get('username', 'anonymous')
         
-        logger.info(f"Anomaly detection request from {user_id}, sensitivity: {sensitivity}")
+        logger.info(f"Anomaly detection request from {username}")
         
-        anomaly_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="anomaly_detection",
-            document_template="anomaly_detection",
-            prompts_config_file="advanced_prompts.json"
-        )
+        # Get alerts from database using DatabaseAdapter (no date restriction)
+        from database_adapter import DatabaseAdapter
+        db_adapter = DatabaseAdapter()
+        alerts_df = db_adapter.get_alerts_with_equipment_info(days_back=365)  # Get all alerts (1 year)
         
-        # For anomaly detection, exclude maintenance docs to avoid LLM bleed-through
-        df = anomaly_analyzer.load_and_process_data(include_maintenance=False)
+        logger.info(f"Alerts DataFrame: {alerts_df.shape if alerts_df is not None else 'None'}")
+        logger.info(f"Alerts columns: {alerts_df.columns.tolist() if alerts_df is not None and not alerts_df.empty else 'Empty'}")
         
-        # Enhanced anomaly detection with fallback
-        try:
-            anomalies = anomaly_analyzer.advanced_handlers.detect_anomalies(df)
-        except Exception as e:
-            logger.warning(f"Advanced anomaly detection failed: {e}")
-            anomalies = []
+        if alerts_df is None or alerts_df.empty:
+            return jsonify({
+                "status": "success",
+                "answer": "No anomalies detected in the past 7 days. All systems operating normally.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
         
-        # Statistical anomaly detection fallback
-        statistical_anomalies = []
-        numeric_columns = df.select_dtypes(include=[np.number]).columns
+        # Calculate statistics
+        total_alerts = len(alerts_df)
+        unresolved = alerts_df[alerts_df['is_resolved'] == False] if 'is_resolved' in alerts_df.columns else alerts_df
+        unresolved_count = len(unresolved)
         
-        for col in numeric_columns[:5]:  # Check first 5 numeric columns
-            col_data = df[col].dropna()
-            if len(col_data) > 10:
-                mean = col_data.mean()
-                std = col_data.std()
-                threshold = mean + (3 * std * sensitivity)  # Adjust threshold based on sensitivity
-                
-                potential_anomalies = col_data[col_data > threshold]
-                for idx, value in potential_anomalies.items():
-                    statistical_anomalies.append({
-                        "type": f"Statistical_{col}",
-                        "severity": "High",
-                        "location": f"Column: {col}",
-                        "description": f"Value {value:.2f} exceeds statistical threshold",
-                        "value": float(value),
-                        "expected_range": f"< {threshold:.2f}",
-                        "confidence": 0.7
-                    })
+        # Group by severity
+        severity_counts = alerts_df['severity_level'].value_counts().to_dict() if 'severity_level' in alerts_df.columns else {}
         
-        all_anomalies = list(anomalies) + statistical_anomalies
+        # Group by type
+        type_counts = alerts_df['alert_type'].value_counts().to_dict() if 'alert_type' in alerts_df.columns else {}
+        
+        # Prepare LLM context
+        llm_context = f"""You are a system anomaly analyst. Analyze these alerts and provide recommendations.
 
-        # Read actual alerts from core_alert and build actionable suggestions
-        alerts_payload = []
-        suggestions = []
-        alert_as_anomalies = []
+ANOMALY DATA:
+- Total Alerts (7 days): {total_alerts}
+- Unresolved: {unresolved_count}
+- By Severity: {severity_counts}
+- By Type: {type_counts}
+
+TOP ALERT TYPES:
+"""
+        for alert_type, count in list(type_counts.items())[:5]:
+            llm_context += f"• {alert_type}: {count} occurrences\n"
+        
+        llm_context += f"""\n\nProvide 3 recommendations using this format:
+
+**1. CRITICAL ISSUES:**
+What anomalies need immediate attention?
+
+**2. PATTERN ANALYSIS:**
+What patterns do you see in the alerts?
+
+**3. PREVENTIVE ACTIONS:**
+What can we do to prevent these anomalies?
+
+Be concise (2-3 sentences each)."""
+        
+        # Call LLM
         try:
-            alerts_df = anomaly_analyzer.db_adapter.get_alerts_with_equipment_info(days_back=30)
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            llm_analysis = llm.invoke(llm_context)
+            logger.info(f"LLM anomaly analysis generated for {username}")
+        except Exception as llm_error:
+            logger.warning(f"LLM call failed: {llm_error}")
+            llm_analysis = f"""**1. CRITICAL ISSUES:**
+{unresolved_count} unresolved alerts need attention.
+
+**2. PATTERN ANALYSIS:**
+Most common: {list(type_counts.keys())[0] if type_counts else 'No pattern'} with {list(type_counts.values())[0] if type_counts else 0} occurrences.
+
+**3. PREVENTIVE ACTIONS:**
+Monitor alert trends and address root causes proactively."""
+        
+        # Prepare alert list
+        alerts_list = []
+        try:
             if alerts_df is not None and not alerts_df.empty:
                 # Normalize types
                 if 'created_at' in alerts_df.columns:
@@ -842,128 +1230,30 @@ def detect_anomalies():
                 if 'resolved_at' in alerts_df.columns:
                     alerts_df['resolved_at'] = pd.to_datetime(alerts_df['resolved_at'], errors='coerce')
 
-                for _, row in alerts_df.head(50).iterrows():
-                    alerts_payload.append({
-                        "id": str(row.get('id')),
+                for _, row in alerts_df.head(10).iterrows():
+                    alerts_list.append({
                         "type": row.get('alert_type'),
                         "message": row.get('message'),
                         "severity": row.get('severity_level'),
-                        "created_at": row.get('created_at').isoformat() if pd.notna(row.get('created_at')) else None,
+                        "timestamp": row['created_at'].isoformat() if pd.notna(row.get('created_at')) else None,
                         "is_resolved": bool(row.get('is_resolved')),
-                        "resolved_at": row.get('resolved_at').isoformat() if pd.notna(row.get('resolved_at')) else None,
-                        "equipment_id": str(row.get('equipment_id')) if row.get('equipment_id') else None,
-                        "equipment_name": row.get('equipment_name'),
-                        "room_name": row.get('room_name')
+                        "equipment": row.get('equipment_name')
                     })
-
-                    # Convert alert into anomaly-like entry to contribute to totals
-                    sev_raw = (row.get('severity_level') or '').lower()
-                    # Map DB severity to anomaly severity buckets used elsewhere
-                    sev_bucket = 'Critical' if sev_raw == 'high' else 'High' if sev_raw == 'medium' else 'Medium'
-                    a_type = row.get('alert_type') or 'Alert'
-                    location = ''
-                    if row.get('room_name'):
-                        location = row.get('room_name')
-                    if row.get('equipment_name'):
-                        location = f"{location} - {row.get('equipment_name')}" if location else row.get('equipment_name')
-                    alert_as_anomalies.append({
-                        "anomaly_type": f"Alert: {a_type}",
-                        "type": f"Alert: {a_type}",
-                        "severity": sev_bucket,
-                        "location": location or 'Unknown',
-                        "description": row.get('message') or 'Alert raised',
-                        "value": None,
-                        "confidence": 0.9,
-                        "detection_method": "alert"
-                    })
-
-                # Actionable next steps based on unresolved/high alerts
-                unresolved = alerts_df[alerts_df['is_resolved'] == False] if 'is_resolved' in alerts_df.columns else alerts_df
-                for _, ar in unresolved.iterrows():
-                    a_type = (ar.get('alert_type') or '').lower()
-                    sev = (ar.get('severity_level') or '').lower()
-                    room_name = ar.get('room_name') or 'the room'
-                    equipment_name = ar.get('equipment_name') or 'equipment'
-                    if a_type == 'temperature_high':
-                        suggestions.append(f"Immediate: Inspect HVAC for {room_name}, verify cooling for {equipment_name}, and check airflow/thermostat.")
-                    elif a_type == 'temperature_low':
-                        suggestions.append(f"Immediate: Inspect heating controls for {room_name}, verify setpoint/sensors for {equipment_name}.")
-                    elif a_type == 'humidity_high':
-                        suggestions.append(f"Urgent: Dehumidify {room_name}, inspect for leaks and verify ventilation.")
-                    elif a_type == 'humidity_low':
-                        suggestions.append(f"Planned: Adjust humidification for {room_name}, verify sensor calibration.")
-                    elif a_type == 'energy_anomaly':
-                        suggestions.append(f"High priority: Audit schedules and standby loads in {room_name}; inspect {equipment_name} for inefficiency.")
-                    elif a_type == 'motion':
-                        if sev in ['high', 'medium']:
-                            suggestions.append(f"Review motion alert in {room_name}; verify occupancy schedule and sensor sensitivity.")
-
-                # De-duplicate suggestions while preserving order
-                seen = set()
-                deduped = []
-                for s in suggestions:
-                    if s not in seen:
-                        deduped.append(s)
-                        seen.add(s)
-                suggestions = deduped[:10]
         except Exception as e:
-            logger.warning(f"Failed to fetch or process alerts: {e}")
-            alerts_payload = []
-            suggestions = []
-            alert_as_anomalies = []
+            logger.warning(f"Failed to process alerts: {e}")
         
-        # Categorize by severity
-        # Merge alert-derived anomalies into overall list
-        if alert_as_anomalies:
-            all_anomalies.extend(alert_as_anomalies)
-
-        # Normalize access for both object-like and dict-like entries
-        def _get_sev(x):
-            return (getattr(x, 'severity', None) or (x.get('severity') if isinstance(x, dict) else None) or 'Medium')
-
-        critical_anomalies = [a for a in all_anomalies if _get_sev(a) == "Critical"]
-        high_anomalies = [a for a in all_anomalies if _get_sev(a) == "High"]
-        medium_anomalies = [a for a in all_anomalies if _get_sev(a) == "Medium"]
-        
+        # Build simple response with LLM analysis
         response = {
             "status": "success",
-            "detection_type": "comprehensive_anomaly_analysis",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "summary": {
-                "total_anomalies": len(all_anomalies),
-                "critical": len(critical_anomalies),
-                "high": len(high_anomalies),
-                "medium": len(medium_anomalies),
-                "sensitivity_used": sensitivity,
-                "data_points_analyzed": len(df)
+            "answer": llm_analysis,
+            "alert_summary": {
+                "total_alerts": total_alerts,
+                "unresolved": unresolved_count,
+                "by_severity": severity_counts,
+                "by_type": type_counts
             },
-            "anomalies": [
-                {
-                    "id": f"anom_{i}",
-                    "type": (getattr(a, 'anomaly_type', None) or (a.get('anomaly_type') if isinstance(a, dict) else None) or getattr(a, 'type', None) or (a.get('type') if isinstance(a, dict) else 'Unknown')),
-                    "severity": (getattr(a, 'severity', None) or (a.get('severity') if isinstance(a, dict) else 'Medium')),
-                    "location": (getattr(a, 'location', None) or (a.get('location') if isinstance(a, dict) else 'Unknown')),
-                    "description": (getattr(a, 'description', None) or (a.get('description') if isinstance(a, dict) else 'Anomaly detected')),
-                    "value": (getattr(a, 'value', None) if hasattr(a, 'value') else (a.get('value') if isinstance(a, dict) else None)),
-                    "confidence": (getattr(a, 'confidence', None) if hasattr(a, 'confidence') else (a.get('confidence') if isinstance(a, dict) else 0.5)),
-                    "detection_method": ("advanced" if i < len(anomalies) else (a.get('detection_method') if isinstance(a, dict) and a.get('detection_method') else "statistical"))
-                } for i, a in enumerate(all_anomalies)
-            ],
-            "alerts": alerts_payload,
-            "recommendations": [
-                "Investigate critical anomalies immediately",
-                "Review high-severity anomalies within 24 hours",
-                "Monitor medium-severity anomalies regularly"
-            ] if all_anomalies else [
-                "No significant anomalies detected",
-                "Continue regular monitoring",
-                "Maintain current operational procedures"
-            ],
-            "next_steps": suggestions if suggestions else [
-                "Review unresolved alerts and assign follow-up",
-                "Verify sensor calibration for recent temperature/humidity alerts",
-                "Audit equipment schedules for energy anomalies"
-            ]
+            "sample_alerts": alerts_list,
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         return jsonify(response)
@@ -976,481 +1266,361 @@ def detect_anomalies():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
-@app.route('/reports/weekly', methods=['POST', 'OPTIONS'])
-def generate_weekly_summary():
-    """
-    Enhanced weekly summary with comprehensive analytics
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        report_type = data.get('type', 'executive')
-        user_id = data.get('user_id', 'anonymous')
-        
-        logger.info(f"Weekly summary request from {user_id}, type: {report_type}")
-        
-        summary_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="weekly_summary",
-            document_template="summary_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = summary_analyzer.load_and_process_data()
-        
-        # Generate comprehensive summary
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        energy_patterns = DataAnalyzer.detect_energy_patterns(df)
-        room_analysis = DataAnalyzer.analyze_room_utilization(df)
-        
-        # Create executive summary
-        executive_summary = f"Weekly Building Management Report\n"
-        executive_summary += f"Period: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}\n\n"
-        
-        executive_summary += f"📊 Data Overview:\n"
-        executive_summary += f"• Total Records: {data_quality['total_records']:,}\n"
-        executive_summary += f"• Data Quality: {data_quality['data_quality'].title()}\n"
-        executive_summary += f"• Completeness: {data_quality['completeness_score']:.1%}\n\n"
-        
-        if energy_patterns:
-            executive_summary += f"🔋 Energy Insights:\n"
-            for pattern in energy_patterns[:3]:
-                executive_summary += f"• {pattern['column']}: {pattern['average']:.2f} avg ({pattern['trend']} trend)\n"
-            executive_summary += f"\n"
-        
-        if room_analysis['status'] == 'success':
-            executive_summary += f"🏢 Room Utilization:\n"
-            executive_summary += f"• Most Used: {room_analysis['most_used_room']} ({room_analysis['most_used_count']} events)\n"
-            executive_summary += f"• Total Rooms: {room_analysis['unique_rooms']}\n"
-            executive_summary += f"• Usage Distribution: {room_analysis['utilization_distribution']['high_usage']} high, {room_analysis['utilization_distribution']['medium_usage']} medium, {room_analysis['utilization_distribution']['low_usage']} low\n\n"
-        
-        executive_summary += f"💡 Recommendations:\n"
-        executive_summary += f"• Continue monitoring key performance indicators\n"
-        executive_summary += f"• Review equipment maintenance schedules\n"
-        executive_summary += f"• Optimize energy consumption patterns\n"
-        
-        response = {
-            "status": "success",
-            "report_type": "weekly_summary",
-            "period": f"Week ending {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "executive_summary": executive_summary,
-            "detailed_analysis": {
-                "data_quality": data_quality,
-                "energy_insights": energy_patterns,
-                "room_utilization": room_analysis,
-                "key_metrics": {
-                    "total_operations": len(df),
-                    "system_uptime": "99.8%",  # Placeholder - would come from actual metrics
-                    "alerts_resolved": 0,  # Placeholder
-                    "maintenance_completed": 0  # Placeholder
-                }
-            },
-            "action_items": [
-                "Review energy consumption trends",
-                "Check equipment maintenance status",
-                "Analyze room utilization patterns",
-                "Update operational procedures as needed"
-            ]
-        }
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Weekly summary error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Weekly summary generation failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/rooms/utilization', methods=['POST', 'OPTIONS'])
-def room_utilization():
-    """
-    Enhanced room utilization analysis with comprehensive metrics
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        user_id = data.get('user_id', 'anonymous')
-        
-        logger.info(f"Room utilization analysis request from {user_id}")
-        
-        utilization_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="chat_assistant",
-            document_template="standard",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = utilization_analyzer.load_and_process_data()
-        room_analysis = DataAnalyzer.analyze_room_utilization(df)
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        
-        if room_analysis['status'] == 'success':
-            summary = f"🏢 Comprehensive Room Utilization Analysis\n\n"
-            summary += f"• Most Utilized Room: {room_analysis['most_used_room']}\n"
-            summary += f"• Usage Count: {room_analysis['most_used_count']:,} events\n"
-            summary += f"• Usage Percentage: {room_analysis.get('usage_percentage', 0):.1f}% of total\n"
-            summary += f"• Total Rooms: {room_analysis['unique_rooms']}\n"
-            summary += f"• Total Events: {room_analysis['total_events']:,}\n"
-            summary += f"• Average Events per Room: {room_analysis.get('avg_events_per_room', 0):.1f}\n\n"
-            
-            summary += f"📈 Utilization Distribution:\n"
-            summary += f"• High Usage: {room_analysis['utilization_distribution']['high_usage']} rooms\n"
-            summary += f"• Medium Usage: {room_analysis['utilization_distribution']['medium_usage']} rooms\n"
-            summary += f"• Low Usage: {room_analysis['utilization_distribution']['low_usage']} rooms\n"
-            
-            response_data = {
-                "status": "success",
-                "analysis_type": "room_utilization",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "summary": summary,
-                "detailed_metrics": room_analysis,
-                "data_quality": data_quality,
-                "recommendations": [
-                    f"Focus maintenance on high-usage room: {room_analysis['most_used_room']}",
-                    "Consider load balancing for underutilized spaces",
-                    "Monitor usage patterns for optimization opportunities",
-                    "Review peak usage times for energy efficiency"
-                ]
-            }
-        else:
-            response_data = {
-                "status": "success",
-                "analysis_type": "room_utilization",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "summary": "Room utilization analysis completed. No specific room data identified in current dataset.",
-                "data_analysis": {
-                    "data_quality": data_quality,
-                    "available_columns": df.columns.tolist(),
-                    "suggested_improvements": [
-                        "Add room identification columns (room_id, location, etc.)",
-                        "Ensure consistent data labeling across systems",
-                        "Implement standardized room naming conventions"
-                    ]
-                },
-                "recommendations": [
-                    "Review data collection schema for room identification",
-                    "Ensure sensors are properly tagged with location data",
-                    "Consider implementing room usage tracking system"
-                ]
-            }
-        
-        return jsonify(response_data)
-        
-    except Exception as e:
-        logger.error(f"Room utilization error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Room utilization analysis failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/context/analyze', methods=['POST', 'OPTIONS'])
-def context_analysis():
-    """
-    Enhanced context-aware analysis with situational awareness
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-    
-    try:
-        data = request.get_json() or {}
-        query = data.get('query', 'Provide current system status and insights').strip()
-        user_id = data.get('user_id', 'anonymous')
-        
-        logger.info(f"Context analysis request from {user_id}: {query}")
-        
-        context_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="context_aware",
-            document_template="standard",
-            prompts_config_file="advanced_prompts.json"
-        )
-        
-        df = context_analyzer.load_and_process_data()
-        
-        # Comprehensive context analysis
-        data_quality = DataAnalyzer.analyze_dataset_quality(df)
-        energy_patterns = DataAnalyzer.detect_energy_patterns(df)
-        room_analysis = DataAnalyzer.analyze_room_utilization(df)
-        
-        # Build context profile
-        current_context = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "data_status": {
-                "records_available": data_quality['total_records'],
-                "data_quality": data_quality['data_quality'],
-                "completeness": f"{data_quality['completeness_score']:.1%}"
-            },
-            "system_health": system_health['status'],
-            "key_metrics": {
-                "energy_metrics_detected": len(energy_patterns),
-                "rooms_analyzed": room_analysis.get('unique_rooms', 0),
-                "operational_status": "Normal"
-            }
-        }
-        
-        # Generate context-aware insights
-        insights = []
-        
-        if energy_patterns:
-            avg_energy = sum(p['average'] for p in energy_patterns) / len(energy_patterns)
-            insights.append(f"Current energy consumption averaging {avg_energy:.2f} across {len(energy_patterns)} metrics")
-        
-        if room_analysis['status'] == 'success':
-            insights.append(f"Room utilization shows {room_analysis['most_used_room']} as most active with {room_analysis['most_used_count']} events")
-        
-        if data_quality['data_quality'] == 'good':
-            insights.append("Data quality is good, enabling reliable analysis")
-        else:
-            insights.append("Data quality needs improvement for optimal insights")
-        
-        response = {
-            "status": "success",
-            "analysis_type": "context_aware",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "context_analysis": f"Current System Context Analysis:\n\n" + "\n".join([f"• {insight}" for insight in insights]),
-            "current_context": current_context,
-            "insights": insights,
-            "recommendations": [
-                "Continue monitoring system performance",
-                "Review data collection processes regularly",
-                "Implement proactive maintenance based on usage patterns"
-            ],
-            "alerts": [
-                "No critical issues detected" if system_health['status'] == 'healthy' else "System requires attention"
-            ]
-        }
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        logger.error(f"Context analysis error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Context analysis failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
-@app.route('/energy/report', methods=['POST', 'OPTIONS'])
-def energy_report():
-    """
-    Aggregated energy report from core_energysummary.
-    Body: { period: 'daily'|'monthly'|'yearly', room_id?: string, start?: ISO, end?: ISO }
-    """
-    if request.method == 'OPTIONS':
-        return jsonify({}), 200
-
-    try:
-        data = request.get_json() or {}
-        period = (data.get('period') or 'daily').lower()
-        room_id = data.get('room_id')
-        start = data.get('start')
-        end = data.get('end')
-
-        report_analyzer = RoomLogAnalyzer(
-            use_database=True,
-            prompt_type="energy_report",
-            document_template="energy_report",
-            prompts_config_file="advanced_prompts.json"
-        )
-
-        # Fetch summaries
-        start_dt = pd.to_datetime(start, errors='coerce') if start else None
-        end_dt = pd.to_datetime(end, errors='coerce') if end else None
-        es_df = report_analyzer.db_adapter.get_energy_summary_dataframe(
-            start_date=start_dt, end_date=end_dt, room_id=room_id
-        )
-
-        if es_df is None or es_df.empty:
-            return jsonify({
-                "status": "success",
-                "period": period,
-                "totals": {"total_energy": 0, "total_cost": 0},
-                "groups": []
-            })
-
-        # Map room_id -> room_name for readability (ensure string keys for UUIDs)
-        rooms = report_analyzer.db_adapter.get_rooms_list()
-        room_map = {str(r['id']): r['name'] for r in rooms}
-        if 'room_id' in es_df.columns:
-            es_df['room_id'] = es_df['room_id'].astype(str)
-            es_df['room_name'] = es_df['room_id'].map(room_map).fillna('Unknown')
-        else:
-            es_df['room_name'] = 'Unknown'
-
-        # Build time key per period
-        if 'period_start' in es_df.columns:
-            es_df['period_start'] = pd.to_datetime(es_df['period_start'], errors='coerce')
-
-        if period == 'daily':
-            es_df['bucket'] = es_df['period_start'].dt.strftime('%Y-%m-%d')
-        elif period == 'monthly':
-            es_df['bucket'] = es_df['period_start'].dt.strftime('%Y-%m')
-        elif period == 'yearly':
-            es_df['bucket'] = es_df['period_start'].dt.strftime('%Y')
-        else:
-            return jsonify({"status": "error", "error": "Invalid period. Use daily, monthly, or yearly."}), 400
-
-        # Aggregate
-        agg = es_df.groupby(['bucket', 'room_name'], dropna=False).agg({
-            'total_energy': 'sum',
-            'total_cost': 'sum',
-            'reading_count': 'sum',
-            'anomaly_count': 'sum'
-        }).reset_index()
-
-        groups = []
-        for (_, row) in agg.iterrows():
-            groups.append({
-                "period": row['bucket'],
-                "room_name": row['room_name'],
-                "total_energy": float(row['total_energy'] or 0),
-                "total_cost": float(row['total_cost'] or 0),
-                "reading_count": int(row['reading_count'] or 0),
-                "anomaly_count": int(row['anomaly_count'] or 0)
-            })
-
-        totals = {
-            "total_energy": float(es_df['total_energy'].sum() or 0),
-            "total_cost": float(es_df['total_cost'].sum() or 0)
-        }
-
-        return jsonify({
-            "status": "success",
-            "period": period,
-            "filters": {"room_id": room_id, "start": start, "end": end},
-            "totals": totals,
-            "groups": groups
-        })
-
-    except Exception as e:
-        logger.error(f"Energy report error: {e}\n{traceback.format_exc()}")
-        return jsonify({
-            "status": "error",
-            "error": f"Energy report failed: {str(e)}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }), 500
-
 @app.route('/billing/rates', methods=['POST', 'OPTIONS'])
 def billing_rates():
-    """
-    Retrieve billing rates (from core_billingrate) and provide suggestions.
-    Body: { room_id?: string, at?: ISO datetime }
-    """
+    """Get billing rates with LLM-powered cost optimization suggestions"""
     if request.method == 'OPTIONS':
         return jsonify({}), 200
-
+    
     try:
         data = request.get_json() or {}
-        room_id = data.get('room_id')
-        at = data.get('at')
-        ts = pd.to_datetime(at, errors='coerce') if at else pd.Timestamp.now(tz=timezone.utc)
-
+        user_id = data.get('user_id', 'anonymous')
+        username = data.get('username', 'anonymous')
+        
+        logger.info(f"Billing rates analysis request from {username}")
+        
+        # Initialize analyzer
         analyzer = RoomLogAnalyzer(
             use_database=True,
-            prompt_type="billing",
-            document_template="standard",
-            prompts_config_file="advanced_prompts.json"
+            prompt_type="billing_analysis",
+            document_template="billing_report"
         )
+        
+        # Fetch billing rates from database
+        billing_df = analyzer.db_adapter.get_billing_rates_dataframe()
+        
+        if billing_df is None or billing_df.empty:
+            return jsonify({
+                "status": "success",
+                "answer": "No billing rates configured yet.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Calculate statistics
+        avg_rate = billing_df['rate_per_kwh'].mean()
+        min_rate = billing_df['rate_per_kwh'].min()
+        max_rate = billing_df['rate_per_kwh'].max()
+        total_rates = len(billing_df)
+        
+        # Prepare rates list
+        rates_list = []
+        for _, row in billing_df.iterrows():
+            rates_list.append({
+                "rate": float(row['rate_per_kwh']),
+                "currency": row.get('currency', 'PHP'),
+                "start_time": str(row.get('start_time')) if pd.notna(row.get('start_time')) else None,
+                "end_time": str(row.get('end_time')) if pd.notna(row.get('end_time')) else None,
+                "valid_from": row['valid_from'].isoformat() if pd.notna(row.get('valid_from')) else None,
+                "valid_to": row['valid_to'].isoformat() if pd.notna(row.get('valid_to')) else None
+            })
+        
+        # Prepare LLM context
+        llm_context = f"""Analyze electricity billing rates and provide cost optimization recommendations.
 
-        # First try active-at timestamp
-        rates_df = analyzer.db_adapter.get_billing_rates_dataframe(room_id=room_id, active_at=ts)
-        rooms = analyzer.db_adapter.get_rooms_list()
-        room_map = {r['id']: r['name'] for r in rooms}
+BILLING RATES SUMMARY:
+- Total rate configurations: {total_rates}
+- Average rate: {avg_rate:.4f} PHP per kWh
+- Lowest rate: {min_rate:.4f} PHP per kWh
+- Highest rate: {max_rate:.4f} PHP per kWh
+- Currency: PHP
 
-        rates = []
-        suggestions = []
-        # If still empty, fetch latest without time filter
-        if rates_df is None or rates_df.empty:
-            rates_df = analyzer.db_adapter.get_billing_rates_dataframe(room_id=room_id, active_at=None)
+RATE DETAILS:
+"""
+        for i, rate in enumerate(rates_list[:5], 1):
+            llm_context += f"{i}. {rate['rate']:.4f} per kWh ({rate['start_time']} - {rate['end_time']})\n"
+        
+        llm_context += f"""\n\nProvide 3 recommendations using this format:
 
-        if rates_df is not None and not rates_df.empty:
-            for _, row in rates_df.iterrows():
-                rid = row.get('room_id')
-                currency = (row.get('currency') or 'PHP').upper()
-                rate = float(row.get('rate_per_kwh') or 0)
-                php_rate = rate if currency == 'PHP' else rate * 56
-                info = {
-                    "id": str(row.get('id')),
-                    "room_id": str(rid) if rid else None,
-                    "room_name": room_map.get(rid, 'Global') if rid else 'Global',
-                    "rate_per_kwh": rate,
-                    "currency": currency,
-                    "effective_rate_php": round(php_rate, 4),
-                    "start_time": str(row.get('start_time')) if row.get('start_time') is not pd.NaT else None,
-                    "end_time": str(row.get('end_time')) if row.get('end_time') is not pd.NaT else None,
-                    "valid_from": row.get('valid_from').isoformat() if pd.notna(row.get('valid_from')) else None,
-                    "valid_to": row.get('valid_to').isoformat() if pd.notna(row.get('valid_to')) else None,
-                    "created_at": row.get('created_at').isoformat() if pd.notna(row.get('created_at')) else None
-                }
-                rates.append(info)
+**1. RATE ANALYSIS:**
+What patterns do you see in the billing rates? Are there peak/off-peak opportunities?
 
-                # Suggestions based on currency and rate
-                if currency != 'PHP':
-                    suggestions.append(f"Convert rate {rate} {currency}/kWh for {info['room_name']} to PHP to avoid frontend inconsistencies.")
-                if info['start_time'] and info['end_time']:
-                    suggestions.append(f"Time-windowed rate detected for {info['room_name']}. Consider off-peak optimization outside {info['start_time']}-{info['end_time']}.")
-        else:
-            # No rate found: propose creating a default
-            target_room = room_map.get(room_id, 'this room') if room_id else 'all rooms'
-            suggestions.append(f"No billing rate found for {target_room} at {ts.isoformat()}. Create a PHP/kWh rate to enable cost calculations.")
+**2. COST OPTIMIZATION:**
+How can we reduce electricity costs based on these rates?
 
-            # DEBUG: surface database counts to help diagnose
-            try:
-                with analyzer.db_adapter.connection.cursor() as cur:
-                    cur.execute("SELECT COUNT(*) FROM core_billingrate")
-                    count_row = cur.fetchone()
-                    rate_count = int(count_row[0]) if count_row else 0
-                    # Fetch one sample row if exists
-                    sample = None
-                    if rate_count > 0:
-                        cur.execute("SELECT id, rate_per_kwh, currency, created_at FROM core_billingrate ORDER BY created_at DESC LIMIT 1")
-                        sample = cur.fetchone()
-                debug_info = {"core_billingrate_count": rate_count, "sample": sample}
-            except Exception as dbg_e:
-                debug_info = {"error": str(dbg_e)}
+**3. ACTION ITEMS:**
+What specific actions should we take to optimize billing costs?
 
-        # De-duplicate suggestions
-        seen = set()
-        deduped = []
-        for s in suggestions:
-            if s not in seen:
-                deduped.append(s)
-                seen.add(s)
+Be concise (2-3 sentences each)."""
+        
+        # Call LLM
+        try:
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            llm_analysis = llm.invoke(llm_context)
+            logger.info(f"LLM billing analysis generated for {username}")
+        except Exception as llm_error:
+            logger.warning(f"LLM call failed: {llm_error}")
+            llm_analysis = f"""**1. RATE ANALYSIS:**
+Average rate is {avg_rate:.4f} per kWh with variation from {min_rate:.4f} to {max_rate:.4f}.
 
-        resp = {
+**2. COST OPTIMIZATION:**
+Focus energy consumption during lower-rate periods to reduce costs.
+
+**3. ACTION ITEMS:**
+Schedule high-energy tasks during off-peak hours when rates are lowest."""
+        
+        response = {
             "status": "success",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "filters": {"room_id": room_id, "at": ts.isoformat()},
-            "rates": rates,
-            "suggestions": deduped[:10]
+            "answer": llm_analysis,
+            "billing_data": {
+                "total_rates": total_rates,
+                "average_rate": float(avg_rate),
+                "min_rate": float(min_rate),
+                "max_rate": float(max_rate),
+                "currency": "PHP",  # Always use PHP
+                "rates": rates_list
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
-        if not rates:
-            resp["debug"] = debug_info
-        return jsonify(resp)
-
+        
+        return jsonify(response)
+        
     except Exception as e:
-        logger.error(f"Billing rates error: {e}\n{traceback.format_exc()}")
+        logger.error(f"Billing rates analysis error: {e}\n{traceback.format_exc()}")
         return jsonify({
             "status": "error",
-            "error": f"Billing rates failed: {str(e)}",
+            "error": f"Billing analysis failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/kpi/heartbeat', methods=['POST', 'OPTIONS'])
+def kpi_heartbeat_analysis():
+    """Analyze system health KPIs from heartbeat logs with LLM insights"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    try:
+        data = request.get_json() or {}
+        user_id = data.get('user_id', 'anonymous')
+        username = data.get('username', 'anonymous')
+        
+        logger.info(f"KPI heartbeat analysis request from {username}")
+        
+        # Fetch heartbeat data using raw SQL
+        from database_adapter import DatabaseAdapter
+        db_adapter = DatabaseAdapter()
+        
+        query = """
+        SELECT 
+            id, timestamp, dht22_working, pzem_working, success_rate,
+            wifi_signal, uptime, sensor_type, current_temp, current_humidity,
+            current_power, recorded_at, equipment_id, photoresistor_working,
+            failed_readings, pzem_error_count, voltage_stability
+        FROM core_heartbeatlog
+        ORDER BY recorded_at DESC
+        LIMIT 100
+        """
+        
+        heartbeat_df = pd.read_sql_query(query, db_adapter.connection)
+        
+        if heartbeat_df.empty:
+            return jsonify({
+                "status": "success",
+                "answer": "No heartbeat data available yet.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Calculate KPIs
+        avg_success_rate = heartbeat_df['success_rate'].mean()
+        avg_wifi_signal = heartbeat_df['wifi_signal'].mean()
+        avg_uptime = heartbeat_df['uptime'].mean()
+        avg_voltage_stability = heartbeat_df['voltage_stability'].mean()
+        total_failed_readings = heartbeat_df['failed_readings'].sum()
+        total_pzem_errors = heartbeat_df['pzem_error_count'].sum()
+        
+        # Sensor health
+        dht22_health = (heartbeat_df['dht22_working'].sum() / len(heartbeat_df)) * 100
+        pzem_health = (heartbeat_df['pzem_working'].sum() / len(heartbeat_df)) * 100
+        photoresistor_health = (heartbeat_df['photoresistor_working'].sum() / len(heartbeat_df)) * 100
+        
+        # Prepare LLM context
+        llm_context = f"""You are a system health analyst. Analyze these IoT device health metrics and provide insights.
+
+SYSTEM HEALTH KPIs:
+- Average Success Rate: {avg_success_rate:.2f}%
+- Average WiFi Signal: {avg_wifi_signal:.1f} dBm
+- Average Uptime: {avg_uptime/3600:.1f} hours
+- Average Voltage Stability: {avg_voltage_stability:.2f}
+- Total Failed Readings: {total_failed_readings}
+- Total PZEM Errors: {total_pzem_errors}
+
+SENSOR HEALTH:
+- DHT22 (Temp/Humidity): {dht22_health:.1f}% operational
+- PZEM (Power Meter): {pzem_health:.1f}% operational  
+- Photoresistor (Light): {photoresistor_health:.1f}% operational
+
+Data Points Analyzed: {len(heartbeat_df)}
+
+Provide 3 recommendations using this format:
+
+**1. SYSTEM HEALTH ASSESSMENT:**
+What is the overall health status of the IoT sensors?
+
+**2. CRITICAL ISSUES:**
+What problems need immediate attention?
+
+**3. MAINTENANCE RECOMMENDATIONS:**
+What preventive actions should be taken?
+
+Be concise (2-3 sentences each)."""
+        
+        # Call LLM
+        try:
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            llm_analysis = llm.invoke(llm_context)
+            logger.info(f"LLM KPI analysis generated for {username}")
+        except Exception as llm_error:
+            logger.warning(f"LLM call failed: {llm_error}")
+            llm_analysis = f"""**1. SYSTEM HEALTH ASSESSMENT:**
+System shows {avg_success_rate:.1f}% success rate with sensors mostly operational.
+
+**2. CRITICAL ISSUES:**
+{total_failed_readings} failed readings and {total_pzem_errors} PZEM errors need investigation.
+
+**3. MAINTENANCE RECOMMENDATIONS:**
+Monitor WiFi signal strength and check sensors with low operational rates."""
+        
+        response = {
+            "status": "success",
+            "answer": llm_analysis,
+            "kpi_data": {
+                "success_rate": float(avg_success_rate),
+                "wifi_signal": float(avg_wifi_signal),
+                "uptime_hours": float(avg_uptime / 3600),
+                "voltage_stability": float(avg_voltage_stability),
+                "total_failed_readings": int(total_failed_readings),
+                "total_pzem_errors": int(total_pzem_errors),
+                "sensor_health": {
+                    "dht22": float(dht22_health),
+                    "pzem": float(pzem_health),
+                    "photoresistor": float(photoresistor_health)
+                },
+                "data_points": len(heartbeat_df)
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        logger.error(f"KPI heartbeat analysis error: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"KPI analysis failed: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/chat/history/save', methods=['POST', 'OPTIONS'])
+def save_chat_history():
+    """Save chat message to MongoDB"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    try:
+        if chat_collection is None:
+            return jsonify({
+                "status": "warning",
+                "message": "MongoDB not connected. Chat not saved.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        data = request.get_json() or {}
+        
+        # Create chat document
+        chat_document = {
+            "user_id": data.get('user_id', 'anonymous'),
+            "username": data.get('username', 'anonymous'),
+            "session_id": data.get('session_id', f"session_{datetime.now().timestamp()}"),
+            "user_message": data.get('user_message', ''),
+            "assistant_response": data.get('assistant_response', ''),
+            "query_type": data.get('query_type', 'general'),
+            "timestamp": datetime.now(timezone.utc),
+            "metadata": {
+                "user_role": data.get('user_role', 'viewer'),
+                "response_time_ms": data.get('response_time_ms'),
+                "has_error": data.get('has_error', False)
+            }
+        }
+        
+        # Insert into MongoDB
+        result = chat_collection.insert_one(chat_document)
+        
+        logger.info(f"Chat saved to MongoDB: {result.inserted_id}")
+        
+        return jsonify({
+            "status": "success",
+            "message": "Chat history saved",
+            "chat_id": str(result.inserted_id),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error saving chat history: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"Failed to save chat: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
+@app.route('/chat/history/get', methods=['POST', 'OPTIONS'])
+def get_chat_history():
+    """Retrieve chat history from MongoDB"""
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    try:
+        if chat_collection is None:
+            return jsonify({
+                "status": "warning",
+                "message": "MongoDB not connected",
+                "chats": [],
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        data = request.get_json() or {}
+        user_id = data.get('user_id', 'anonymous')
+        session_id = data.get('session_id')
+        limit = data.get('limit', 50)
+        
+        # Build query
+        query = {"user_id": user_id}
+        if session_id:
+            query["session_id"] = session_id
+        
+        # Fetch chat history
+        chats = list(chat_collection.find(query).sort("timestamp", DESCENDING).limit(limit))
+        
+        # Convert ObjectId to string
+        for chat in chats:
+            chat['_id'] = str(chat['_id'])
+            chat['timestamp'] = chat['timestamp'].isoformat()
+        
+        return jsonify({
+            "status": "success",
+            "chats": chats,
+            "count": len(chats),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error retrieving chat history: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"Failed to retrieve chat: {str(e)}",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
 @app.route('/system/status', methods=['GET'])
 def system_status():
     """Comprehensive system status endpoint"""
+    mongodb_status = "connected" if chat_collection is not None else "disconnected"
+    
     return jsonify({
         "status": "success",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "system_health": system_health,
+        "mongodb_status": mongodb_status,
         "endpoints_available": [
             {"path": "/health", "methods": ["GET"], "description": "System health check"},
             {"path": "/llmquery", "methods": ["POST"], "description": "General LLM queries"},
@@ -1501,13 +1671,10 @@ def require_role(required_role: str):
         return decorated_function
     return decorator
 
-# Apply enhanced role-based access control
+# Apply enhanced role-based access control (only for existing endpoints)
 predict_maintenance = require_role('maintenance')(predict_maintenance)
 detect_anomalies = require_role('anomalies')(detect_anomalies)
-generate_weekly_summary = require_role('reports')(generate_weekly_summary)
-energy_insights = require_role('energy')(energy_insights)
-room_utilization = require_role('utilization')(room_utilization)
-context_analysis = require_role('context')(context_analysis)
+# Removed decorators for deleted endpoints: generate_weekly_summary, energy_insights, room_utilization, context_analysis
 
 # Error handlers
 @app.errorhandler(404)
@@ -1538,6 +1705,13 @@ if __name__ == '__main__':
     print("🚀 INITIALIZING ENHANCED ADVANCED LLM API SERVER")
     print("=" * 60)
     
+    # Initialize MongoDB for chat history
+    mongodb_connected = initialize_mongodb()
+    if mongodb_connected:
+        print("✅ MongoDB connected - Chat history will be saved")
+    else:
+        print("⚠️  MongoDB not connected - Chat history will NOT be saved")
+    
     # Initialize system
     if initialize_system():
         print("✅ System initialized successfully")
@@ -1555,28 +1729,31 @@ if __name__ == '__main__':
         
         print("\n📡 Available Endpoints:")
         endpoints = [
-            ("GET   /health", "System health with detailed analytics"),
-            ("POST  /llmquery", "Enhanced LLM queries with metadata"),
-            ("POST  /insights/energy", "Comprehensive energy analysis"),
-            ("POST  /maintenance/predict", "Predictive maintenance with fallbacks"),
-            ("POST  /anomalies/detect", "Multi-method anomaly detection"),
-            ("POST  /reports/weekly", "Detailed weekly summaries"),
-            ("POST  /rooms/utilization", "Advanced room usage analytics"),
-            ("POST  /context/analyze", "Context-aware system analysis"),
-            ("GET   /system/status", "Comprehensive system status")
+            ("GET   /health", "System health check"),
+            ("POST  /llmquery", "General LLM chat queries"),
+            ("POST  /energy/report", "Energy analysis (daily/weekly/monthly/yearly)"),
+            ("POST  /maintenance/predict", "Maintenance predictions with LLM"),
+            ("POST  /anomalies/detect", "Anomaly detection"),
+            ("POST  /billing/rates", "Billing analysis with LLM"),
+            ("POST  /kpi/heartbeat", "KPI monitoring"),
+            ("POST  /chat/history/save", "Save chat to MongoDB"),
+            ("POST  /chat/history/get", "Retrieve chat history"),
+            ("GET   /system/status", "System status"),
+            ("", ""),
+            ("POST  /ask", "Legacy: redirects to /llmquery"),
+            ("POST  /reports/weekly", "Legacy: redirects to /energy/report")
         ]
         
         for endpoint, description in endpoints:
-            print(f"  {endpoint:<25} {description}")
+            print(f"  {endpoint:<30} {description}")
         
-        print("\n🔐 Enhanced Role-Based Access:")
+        print("\n🔐 Role-Based Access:")
         roles = {
             'admin': 'Full system access',
-            'facility_manager': 'Maintenance, reports, anomalies, energy, utilization',
-            'energy_analyst': 'Energy analysis, reports, context',
+            'facility_manager': 'Maintenance, energy, anomalies, billing, KPI',
+            'energy_analyst': 'Energy analysis, billing, KPI',
             'technician': 'Maintenance and anomaly access', 
-            'viewer': 'Reports and utilization analysis',
-            'guest': 'Basic report access'
+            'viewer': 'Energy reports and KPI monitoring'
         }
         
         for role, access in roles.items():

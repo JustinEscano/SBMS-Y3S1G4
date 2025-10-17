@@ -167,149 +167,8 @@ class LoggingManager:
         # Implementation for backup recovery
         pass
 
-class PromptsConfig:
-    """Configuration manager for prompts and templates"""
-    
-    def __init__(self, config_file=None):
-        self.config_file = config_file
-        self.default_prompts = {
-            "system_prompts": {
-                "base_enhancement": """You are an intelligent room management assistant. Analyze the provided room sensor data and maintenance information to answer questions accurately. Focus on:
-
-1. Room occupancy and usage patterns
-2. Energy and power consumption analysis  
-3. Environmental conditions (temperature, humidity)
-4. Maintenance requests and equipment status
-5. Efficiency recommendations
-
-Always base your answers on the actual data provided. If specific numbers aren't available, provide general insights. Be concise and helpful.
-
-User Question: {query}""",
-
-                "analytical": """You are a data analyst specializing in building management systems. Provide detailed analysis of:
-
-- Energy consumption trends and patterns
-- Room utilization efficiency  
-- Equipment performance metrics
-- Maintenance optimization opportunities
-- Cost-saving recommendations
-
-Support your analysis with specific data points when available. Provide actionable insights.
-
-User Question: {query}""",
-
-                "technical": """You are a technical building operations specialist. Focus on:
-
-- Equipment performance and efficiency
-- Power consumption breakdowns
-- Environmental control systems
-- Maintenance scheduling and prioritization
-- Technical specifications and recommendations
-
-Use technical terminology appropriately and provide precise information.
-
-User Question: {query}"""
-            },
-            
-            "document_templates": {
-                "standard": """Room: {room_name}
-Timestamp: {timestamp}
-Occupancy: {occupancy_status} ({occupancy_count} people)
-Energy: {energy_consumption_kwh} kWh
-Power Breakdown:
-- Lighting: {lighting_power}W
-- HVAC Fan: {hvac_power}W  
-- AC Compressor: {ac_compressor_power}W
-- Projector: {projector_power}W
-- Computer: {computer_power}W
-- Standby: {standby_power}W
-- Total: {total_power}W
-Equipment Usage:
-- Lights: {lights_hours}h
-- AC: {ac_hours}h
-- Projector: {projector_hours}h
-- Computer: {computer_hours}h
-Environment: {temperature}°C, {humidity}% humidity""",
-
-                "analytical": """DATA POINT: Room {room_name} at {timestamp}
-OCCUPANCY: {occupancy_count} people ({occupancy_status})
-ENERGY: {energy_consumption_kwh} kWh consumed
-POWER: {total_power}W total ({lighting_power}W lighting, {hvac_power}W HVAC, {ac_compressor_power}W AC)
-USAGE: Lights {lights_hours}h, AC {ac_hours}h, Projector {projector_hours}h
-ENVIRONMENT: {temperature}°C, {humidity}% humidity""",
-
-                "maintenance": """MAINTENANCE REQUEST: {issue_description}
-STATUS: {status}
-SCHEDULED: {requested_date}
-RESOLVED: {resolved_date}
-EQUIPMENT: {equipment_id}
-REQUESTED BY: {requested_by}
-ASSIGNED TO: {assigned_to}
-NOTES: {notes}"""
-            },
-            
-            # ADD THIS SECTION for maintenance rules
-            "maintenance_rules": {
-                "sensor_malfunction": {
-                    "urgency": "high",
-                    "timeline": "48 hours",
-                    "action": "Replace or calibrate sensor",
-                    "impact": "Data accuracy compromised"
-                },
-                "temperature_sensor_error": {
-                    "urgency": "medium", 
-                    "timeline": "1 week",
-                    "action": "Calibrate or replace temperature sensor",
-                    "impact": "Environmental control affected"
-                },
-                "motion_detector_fault": {
-                    "urgency": "medium",
-                    "timeline": "1 week", 
-                    "action": "Repair or replace motion detector",
-                    "impact": "Occupancy tracking inaccurate"
-                },
-                "high_energy_usage": {
-                    "urgency": "medium",
-                    "timeline": "2 weeks",
-                    "action": "Investigate energy consumption patterns",
-                    "impact": "Increased operational costs"
-                },
-                "humidity_calibration_needed": {
-                    "urgency": "low",
-                    "timeline": "1 month",
-                    "action": "Schedule calibration",
-                    "impact": "Minor environmental data inaccuracy"
-                },
-                "power_supply_issue": {
-                    "urgency": "high",
-                    "timeline": "24 hours",
-                    "action": "Immediate inspection required",
-                    "impact": "Potential system failure"
-                }
-            }
-        }
-        
-        self.prompts = self.default_prompts
-        if config_file and os.path.exists(config_file):
-            try:
-                with open(config_file, 'r') as f:
-                    custom_prompts = json.load(f)
-                    self.prompts.update(custom_prompts)
-            except Exception as e:
-                logging.error(f"Error loading custom prompts: {e}")
-    
-    def get_system_prompt(self, prompt_type="base_enhancement"):
-        """Get system prompt by type"""
-        return self.prompts["system_prompts"].get(prompt_type, self.prompts["system_prompts"]["base_enhancement"])
-    
-    def get_document_template(self, template_type="standard"):
-        """Get document template by type"""
-        return self.prompts["document_templates"].get(template_type, self.prompts["document_templates"]["standard"])
-    
-    # ADD THIS METHOD to fix the error
-    def get_all_prompts(self):
-        """Get all prompts configuration - required by advanced_llm_handlers"""
-        return self.prompts
+# Import PromptsConfig from existing file instead of duplicating it
+from prompts_config import PromptsConfig
 
 class AdvancedLLMHandlers:
     """Advanced query handlers for complex analytical queries"""
@@ -906,51 +765,42 @@ Insufficient data points for trend analysis.
             confidence = "high" if len(data) > 10 else "medium" if len(data) > 5 else "low"
             
             return {"slope": slope, "confidence": confidence}
-            
         except Exception as e:
             self.logger.error(f"Error calculating trend: {e}")
             return {"slope": 0, "confidence": "low"}
 
-# ADD THIS IMPORT - Import the comprehensive RoomSpecificHandlers
-try:
-    from room_specific_handlers import RoomSpecificHandlers
-    print("Successfully imported comprehensive RoomSpecificHandlers from room_specific_handlers.py")
-except ImportError as e:
-    print(f"Failed to import RoomSpecificHandlers from room_specific_handlers.py: {e}")
-    print("Falling back to basic RoomSpecificHandlers")
+# RoomSpecificHandlers - Using basic fallback version (room_specific_handlers.py was removed during cleanup)
+class RoomSpecificHandlers:
+    """Basic fallback handlers for room-specific queries"""
     
-    # Fallback to the basic version (keep your existing basic class as backup)
-    class RoomSpecificHandlers:
-        """Basic fallback handlers for room-specific queries"""
-        
-        def __init__(self, prompts_config, db_adapter):
-            self.prompts = prompts_config
-            self.db_adapter = db_adapter
-            self.logger = logging.getLogger(__name__)
-        
-        def handle_room_specific_query(self, query):
-            """Handle queries about specific rooms"""
-            try:
-                # Extract room name from query
-                room_pattern = r'(?:room|Room)\s+([A-Za-z0-9\s]+)'
-                match = re.search(room_pattern, query)
-                
-                if not match:
-                    return {"error": "No room specified in query"}
-                
-                room_name = match.group(1).strip()
-                self.logger.info(f"Processing query for room: {room_name}")
-                
-                # This would typically query the database for specific room data
-                # For now, return a generic response
-                return {
-                    "answer": f"Room {room_name} data would be retrieved and analyzed here. Specific room queries are supported.",
-                    "sources": []
-                }
-                
-            except Exception as e:
-                self.logger.error(f"Error in room-specific handler: {e}")
-                return {"error": f"Room-specific query failed: {str(e)}"}
+    def __init__(self, prompts_config, db_adapter):
+        self.prompts = prompts_config
+        self.db_adapter = db_adapter
+        self.logger = logging.getLogger(__name__)
+    
+    def handle_room_specific_query(self, query):
+        """Handle queries about specific rooms"""
+        try:
+            # Extract room name from query
+            room_pattern = r'(?:room|Room)\s+([A-Za-z0-9\s]+)'
+            match = re.search(room_pattern, query)
+            
+            if not match:
+                return {"error": "No room specified in query"}
+            
+            room_name = match.group(1).strip()
+            self.logger.info(f"Processing query for room: {room_name}")
+            
+            # This would typically query the database for specific room data
+            # For now, return a generic response
+            return {
+                "answer": f"Room {room_name} data would be retrieved and analyzed here. Specific room queries are supported.",
+                "sources": []
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error in room-specific handler: {e}")
+            return {"error": f"Room-specific query failed: {str(e)}"}
 
 class RoomLogAnalyzer:
     """
@@ -2010,6 +1860,135 @@ class RoomLogAnalyzer:
                 self.logger.error(f"Error in KPI handler: {e}")
                 return {"error": str(e)}
 
+        # DAILY/WEEKLY/YEARLY ENERGY REPORT QUERIES - Uses core_energysummary table + LLM
+        if any(keyword in q_lower for keyword in ["daily energy", "weekly energy", "monthly energy", "yearly energy", "daily report", "weekly report", "monthly report", "yearly report"]):
+            try:
+                self.logger.info(f"Matched energy report query: '{query}'")
+                
+                # Determine period type
+                if "daily" in q_lower:
+                    period_type = "daily"
+                elif "weekly" in q_lower or "week" in q_lower:
+                    period_type = "weekly"
+                elif "monthly" in q_lower or "month" in q_lower:
+                    period_type = "monthly"
+                elif "yearly" in q_lower or "year" in q_lower:
+                    period_type = "yearly"
+                else:
+                    period_type = "daily"  # default
+                
+                # Get energy summary from database
+                if self.db_adapter:
+                    energy_df = self.db_adapter.get_energy_summary_data(period_type=period_type, limit=30)
+                    
+                    if energy_df is not None and not energy_df.empty:
+                        from langchain_ollama import OllamaLLM
+                        
+                        # Calculate statistics
+                        total_energy = energy_df['total_energy'].sum()
+                        avg_energy = energy_df['total_energy'].mean()
+                        total_cost = energy_df['total_cost'].sum()
+                        avg_cost = energy_df['total_cost'].mean()
+                        total_anomalies = energy_df['anomaly_count'].sum()
+                        
+                        # Create energy table
+                        energy_table = f"\n📊 **{period_type.upper()} ENERGY REPORT (core_energysummary table)**\n\n"
+                        energy_table += "| Period | Total Energy (kWh) | Avg Power (W) | Peak Power (W) | Cost (PHP) | Anomalies |\n"
+                        energy_table += "|--------|-------------------|---------------|----------------|------------|-----------|\n"
+                        
+                        for _, row in energy_df.head(10).iterrows():
+                            start_date = pd.to_datetime(row['period_start']).strftime('%Y-%m-%d %H:%M')
+                            end_date = pd.to_datetime(row['period_end']).strftime('%Y-%m-%d %H:%M')
+                            period = f"{start_date} - {end_date}"
+                            energy_table += f"| {period} | {row['total_energy']:.2f} | {row['avg_power']:.2f} | {row['peak_power']:.2f} | ₱{row['total_cost']:.2f} | {row['anomaly_count']} |\n"
+                        
+                        # Statistics summary
+                        stats = f"\n📈 **STATISTICS**\n"
+                        stats += f"• Total Energy: {total_energy:.2f} kWh\n"
+                        stats += f"• Average Energy: {avg_energy:.2f} kWh per period\n"
+                        stats += f"• Total Cost: ₱{total_cost:.2f}\n"
+                        stats += f"• Average Cost: ₱{avg_cost:.2f} per period\n"
+                        stats += f"• Total Anomalies: {int(total_anomalies)}\n"
+                        
+                        # LLM analysis
+                        llm_prompt = f"""You are an energy management analyst. Analyze this {period_type} energy data and provide insights.
+
+ENERGY DATA:
+• Period Type: {period_type}
+• Total Energy: {total_energy:.2f} kWh
+• Average Energy: {avg_energy:.2f} kWh
+• Total Cost: ₱{total_cost:.2f}
+• Anomalies Detected: {int(total_anomalies)}
+
+Provide:
+1. **SUMMARY**: Brief overview of energy consumption
+2. **INSIGHTS**: Key patterns or trends
+3. **RECOMMENDATIONS**: Cost-saving suggestions
+
+Be specific and actionable."""
+                        
+                        try:
+                            llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
+                            llm_analysis = llm.invoke(llm_prompt)
+                        except:
+                            llm_analysis = f"**SUMMARY**: {period_type.capitalize()} energy consumption totals {total_energy:.2f} kWh with {int(total_anomalies)} anomalies.\n\n**INSIGHTS**: Average consumption is {avg_energy:.2f} kWh per period.\n\n**RECOMMENDATIONS**: Monitor anomalies and optimize peak usage times."
+                        
+                        # Combine all
+                        full_response = energy_table + stats + "\n🤖 **AI ANALYSIS**\n\n" + llm_analysis
+                        
+                        # Create sources
+                        sources = []
+                        for _, row in energy_df.head(5).iterrows():
+                            sources.append({
+                                "page_content": f"Period: {start_date} - {end_date}\nEnergy: {row['total_energy']} kWh\nCost: ₱{row['total_cost']}\nAnomalies: {row['anomaly_count']}",
+                                "metadata": {"type": "energy_summary", "period_type": period_type}
+                            })
+                        
+                        result = {"answer": full_response, "sources": sources}
+                    else:
+                        # No data - provide LLM suggestions
+                        from langchain_ollama import OllamaLLM
+                        llm_prompt = f"""You are an energy consultant. No {period_type} energy data exists yet.
+ENERGY DATA:
+• Period Type: {period_type}
+• Total Energy: 0 kWh
+• Average Energy: 0 kWh
+• Total Cost: ₱0
+• Anomalies Detected: 0
+
+Provide:
+1. **SUMMARY**: Brief overview of energy consumption
+2. **INSIGHTS**: Key patterns or trends
+3. **RECOMMENDATIONS**: Cost-saving suggestions
+
+Be specific and actionable."""
+                        
+                        try:
+                            llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
+                            llm_analysis = llm.invoke(llm_prompt)
+                        except:
+                            llm_analysis = f"**SUMMARY**: No {period_type} energy data available.\n\n**INSIGHTS**: No patterns or trends detected.\n\n**RECOMMENDATIONS**: Monitor energy usage and optimize peak times."
+                        
+                        result = {"answer": llm_analysis, "sources": []}
+                else:
+                    result = {"answer": "Database not available for energy report.", "sources": []}
+                
+                self.logger_manager.log_prompt_to_mongodb(
+                    query=query,
+                    response=result["answer"],
+                    user_id=user_id,
+                    username=username,
+                    session_id=session_id,
+                    client_ip=client_ip,
+                    sources=result.get("sources", []),
+                    prompt_type=self.prompt_type,
+                    document_template=self.document_template
+                )
+                return result
+            except Exception as e:
+                self.logger.error(f"Error in energy report handler: {e}")
+                return {"error": str(e)}
+
         # ENERGY TREND QUERIES
         if any(keyword in q_lower for keyword in ["energy trend", "energy pattern", "consumption trend", "analyze energy usage patterns", "energy usage patterns"]):
             try:
@@ -2059,19 +2038,100 @@ class RoomLogAnalyzer:
                 self.logger.error(f"Error in weekly summary handler: {e}")
                 return {"error": f"Failed to generate weekly summary: {str(e)}"}
 
-        # ANOMALY DETECTION QUERIES
-        if any(keyword in q_lower for keyword in ["anomaly", "unusual", "abnormal", "alert"]):
+        # ALERT/ANOMALY DETECTION - Uses core_alert table + LLM suggestions
+        if any(keyword in q_lower for keyword in ["anomaly", "anomalies", "unusual", "abnormal", "alert", "alerts", "detect"]):
             try:
-                self.logger.info(f"Matched anomaly detection query: '{query}'")
-                anomalies = self.advanced_handlers.detect_anomalies(df)
-                if anomalies:
-                    anomaly_descriptions = [f"{a['type']}: {a['description']}" for a in anomalies[:3]]
-                    result = {
-                        "answer": f"Detected {len(anomalies)} anomalies: {'; '.join(anomaly_descriptions)}",
-                        "anomalies": anomalies
-                    }
+                self.logger.info(f"Matched alert/anomaly query: '{query}'")
+                
+                # Get real alerts from core_alert table
+                if self.db_adapter:
+                    alerts_df = self.db_adapter.get_alerts_with_equipment_info(days_back=60)
+                    
+                    if alerts_df is not None and not alerts_df.empty:
+                        # Filter based on query
+                        if "unresolved" in q_lower or "pending" in q_lower or "active" in q_lower:
+                            alerts_df = alerts_df[alerts_df['is_resolved'] == False]
+                        elif "resolved" in q_lower or "fixed" in q_lower:
+                            alerts_df = alerts_df[alerts_df['is_resolved'] == True]
+                        
+                        if not alerts_df.empty:
+                            # Get LLM analysis with suggestions
+                            from langchain_ollama import OllamaLLM
+                            
+                            # Prepare summary statistics
+                            alert_types = alerts_df['alert_type'].value_counts().to_dict()
+                            severity_counts = alerts_df['severity_level'].value_counts().to_dict()
+                            unresolved = len(alerts_df[alerts_df['is_resolved'] == False])
+                            resolved = len(alerts_df[alerts_df['is_resolved'] == True])
+                            
+                            # Create detailed alert table
+                            alert_table = "\n📋 **ALERT DETAILS FROM DATABASE (core_alert table)**\n\n"
+                            alert_table += "| # | Type | Severity | Room | Equipment | Message | Status | Triggered At |\n"
+                            alert_table += "|---|------|----------|------|-----------|---------|--------|--------------|\n"
+                            
+                            for idx, (_, alert) in enumerate(alerts_df.head(10).iterrows(), 1):
+                                status = "✅ Resolved" if alert['is_resolved'] else "⚠️ Active"
+                                room = alert.get('room_name', 'N/A')
+                                equipment = alert.get('equipment_type', 'N/A')
+                                triggered = str(alert['created_at'])[:16] if 'created_at' in alert else 'N/A'
+                                
+                                alert_table += f"| {idx} | {alert['alert_type']} | {alert['severity_level']} | {room} | {equipment} | {alert['message']} | {status} | {triggered} |\n"
+                            
+                            # Statistics summary
+                            stats_summary = f"\n📊 **STATISTICS**\n"
+                            stats_summary += f"• Total Alerts: {len(alerts_df)}\n"
+                            stats_summary += f"• Unresolved: {unresolved} | Resolved: {resolved}\n"
+                            stats_summary += f"• Alert Types: {', '.join([f'{k} ({v})' for k,v in alert_types.items()])}\n"
+                            stats_summary += f"• Severity Levels: {', '.join([f'{k} ({v})' for k,v in severity_counts.items()])}\n"
+                            
+                            # Prepare data for LLM
+                            top_alerts = []
+                            for _, alert in alerts_df.head(5).iterrows():
+                                top_alerts.append(f"- {alert['alert_type']} ({alert['severity_level']}) in {alert.get('room_name', 'Unknown')}: {alert['message']}")
+                            
+                            # LLM prompt for intelligent analysis
+                            llm_prompt = f"""You are a building management system analyst. Analyze these alerts from the database and provide actionable recommendations.
+
+ALERT DATA:
+• Total: {len(alerts_df)} alerts
+• Unresolved: {unresolved} | Resolved: {resolved}
+• Types: {', '.join([f'{k} ({v})' for k,v in alert_types.items()])}
+• Severity: {', '.join([f'{k} ({v})' for k,v in severity_counts.items()])}
+
+TOP 5 ALERTS:
+{chr(10).join(top_alerts)}
+
+Provide:
+1. **SUMMARY**: Brief overview
+2. **CRITICAL ACTIONS**: Immediate steps for high-severity alerts
+3. **RECOMMENDATIONS**: Preventive measures
+
+Be specific to the data. Only reference what's explicitly shown above."""
+                            
+                            try:
+                                llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
+                                llm_analysis = llm.invoke(llm_prompt)
+                            except Exception as e:
+                                llm_analysis = f"**SUMMARY**: {len(alerts_df)} alerts detected ({unresolved} unresolved, {resolved} resolved).\n\n**CRITICAL ACTIONS**: Review high-severity alerts first.\n\n**RECOMMENDATIONS**: Monitor alert patterns and address recurring issues."
+                            
+                            # Combine table + stats + LLM analysis
+                            full_response = alert_table + stats_summary + "\n" + "🤖 **AI ANALYSIS**\n\n" + llm_analysis
+                            
+                            # Create sources
+                            sources = []
+                            for _, alert in alerts_df.head(10).iterrows():
+                                sources.append({
+                                    "page_content": f"Alert: {alert['alert_type']}\nSeverity: {alert['severity_level']}\nMessage: {alert['message']}\nRoom: {alert.get('room_name', 'Unknown')}\nEquipment: {alert.get('equipment_type', 'Unknown')}\nStatus: {'Resolved' if alert['is_resolved'] else 'Active'}\nTriggered: {alert.get('created_at', 'N/A')}",
+                                    "metadata": {"type": "alert", "alert_type": alert['alert_type'], "severity": alert['severity_level']}
+                                })
+                            
+                            result = {"answer": full_response, "sources": sources, "alert_count": len(alerts_df)}
+                        else:
+                            result = {"answer": "No alerts found matching your criteria.", "sources": []}
+                    else:
+                        result = {"answer": "No alerts found in the system.", "sources": []}
                 else:
-                    result = {"answer": "No anomalies detected in the current data.", "sources": []}
+                    result = {"answer": "Database not available for alert analysis.", "sources": []}
                 
                 self.logger_manager.log_prompt_to_mongodb(
                     query=query,
@@ -2086,7 +2146,7 @@ class RoomLogAnalyzer:
                 )
                 return result
             except Exception as e:
-                self.logger.error(f"Error in anomaly detection handler: {e}")
+                self.logger.error(f"Error in alert/anomaly handler: {e}")
                 return {"error": str(e)}
 
         # CONTEXT-AWARE QUERIES

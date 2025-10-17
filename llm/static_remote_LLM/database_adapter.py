@@ -328,7 +328,7 @@ class DatabaseAdapter:
             logger.error(f"Error creating JSON format data: {e}")
             raise
     
-    def get_alerts_with_equipment_info(self, limit=None, days_back=30):
+    def get_alerts_with_equipment_info(self, limit=None, days_back=60):
         """Get alerts with equipment and room information for detailed analysis"""
         try:
             cutoff_date = datetime.now() - pd.Timedelta(days=days_back)
@@ -565,10 +565,10 @@ class DatabaseAdapter:
             """
             params = []
             if start_date:
-                query += " AND period_start >= %s"
+                query += " AND period_end >= %s"
                 params.append(start_date)
             if end_date:
-                query += " AND period_end <= %s"
+                query += " AND period_start <= %s"
                 params.append(end_date)
             if room_id:
                 query += " AND room_id = %s"
@@ -590,6 +590,60 @@ class DatabaseAdapter:
         except Exception as e:
             logger.error(f"Error reading energy summary: {e}")
             return pd.DataFrame()
+        
+    def get_energy_summary_data(self, start_date=None, end_date=None, room_id=None, component_id=None, period_type=None, limit=None):
+        """Read aggregated energy summaries from core_energysummary for analytics."""
+        try:
+            query = """
+            SELECT 
+                id,
+                period_start,
+                period_end,
+                period_type,
+                total_energy,
+                avg_power,
+                peak_power,
+                reading_count,
+                anomaly_count,
+                created_at,
+                component_id,
+                room_id,
+                currency,
+                total_cost
+            FROM core_energysummary
+            WHERE 1=1
+            """
+            params = []
+            if start_date:
+                query += " AND period_end >= %s"
+                params.append(start_date)
+            if end_date:
+                query += " AND period_start <= %s"
+                params.append(end_date)
+            if room_id:
+                query += " AND room_id = %s"
+                params.append(room_id)
+            if component_id:
+                query += " AND component_id = %s"
+                params.append(component_id)
+            if period_type:
+                query += " AND period_type = %s"
+                params.append(period_type)
+            query += " ORDER BY period_start DESC"
+            if limit:
+                query += " LIMIT %s"
+                params.append(limit)
+
+            df = pd.read_sql_query(query, self.connection, params=params)
+            # Normalize datetime columns
+            for col in ["period_start", "period_end", "created_at"]:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col], errors='coerce')
+            return df
+        except Exception as e:
+            logger.error(f"Error reading energy summary: {e}")
+            return pd.DataFrame()
+        
 
     def get_billing_rates_dataframe(self, room_id=None, active_at=None):
         """Read billing rates, defaulting currency to PHP when missing."""
