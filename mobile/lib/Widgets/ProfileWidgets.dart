@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:mobile/Screens/AboutUsScreen.dart';
 import 'package:mobile/Screens/HelpSupportScreen.dart';
 import 'package:mobile/Screens/PrivacyPolicyScreen.dart';
 import 'package:mobile/Screens/ProfileDetails.dart';
@@ -313,8 +314,11 @@ class ProfileWidgets {
               icon: Icons.info,
               title: 'About Us',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('About Us feature coming soon!', style: GoogleFonts.poppins())),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Aboutusscreen(),
+                  ),
                 );
               },
             ),
