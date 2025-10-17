@@ -6,6 +6,7 @@ import psycopg2
 import pandas as pd
 from datetime import datetime
 import logging
+from sqlalchemy import create_engine
 
 # Add the Django project to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'api'))
@@ -27,11 +28,17 @@ class DatabaseAdapter:
     
     def __init__(self):
         self.connection = None
+        self.engine = None
         self._connect_to_db()
     
     def _connect_to_db(self):
-        """Establish direct PostgreSQL connection for complex queries"""
+        """Establish PostgreSQL connection using SQLAlchemy for pandas compatibility"""
         try:
+            # Create SQLAlchemy engine for pandas compatibility
+            connection_string = "postgresql://postgres:9609@localhost:5432/sbmsdb"
+            self.engine = create_engine(connection_string)
+            
+            # Also maintain psycopg2 connection for execute_query method
             self.connection = psycopg2.connect(
                 host='localhost',
                 database='sbmsdb',
@@ -43,12 +50,6 @@ class DatabaseAdapter:
         except Exception as e:
             logger.error(f"Error connecting to database: {e}")
             raise
-    
-    # ADD THIS PROPERTY to fix the engine attribute error
-    @property
-    def engine(self):
-        """Provide engine property for compatibility with pandas read_sql_query"""
-        return self.connection
     
     def get_sensor_data_as_dataframe(self, limit=None, start_date=None, end_date=None):
         """
@@ -100,8 +101,8 @@ class DatabaseAdapter:
                 query += " LIMIT %s"
                 params.append(limit)
             
-            # Execute query and create DataFrame
-            df = pd.read_sql_query(query, self.connection, params=params)
+            # Execute query and create DataFrame using SQLAlchemy engine
+            df = pd.read_sql_query(query, self.engine, params=tuple(params) if params else None)
             
             # Convert timestamp to datetime
             df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -162,7 +163,7 @@ class DatabaseAdapter:
                 query += " LIMIT %s"
                 params.append(limit)
             
-            df = pd.read_sql_query(query, self.connection, params=params)
+            df = pd.read_sql_query(query, self.engine, params=tuple(params) if params else None)
             
             # Convert timestamp columns
             if 'created_at' in df.columns:
@@ -229,7 +230,7 @@ class DatabaseAdapter:
                 query += " LIMIT %s"
                 params.append(limit)
             
-            df = pd.read_sql_query(query, self.connection, params=params if params else None)
+            df = pd.read_sql_query(query, self.engine, params=tuple(params) if params else None)
             
             # Convert date columns to datetime
             date_columns = ['requested_date', 'resolved_date', 'created_at']
@@ -360,7 +361,7 @@ class DatabaseAdapter:
                 query += " LIMIT %s"
                 params.append(limit)
             
-            df = pd.read_sql_query(query, self.connection, params=params)
+            df = pd.read_sql_query(query, self.engine, params=tuple(params) if params else None)
             
             # Convert timestamp columns
             if 'created_at' in df.columns:
@@ -395,7 +396,7 @@ class DatabaseAdapter:
             WHERE triggered_at >= %s
             """
             
-            df = pd.read_sql_query(query, self.connection, params=[cutoff_date])
+            df = pd.read_sql_query(query, self.engine, params=(cutoff_date,))
             
             if not df.empty:
                 stats = df.iloc[0].to_dict()
@@ -444,7 +445,7 @@ class DatabaseAdapter:
             ORDER BY date
             """
             
-            df = pd.read_sql_query(query, self.connection, params=[cutoff_date])
+            df = pd.read_sql_query(query, self.engine, params=(cutoff_date,))
             
             if not df.empty:
                 df['date'] = pd.to_datetime(df['date'])
@@ -581,7 +582,7 @@ class DatabaseAdapter:
                 query += " LIMIT %s"
                 params.append(limit)
 
-            df = pd.read_sql_query(query, self.connection, params=params)
+            df = pd.read_sql_query(query, self.engine, params=tuple(params) if params else None)
             # Normalize datetime columns
             for col in ["period_start", "period_end", "created_at"]:
                 if col in df.columns:
@@ -634,7 +635,7 @@ class DatabaseAdapter:
                 query += " LIMIT %s"
                 params.append(limit)
 
-            df = pd.read_sql_query(query, self.connection, params=params)
+            df = pd.read_sql_query(query, self.engine, params=tuple(params) if params else None)
             # Normalize datetime columns
             for col in ["period_start", "period_end", "created_at"]:
                 if col in df.columns:
@@ -671,7 +672,7 @@ class DatabaseAdapter:
                 params.extend([active_at, active_at])
             query += " ORDER BY created_at DESC"
 
-            df = pd.read_sql_query(query, self.connection, params=params)
+            df = pd.read_sql_query(query, self.engine, params=tuple(params) if params else None)
             for col in ["created_at", "valid_from", "valid_to"]:
                 if col in df.columns:
                     df[col] = pd.to_datetime(df[col], errors='coerce')
@@ -696,13 +697,69 @@ class DatabaseAdapter:
                     fallback_query += " AND (room_id = %s OR room_id IS NULL)"
                     fallback_params.append(room_id)
                 fallback_query += " ORDER BY created_at DESC"
-                df = pd.read_sql_query(fallback_query, self.connection, params=fallback_params)
+                df = pd.read_sql_query(fallback_query, self.engine, params=tuple(fallback_params) if fallback_params else None)
                 for col in ["created_at", "valid_from", "valid_to"]:
                     if col in df.columns:
                         df[col] = pd.to_datetime(df[col], errors='coerce')
             return df
         except Exception as e:
             logger.error(f"Error reading billing rates: {e}")
+            return pd.DataFrame()
+    
+    def execute_query(self, query, params=None):
+        """Execute a raw SQL query and return results"""
+        try:
+            cursor = self.connection.cursor()
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            logger.error(f"Error executing query: {e}")
+            return None
+    
+    def get_rooms_detailed(self):
+        """Get detailed room information with equipment and sensor data"""
+        try:
+            query = """
+            SELECT 
+                r.id,
+                r.name,
+                r.floor,
+                r.capacity,
+                r.type,
+                r.occupancy_pattern,
+                r.typical_energy_usage,
+                r.created_at,
+                COUNT(DISTINCT e.id) as equipment_count,
+                COUNT(DISTINCT sl.id) as sensor_reading_count,
+                AVG(sl.temperature) as avg_temperature,
+                AVG(sl.humidity) as avg_humidity,
+                AVG(sl.energy_usage) as avg_energy_usage,
+                MAX(sl.recorded_at) as last_reading
+            FROM core_room r
+            LEFT JOIN core_equipment e ON r.id = e.room_id
+            LEFT JOIN core_sensorlog sl ON e.id = sl.equipment_id
+            GROUP BY r.id, r.name, r.floor, r.capacity, r.type, r.occupancy_pattern, r.typical_energy_usage, r.created_at
+            ORDER BY r.floor, r.name
+            """
+            
+            df = pd.read_sql_query(query, self.engine)
+            
+            # Convert timestamp columns
+            if 'created_at' in df.columns:
+                df['created_at'] = pd.to_datetime(df['created_at'])
+            if 'last_reading' in df.columns:
+                df['last_reading'] = pd.to_datetime(df['last_reading'])
+            
+            logger.info(f"Retrieved {len(df)} rooms with detailed information")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error getting detailed room information: {e}")
             return pd.DataFrame()
     
     def close_connection(self):

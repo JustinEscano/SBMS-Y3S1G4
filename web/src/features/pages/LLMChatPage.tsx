@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import PageLayout from "./PageLayout";
 import type { ChatMessage } from "../../service/LLMService";
+import { userService } from "../services/userService";
 import "./LLMChatPage.css";
 
 // Define API endpoint types
@@ -10,12 +11,39 @@ type QueryType = "general" | "maintenance" | "anomalies" | "energy" | "utilizati
 type UserRole = "viewer" | "technician" | "energy_analyst" | "facility_manager" | "admin";
 
 const LLMChatPage: React.FC = () => {
-  // Generate or retrieve session ID for chat persistence
+  // Get logged-in user info
+  const [currentUser, setCurrentUser] = useState<{id: string, username: string} | null>(null);
+  
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+          const user = await userService.getById(userId);
+          setCurrentUser({
+            id: userId,
+            username: user.username || user.email || 'User'
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load user info:", error);
+        // Fallback to user_id if username fetch fails
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+          setCurrentUser({ id: userId, username: `User_${userId.slice(0, 8)}` });
+        }
+      }
+    };
+    loadUserInfo();
+  }, []);
+
+  // Generate or retrieve session ID for chat persistence (survives logout)
   const [sessionId] = useState(() => {
-    let id = sessionStorage.getItem("chat_session_id");
+    // Use localStorage instead of sessionStorage so it persists even after logout
+    let id = localStorage.getItem("chat_session_id");
     if (!id) {
       id = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem("chat_session_id", id);
+      localStorage.setItem("chat_session_id", id);
     }
     return id;
   });
@@ -64,12 +92,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/billing/rates", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
-          user_id: "web_user",
-          username: "Web User"
+          user_id,
+          username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -141,12 +170,13 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/kpi/heartbeat", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
-          user_id: "web_user",
-          username: "Web User"
+          user_id,
+          username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -224,7 +254,7 @@ const LLMChatPage: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id: "web_user",
+            user_id: getUserInfo().user_id,
             session_id: sessionId,
             limit: 50
           })
@@ -272,16 +302,25 @@ const LLMChatPage: React.FC = () => {
     }
   };
 
+  // Helper to get current user info
+  const getUserInfo = () => {
+    return {
+      user_id: currentUser?.id || localStorage.getItem('user_id') || 'anonymous',
+      username: currentUser?.username || 'User'
+    };
+  };
+
   // Save chat to MongoDB
   const saveChatToMongoDB = async (userMessage: string, assistantResponse: string, queryType: QueryType, userRole: string, responseTimeMs?: number, hasError: boolean = false) => {
     try {
+      const { user_id, username } = getUserInfo();
       await fetch("http://localhost:5000/chat/history/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: "web_user",
-          username: "Web User",
-          session_id: `web_session_${Date.now()}`,
+          user_id,
+          username,
+          session_id: `${user_id}_${sessionId}`,
           user_message: userMessage,
           assistant_response: assistantResponse,
           query_type: queryType,
@@ -307,7 +346,8 @@ const LLMChatPage: React.FC = () => {
         lowerQuery.includes("check for maintenance")) {
       return "maintenance";
     } else if (lowerQuery.includes("anomal") || lowerQuery.includes("unusual") || 
-               lowerQuery.includes("strange") || lowerQuery.includes("weird")) {
+               lowerQuery.includes("strange") || lowerQuery.includes("weird") ||
+               lowerQuery.includes("alert") || lowerQuery.includes("warning")) {
       return "anomalies";
     } else if (lowerQuery.includes("energy") || lowerQuery.includes("power") || 
                lowerQuery.includes("kwh") || lowerQuery.includes("consumption") ||
@@ -317,7 +357,9 @@ const LLMChatPage: React.FC = () => {
       return "billing";
     } else if (lowerQuery.includes("room") || lowerQuery.includes("utilization") || 
                lowerQuery.includes("usage") || lowerQuery.includes("occupied") ||
-               lowerQuery.includes("most used")) {
+               lowerQuery.includes("most used") || lowerQuery.includes("available") ||
+               lowerQuery.includes("space") || lowerQuery.includes("floor") ||
+               lowerQuery.includes("capacity") || lowerQuery.includes("analyze specific")) {
       return "utilization";
     } else if (lowerQuery.includes("report") || lowerQuery.includes("summary") ||
                lowerQuery.includes("weekly") || lowerQuery.includes("daily") ||
@@ -369,9 +411,8 @@ const LLMChatPage: React.FC = () => {
         },
         body: JSON.stringify({
           query: query,
-          user_id: "web_user",
-          username: "Web User",
-          session_id: "web_session",
+          ...getUserInfo(),
+          session_id: sessionId,
           client_ip: "127.0.0.1"
         })
       });
@@ -419,7 +460,7 @@ const LLMChatPage: React.FC = () => {
         },
         body: JSON.stringify({
           sensitivity,
-          user_id: "web_user"
+          ...getUserInfo()
         })
       });
 
@@ -448,13 +489,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: "weekly",
-          user_id: "web_user",
-          username: "Web User"
+          user_id,
+          username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -509,13 +551,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: "daily",
-          user_id: "web_user",
-          username: "Web User"
+          user_id,
+          username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -570,13 +613,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: "monthly",
-          user_id: "web_user",
-          username: "Web User"
+          user_id,
+          username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -631,13 +675,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "viewer" },
         body: JSON.stringify({ 
           query: "yearly energy report",
-          user_id: "web_user",
-          username: "Web User",
+          user_id,
+          username,
           session_id: `web_${Date.now()}`
         })
       });
@@ -661,40 +706,63 @@ const LLMChatPage: React.FC = () => {
     return 'weekly';
   };
 
-  // Fake room utilization response
-  const callRoomUtilization = async () => {
+  // Call room utilization endpoint with AI analysis
+  const callRoomUtilization = async (userQuery: string = "") => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: "assistant",
-      content: "Analyzing room utilization...",
+      content: "🏢 Loading room directory with AI insights...",
       timestamp: new Date(),
       isLoading: true,
     };
     setMessages((prev) => [...prev, loadingMessage]);
     setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const lines: string[] = [];
-    lines.push("🏢 Room Utilization Analysis\n");
-    lines.push("⚠️ Room-specific features are currently unavailable.\n");
-    lines.push("📊 System Overview:");
-    lines.push("• Total Energy Consumption: 1,250 kWh");
-    lines.push("• Average Daily Usage: 89 kWh");
-    lines.push("• Peak Usage Time: 14:00-16:00");
-    lines.push("• Current System Status: ✅ Normal");
-    lines.push("\n💡 Available Features:");
-    lines.push("• Energy consumption reports");
-    lines.push("• Billing rate analysis");
-    lines.push("• Maintenance predictions");
-    lines.push("• Anomaly detection");
-    lines.push("• Weekly summaries");
-
-    const formattedContent = lines.join("\n");
-    setMessages((prev) => prev.map((m) => m.id === loadingId ? ({ ...m, content: formattedContent, isLoading: false }) : m));
-    setIsLoading(false);
+    try {
+      const { user_id, username } = getUserInfo();
+      const response = await fetch("http://localhost:5000/rooms/list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: userQuery,
+          user_id,
+          username
+        })
+      });
+      
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      
+      // Use the formatted summary_text from the backend (includes LLM analysis)
+      const formattedContent = data.summary_text || "No rooms found.";
+      
+      // Log statistics if available
+      if (data.statistics) {
+        console.log("Room Statistics:", data.statistics);
+        console.log("Total Rooms:", data.total_rooms);
+        console.log("LLM Analysis Generated:", !!data.llm_analysis);
+      }
+      
+      setMessages((prev) => prev.map((m) => 
+        m.id === loadingId ? ({ ...m, content: formattedContent, isLoading: false }) : m
+      ));
+      
+      // Save to MongoDB
+      await saveChatToMongoDB("Show me rooms", formattedContent, "utilization", "viewer");
+      
+    } catch (error) {
+      console.error("Room list error:", error);
+      const errorMessage = "❌ Failed to load rooms. Please ensure the LLM server is running on port 5000.";
+      setMessages((prev) => prev.map((m) => 
+        m.id === loadingId ? ({ ...m, content: errorMessage, isLoading: false }) : m
+      ));
+      
+      // Save error to MongoDB
+      await saveChatToMongoDB("Show me rooms", errorMessage, "utilization", "viewer", undefined, true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Call energy report endpoint with LLM analysis
@@ -711,13 +779,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: period,
-          user_id: "web_user",
-          username: "Web User"
+          user_id,
+          username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -797,13 +866,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/maintenance/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
           query: userQuery || "Analyze equipment and suggest maintenance",
-          user_id: "web_user",
-          username: "Web User"
+          user_id,
+          username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -948,7 +1018,7 @@ const LLMChatPage: React.FC = () => {
       
       if (queryType === "utilization") {
         setMessages((prev) => [...prev, userMessage]);
-        await callRoomUtilization();
+        await callRoomUtilization(messageText);  // Pass the user's query
         return;
       }
 
@@ -968,66 +1038,8 @@ const LLMChatPage: React.FC = () => {
         try {
           const response = await callAnomaliesDetect(userRole);
           
-          // Use the new simple format with LLM answer
-          const llmAnswer = response.answer || "No analysis available";
-          const alertSummary = response.alert_summary || {};
-          const sampleAlerts: any[] = Array.isArray(response.sample_alerts) ? response.sample_alerts : [];
-
-          const lines: string[] = [];
-          lines.push("⚠️ **ANOMALY DETECTION**\n");
-          
-          // Show summary
-          lines.push("📊 Alert Summary:");
-          lines.push(`• Total Alerts: ${alertSummary.total_alerts || 0}`);
-          lines.push(`• Unresolved: ${alertSummary.unresolved || 0}`);
-          if (alertSummary.by_severity) {
-            const sevCounts = alertSummary.by_severity;
-            lines.push(`• Severity: High: ${sevCounts.high || 0}, Medium: ${sevCounts.medium || 0}, Low: ${sevCounts.low || 0}`);
-          }
-          if (alertSummary.by_type) {
-            lines.push(`• Alert Types: ${Object.keys(alertSummary.by_type).length} different types\n`);
-          }
-
-          // Show sample alerts with better formatting
-          if (sampleAlerts.length > 0) {
-            lines.push("\n📋 Recent Alerts:\n");
-            sampleAlerts.forEach((alert: any, idx: number) => {
-              const type = alert.type || "unknown";
-              const msg = alert.message || "Alert raised";
-              const sev = alert.severity || "medium";
-              const resolved = alert.is_resolved ? "✅ Resolved" : "🔴 Active";
-              const equipment = alert.equipment || "Unknown";
-              
-              // Format timestamp nicely
-              let timeStr = "Unknown time";
-              if (alert.timestamp) {
-                try {
-                  const date = new Date(alert.timestamp);
-                  timeStr = date.toLocaleString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric',
-                    hour: '2-digit', 
-                    minute: '2-digit'
-                  });
-                } catch {
-                  timeStr = String(alert.timestamp);
-                }
-              }
-              
-              lines.push(`**${idx + 1}. [${sev.toUpperCase()}] ${type}**`);
-              lines.push(`   📝 ${msg}`);
-              lines.push(`   🔧 Equipment: ${equipment}`);
-              lines.push(`   📅 ${timeStr}`);
-              lines.push(`   ${resolved}\n`);
-            });
-          }
-
-          // Add LLM analysis
-          lines.push("\n\n🤖 **AI ANALYSIS**\n");
-          lines.push(llmAnswer);
-
-          const formattedContent = lines.join("\n");
+          // Use the formatted answer from backend (includes everything)
+          const formattedContent = response.answer || "No anomalies detected.";
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === loadingMessage.id
@@ -1152,18 +1164,30 @@ const LLMChatPage: React.FC = () => {
 
   const clearChat = () => {
     setMessages([]);
+    // Optionally clear localStorage messages
+    localStorage.removeItem('llm_chat_messages');
+  };
+  
+  const startNewSession = () => {
+    // Clear current chat
+    setMessages([]);
+    localStorage.removeItem('llm_chat_messages');
+    
+    // Generate new session ID
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem("chat_session_id", newSessionId);
+    
+    // Reload page to use new session
+    window.location.reload();
   };
 
   const getSuggestions = () => {
     return [
       "daily energy report",
       "weekly energy report",
-      "monthly energy report",
-      "yearly energy report",
       "check for maintenance",
-      "show billing rates",
-      "show me alerts",
       "show anomalies",
+      "show billing rates",
       "kpi performance",
     ];
   };

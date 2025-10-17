@@ -602,6 +602,28 @@ def llm_query():
         
         # Smart query routing - detect if user wants specific analysis
         query_lower = query.lower()
+        
+        # Check for room queries first
+        room_keywords = ['show me rooms', 'list rooms', 'all rooms', 'room list', 'what rooms', 'available rooms', 'room directory']
+        if any(keyword in query_lower for keyword in room_keywords):
+            # Route to rooms endpoint
+            try:
+                rooms_response = list_rooms()
+                rooms_data = rooms_response.get_json()
+                
+                if rooms_data.get('status') == 'success':
+                    return jsonify({
+                        "status": "success",
+                        "query": query,
+                        "answer": rooms_data.get('summary_text', 'Rooms retrieved successfully'),
+                        "rooms": rooms_data.get('rooms', []),
+                        "total_rooms": rooms_data.get('total_rooms', 0),
+                        "detected_intent": "rooms",
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+            except Exception as e:
+                logger.error(f"Room routing error: {e}")
+        
         route_keywords = {
             'energy': ['energy', 'power', 'consumption', 'kwh', 'electricity', 'usage'],
             'maintenance': ['maintenance', 'repair', 'broken', 'issue', 'problem', 'fix'],
@@ -935,7 +957,7 @@ def predict_maintenance():
                 formatted_suggestions.append(actual_request)
         
         # Generate human-readable summary
-        summary_text = f"🔧 **Maintenance Analysis for {username}**\n\n"
+        summary_text = f"🔧 **MAINTENANCE REQUESTS**\n\n"
         
         # Count by source
         ai_predictions = len(maintenance_alerts)
@@ -948,6 +970,11 @@ def predict_maintenance():
         high_count = all_urgencies.count('High')
         medium_count = all_urgencies.count('Medium')
         low_count = all_urgencies.count('Low')
+        
+        # Count by status
+        pending_requests = [r for r in actual_requests if r.get('status') == 'pending']
+        in_progress_requests = [r for r in actual_requests if r.get('status') == 'in_progress']
+        resolved_requests = [r for r in actual_requests if r.get('status') == 'resolved']
         
         # Use LLM to generate intelligent maintenance insights
         llm_analysis = ""
@@ -1016,32 +1043,69 @@ Use the exact headers shown above. Be concise (2-3 sentences each)."""
 • Keep maintenance logs updated
 """
         
-        summary_text += f"📊 **Summary:**\n"
-        summary_text += f"• Total Items: {total_items}\n"
-        summary_text += f"• 🤖 AI Predictions: {ai_predictions}\n"
-        summary_text += f"• 👤 User Requests: {user_requests}\n"
-        summary_text += f"• 🔴 Critical: {critical_count}\n"
-        summary_text += f"• 🟠 High Priority: {high_count}\n"
-        summary_text += f"• 🟡 Medium Priority: {medium_count}\n"
-        summary_text += f"• ⚪ Low Priority: {low_count}\n"
-        
-        if formatted_suggestions:
-            summary_text += f"\n**Top Maintenance Items:**\n"
-            for i, s in enumerate(formatted_suggestions[:10], 1):
-                source_icon = "🤖" if s.get('source') == 'AI_PREDICTION' else "👤"
-                urgency = s.get('urgency', 'Medium')
-                urgency_emoji = "🔴" if urgency == "Critical" else "🟠" if urgency == "High" else "🟡" if urgency == "Medium" else "⚪"
+        if user_requests > 0:
+            summary_text += f"📋 **Status Overview:**\n"
+            summary_text += f"• Total Requests: **{user_requests}**\n"
+            summary_text += f"• ⏳ Pending: **{len(pending_requests)}**\n"
+            summary_text += f"• 🔄 In Progress: **{len(in_progress_requests)}**\n"
+            summary_text += f"• ✅ Resolved: **{len(resolved_requests)}**\n\n"
+            
+            if pending_requests:
+                summary_text += f"🔴 **Pending Issues ({len(pending_requests)}):**\n\n"
+                for idx, req in enumerate(pending_requests[:10], 1):  # Show first 10 pending
+                    issue = req.get('issue', 'No description provided')
+                    room = req.get('room', 'Unknown Room')
+                    equipment = req.get('equipment', 'Unknown Equipment')
+                    requested_by = req.get('requested_by', 'Unknown')
+                    created_at = req.get('created_at')
+                    
+                    # Format timestamp
+                    if created_at:
+                        try:
+                            from datetime import datetime as dt_class
+                            if isinstance(created_at, str):
+                                dt = dt_class.fromisoformat(created_at.replace('Z', '+00:00'))
+                            else:
+                                dt = created_at
+                            timestamp = dt.strftime("%b %d, %Y %I:%M %p")
+                        except:
+                            timestamp = str(created_at)[:19]
+                    else:
+                        timestamp = "No date"
+                    
+                    summary_text += f"**{idx}. {equipment}** - {room}\n"
+                    summary_text += f"   📝 Issue: {issue}\n"
+                    summary_text += f"   👤 Requested by: {requested_by}\n"
+                    summary_text += f"   🕐 Created: {timestamp}\n\n"
                 
-                summary_text += f"\n{i}. {source_icon} {urgency_emoji} **{s.get('equipment', 'Equipment')}** ({s.get('room', 'Unknown Room')})\n"
-                summary_text += f"   - Issue: {s.get('issue', 'Maintenance needed')}\n"
-                summary_text += f"   - Requested by: {s.get('requested_by', 'System')}\n"
-                summary_text += f"   - Action: {s.get('action', 'Inspect')}\n"
-                summary_text += f"   - Timeline: {s.get('timeline', 'Schedule soon')}\n"
-                if s.get('source') == 'USER_REQUEST':
-                    summary_text += f"   - Status: {s.get('status', 'pending').upper()}\n"
-                    if s.get('assigned_to'):
-                        summary_text += f"   - Assigned to: {s.get('assigned_to')}\n"
-        else:
+                if len(pending_requests) > 10:
+                    summary_text += f"_...and {len(pending_requests) - 10} more pending requests_\n\n"
+            
+            if resolved_requests:
+                summary_text += f"✅ **Recently Resolved ({len(resolved_requests)}):**\n\n"
+                for idx, req in enumerate(resolved_requests[:5], 1):  # Show first 5 resolved
+                    issue = req.get('issue', 'No description')
+                    equipment = req.get('equipment', 'Unknown Equipment')
+                    resolved_at = req.get('resolved_at')
+                    
+                    if resolved_at:
+                        try:
+                            from datetime import datetime as dt_class
+                            if isinstance(resolved_at, str):
+                                dt = dt_class.fromisoformat(resolved_at.replace('Z', '+00:00'))
+                            else:
+                                dt = resolved_at
+                            timestamp = dt.strftime("%b %d, %Y %I:%M %p")
+                        except:
+                            timestamp = str(resolved_at)[:19]
+                    else:
+                        timestamp = "No date"
+                    
+                    summary_text += f"**{idx}. {equipment}**: {issue}\n"
+                    summary_text += f"   🕐 Resolved: {timestamp}\n\n"
+        
+        # Only show "no issues" message if there are truly no requests
+        if not formatted_suggestions:
             summary_text += "\n✅ No maintenance issues detected.\n"
             summary_text += "All equipment is operating within normal parameters.\n\n"
             # Use LLM for preventive recommendations even when no issues
@@ -1135,6 +1199,254 @@ Be specific and actionable."""
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 500
 
+@app.route('/rooms/list', methods=['GET', 'POST', 'OPTIONS'])
+def list_rooms():
+    """
+    Get list of all rooms with detailed information
+    Supports queries like: "what rooms are available", "show me all rooms", "analyze specific rooms"
+    """
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    try:
+        data = request.get_json() or {}
+        user_query = data.get('query', '').lower()  # Get user's original query
+        
+        from database_adapter import DatabaseAdapter
+        db_adapter = DatabaseAdapter()
+        
+        # Get detailed room information
+        rooms_df = db_adapter.get_rooms_detailed()
+        
+        if rooms_df is None or rooms_df.empty:
+            return jsonify({
+                "status": "success",
+                "rooms": [],
+                "total_rooms": 0,
+                "message": "No rooms found in the system",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Format rooms data
+        rooms_list = []
+        for _, room in rooms_df.iterrows():
+            room_data = {
+                "id": str(room['id']),
+                "name": room['name'],
+                "floor": int(room['floor']) if pd.notna(room['floor']) else 0,
+                "capacity": int(room['capacity']) if pd.notna(room['capacity']) else 0,
+                "type": room['type'],
+                "occupancy_pattern": room.get('occupancy_pattern', 'Not specified'),
+                "typical_energy_usage": float(room['typical_energy_usage']) if pd.notna(room.get('typical_energy_usage')) else 0.0,
+                "equipment_count": int(room['equipment_count']) if pd.notna(room['equipment_count']) else 0,
+                "sensor_reading_count": int(room['sensor_reading_count']) if pd.notna(room['sensor_reading_count']) else 0,
+                "avg_temperature": round(float(room['avg_temperature']), 1) if pd.notna(room.get('avg_temperature')) else None,
+                "avg_humidity": round(float(room['avg_humidity']), 1) if pd.notna(room.get('avg_humidity')) else None,
+                "avg_energy_usage": round(float(room['avg_energy_usage']), 2) if pd.notna(room.get('avg_energy_usage')) else None,
+                "last_reading": room['last_reading'].isoformat() if pd.notna(room.get('last_reading')) else None,
+                "created_at": room['created_at'].isoformat() if pd.notna(room.get('created_at')) else None
+            }
+            rooms_list.append(room_data)
+        
+        # Generate summary text for LLM display
+        summary_text = f"🏢 **ROOM DIRECTORY**\n\n"
+        summary_text += f"📊 **Total Rooms**: {len(rooms_list)}\n\n"
+        
+        # Group by floor
+        floors = {}
+        for room in rooms_list:
+            floor = room['floor']
+            if floor not in floors:
+                floors[floor] = []
+            floors[floor].append(room)
+        
+        for floor in sorted(floors.keys()):
+            summary_text += f"**Floor {floor}:**\n"
+            for room in floors[floor]:
+                summary_text += f"\n📍 **{room['name']}**\n"
+                summary_text += f"   • Type: {room['type'].title()}\n"
+                summary_text += f"   • Capacity: {room['capacity']} people\n"
+                summary_text += f"   • Equipment: {room['equipment_count']} devices\n"
+                
+                if room['avg_temperature']:
+                    summary_text += f"   • Current Temp: {room['avg_temperature']}°C\n"
+                if room['avg_humidity']:
+                    summary_text += f"   • Humidity: {room['avg_humidity']}%\n"
+                if room['avg_energy_usage']:
+                    summary_text += f"   • Avg Energy: {room['avg_energy_usage']} kWh\n"
+                
+                summary_text += f"   • Pattern: {room['occupancy_pattern']}\n"
+            summary_text += "\n"
+        
+        # Generate LLM analysis for room utilization insights
+        llm_analysis = ""
+        try:
+            # Calculate statistics for LLM context
+            total_equipment = sum(r['equipment_count'] for r in rooms_list)
+            avg_temp = sum(r['avg_temperature'] for r in rooms_list if r['avg_temperature']) / len([r for r in rooms_list if r['avg_temperature']]) if any(r['avg_temperature'] for r in rooms_list) else 0
+            total_energy = sum(r['avg_energy_usage'] for r in rooms_list if r['avg_energy_usage'])
+            
+            # Find highest and lowest energy consumers
+            energy_rooms = [(r['name'], r['avg_energy_usage']) for r in rooms_list if r['avg_energy_usage']]
+            if energy_rooms:
+                energy_rooms.sort(key=lambda x: x[1], reverse=True)
+                highest_energy = energy_rooms[0]
+                lowest_energy = energy_rooms[-1]
+            else:
+                highest_energy = ("Unknown", 0)
+                lowest_energy = ("Unknown", 0)
+            
+            # Determine user intent and customize prompt
+            if "available" in user_query:
+                # Focus on availability and booking
+                llm_context = f"""You are a building management expert. The user asked: "{user_query}"
+
+AVAILABLE ROOMS ({len(rooms_list)} total):
+{chr(10).join([f"- {r['name']} (Floor {r['floor']}): {r['type']}, {r['capacity']} people capacity, Pattern: {r.get('occupancy_pattern', 'N/A')}" for r in rooms_list[:10]])}
+
+Provide 3 recommendations focused on AVAILABILITY:
+
+**1. IMMEDIATE AVAILABILITY:**
+Which rooms are currently available for booking? List specific room names and their capacities.
+
+**2. BEST ROOMS FOR DIFFERENT USES:**
+Recommend which rooms are best for meetings, work sessions, and breaks based on capacity and type.
+
+**3. SCHEDULING OPTIMIZATION:**
+Based on occupancy patterns, suggest optimal booking times for each room type.
+
+Be specific with room names and practical booking advice."""
+            
+            elif "analyze" in user_query or "specific" in user_query:
+                # Detailed analysis mode
+                llm_context = f"""You are a building management expert performing detailed room analysis. User query: "{user_query}"
+
+DETAILED ROOM DATA:
+{chr(10).join([f"- {r['name']} (Floor {r['floor']}): {r['type']}, {r['capacity']} people, {r['equipment_count']} devices, {(r['avg_energy_usage'] if r['avg_energy_usage'] else 0):.2f} kWh, Temp: {r.get('avg_temperature', 'N/A')}°C" for r in rooms_list[:10]])}
+
+STATISTICS:
+- Highest Energy: {highest_energy[0]} ({highest_energy[1]:.2f} kWh)
+- Lowest Energy: {lowest_energy[0]} ({lowest_energy[1]:.2f} kWh)
+- Total Equipment: {total_equipment} devices
+
+Provide DETAILED ANALYSIS with 3 recommendations:
+
+**1. ENERGY EFFICIENCY ANALYSIS:**
+Analyze energy consumption patterns. Which specific rooms are inefficient and why? Include actual numbers.
+
+**2. EQUIPMENT & INFRASTRUCTURE:**
+Evaluate equipment distribution and identify rooms needing upgrades. Be specific about which rooms and what equipment.
+
+**3. OPTIMIZATION OPPORTUNITIES:**
+Identify specific improvement opportunities for each room type (meeting rooms, offices, labs, etc.).
+
+Use actual room names, numbers, and be very specific in your analysis."""
+            
+            elif "floor" in user_query:
+                # Floor-specific information
+                floor_num = None
+                for word in user_query.split():
+                    if word.isdigit():
+                        floor_num = int(word)
+                        break
+                
+                if floor_num:
+                    floor_rooms = [r for r in rooms_list if r['floor'] == floor_num]
+                    llm_context = f"""User asked about Floor {floor_num}. 
+
+FLOOR {floor_num} ROOMS ({len(floor_rooms)} rooms):
+{chr(10).join([f"- {r['name']}: {r['type']}, {r['capacity']} people, {(r['avg_energy_usage'] if r['avg_energy_usage'] else 0):.2f} kWh" for r in floor_rooms])}
+
+Provide 3 recommendations for FLOOR {floor_num}:
+
+**1. FLOOR {floor_num} OVERVIEW:**
+Summarize what's on this floor and how it's being used.
+
+**2. FLOOR {floor_num} OPTIMIZATION:**
+Specific improvements for this floor's rooms.
+
+**3. FLOOR {floor_num} RECOMMENDATIONS:**
+Best practices for managing this floor's spaces."""
+                else:
+                    llm_context = f"""Provide floor-by-floor breakdown with recommendations for each floor."""
+            
+            else:
+                # General overview
+                llm_context = f"""You are a building management expert. User query: "{user_query if user_query else 'Show me all rooms'}"
+
+ROOM STATISTICS:
+- Total Rooms: {len(rooms_list)} across {len(floors)} floors
+- Total Equipment: {total_equipment} devices
+- Average Temperature: {avg_temp:.1f}°C
+- Total Energy: {total_energy:.2f} kWh
+- Highest Energy: {highest_energy[0]} ({highest_energy[1]:.2f} kWh)
+- Lowest Energy: {lowest_energy[0]} ({lowest_energy[1]:.2f} kWh)
+
+ROOMS:
+{chr(10).join([f"- {r['name']} (Floor {r['floor']}): {r['type']}, {r['capacity']} people, {(r['avg_energy_usage'] if r['avg_energy_usage'] else 0):.2f} kWh" for r in rooms_list[:10]])}
+
+Provide 3 GENERAL recommendations:
+
+**1. ENERGY OPTIMIZATION:**
+Which rooms need energy optimization? Use specific room names and numbers.
+
+**2. SPACE UTILIZATION:**
+How to better use our {len(rooms_list)} rooms across {len(floors)} floors? Be specific about room types.
+
+**3. EQUIPMENT MANAGEMENT:**
+What equipment maintenance or upgrades are needed? Prioritize specific rooms.
+
+Be concise and use actual data."""
+
+            # Call LLM directly
+            from langchain_ollama import OllamaLLM
+            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            logger.info(f"Calling LLM for room analysis...")
+            llm_analysis = llm.invoke(llm_context)
+            logger.info(f"LLM room analysis generated successfully: {len(llm_analysis)} chars")
+            
+        except Exception as llm_error:
+            logger.error(f"LLM analysis failed: {llm_error}", exc_info=True)
+            logger.warning(f"Using fallback recommendations")
+            llm_analysis = f"""**1. ENERGY OPTIMIZATION:**
+Focus on {highest_energy[0]} which consumes {highest_energy[1]:.2f} kWh. Review HVAC settings and equipment usage patterns to reduce consumption.
+
+**2. SPACE UTILIZATION:**
+With {len(rooms_list)} rooms across {len(floors)} floors, consider consolidating underutilized spaces and optimizing high-traffic areas.
+
+**3. EQUIPMENT MANAGEMENT:**
+{total_equipment} devices need regular maintenance. Prioritize high-energy rooms and schedule preventive maintenance quarterly."""
+        
+        # Add LLM analysis to summary
+        summary_text += f"\n🤖 **AI RECOMMENDATIONS**\n\n{llm_analysis}\n"
+        
+        db_adapter.close_connection()
+        
+        return jsonify({
+            "status": "success",
+            "rooms": rooms_list,
+            "total_rooms": len(rooms_list),
+            "summary_text": summary_text,
+            "llm_analysis": llm_analysis,
+            "floors": list(sorted(floors.keys())),
+            "statistics": {
+                "total_equipment": total_equipment,
+                "avg_temperature": round(avg_temp, 1) if avg_temp else None,
+                "total_energy": round(total_energy, 2),
+                "highest_energy_room": highest_energy[0],
+                "lowest_energy_room": lowest_energy[0]
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Room list error: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "status": "error",
+            "error": f"Failed to retrieve rooms: {str(e)}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 500
+
 @app.route('/anomalies/detect', methods=['POST', 'OPTIONS'])
 def detect_anomalies():
     """
@@ -1147,6 +1459,7 @@ def detect_anomalies():
         data = request.get_json() or {}
         user_id = data.get('user_id', 'anonymous')
         username = data.get('username', 'anonymous')
+        query = data.get('query', '').lower()  # Get the user's query for context
         
         logger.info(f"Anomaly detection request from {username}")
         
@@ -1242,10 +1555,51 @@ Monitor alert trends and address root causes proactively."""
         except Exception as e:
             logger.warning(f"Failed to process alerts: {e}")
         
-        # Build simple response with LLM analysis
+        # Build formatted response with actual alerts
+        summary_text = f"⚠️ **SYSTEM ALERTS**\n\n"
+        summary_text += f"📊 **Alert Summary:**\n"
+        summary_text += f"• Total Alerts: **{total_alerts}**\n"
+        summary_text += f"• Unresolved: **{unresolved_count}**\n"
+        
+        if severity_counts:
+            summary_text += f"\n**By Severity:**\n"
+            for severity, count in severity_counts.items():
+                emoji = "🔴" if severity == "high" else "🟠" if severity == "medium" else "🟡"
+                summary_text += f"• {emoji} {severity.title()}: {count}\n"
+        
+        if type_counts:
+            summary_text += f"\n**By Type:**\n"
+            for alert_type, count in list(type_counts.items())[:5]:
+                summary_text += f"• {alert_type}: {count} occurrences\n"
+        
+        # Add recent alerts
+        if alerts_list:
+            summary_text += f"\n\n📋 **Recent Alerts ({min(len(alerts_list), 10)}):**\n\n"
+            for idx, alert in enumerate(alerts_list[:10], 1):
+                severity_emoji = "🔴" if alert.get('severity') == "high" else "🟠" if alert.get('severity') == "medium" else "🟡"
+                status_emoji = "✅" if alert.get('is_resolved') else "🔴"
+                
+                summary_text += f"**{idx}. [{alert.get('severity', 'unknown').upper()}] {alert.get('type', 'Unknown')}**\n"
+                summary_text += f"   {severity_emoji} {alert.get('message', 'No description')}\n"
+                if alert.get('equipment'):
+                    summary_text += f"   🔧 Equipment: {alert['equipment']}\n"
+                if alert.get('timestamp'):
+                    try:
+                        from datetime import datetime as dt_class
+                        dt = dt_class.fromisoformat(alert['timestamp'].replace('Z', '+00:00'))
+                        timestamp_str = dt.strftime("%b %d, %Y %I:%M %p")
+                        summary_text += f"   📅 {timestamp_str}\n"
+                    except:
+                        summary_text += f"   📅 {alert['timestamp'][:19]}\n"
+                summary_text += f"   {status_emoji} {'Resolved' if alert.get('is_resolved') else 'Active'}\n\n"
+        
+        # Add LLM analysis
+        summary_text += f"\n🤖 **AI ANALYSIS**\n\n{llm_analysis}\n"
+        
         response = {
             "status": "success",
-            "answer": llm_analysis,
+            "answer": summary_text,
+            "llm_analysis": llm_analysis,
             "alert_summary": {
                 "total_alerts": total_alerts,
                 "unresolved": unresolved_count,
@@ -1730,7 +2084,8 @@ if __name__ == '__main__':
         print("\n📡 Available Endpoints:")
         endpoints = [
             ("GET   /health", "System health check"),
-            ("POST  /llmquery", "General LLM chat queries"),
+            ("POST  /llmquery", "General LLM chat queries (auto-routes room queries)"),
+            ("GET   /rooms/list", "List all rooms with details"),
             ("POST  /energy/report", "Energy analysis (daily/weekly/monthly/yearly)"),
             ("POST  /maintenance/predict", "Maintenance predictions with LLM"),
             ("POST  /anomalies/detect", "Anomaly detection"),
