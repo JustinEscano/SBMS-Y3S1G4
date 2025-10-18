@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../Screens/RegisterScreen.dart';
 import '../Screens/DashboardScreen.dart';
 import '../Screens/OtpScreen.dart';
@@ -69,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         if (data.containsKey('access') && data.containsKey('refresh')) {
           final accessToken = data['access'] as String;
@@ -91,9 +93,24 @@ class _LoginScreenState extends State<LoginScreen> {
           });
         }
       } else if (response.statusCode == 401) {
-        setState(() {
-          _errorMessage = 'Invalid email or password';
-        });
+        final errorData = response.data;
+        if (errorData is Map && errorData.containsKey('password') && errorData['password'] is List && errorData['password'].isNotEmpty) {
+          setState(() {
+            _errorMessage = 'Incorrect password';
+          });
+        } else if (errorData is Map && errorData.containsKey('detail') && errorData['detail'].toString().toLowerCase().contains('credentials')) {
+          setState(() {
+            _errorMessage = 'Incorrect password';
+          });
+        } else if (errorData is Map && errorData.containsKey('non_field_errors') && errorData['non_field_errors'] is List && errorData['non_field_errors'].isNotEmpty) {
+          setState(() {
+            _errorMessage = 'Incorrect password';
+          });
+        } else {
+          setState(() {
+            _errorMessage = 'Invalid email or password';
+          });
+        }
       } else if (response.statusCode == 400) {
         setState(() {
           final errorData = response.data;
@@ -144,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF161C28),
+      backgroundColor: const Color(0xFF121822),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -158,33 +175,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     'assets/icons/logo.png',
                     height: 80,
                     fit: BoxFit.contain,
-                  ),
+                  ).animate().fadeIn(duration: 300.ms),
                   const SizedBox(height: 16),
                   Image.asset(
                     'assets/icons/ORBIT.png',
                     height: 40,
                     fit: BoxFit.contain,
-                  ),
+                  ).animate().fadeIn(duration: 300.ms),
                   const SizedBox(height: 32),
                   Text(
                     'Login To Continue',
-                    style: const TextStyle(
-                      fontFamily: 'Arial',
+                    style: GoogleFonts.urbanist(
                       fontWeight: FontWeight.bold,
                       fontSize: 26,
-                      color: Color(0xFFFFFFFF),
+                      color: Colors.white,
                     ),
                     textAlign: TextAlign.center,
-                  ),
+                  ).animate().fadeIn(duration: 300.ms),
                   const SizedBox(height: 48),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Email',
-                      style: const TextStyle(
-                        fontFamily: 'Arial',
+                      style: GoogleFonts.urbanist(
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFFFFFFF),
+                        color: Colors.white,
                         fontSize: 16,
                       ),
                     ),
@@ -194,22 +209,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     decoration: InputDecoration(
                       hintText: 'Enter your email',
-                      hintStyle: const TextStyle(
-                        fontFamily: 'Arial',
-                        color: Color(0xFF676767),
-                      ),
+                      hintStyle: GoogleFonts.urbanist(color: Colors.grey),
                       filled: true,
-                      fillColor: const Color(0xFF28292E),
+                      fillColor: const Color(0xFF121822),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    style: const TextStyle(
-                      fontFamily: 'Arial',
-                      color: Color(0xFFFFFFFF),
-                    ),
+                    style: GoogleFonts.urbanist(color: Colors.white),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -217,16 +226,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                       return null;
                     },
-                  ),
+                  ).animate().fadeIn(duration: 300.ms),
                   const SizedBox(height: 24),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Password',
-                      style: const TextStyle(
-                        fontFamily: 'Arial',
+                      style: GoogleFonts.urbanist(
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFFFFFFF),
+                        color: Colors.white,
                         fontSize: 16,
                       ),
                     ),
@@ -236,22 +244,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     decoration: InputDecoration(
                       hintText: 'Enter your password',
-                      hintStyle: const TextStyle(
-                        fontFamily: 'Arial',
-                        color: Color(0xFF676767),
-                      ),
+                      hintStyle: GoogleFonts.urbanist(color: Colors.grey),
                       filled: true,
-                      fillColor: const Color(0xFF28292E),
+                      fillColor: const Color(0xFF121822),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    style: const TextStyle(
-                      fontFamily: 'Arial',
-                      color: Color(0xFFFFFFFF),
-                    ),
+                    style: GoogleFonts.urbanist(color: Colors.white),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -259,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                       return null;
                     },
-                  ),
+                  ).animate().fadeIn(duration: 300.ms),
                   const SizedBox(height: 16),
                   Align(
                     alignment: Alignment.centerRight,
@@ -272,41 +274,39 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: Text(
                         'Forgot Password?',
-                        style: const TextStyle(
-                          fontFamily: 'Arial',
-                          color: Color(0xFF4D6BFE),
+                        style: GoogleFonts.urbanist(
+                          color: const Color(0xFF184BFB),
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ),
+                  ).animate().fadeIn(duration: 300.ms),
                   const SizedBox(height: 24),
                   if (_errorMessage.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(12),
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF28292E),
+                        color: const Color(0xFF121822),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         _errorMessage,
-                        style: const TextStyle(
-                          fontFamily: 'Arial',
+                        style: GoogleFonts.urbanist(
                           color: Colors.red,
                           fontSize: 14,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    ),
+                    ).animate().fadeIn(duration: 300.ms),
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4D6BFE),
+                        backgroundColor: const Color(0xFF184BFB),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -317,29 +317,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFFFFF)),
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                          : const Text(
+                          : Text(
                         'Login',
-                        style: TextStyle(
-                          fontFamily: 'Arial',
-                          color: Color(0xFFFFFFFF),
+                        style: GoogleFonts.urbanist(
+                          color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ),
+                  ).animate().scale(duration: 200.ms),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Don't have an account? ",
-                        style: const TextStyle(
-                          fontFamily: 'Arial',
-                          color: Color(0xFFFFFFFF),
+                        style: GoogleFonts.urbanist(
+                          color: Colors.white,
                           fontSize: 14,
                         ),
                       ),
@@ -352,16 +350,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         child: Text(
                           'Sign Up',
-                          style: const TextStyle(
-                            fontFamily: 'Arial',
-                            color: Color(0xFF4D6BFE),
+                          style: GoogleFonts.urbanist(
+                            color: const Color(0xFF184BFB),
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ],
-                  ),
+                  ).animate().fadeIn(duration: 300.ms),
                 ],
               ),
             ),

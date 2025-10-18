@@ -4,13 +4,13 @@ class ApiConfig {
   static const String _environment = 'dev';
   static const String _prodBaseUrl = 'https://your-api-domain.com/api/';
   static String get _devBaseUrl => Platform.isAndroid
-      ? 'http://192.168.0.28:8000/api'
-      : 'http://192.168.0.28:8000/api';
+      ? 'http://10.40.19.57:8000/api'
+      : 'http://10.40.19.57:8000/api';
   static String get baseUrl => _environment == 'prod' ? _prodBaseUrl : _devBaseUrl;
 
   // LLM Direct Server (bypass Django API)
   static String get _llmDevBaseUrl => Platform.isAndroid
-      ? 'http://192.168.0.28:5000'  // Updated to match current network
+      ? 'http://10.40.19.57:5000'  // Updated to match current network
       : 'http://localhost:5000';
   static String get llmBaseUrl => _environment == 'prod' ? 'https://your-llm-domain.com' : _llmDevBaseUrl;
 
