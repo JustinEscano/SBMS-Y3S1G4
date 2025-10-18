@@ -6,13 +6,13 @@
 #include <time.h>
 
 // WiFi credentials - UPDATE THESE TO YOUR NETWORK
-const char* ssid = "SKYWORTH-FA13";
-const char* password = "281892655";
+const char* ssid = "Redmi Note 11";
+const char* password = "987654321";
 
 // Django API endpoints - UPDATED TO NEW IP
-const char* serverURL = "http://192.168.0.28:8000/api/esp32/sensor-data/";
-const char* healthURL = "http://192.168.0.28:8000/api/esp32/health/";
-const char* heartbeatURL = "http://192.168.0.28:8000/api/esp32/heartbeat/";
+const char* serverURL = "http://10.29.175.29:8000/api/esp32/sensor-data/";
+const char* healthURL = "http://10.29.175.29:8000/api/esp32/health/";
+const char* heartbeatURL = "http://10.29.175.29:8000/api/esp32/heartbeat/";
 
 // Device configuration - MUST MATCH Django equipment device_id
 const char* deviceID = "ESP32_001";
