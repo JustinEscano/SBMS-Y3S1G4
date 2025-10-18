@@ -1,7 +1,25 @@
-fastapi
-langchain
-langchain-ollama
-langchain-community
-pandas
-uvicorn
-chromadb
+# Django API dependencies
+Django==5.2.4
+psycopg2-binary==2.9.9
+
+# Flask LLM service dependencies
+Flask==3.0.3
+flask-cors==5.0.0
+
+# LLM and AI dependencies
+langchain==0.3.4
+langchain-community==0.3.3
+langchain-core==0.3.13
+langchain-ollama==0.2.0
+pymongo==4.10.1
+chromadb==0.5.13
+ollama==0.3.3
+
+# Data processing dependencies
+pandas==2.2.3
+numpy==1.26.4
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.26.0
+
+# Utilities
+python-dotenv==1.0.1

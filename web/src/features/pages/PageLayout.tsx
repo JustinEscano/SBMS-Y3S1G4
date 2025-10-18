@@ -1,0 +1,60 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import SideBar from "../components/SideBar";
+import TopBar from "../components/TopBar";
+import { useAuth } from "../context/AuthContext";
+import "./PageStyle.css";
+
+interface SelectedSection {
+  parent: string;
+  child?: string;
+}
+
+interface PageLayoutProps {
+  initialSection?: SelectedSection;
+  children: React.ReactNode;
+}
+
+const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
+  const [collapsed, setCollapsed] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  function handleLogout(): void {
+    logout();
+    localStorage.clear();
+    navigate("/login");
+  }
+
+  useEffect(() => {
+    document.body.classList.add("dashboard");
+    return () => {
+      document.body.classList.remove("dashboard");
+    };
+  }, []);
+
+  return (
+      <div className="dashboard-container">
+        <SideBar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
+          handleLogout={handleLogout}
+        />
+
+        <TopBar
+          collapsed={collapsed}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          handleLogout={handleLogout}
+        />
+
+        <div className={`dashboard-content ${collapsed ? "expanded" : ""}`}>
+          {children}
+        </div>
+      </div>
+  );
+};
+
+export default PageLayout;

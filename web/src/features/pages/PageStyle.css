@@ -1,0 +1,820 @@
+:root {
+  --sidebar-expanded: 220px;
+  --sidebar-collapsed: 70px;
+  --topbar-height: 60px;
+  --red: #e74c3c;
+  --dark-red: #c0392b;
+  --blue: #4c6ef5;
+  --light-blue: #4cafef;
+  --hover-blue: #3a9cd6;
+  --dark-blue: #3652d9;
+  --dark-bg: #1f2235;
+  --mid-bg: #2a2d43;
+  --header-bg: #3a3f61;
+  --white: #ffffff;
+  --off-white: #f5f5f5;
+  --light-purple: #a6b1ff;
+  --purple: #9b59b6;
+  --brown: #a0522d;
+  --black: #000000;
+  --gray: #aaa;
+  --light-gray: #ddd;
+  --blue-gray: #607D8B;
+  --lime-green: #32cd32;
+  --success: #4CAF50;
+  --warning: #ff9800;
+  --error: #f44336;
+  transition: transform 0.2s ease;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #1f2235; /* Match dashboard background */
+}
+
+/* FIXED: App container setup */
+#root {
+  width: 100%;
+  min-height: 100vh; /* CHANGED: Use min-height to allow content to expand */
+  display: flex;
+  flex-direction: column;
+}
+
+/* FIXED: Dashboard content with proper scrolling */
+.dashboard-content {
+  flex: 1;
+  padding: 24px;
+  padding-top: calc(var(--topbar-height) + 24px);
+  background: #1f2235;
+  color: #f5f5f5;
+  margin-left: var(--sidebar-expanded);
+  transition: margin-left 0.3s ease;
+  overflow-y: auto;
+  height: calc(100vh - var(--topbar-height));
+}
+
+.dashboard-content.expanded {
+  margin-left: var(--sidebar-collapsed);
+  width: calc(100% - var(--sidebar-collapsed));
+}
+
+.page-header h1 {
+  display: flex;
+  align-items: center;   /* makes all parts align vertically in the middle */
+  gap: 8px;              /* space between elements */
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.page-header .title {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.page-header .divider {
+  font-size: 1.5rem;   /* slightly smaller bar if you want */
+  color: #fff;         /* subtle color for divider */
+}
+
+.page-header .breadcrumb {
+  font-size: 1rem;     /* smaller text */
+  font-weight: 400;
+  color: #aaa;
+}
+
+.table-title {
+  text-align: left;     /* align text to the left */
+  font-size: 1.25rem;   /* make it bigger (adjust as needed) */
+  font-weight: 600;     /* bold for emphasis */
+  padding: 16px 32px;    /* some breathing room */
+  color: #fff;          /* optional: white text */
+}
+
+
+.dashboard-content h2 {
+  font-size: 1.3rem;
+  margin: 20px 0 12px;
+  font-weight: 500;
+  color: var(--light-purple);
+}
+
+.content-container {
+  padding-bottom: 25px;
+  margin-bottom: 13px;
+}
+
+.stats-boxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stats-box {
+  background: var(--mid-bg);
+  padding: 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+}
+
+.stat-boxes:hover {
+  transform: translateY(-3px);
+}
+
+.stat-icon {
+  font-size: 5.3rem;
+  padding: 13px;
+}
+
+.stat-info p.stat-number {
+  font-size: 1.9rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: var(--white);
+}
+
+.stat-info p.stat-label {
+  font-size: 1.3rem;
+  color: var(--gray);
+}
+
+/* Rooms Section */
+.rooms-section {
+  background: var(--mid-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--header-bg);
+  margin-bottom: 2rem; /* ADDED: Bottom margin for proper spacing */
+}
+
+.rooms-section h2 {
+  margin-bottom: 1rem;
+  color: var(--white);
+}
+
+.table-controls .search-btn,
+.table-controls .filter-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--blue);
+  color: var(--white);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  text-transform: uppercase; /* Consistent with dashboard style */
+}
+
+.table-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.table-controls input {
+  width: 100%;
+}
+
+.table-controls input,
+.table-controls select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: var(--header-bg);
+  color: var(--off-white);
+}
+
+.table-controls input::placeholder {
+  color: var(--gray);
+}
+
+.table-controls .add-btn {
+  background: var(--blue);
+  color: var(--white);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.table-controls .add-btn:hover {
+  background: var(--dark-blue);
+}
+
+/* FIXED: Table container with proper overflow */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--header-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  outline: 1px solid var(--white);
+}
+
+table thead {
+  background: var(--header-bg);
+  outline: 1px solid var(--white);
+}
+
+table thead th {
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--light-gray);
+}
+
+table tbody td {
+  padding: 12px;
+  border-top: 1px solid var(--mid-bg);
+  color: var(--white);
+  text-align: center;
+}
+
+.edt-btn,
+.dlt-btn,
+.view-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-right: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.edt-btn {
+  background: var(--light-blue);
+  color: var(--white);
+}
+
+.edt-btn:hover {
+  background: var(--hover-blue);
+}
+
+.view-btn {
+  background: var(--warning);
+  color: var(--white);
+}
+
+.view-btn:hover {
+  background: var(--brown);
+  color: var(--white);
+}
+
+.dlt-btn {
+  background: var(--red);
+  color: var(--white);
+}
+
+.dlt-btn:hover {
+  background: var(--dark-red);
+  color: var(--white);
+}
+
+.add-btn-main {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #4c6ef5;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 16px;
+  margin-top: 16px;
+  transition: background 0.2s ease;
+}
+
+.add-btn-main:hover {
+  background: #3652d9;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.pagination button {
+  background: transparent;
+  border: none;
+  color: #f5f5f5;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  color: #4c6ef5;
+}
+
+.pagination button[disabled] {
+  cursor: default;
+  color: #555;
+}
+
+.pagination button.current {
+  text-decoration: underline;
+  font-weight: bold;
+  cursor: default;
+}
+
+.pagination-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center horizontally */
+  gap: 6px;            /* spacing between buttons and text */
+  padding: 14px;
+}
+
+/* Jump to page input */
+.jump-page {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.jump-page input {
+  width: 60px;
+  padding: 4px;
+  border-radius: 4px;
+  border: none;
+  text-align: center;
+  background: var(--header-bg);
+  color: var(--white);
+}
+
+.jump-page button {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: none;
+  background: #4c6ef5;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.jump-page button:hover {
+  background: #3652d9;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .sensor-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .systems-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    margin-left: 0;
+    padding: 16px;
+    width: 100%;
+  }
+  
+  .sensor-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-boxes {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  
+  .reading-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .sensor-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .system-details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.status-color {
+  font-weight: bold;
+  color: var(--white);
+  padding: 5px 20px;
+  border-radius: 12px;
+}
+
+.status-color-online {
+  background-color: var(--success);
+}
+
+.status-color-offline {
+  background-color: var(--gray);
+}
+
+.status-color-maintenance {
+  background-color: var(--warning);
+}
+
+.status-color-error {
+  background-color: var(--error);
+}
+
+.status-color-pending {
+  background-color: var(--warning);
+}
+
+.status-color-in_progress {
+  background-color: var(--light-blue);
+}
+
+.status-color-resolved {
+  background-color: var(--success);
+}
+
+.type-color {
+  font-weight: bold;
+  color: var(--white);
+  padding: 5px 20px;
+  border-radius: 12px;
+}
+
+.type-color-lab {
+  background-color: var(--purple);
+}
+.type-color-meeting {
+  background-color: var(--warning);
+}
+.type-color-storage {
+  background-color: var(--brown);
+}
+.type-color-office {
+  background-color: var(--blue)
+}
+.type-color-corridor {
+  background-color: var(--blue-gray);
+}
+.type-color-utility {
+  background-color: var(--lime-green); 
+}
+
+@media (max-width: 480px) {
+  .sensor-card {
+    padding: 1rem;
+  }
+  
+  .sensor-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stats-boxes {
+    grid-template-columns: 1fr;
+  }
+  
+  .systems-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .welcome-header {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* usage page */
+
+/* General page layout */
+.usage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.usage-header .left h2 {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.usage-header .right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.usage-header select {
+  background: #1e2a38;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.date-picker {
+  color: #bbb;
+  font-size: 14px;
+}
+
+/* Chart container */
+.usage-chart-container {
+  background: #1c2736;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 30px;
+  height: 360px; /* fixed height so chart stays consistent */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Inside chart */
+.chart-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+
+/* Container for HVAC Logs */
+.hvac-logs {
+  margin-top: 2.5rem; /* mt-10 */
+  margin-bottom: 2.5rem;
+}
+
+.hvac-logs h2 {
+  font-size: 1.25rem; /* text-lg */
+  font-weight: 600;   /* font-semibold */
+  margin-bottom: 1rem; /* mb-4 */
+  color: #f1f5f9; /* light gray */
+}
+
+/* Horizontal scroll layout for cards */
+.hvac-logs-grid {
+  display: flex;
+  flex-wrap: nowrap;         /* keep cards in one row */
+  overflow-x: auto;          /* horizontal scroll if too many */
+  gap: 40px;                 /* spacing between cards */
+  padding-bottom: 1rem;      /* some padding for scroll */
+}
+
+/* Individual sensor log card */
+.hvac-card {
+  min-width: 300px;          /* width of each card */
+  flex: 0 0 auto;            /* prevent shrinking */
+  background-color: #1f2937; /* gray-800 */
+  border-radius: 0.75rem;    /* rounded-lg */
+  padding: 1rem;             /* p-4 */
+  color: #e5e7eb;            /* text-gray-200 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #374151; /* subtle border */
+}
+
+.hvac-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Card content styling */
+.hvac-card p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem; /* text-sm */
+}
+
+.hvac-card p strong {
+  color: #f8fafc; /* make labels slightly brighter */
+}
+
+.dropdown-default {
+  padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background: var(--header-bg);
+    color: var(--off-white)
+}
+
+/* Add to PageStyle.css for summary cards */
+.summary-card {
+  padding: 1rem;
+  background-color: #1f2937; /* bg-gray-800 */
+  border-radius: 0.5rem;
+  border: 1px solid #374151; /* border-gray-700 */
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.summary-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.summary-card p:first-child {
+  color: #9ca3af; /* text-gray-400 */
+  font-size: 0.875rem; /* text-sm */
+  margin-bottom: 0.25rem;
+}
+
+.summary-card p:last-child {
+  color: #ffffff; /* text-white */
+  font-weight: bold;
+  font-size: 1.125rem; /* text-lg */
+  margin: 0;
+}
+
+/* Grid container for cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  margin-top: 20px;
+}
+
+@media (min-width: 768px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* settings */
+
+/* Settings-Specific Sections */
+.settings-section {
+  margin-bottom: 1rem;
+}
+
+.settings-form {
+  background: var(--mid-bg); /* Clean bg */
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.otp-section, .password-section {
+  border: 1px solid var(--header-bg); /* Subtle borders for separation */
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.otp-section h4 {
+  color: var(--light-blue); /* Blue accent for OTP */
+}
+
+.password-section h4 {
+  color: var(--warning); /* Orange for password */
+}
+
+.delete-trigger {
+  text-align: center; /* Center delete button */
+}
+
+/* Modal Enhancements (Build on existing .modal) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8); /* Darker overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--mid-bg);
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--header-bg);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--white);
+  font-size: 1.25rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--gray);
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: var(--red);
+}
+
+.modal-content {
+  padding: 1.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background: var(--dark-blue);
+}
+
+.btn-danger {
+  background: var(--red);
+  color: var(--white);
+}
+
+.btn-danger:hover {
+  background: var(--dark-red);
+}
+
+.btn-secondary {
+  background: var(--mid-bg);
+  color: var(--off-white);
+  border: 1px solid var(--header-bg);
+}
+
+.btn-secondary:hover {
+  background: var(--header-bg);
+}
+
+/* Throbber (already in CSS, but ensure) */
+.loading-throbber {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--mid-bg);
+  border-top: 4px solid var(--blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

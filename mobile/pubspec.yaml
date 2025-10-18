@@ -1,0 +1,47 @@
+name: mobile
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.2.2
+  provider: ^6.1.2
+  shared_preferences: ^2.3.0
+  file_picker: ^10.3.3
+  image_picker: ^1.1.2
+  url_launcher: ^6.3.1
+  jwt_decode: ^0.3.1
+  fl_chart: ^0.68.0
+  dio: ^5.9.0
+  google_fonts: ^6.1.0
+  flutter_animate: ^4.5.0
+  open_filex: ^4.3.2
+  path_provider: ^2.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/Home Default.png
+    - assets/icons/Home Hovered.png
+    - assets/icons/Orb Default.png
+    - assets/icons/Orb Hovered.png
+    - assets/icons/Report Default.png
+    - assets/icons/Report Hovered.png
+    - assets/icons/Usage Default.png
+    - assets/icons/Usage Hovered.png
+    - assets/icons/Notif default.png
+    - assets/icons/Notif ping.png
+    - assets/icons/logo.png
+    - assets/icons/ORBIT.png

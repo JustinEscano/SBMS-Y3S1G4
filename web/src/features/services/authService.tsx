@@ -1,0 +1,48 @@
+import axiosInstance from "../../service/AppService.tsx";
+import { jwtDecode } from "jwt-decode";
+interface LoginResponse {
+  access: string;
+  refresh: string;
+  userId: string;
+}
+interface TokenPayload {
+  user_id: string;
+  exp: number;
+  token_type: string;
+}
+export const loginUser = async (
+  email: string,
+  password: string
+): Promise<LoginResponse> => {
+  const res = await axiosInstance.post("/api/token/", { email, password });
+  const { access, refresh } = res.data as { access: string; refresh: string };
+  // ✅ Decode JWT payload to extract user_id
+  const decoded = jwtDecode<TokenPayload>(access);
+  // ✅ Save tokens and user_id to localStorage
+  localStorage.setItem("access_token", access);
+  localStorage.setItem("refresh_token", refresh);
+  localStorage.setItem("user_id", decoded.user_id);
+  return {
+    access,
+    refresh,
+    userId: decoded.user_id,
+  };
+};
+export const requestOTPPasswordReset = async (email: string) => {
+  const res = await axiosInstance.post('/api/otp-password/request/', { email });
+  return res.data;
+};
+export const verifyOTPPasswordReset = async (email: string, otp: string, password: string) => {
+  const res = await axiosInstance.patch('/api/otp-password/verify/', { email, otp, password });
+  return res.data;
+};
+// For AUTHENTICATED verification (e.g., SettingsPage) - email + otp (to match backend expectations)
+export const verifyOTP = async (email: string, otp: string) => {
+  const res = await axiosInstance.post('/api/otp-password/verify-otp/', { email, otp });
+  return res.data;
+};
+// For UNAUTHENTICATED verification (e.g., PasswordResetScreen) - email + otp
+export const verifyOTPUnauthenticated = async (email: string, otp: string) => {
+  const res = await axiosInstance.post('/api/otp-password/verify-otp/', { email, otp });
+  return res.data;
+};
