@@ -1,0 +1,619 @@
+{
+  "room_id": "RM-405",
+  "building_location": "Dagupan City, Ilocos Region, Philippines",
+  "start_date": "2025-03-03",
+  "end_date": "2025-03-09",
+  "data_interval_minutes": 30,
+  "logs": [
+    {
+      "timestamp": "2025-03-03T00:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.05,
+      "power_consumption_watts": {
+        "lighting": 10,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 50
+      },
+      "equipment_usage": {
+        "lights_on_hours": 0.0,
+        "air_conditioner_on_hours": 0.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 0.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.0,
+        "humidity_percent": 70
+      }
+    },
+    {
+      "timestamp": "2025-03-03T00:30:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.05,
+      "power_consumption_watts": {
+        "lighting": 10,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 50
+      },
+      "equipment_usage": {
+        "lights_on_hours": 0.0,
+        "air_conditioner_on_hours": 0.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 0.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.1,
+        "humidity_percent": 70
+      }
+    },
+    {
+      "timestamp": "2025-03-03T07:30:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 1,
+      "energy_consumption_kwh": 0.18,
+      "power_consumption_watts": {
+        "lighting": 60,
+        "hvac_fan": 35,
+        "standby_misc": 25,
+        "computer": 80,
+        "total": 200
+      },
+      "equipment_usage": {
+        "lights_on_hours": 0.5,
+        "air_conditioner_on_hours": 0.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 0.5
+      },
+      "environmental_data": {
+        "temperature_celsius": 26.5,
+        "humidity_percent": 68
+      }
+    },
+    {
+      "timestamp": "2025-03-03T09:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 5,
+      "energy_consumption_kwh": 0.60,
+      "power_consumption_watts": {
+        "lighting": 100,
+        "hvac_fan": 110,
+        "air_conditioner_compressor": 600,
+        "projector": 200,
+        "computer": 150,
+        "standby_misc": 30,
+        "total": 1190
+      },
+      "equipment_usage": {
+        "lights_on_hours": 2.0,
+        "air_conditioner_on_hours": 1.5,
+        "projector_on_hours": 1.0,
+        "computer_on_hours": 2.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 23.0,
+        "humidity_percent": 60
+      }
+    },
+    {
+      "timestamp": "2025-03-03T12:30:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 8,
+      "energy_consumption_kwh": 0.80,
+      "power_consumption_watts": {
+        "lighting": 120,
+        "hvac_fan": 120,
+        "air_conditioner_compressor": 800,
+        "projector": 300,
+        "computer": 220,
+        "standby_misc": 40,
+        "total": 1600
+      },
+      "equipment_usage": {
+        "lights_on_hours": 5.5,
+        "air_conditioner_on_hours": 4.0,
+        "projector_on_hours": 2.5,
+        "computer_on_hours": 5.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 22.5,
+        "humidity_percent": 58
+      }
+    },
+    {
+      "timestamp": "2025-03-03T18:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.10,
+      "power_consumption_watts": {
+        "lighting": 20,
+        "hvac_fan": 25,
+        "standby_misc": 30,
+        "total": 75
+      },
+      "equipment_usage": {
+        "lights_on_hours": 10.0,
+        "air_conditioner_on_hours": 9.0,
+        "projector_on_hours": 2.5,
+        "computer_on_hours": 10.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 24.5,
+        "humidity_percent": 65
+      }
+    },
+    {
+      "timestamp": "2025-03-03T21:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.06,
+      "power_consumption_watts": {
+        "lighting": 0,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 40
+      },
+      "equipment_usage": {
+        "lights_on_hours": 13.0,
+        "air_conditioner_on_hours": 9.0,
+        "projector_on_hours": 2.5,
+        "computer_on_hours": 13.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.8,
+        "humidity_percent": 70
+      }
+    },
+    {
+      "timestamp": "2025-03-04T08:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 4,
+      "energy_consumption_kwh": 0.58,
+      "power_consumption_watts": {
+        "lighting": 90,
+        "hvac_fan": 100,
+        "air_conditioner_compressor": 580,
+        "projector": 0,
+        "computer": 140,
+        "standby_misc": 30,
+        "total": 940
+      },
+      "equipment_usage": {
+        "lights_on_hours": 1.0,
+        "air_conditioner_on_hours": 1.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 1.5
+      },
+      "environmental_data": {
+        "temperature_celsius": 23.2,
+        "humidity_percent": 61
+      }
+    },
+    {
+      "timestamp": "2025-03-04T12:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 7,
+      "energy_consumption_kwh": 0.75,
+      "power_consumption_watts": {
+        "lighting": 110,
+        "hvac_fan": 120,
+        "air_conditioner_compressor": 750,
+        "projector": 280,
+        "computer": 200,
+        "standby_misc": 35,
+        "total": 1495
+      },
+      "equipment_usage": {
+        "lights_on_hours": 5.0,
+        "air_conditioner_on_hours": 4.0,
+        "projector_on_hours": 3.0,
+        "computer_on_hours": 5.5
+      },
+      "environmental_data": {
+        "temperature_celsius": 22.7,
+        "humidity_percent": 59
+      }
+    },
+    {
+      "timestamp": "2025-03-04T17:30:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 2,
+      "energy_consumption_kwh": 0.35,
+      "power_consumption_watts": {
+        "lighting": 70,
+        "hvac_fan": 70,
+        "air_conditioner_compressor": 250,
+        "projector": 0,
+        "computer": 90,
+        "standby_misc": 28,
+        "total": 508
+      },
+      "equipment_usage": {
+        "lights_on_hours": 10.5,
+        "air_conditioner_on_hours": 9.0,
+        "projector_on_hours": 3.0,
+        "computer_on_hours": 10.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 24.2,
+        "humidity_percent": 63
+      }
+    },
+    {
+      "timestamp": "2025-03-04T23:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.08,
+      "power_consumption_watts": {
+        "lighting": 20,
+        "hvac_fan": 18,
+        "standby_misc": 30,
+        "total": 68
+      },
+      "equipment_usage": {
+        "lights_on_hours": 16.0,
+        "air_conditioner_on_hours": 10.0,
+        "projector_on_hours": 3.0,
+        "computer_on_hours": 15.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 26.0,
+        "humidity_percent": 71
+      }
+    },
+    {
+      "timestamp": "2025-03-05T09:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 6,
+      "energy_consumption_kwh": 0.62,
+      "power_consumption_watts": {
+        "lighting": 105,
+        "hvac_fan": 115,
+        "air_conditioner_compressor": 620,
+        "projector": 210,
+        "computer": 160,
+        "standby_misc": 32,
+        "total": 1242
+      },
+      "equipment_usage": {
+        "lights_on_hours": 2.5,
+        "air_conditioner_on_hours": 2.0,
+        "projector_on_hours": 1.5,
+        "computer_on_hours": 2.5
+      },
+      "environmental_data": {
+        "temperature_celsius": 22.8,
+        "humidity_percent": 60
+      }
+    },
+    {
+      "timestamp": "2025-03-05T13:30:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 7,
+      "energy_consumption_kwh": 0.78,
+      "power_consumption_watts": {
+        "lighting": 115,
+        "hvac_fan": 125,
+        "air_conditioner_compressor": 780,
+        "projector": 290,
+        "computer": 210,
+        "standby_misc": 38,
+        "total": 1558
+      },
+      "equipment_usage": {
+        "lights_on_hours": 7.0,
+        "air_conditioner_on_hours": 5.0,
+        "projector_on_hours": 3.5,
+        "computer_on_hours": 7.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 22.3,
+        "humidity_percent": 57
+      }
+    },
+    {
+      "timestamp": "2025-03-05T20:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.05,
+      "power_consumption_watts": {
+        "lighting": 0,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 40
+      },
+      "equipment_usage": {
+        "lights_on_hours": 13.0,
+        "air_conditioner_on_hours": 10.0,
+        "projector_on_hours": 3.5,
+        "computer_on_hours": 13.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.0,
+        "humidity_percent": 69
+      }
+    },
+    {
+      "timestamp": "2025-03-06T08:30:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 5,
+      "energy_consumption_kwh": 0.57,
+      "power_consumption_watts": {
+        "lighting": 95,
+        "hvac_fan": 105,
+        "air_conditioner_compressor": 570,
+        "projector": 180,
+        "computer": 155,
+        "standby_misc": 30,
+        "total": 1135
+      },
+      "equipment_usage": {
+        "lights_on_hours": 1.5,
+        "air_conditioner_on_hours": 1.0,
+        "projector_on_hours": 0.5,
+        "computer_on_hours": 2.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 23.1,
+        "humidity_percent": 60
+      }
+    },
+    {
+      "timestamp": "2025-03-06T15:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 9,
+      "energy_consumption_kwh": 0.90,
+      "power_consumption_watts": {
+        "lighting": 130,
+        "hvac_fan": 130,
+        "air_conditioner_compressor": 900,
+        "projector": 320,
+        "computer": 250,
+        "standby_misc": 45,
+        "total": 1775
+      },
+      "equipment_usage": {
+        "lights_on_hours": 8.0,
+        "air_conditioner_on_hours": 6.0,
+        "projector_on_hours": 5.0,
+        "computer_on_hours": 8.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 22.0,
+        "humidity_percent": 56
+      }
+    },
+    {
+      "timestamp": "2025-03-06T22:30:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.06,
+      "power_consumption_watts": {
+        "lighting": 0,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 40
+      },
+      "equipment_usage": {
+        "lights_on_hours": 15.0,
+        "air_conditioner_on_hours": 10.0,
+        "projector_on_hours": 5.0,
+        "computer_on_hours": 15.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 26.2,
+        "humidity_percent": 72
+      }
+    },
+    {
+      "timestamp": "2025-03-07T08:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 3,
+      "energy_consumption_kwh": 0.40,
+      "power_consumption_watts": {
+        "lighting": 80,
+        "hvac_fan": 80,
+        "air_conditioner_compressor": 300,
+        "projector": 0,
+        "computer": 100,
+        "standby_misc": 28,
+        "total": 588
+      },
+      "equipment_usage": {
+        "lights_on_hours": 1.0,
+        "air_conditioner_on_hours": 0.5,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 1.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 24.0,
+        "humidity_percent": 65
+      }
+    },
+    {
+      "timestamp": "2025-03-07T12:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 6,
+      "energy_consumption_kwh": 0.68,
+      "power_consumption_watts": {
+        "lighting": 100,
+        "hvac_fan": 110,
+        "air_conditioner_compressor": 680,
+        "projector": 240,
+        "computer": 170,
+        "standby_misc": 35,
+        "total": 1335
+      },
+      "equipment_usage": {
+        "lights_on_hours": 5.0,
+        "air_conditioner_on_hours": 3.0,
+        "projector_on_hours": 2.0,
+        "computer_on_hours": 5.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 22.9,
+        "humidity_percent": 60
+      }
+    },
+    {
+      "timestamp": "2025-03-07T18:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.12,
+      "power_consumption_watts": {
+        "lighting": 30,
+        "hvac_fan": 30,
+        "standby_misc": 30,
+        "total": 90
+      },
+      "equipment_usage": {
+        "lights_on_hours": 11.0,
+        "air_conditioner_on_hours": 7.0,
+        "projector_on_hours": 2.0,
+        "computer_on_hours": 11.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.0,
+        "humidity_percent": 68
+      }
+    },
+    {
+      "timestamp": "2025-03-08T00:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.05,
+      "power_consumption_watts": {
+        "lighting": 10,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 50
+      },
+      "equipment_usage": {
+        "lights_on_hours": 0.0,
+        "air_conditioner_on_hours": 0.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 0.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.5,
+        "humidity_percent": 70
+      }
+    },
+    {
+      "timestamp": "2025-03-08T09:30:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 2,
+      "energy_consumption_kwh": 0.30,
+      "power_consumption_watts": {
+        "lighting": 70,
+        "hvac_fan": 60,
+        "air_conditioner_compressor": 200,
+        "projector": 0,
+        "computer": 80,
+        "standby_misc": 25,
+        "total": 435
+      },
+      "equipment_usage": {
+        "lights_on_hours": 1.0,
+        "air_conditioner_on_hours": 0.5,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 1.5
+      },
+      "environmental_data": {
+        "temperature_celsius": 24.0,
+        "humidity_percent": 65
+      }
+    },
+    {
+      "timestamp": "2025-03-08T14:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.07,
+      "power_consumption_watts": {
+        "lighting": 15,
+        "hvac_fan": 20,
+        "standby_misc": 30,
+        "total": 65
+      },
+      "equipment_usage": {
+        "lights_on_hours": 5.0,
+        "air_conditioner_on_hours": 2.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 5.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 26.0,
+        "humidity_percent": 72
+      }
+    },
+    {
+      "timestamp": "2025-03-09T08:00:00+08:00",
+      "occupancy_status": "occupied",
+      "occupancy_count": 1,
+      "energy_consumption_kwh": 0.15,
+      "power_consumption_watts": {
+        "lighting": 50,
+        "hvac_fan": 30,
+        "standby_misc": 25,
+        "computer": 60,
+        "total": 165
+      },
+      "equipment_usage": {
+        "lights_on_hours": 0.5,
+        "air_conditioner_on_hours": 0.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 0.5
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.5,
+        "humidity_percent": 69
+      }
+    },
+    {
+      "timestamp": "2025-03-09T11:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.06,
+      "power_consumption_watts": {
+        "lighting": 10,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 50
+      },
+      "equipment_usage": {
+        "lights_on_hours": 3.0,
+        "air_conditioner_on_hours": 0.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 3.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 26.0,
+        "humidity_percent": 70
+      }
+    },
+    {
+      "timestamp": "2025-03-09T18:00:00+08:00",
+      "occupancy_status": "unoccupied",
+      "occupancy_count": 0,
+      "energy_consumption_kwh": 0.05,
+      "power_consumption_watts": {
+        "lighting": 10,
+        "hvac_fan": 15,
+        "standby_misc": 25,
+        "total": 50
+      },
+      "equipment_usage": {
+        "lights_on_hours": 10.0,
+        "air_conditioner_on_hours": 0.0,
+        "projector_on_hours": 0.0,
+        "computer_on_hours": 10.0
+      },
+      "environmental_data": {
+        "temperature_celsius": 25.8,
+        "humidity_percent": 71
+      }
+    }
+  ]
+}
