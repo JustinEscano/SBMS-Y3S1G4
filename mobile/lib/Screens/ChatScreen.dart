@@ -527,258 +527,259 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      appBar: AppBar(
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
         backgroundColor: const Color(0xFF000000),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          hasInteracted ? 'Orb Control by Orbit' : 'ORB Chat',
-          style: GoogleFonts.urbanist(
-            color: const Color(0xFFFFFFFF),
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF000000),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.white),
-            onPressed: isRefreshingToken ? null : _clearConversation,
-            tooltip: 'Clear Conversation',
+          title: Text(
+            hasInteracted ? 'Orb Control by Orbit' : 'ORB Chat',
+            style: GoogleFonts.urbanist(
+              color: const Color(0xFFFFFFFF),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (chatProvider.errorMessage.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(8),
-              color: const Color(0xFF121822),
-              child: Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      chatProvider.errorMessage,
-                      style: GoogleFonts.inter(
-                        color: Colors.red,
-                        fontSize: 14,
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.white),
+              onPressed: isRefreshingToken ? null : _clearConversation,
+              tooltip: 'Clear Conversation',
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            if (chatProvider.errorMessage.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(8),
+                color: const Color(0xFF121822),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        chatProvider.errorMessage,
+                        style: GoogleFonts.inter(
+                          color: Colors.red,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () {
-                      chatProvider.clearError();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: isRefreshingToken
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
-                : chatProvider.messages.isEmpty && !hasInteracted
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Hello, I am Orb!',
-                    style: GoogleFonts.urbanist(
-                      color: const Color(0xFFFFFFFF),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () {
+                        chatProvider.clearError();
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'How can I help you?',
-                    style: GoogleFonts.urbanist(
-                      color: const Color(0xFFFFFFFF),
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildSuggestions(),
-                ],
+                  ],
+                ),
               ),
-            )
-                : ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: chatProvider.messages.length + (chatProvider.isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < chatProvider.messages.length) {
-                  return _buildMessageBubble(chatProvider.messages[index]);
-                } else {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          child: CircleAvatar(
-                            backgroundColor: Colors.transparent,
-                            child: Image.asset(
-                              'assets/icons/Orb Hovered.png',
-                              width: 32,
-                              height: 32,
-                              fit: BoxFit.contain,
+            Expanded(
+              child: isRefreshingToken
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
+                  : chatProvider.messages.isEmpty && !hasInteracted
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Hello, I am Orb!',
+                      style: GoogleFonts.urbanist(
+                        color: const Color(0xFFFFFFFF),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'How can I help you?',
+                      style: GoogleFonts.urbanist(
+                        color: const Color(0xFFFFFFFF),
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSuggestions(),
+                  ],
+                ),
+              )
+                  : ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: chatProvider.messages.length + (chatProvider.isLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index < chatProvider.messages.length) {
+                    return _buildMessageBubble(chatProvider.messages[index]);
+                  } else {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            child: CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              child: Image.asset(
+                                'assets/icons/Orb Hovered.png',
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
-                        ),
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF121822),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(0xFF184BFB),
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF121822),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFF184BFB),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Thinking...',
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF676767),
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: 14,
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Thinking...',
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFF676767),
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 14,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
+                        ],
+                      ),
+                    );
+                  }
+                },
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Color(0xFF000000),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    style: GoogleFonts.inter(
-                      color: const Color(0xFFFFFFFF),
-                      fontSize: 14,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Ask Orb...',
-                      hintStyle: GoogleFonts.inter(
-                        color: const Color(0xFF676767),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFF000000),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFFFFFFFF),
                         fontSize: 14,
                       ),
-                      filled: true,
-                      fillColor: const Color(0xFF232627),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF676767),
-                          width: 1,
+                      decoration: InputDecoration(
+                        hintText: 'Ask Orb...',
+                        hintStyle: GoogleFonts.inter(
+                          color: const Color(0xFF676767),
+                          fontSize: 14,
                         ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF676767),
-                          width: 1,
+                        filled: true,
+                        fillColor: const Color(0xFF232627),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF676767),
+                            width: 1,
+                          ),
                         ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF676767),
-                          width: 1,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF676767),
+                            width: 1,
+                          ),
                         ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF676767),
+                            width: 1,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      onSubmitted: (_) => isRefreshingToken ? null : _sendMessage(_messageController.text.trim()),
+                      maxLines: null,
                     ),
-                    onSubmitted: (_) => isRefreshingToken ? null : _sendMessage(_messageController.text.trim()),
-                    maxLines: null,
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(
-                    Icons.send,
-                    color: Color(0xFF4D6BFE),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.send,
+                      color: Color(0xFF4D6BFE),
+                    ),
+                    onPressed: isRefreshingToken ? null : () => _sendMessage(_messageController.text.trim()),
                   ),
-                  onPressed: isRefreshingToken ? null : () => _sendMessage(_messageController.text.trim()),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavBar(
-        onMenuSelection: (value) {
-          switch (value) {
-            case 'dashboard':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DashboardScreen(
-                    accessToken: AuthService().accessToken ?? widget.accessToken,
+          ],
+        ),
+        bottomNavigationBar: BottomNavBar(
+          onMenuSelection: (value) {
+            switch (value) {
+              case 'dashboard':
+                Navigator.pop(context);
+                break;
+              case 'analytics':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EnergyAnalyticsScreen(
+                      accessToken: AuthService().accessToken ?? widget.accessToken,
+                      refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                    ),
                   ),
-                ),
-              );
-              break;
-            case 'analytics':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EnergyAnalyticsScreen(
-                    accessToken: AuthService().accessToken ?? widget.accessToken,
-                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                );
+                break;
+              case 'maintenance_requests':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MaintenanceManagementScreen(
+                      accessToken: AuthService().accessToken ?? widget.accessToken,
+                      refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                      userRole: 'client',
+                    ),
                   ),
-                ),
-              );
-              break;
-            case 'maintenance_requests':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MaintenanceManagementScreen(
-                    accessToken: AuthService().accessToken ?? widget.accessToken,
-                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
-                    userRole: 'client',
-                  ),
-                ),
-              );
-              break;
-            case 'orb_chat':
-              break;
-            default:
-              break;
-          }
-        },
-        currentScreen: 'orb_chat',
+                );
+                break;
+              case 'orb_chat':
+                break;
+              default:
+                break;
+            }
+          },
+          currentScreen: 'orb_chat',
+        ),
       ),
     );
   }

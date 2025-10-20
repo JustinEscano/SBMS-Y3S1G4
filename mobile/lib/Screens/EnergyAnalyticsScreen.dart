@@ -11,6 +11,7 @@ import '../Widgets/bottom_navbar.dart';
 import '../Widgets/AnalyticsWidgets.dart';
 import '../Services/auth_service.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/safe_navigation.dart';
 import 'DashboardScreen.dart';
 import 'ChatScreen.dart';
 
@@ -1010,15 +1011,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       });
     }
 
-    Navigator.push(
+    SafeNavigation.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MaintenanceManagementScreen(
-          accessToken: AuthService().accessToken ?? widget.accessToken,
-          refreshToken: AuthService().refreshToken ?? widget.refreshToken,
-          userRole: userRole,
-        ),
+      MaintenanceManagementScreen(
+        accessToken: AuthService().accessToken ?? widget.accessToken,
+        refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+        userRole: userRole,
       ),
+      routeName: 'maintenance',
     ).then((_) {
       loadEnergyData();
     });
@@ -1043,14 +1043,13 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
   }
 
   void _navigateToNotifications() {
-    Navigator.push(
+    SafeNavigation.push(
       context,
-      _createSlideRoute(
-        NotificationsScreen(
-          accessToken: AuthService().accessToken ?? widget.accessToken,
-          refreshToken: AuthService().refreshToken ?? widget.refreshToken,
-        ),
+      NotificationsScreen(
+        accessToken: AuthService().accessToken ?? widget.accessToken,
+        refreshToken: AuthService().refreshToken ?? widget.refreshToken,
       ),
+      routeName: 'notifications',
     ).then((_) {
       // Refresh notifications after returning from NotificationsScreen
       final provider = Provider.of<DashboardProvider>(context, listen: false);
@@ -1080,193 +1079,195 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     final double maxX = now.difference(startTime).inMinutes / 60.0;
     final interval = _getInterval(timeFrame);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1F1E23),
-        title: Text(
-          '${_getScopeTitle()}',
-          style: GoogleFonts.urbanist(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: ImageIcon(
-              AssetImage(provider.unreadNotificationCount > 0
-                  ? 'assets/icons/Notif ping.png'
-                  : 'assets/icons/Notif default.png'),
-              size: 24,
-              color: Colors.white70,
+    return SafePopScope(
+      routeName: 'analytics',
+      child: Scaffold(
+        backgroundColor: const Color(0xFF000000),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1F1E23),
+          title: Text(
+            '${_getScopeTitle()}',
+            style: GoogleFonts.urbanist(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            onPressed: isRefreshingToken ? null : _navigateToNotifications,
-            tooltip: 'View Notifications',
           ),
-        ],
-      ),
-      body: isLoading || isRefreshingToken
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
-          : RefreshIndicator(
-        onRefresh: () {
-          final provider = Provider.of<DashboardProvider>(context, listen: false);
-          return Future.wait([
-            loadEnergyData(),
-            provider.loadData(context: context),
-          ]).then((_) => null);
-        },
-        color: const Color(0xFF184BFB),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (errorMessage.isNotEmpty)
-                AnalyticsWidgets.buildErrorBanner(errorMessage),
-              AnalyticsWidgets.buildFilterSelector(
-                currentTimeFrame: timeFrame,
-                onTimeFrameChanged: _changeTimeFrame,
-                currentScope: selectedScope,
-                onScopeChanged: (newScope) => _changeScope(newScope),
-                selectedRoomId: selectedRoomId,
-                rooms: rooms,
-                onRoomChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedRoomId = value;
-                      final matchingEquipment = equipment.firstWhere(
-                            (eq) => eq['room'] == value,
-                        orElse: () => {},
-                      );
-                      selectedComponentId = matchingEquipment.isNotEmpty ? matchingEquipment['component_id'] : null;
-                    });
-                    loadEnergyData();
-                  }
-                },
-                selectedComponentId: selectedComponentId,
-                equipment: equipment,
-                onEquipmentChanged: (value) {
-                  if (value != null) {
-                    _changeScope('room', newComponentId: value);
-                  }
-                },
+          iconTheme: const IconThemeData(color: Colors.white),
+          actions: [
+            IconButton(
+              icon: ImageIcon(
+                AssetImage(provider.unreadNotificationCount > 0
+                    ? 'assets/icons/Notif ping.png'
+                    : 'assets/icons/Notif default.png'),
+                size: 24,
+                color: Colors.white70,
               ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildPowerChart(
-                scopeTitle: _getScopeTitle(),
-                chartSuffix: chartSuffix,
-                powerSpots: powerSpots,
-                timeFrame: timeFrame,
-                startTime: startTime,
-                maxX: maxX,
-                interval: interval,
-                formatTimeAxis: _formatTimeAxis,
-                shouldShowLabel: _shouldShowLabel,
-                maxY: _getMaxY(powerSpots),
-              ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildEnergyChart(
-                scopeTitle: _getScopeTitle(),
-                chartSuffix: chartSuffix,
-                energySpots: energySpots,
-                timeFrame: timeFrame,
-                startTime: startTime,
-                maxX: maxX,
-                interval: interval,
-                formatTimeAxis: _formatTimeAxis,
-                shouldShowLabel: _shouldShowLabel,
-                maxY: _getMaxY(energySpots, isEnergy: true),
-              ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildTemperatureChart(
-                scopeTitle: _getScopeTitle(),
-                chartSuffix: chartSuffix,
-                temperatureSpots: temperatureSpots,
-                timeFrame: timeFrame,
-                startTime: startTime,
-                maxX: maxX,
-                interval: interval,
-                formatTimeAxis: _formatTimeAxis,
-                shouldShowLabel: _shouldShowLabel,
-                maxY: _getMaxY(temperatureSpots, isTemperature: true),
-              ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildHumidityChart(
-                scopeTitle: _getScopeTitle(),
-                chartSuffix: chartSuffix,
-                humiditySpots: humiditySpots,
-                timeFrame: timeFrame,
-                startTime: startTime,
-                maxX: maxX,
-                interval: interval,
-                formatTimeAxis: _formatTimeAxis,
-                shouldShowLabel: _shouldShowLabel,
-                maxY: _getMaxY(humiditySpots, isHumidity: true),
-              ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildSecurityChart(
-                scopeTitle: _getScopeTitle(),
-                chartSuffix: chartSuffix,
-                securityAlertSpots: securityAlertSpots,
-                timeFrame: timeFrame,
-                startTime: startTime,
-                maxX: maxX,
-                interval: interval,
-                formatTimeAxis: _formatTimeAxis,
-                shouldShowLabel: _shouldShowLabel,
-                maxY: _getMaxY(securityAlertSpots, isSecurity: true),
-              ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildStatisticsCard(
-                scopeTitle: _getScopeTitle(),
-                summaryData: summaryData,
-                totalCost: totalCost,
-                effectiveRate: effectiveRate,
-                billingData: billingData,
-              ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildHvacStatusCard(
-                scopeTitle: _getScopeTitle(),
-                hvacData: hvacData,
-              ),
-              const SizedBox(height: 16),
-              AnalyticsWidgets.buildSecurityStatusCard(
-                scopeTitle: _getScopeTitle(),
-                securityData: securityData,
-              ),
-            ],
+              onPressed: isRefreshingToken ? null : _navigateToNotifications,
+              tooltip: 'View Notifications',
+            ),
+          ],
+        ),
+        body: isLoading || isRefreshingToken
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
+            : RefreshIndicator(
+          onRefresh: () {
+            final provider = Provider.of<DashboardProvider>(context, listen: false);
+            return Future.wait([
+              loadEnergyData(),
+              provider.loadData(context: context),
+            ]).then((_) => null);
+          },
+          color: const Color(0xFF184BFB),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (errorMessage.isNotEmpty)
+                  AnalyticsWidgets.buildErrorBanner(errorMessage),
+                AnalyticsWidgets.buildFilterSelector(
+                  currentTimeFrame: timeFrame,
+                  onTimeFrameChanged: _changeTimeFrame,
+                  currentScope: selectedScope,
+                  onScopeChanged: (newScope) => _changeScope(newScope),
+                  selectedRoomId: selectedRoomId,
+                  rooms: rooms,
+                  onRoomChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedRoomId = value;
+                        final matchingEquipment = equipment.firstWhere(
+                              (eq) => eq['room'] == value,
+                          orElse: () => {},
+                        );
+                        selectedComponentId = matchingEquipment.isNotEmpty ? matchingEquipment['component_id'] : null;
+                      });
+                      loadEnergyData();
+                    }
+                  },
+                  selectedComponentId: selectedComponentId,
+                  equipment: equipment,
+                  onEquipmentChanged: (value) {
+                    if (value != null) {
+                      _changeScope('room', newComponentId: value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildPowerChart(
+                  scopeTitle: _getScopeTitle(),
+                  chartSuffix: chartSuffix,
+                  powerSpots: powerSpots,
+                  timeFrame: timeFrame,
+                  startTime: startTime,
+                  maxX: maxX,
+                  interval: interval,
+                  formatTimeAxis: _formatTimeAxis,
+                  shouldShowLabel: _shouldShowLabel,
+                  maxY: _getMaxY(powerSpots),
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildEnergyChart(
+                  scopeTitle: _getScopeTitle(),
+                  chartSuffix: chartSuffix,
+                  energySpots: energySpots,
+                  timeFrame: timeFrame,
+                  startTime: startTime,
+                  maxX: maxX,
+                  interval: interval,
+                  formatTimeAxis: _formatTimeAxis,
+                  shouldShowLabel: _shouldShowLabel,
+                  maxY: _getMaxY(energySpots, isEnergy: true),
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildTemperatureChart(
+                  scopeTitle: _getScopeTitle(),
+                  chartSuffix: chartSuffix,
+                  temperatureSpots: temperatureSpots,
+                  timeFrame: timeFrame,
+                  startTime: startTime,
+                  maxX: maxX,
+                  interval: interval,
+                  formatTimeAxis: _formatTimeAxis,
+                  shouldShowLabel: _shouldShowLabel,
+                  maxY: _getMaxY(temperatureSpots, isTemperature: true),
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildHumidityChart(
+                  scopeTitle: _getScopeTitle(),
+                  chartSuffix: chartSuffix,
+                  humiditySpots: humiditySpots,
+                  timeFrame: timeFrame,
+                  startTime: startTime,
+                  maxX: maxX,
+                  interval: interval,
+                  formatTimeAxis: _formatTimeAxis,
+                  shouldShowLabel: _shouldShowLabel,
+                  maxY: _getMaxY(humiditySpots, isHumidity: true),
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildSecurityChart(
+                  scopeTitle: _getScopeTitle(),
+                  chartSuffix: chartSuffix,
+                  securityAlertSpots: securityAlertSpots,
+                  timeFrame: timeFrame,
+                  startTime: startTime,
+                  maxX: maxX,
+                  interval: interval,
+                  formatTimeAxis: _formatTimeAxis,
+                  shouldShowLabel: _shouldShowLabel,
+                  maxY: _getMaxY(securityAlertSpots, isSecurity: true),
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildStatisticsCard(
+                  scopeTitle: _getScopeTitle(),
+                  summaryData: summaryData,
+                  totalCost: totalCost,
+                  effectiveRate: effectiveRate,
+                  billingData: billingData,
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildHvacStatusCard(
+                  scopeTitle: _getScopeTitle(),
+                  hvacData: hvacData,
+                ),
+                const SizedBox(height: 16),
+                AnalyticsWidgets.buildSecurityStatusCard(
+                  scopeTitle: _getScopeTitle(),
+                  securityData: securityData,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        onMenuSelection: (value) {
-          switch (value) {
-            case 'dashboard':
-              Navigator.pop(context);
-              break;
-            case 'maintenance_requests':
-              _navigateToMaintenanceManagement();
-              break;
-            case 'orb_chat':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatScreen(
+        bottomNavigationBar: BottomNavBar(
+          onMenuSelection: (value) {
+            switch (value) {
+              case 'dashboard':
+                SafeNavigation.pop(context);
+                break;
+              case 'maintenance_requests':
+                _navigateToMaintenanceManagement();
+                break;
+              case 'orb_chat':
+                SafeNavigation.push(
+                  context,
+                  ChatScreen(
                     accessToken: AuthService().accessToken ?? widget.accessToken,
                     refreshToken: AuthService().refreshToken ?? widget.refreshToken,
                   ),
-                ),
-              );
-              break;
-            case 'analytics':
-              break;
-            default:
-              break;
-          }
-        },
-        currentScreen: 'analytics',
+                  routeName: 'chat',
+                );
+                break;
+              case 'analytics':
+                break;
+              default:
+                break;
+            }
+          },
+          currentScreen: 'analytics',
+        ),
       ),
     );
   }

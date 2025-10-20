@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../Services/auth_service.dart';
@@ -13,6 +14,7 @@ import '../Widgets/bottom_navbar.dart';
 import '../Widgets/DashboardScreenWidgets.dart';
 import '../providers/dashboard_provider.dart';
 import '../utils/constants.dart';
+import '../utils/safe_navigation.dart';
 import 'dart:developer' as developer;
 
 class DashboardScreen extends StatefulWidget {
@@ -66,7 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _navigateToScreen(Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
+    SafeNavigation.push(context, screen, routeName: screen.runtimeType.toString())
         .then((_) => Provider.of<DashboardProvider>(context, listen: false).loadData(context: context));
   }
 
@@ -136,23 +138,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final authService = Provider.of<AuthService>(context, listen: false);
     switch (value) {
       case 'analytics':
-        _navigateToScreen(EnergyAnalyticsScreen(
-          accessToken: widget.accessToken,
-          refreshToken: authService.refreshToken ?? '',
-        ));
+        SafeNavigation.push(
+          context,
+          EnergyAnalyticsScreen(
+            accessToken: widget.accessToken,
+            refreshToken: authService.refreshToken ?? '',
+          ),
+          routeName: 'analytics',
+        );
         break;
       case 'maintenance_requests':
         _navigateToMaintenanceManagement();
         break;
       case 'orb_chat':
-        Navigator.pushReplacement(
+        SafeNavigation.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => ChatScreen(
-              accessToken: widget.accessToken,
-              refreshToken: authService.refreshToken ?? '',
-            ),
+          ChatScreen(
+            accessToken: widget.accessToken,
+            refreshToken: authService.refreshToken ?? '',
           ),
+          routeName: 'chat',
         );
         break;
       case 'dashboard':
@@ -214,254 +219,258 @@ class _DashboardScreenState extends State<DashboardScreen> {
       hasImage = true;
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFF121822),
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: _navigateToProfile,
-              child: CircleAvatar(
-                radius: 20,
-                backgroundImage: profileImage,
-                backgroundColor: Colors.grey[200],
-                child: !hasImage
-                    ? Icon(Icons.person, size: 24, color: Colors.grey[600])
-                    : null,
-                onBackgroundImageError: hasImage
-                    ? (error, stackTrace) {
-                  developer.log(
-                    'Error loading profile picture: $error',
-                    name: 'DashboardScreen.Image',
-                    error: error,
-                    stackTrace: stackTrace,
-                  );
-                }
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                _profileData?['username'] ?? 'User',
-                style: GoogleFonts.urbanist(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: Colors.white,
+    return SafePopScope(
+      routeName: 'dashboard',
+      showExitConfirmation: true,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: const Color(0xFF121822),
+          title: Row(
+            children: [
+              GestureDetector(
+                onTap: _navigateToProfile,
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundImage: profileImage,
+                  backgroundColor: Colors.grey[200],
+                  child: !hasImage
+                      ? Icon(Icons.person, size: 24, color: Colors.grey[600])
+                      : null,
+                  onBackgroundImageError: hasImage
+                      ? (error, stackTrace) {
+                    developer.log(
+                      'Error loading profile picture: $error',
+                      name: 'DashboardScreen.Image',
+                      error: error,
+                      stackTrace: stackTrace,
+                    );
+                  }
+                      : null,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _profileData?['username'] ?? 'User',
+                  style: GoogleFonts.urbanist(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: ImageIcon(
+                AssetImage(provider.unreadNotificationCount > 0
+                    ? 'assets/icons/Notif ping.png'
+                    : 'assets/icons/Notif default.png'),
+                size: 24,
+                color: Colors.white70,
+              ),
+              tooltip: 'Notifications',
+              onPressed: _navigateToNotifications,
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: ImageIcon(
-              AssetImage(provider.unreadNotificationCount > 0
-                  ? 'assets/icons/Notif ping.png'
-                  : 'assets/icons/Notif default.png'),
-              size: 24,
-              color: Colors.white70,
-            ),
-            tooltip: 'Notifications',
-            onPressed: _navigateToNotifications,
-          ),
-        ],
-      ),
-      backgroundColor: const Color(0xFF000000),
-      body: provider.isLoading
-          ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
-          : RefreshIndicator(
-        onRefresh: () => provider.loadData(context: context),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Dashboard',
-                style: GoogleFonts.urbanist(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+        backgroundColor: const Color(0xFF000000),
+        body: provider.isLoading
+            ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
+            : RefreshIndicator(
+          onRefresh: () => provider.loadData(context: context),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Dashboard',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              if (provider.errorMessage.isNotEmpty)
-                DashboardScreenWidgets.buildErrorBanner(provider.errorMessage),
-              const SizedBox(height: 20),
-              Text(
-                'Building Systems',
-                style: GoogleFonts.urbanist(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                const SizedBox(height: 20),
+                if (provider.errorMessage.isNotEmpty)
+                  DashboardScreenWidgets.buildErrorBanner(provider.errorMessage),
+                const SizedBox(height: 20),
+                Text(
+                  'Building Systems',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: DashboardScreenWidgets.buildSystemCard(
-                      title: 'Energy',
-                      value: '${provider.energyData['avgPower']?.toStringAsFixed(1) ?? '0'} W',
-                      subtitle: 'Avg Power',
-                      icon: Icons.electrical_services,
-                      color: Colors.teal,
-                      status: provider.energyData['status'] ?? 'offline',
-                      onTap: () => _showSystemDetails('Energy', provider),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DashboardScreenWidgets.buildSystemCard(
-                      title: 'HVAC',
-                      value: '${provider.hvacData['activeZones'] ?? 0}/${provider.hvacData['totalZones'] ?? 0}',
-                      subtitle: 'Active Zones',
-                      icon: Icons.thermostat,
-                      color: Colors.orange,
-                      status: provider.hvacData['status'] ?? 'offline',
-                      onTap: () => _showSystemDetails('HVAC', provider),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: DashboardScreenWidgets.buildSystemCard(
-                      title: 'Security',
-                      value: '${provider.securityData['activeDevices'] ?? 0}',
-                      subtitle: 'Active Devices',
-                      icon: Icons.security,
-                      color: Colors.red,
-                      status: provider.securityData['status'] ?? 'secure',
-                      onTap: () => _showSystemDetails('Security', provider),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DashboardScreenWidgets.buildSystemCard(
-                      title: 'Maintenance',
-                      value: '${provider.maintenanceRequests.length}',
-                      subtitle: 'Total Requests',
-                      icon: Icons.build,
-                      color: Colors.indigo,
-                      status: provider.maintenanceRequests.any((task) => task['priority'] == 'high' || task['priority'] == 'critical')
-                          ? 'attention'
-                          : 'normal',
-                      onTap: () => _showSystemDetails('Maintenance', provider),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Infrastructure Overview',
-                style: GoogleFonts.urbanist(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: DashboardScreenWidgets.buildOverviewCard(
-                      title: 'Rooms',
-                      value: provider.rooms.length.toString(),
-                      icon: Icons.room,
-                      color: Colors.blue,
-                      onTap: _navigateToRoomManagement,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DashboardScreenWidgets.buildOverviewCard(
-                      title: 'Equipment',
-                      value: provider.equipment.length.toString(),
-                      icon: Icons.devices,
-                      color: Colors.green,
-                      onTap: _navigateToEquipmentManagement,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: DashboardScreenWidgets.buildOverviewCard(
-                      title: 'ESP32 Devices',
-                      value: esp32Count.toString(),
-                      icon: Icons.memory,
-                      color: Colors.purple,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DashboardScreenWidgets.buildOverviewCard(
-                      title: 'Online',
-                      value: onlineEquipment.toString(),
-                      icon: Icons.online_prediction,
-                      color: Colors.teal,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Quick Actions',
-                style: GoogleFonts.urbanist(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: DashboardScreenWidgets.buildActionCard(
-                      title: 'ORB Chat',
-                      icon: Icons.chat,
-                      color: Colors.blue,
-                      onTap: _navigateToChatScreen,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DashboardScreenWidgets.buildActionCard(
-                      title: 'Maintenance',
-                      icon: Icons.build,
-                      color: Colors.indigo,
-                      onTap: _navigateToMaintenanceManagement,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              if (provider.latestSensorData.isNotEmpty) ...[
-                DashboardScreenWidgets.buildLiveSensorDataHeader(),
                 const SizedBox(height: 12),
-                ...provider.latestSensorData.map((sensorData) => DashboardScreenWidgets.buildSensorCard(sensorData)).toList(),
-                const SizedBox(height: 24),
-              ],
-              if (provider.rooms.isEmpty && provider.equipment.isEmpty && provider.sensorLogs.isEmpty && provider.latestSensorData.isEmpty)
-                DashboardScreenWidgets.buildEmptyState(
-                  onAddRooms: _navigateToRoomManagement,
-                  onAddEquipment: _navigateToEquipmentManagement,
+                Row(
+                  children: [
+                    Expanded(
+                      child: DashboardScreenWidgets.buildSystemCard(
+                        title: 'Energy',
+                        value: '${provider.energyData['avgPower']?.toStringAsFixed(1) ?? '0'} W',
+                        subtitle: 'Avg Power',
+                        icon: Icons.electrical_services,
+                        color: Colors.teal,
+                        status: provider.energyData['status'] ?? 'offline',
+                        onTap: () => _showSystemDetails('Energy', provider),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DashboardScreenWidgets.buildSystemCard(
+                        title: 'HVAC',
+                        value: '${provider.hvacData['activeZones'] ?? 0}/${provider.hvacData['totalZones'] ?? 0}',
+                        subtitle: 'Active Zones',
+                        icon: Icons.thermostat,
+                        color: Colors.orange,
+                        status: provider.hvacData['status'] ?? 'offline',
+                        onTap: () => _showSystemDetails('HVAC', provider),
+                      ),
+                    ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DashboardScreenWidgets.buildSystemCard(
+                        title: 'Security',
+                        value: '${provider.securityData['activeDevices'] ?? 0}',
+                        subtitle: 'Active Devices',
+                        icon: Icons.security,
+                        color: Colors.red,
+                        status: provider.securityData['status'] ?? 'secure',
+                        onTap: () => _showSystemDetails('Security', provider),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DashboardScreenWidgets.buildSystemCard(
+                        title: 'Maintenance',
+                        value: '${provider.maintenanceRequests.length}',
+                        subtitle: 'Total Requests',
+                        icon: Icons.build,
+                        color: Colors.indigo,
+                        status: provider.maintenanceRequests.any((task) => task['priority'] == 'high' || task['priority'] == 'critical')
+                            ? 'attention'
+                            : 'normal',
+                        onTap: () => _showSystemDetails('Maintenance', provider),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Infrastructure Overview',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DashboardScreenWidgets.buildOverviewCard(
+                        title: 'Rooms',
+                        value: provider.rooms.length.toString(),
+                        icon: Icons.room,
+                        color: Colors.blue,
+                        onTap: _navigateToRoomManagement,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DashboardScreenWidgets.buildOverviewCard(
+                        title: 'Equipment',
+                        value: provider.equipment.length.toString(),
+                        icon: Icons.devices,
+                        color: Colors.green,
+                        onTap: _navigateToEquipmentManagement,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DashboardScreenWidgets.buildOverviewCard(
+                        title: 'ESP32 Devices',
+                        value: esp32Count.toString(),
+                        icon: Icons.memory,
+                        color: Colors.purple,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DashboardScreenWidgets.buildOverviewCard(
+                        title: 'Online',
+                        value: onlineEquipment.toString(),
+                        icon: Icons.online_prediction,
+                        color: Colors.teal,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Quick Actions',
+                  style: GoogleFonts.urbanist(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DashboardScreenWidgets.buildActionCard(
+                        title: 'ORB Chat',
+                        icon: Icons.chat,
+                        color: Colors.blue,
+                        onTap: _navigateToChatScreen,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DashboardScreenWidgets.buildActionCard(
+                        title: 'Maintenance',
+                        icon: Icons.build,
+                        color: Colors.indigo,
+                        onTap: _navigateToMaintenanceManagement,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                if (provider.latestSensorData.isNotEmpty) ...[
+                  DashboardScreenWidgets.buildLiveSensorDataHeader(),
+                  const SizedBox(height: 12),
+                  ...provider.latestSensorData.map((sensorData) => DashboardScreenWidgets.buildSensorCard(sensorData)).toList(),
+                  const SizedBox(height: 24),
+                ],
+                if (provider.rooms.isEmpty && provider.equipment.isEmpty && provider.sensorLogs.isEmpty && provider.latestSensorData.isEmpty)
+                  DashboardScreenWidgets.buildEmptyState(
+                    onAddRooms: _navigateToRoomManagement,
+                    onAddEquipment: _navigateToEquipmentManagement,
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        onMenuSelection: _handleMenuSelection,
-        currentScreen: 'dashboard',
+        bottomNavigationBar: BottomNavBar(
+          onMenuSelection: _handleMenuSelection,
+          currentScreen: 'dashboard',
+        ),
       ),
     );
   }
