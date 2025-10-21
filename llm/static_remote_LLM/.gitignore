@@ -9,8 +9,10 @@ __pycache__/
 
 # Virtual environment
 venv/
+myenv/
 .env/
 .venv/
+env/
 
 # SQLite databases
 *.sqlite3
