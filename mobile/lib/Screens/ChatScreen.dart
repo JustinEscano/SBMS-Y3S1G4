@@ -158,13 +158,13 @@ class _ChatScreenState extends State<ChatScreen> {
       if (queryType == 'maintenance') {
         formattedResponse = await _handleMaintenanceQuery(message);
       } else if (queryType == 'anomalies') {
-        formattedResponse = await _handleAnomaliesQuery();
+        formattedResponse = await _handleAnomaliesQuery(message); // ✅ Pass message
       } else if (queryType == 'energy' || queryType == 'summary') {
         formattedResponse = await _handleEnergyQuery(message);
       } else if (queryType == 'billing') {
-        formattedResponse = await _handleBillingQuery();
+        formattedResponse = await _handleBillingQuery(message); // ✅ Pass message
       } else if (queryType == 'kpi') {
-        formattedResponse = await _handleKpiQuery();
+        formattedResponse = await _handleKpiQuery(message); // ✅ Pass message
       } else if (queryType == 'utilization') {
         formattedResponse = await _handleRoomsQuery(message);
       } else {
@@ -258,14 +258,14 @@ class _ChatScreenState extends State<ChatScreen> {
     return lines.join('\n');
   }
 
-  Future<String> _handleAnomaliesQuery() async {
-    final data = await _llmService.detectAnomalies();
+  Future<String> _handleAnomaliesQuery(String query) async {
+    final data = await _llmService.detectAnomalies(query: query); // ✅ Pass full query for personality
     return data['answer'] ?? 'No anomalies detected.';
   }
 
   Future<String> _handleEnergyQuery(String query) async {
     final period = _llmService.determineReportPeriod(query);
-    final data = await _llmService.getEnergyReport(period);
+    final data = await _llmService.getEnergyReport(period, query: query); // ✅ Pass full query for personality
     final lines = <String>[];
 
     lines.add('⚡ ${period.toUpperCase()} ENERGY REPORT\n');
@@ -287,8 +287,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return lines.join('\n');
   }
 
-  Future<String> _handleBillingQuery() async {
-    final data = await _llmService.getBillingRates();
+  Future<String> _handleBillingQuery(String query) async {
+    final data = await _llmService.getBillingRates(query: query); // ✅ Pass full query for personality
     final lines = <String>[];
 
     lines.add('💱 BILLING RATES ANALYSIS\n');
@@ -310,8 +310,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return lines.join('\n');
   }
 
-  Future<String> _handleKpiQuery() async {
-    final data = await _llmService.getKpiHeartbeat();
+  Future<String> _handleKpiQuery(String query) async {
+    final data = await _llmService.getKpiHeartbeat(query: query); // ✅ Pass full query for personality
     final lines = <String>[];
 
     lines.add('📊 SYSTEM HEALTH KPI ANALYSIS\n');

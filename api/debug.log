@@ -10328,3 +10328,11 @@ Email sent to dummy@example.com (Notification ID: 0faa7ddf-d345-4460-ad9c-ae360c
 In-app notification created for AceAdmin (ID: e7ae16a6-6a86-468c-af8a-8d02ebe43441, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
 Email sent to acephilipgclass18@gmail.com (Notification ID: e7ae16a6-6a86-468c-af8a-8d02ebe43441, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
 Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Profile created for user 12345 (ID: 6d591b45-2273-4ac4-9a5f-62ffe9bc4d10) on token obtain

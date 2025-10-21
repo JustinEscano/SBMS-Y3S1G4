@@ -154,7 +154,7 @@ class LLMService {
   }
 
   // Anomaly detection endpoint
-  Future<Map<String, dynamic>> detectAnomalies({double sensitivity = 0.8}) async {
+  Future<Map<String, dynamic>> detectAnomalies({double sensitivity = 0.8, String? query}) async {
     if (!(await AuthService().ensureValidToken())) {
       throw Exception('Invalid token');
     }
@@ -166,8 +166,10 @@ class LLMService {
     };
 
     final body = jsonEncode({
+      'query': query ?? '', // Full user query for personality extraction
       'sensitivity': sensitivity,
       'user_id': userInfo['user_id'],
+      'username': userInfo['username'],
     });
 
     final response = await http.post(
@@ -184,7 +186,7 @@ class LLMService {
   }
 
   // Energy report endpoint
-  Future<Map<String, dynamic>> getEnergyReport(String period) async {
+  Future<Map<String, dynamic>> getEnergyReport(String period, {String? query}) async {
     if (!(await AuthService().ensureValidToken())) {
       throw Exception('Invalid token');
     }
@@ -197,6 +199,7 @@ class LLMService {
 
     final body = jsonEncode({
       'period': period, // 'daily', 'weekly', 'monthly', 'yearly'
+      'query': query ?? '', // Full user query for personality extraction
       'user_id': userInfo['user_id'],
       'username': userInfo['username'],
     });
@@ -215,7 +218,7 @@ class LLMService {
   }
 
   // Billing rates endpoint
-  Future<Map<String, dynamic>> getBillingRates() async {
+  Future<Map<String, dynamic>> getBillingRates({String? query}) async {
     if (!(await AuthService().ensureValidToken())) {
       throw Exception('Invalid token');
     }
@@ -227,6 +230,7 @@ class LLMService {
     };
 
     final body = jsonEncode({
+      'query': query ?? '', // Full user query for personality extraction
       'user_id': userInfo['user_id'],
       'username': userInfo['username'],
     });
@@ -245,7 +249,7 @@ class LLMService {
   }
 
   // KPI heartbeat endpoint
-  Future<Map<String, dynamic>> getKpiHeartbeat() async {
+  Future<Map<String, dynamic>> getKpiHeartbeat({String? query}) async {
     if (!(await AuthService().ensureValidToken())) {
       throw Exception('Invalid token');
     }
@@ -257,6 +261,7 @@ class LLMService {
     };
 
     final body = jsonEncode({
+      'query': query ?? '', // Full user query for personality extraction
       'user_id': userInfo['user_id'],
       'username': userInfo['username'],
     });
