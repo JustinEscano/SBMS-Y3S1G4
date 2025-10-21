@@ -630,7 +630,8 @@ table tbody td {
     border: none;
     outline: none;
     background: var(--header-bg);
-    color: var(--off-white)
+    color: var(--off-white);
+    margin: 5px;
 }
 
 /* Add to PageStyle.css for summary cards */
