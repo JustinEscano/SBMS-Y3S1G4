@@ -14,6 +14,14 @@ class PersonalityExtractor {
 
     // Patterns to detect personality instructions (ordered by specificity)
     final patterns = [
+      // "can you act like/as X" (at start)
+      _Pattern(
+        regex: RegExp(
+          r'^can\s+you\s+act\s+(?:like|as)\s+([a-z\s]+?)(?:\s+(?:while|and|when|to))',
+          caseSensitive: false,
+        ),
+        formatter: (match) => _capitalizeName(match.group(1)!),
+      ),
       // "while acting as X" (at start)
       _Pattern(
         regex: RegExp(
@@ -120,17 +128,93 @@ class PersonalityExtractor {
 
   /// Capitalize names properly (e.g., 'lebron james' -> 'LeBron James')
   static String _capitalizeName(String name) {
-    // Special cases for known names
+    // Special cases for known names and roles
     const specialCases = {
+      // Sports & Athletes
       'lebron james': 'LeBron James',
+      'michael jordan': 'Michael Jordan',
+      'serena williams': 'Serena Williams',
+      'cristiano ronaldo': 'Cristiano Ronaldo',
+      'lionel messi': 'Lionel Messi',
+      'kobe bryant': 'Kobe Bryant',
+      'tom brady': 'Tom Brady',
+      
+      // Tech & Business Leaders
       'elon musk': 'Elon Musk',
+      'steve jobs': 'Steve Jobs',
+      'bill gates': 'Bill Gates',
+      'mark zuckerberg': 'Mark Zuckerberg',
+      'jeff bezos': 'Jeff Bezos',
+      'tim cook': 'Tim Cook',
+      'sundar pichai': 'Sundar Pichai',
+      
+      // Scientists & Inventors
       'albert einstein': 'Albert Einstein',
-      'shakespeare': 'Shakespeare',
       'einstein': 'Einstein',
+      'nikola tesla': 'Nikola Tesla',
+      'marie curie': 'Marie Curie',
+      'stephen hawking': 'Stephen Hawking',
+      'isaac newton': 'Isaac Newton',
+      'neil degrasse tyson': 'Neil deGrasse Tyson',
+      
+      // Historical Figures
+      'abraham lincoln': 'Abraham Lincoln',
+      'winston churchill': 'Winston Churchill',
+      'nelson mandela': 'Nelson Mandela',
+      'mahatma gandhi': 'Mahatma Gandhi',
+      'martin luther king': 'Martin Luther King Jr.',
+      'cleopatra': 'Cleopatra',
+      
+      // Writers & Philosophers
+      'shakespeare': 'Shakespeare',
+      'william shakespeare': 'William Shakespeare',
+      'mark twain': 'Mark Twain',
+      'jane austen': 'Jane Austen',
+      'ernest hemingway': 'Ernest Hemingway',
+      'socrates': 'Socrates',
+      'plato': 'Plato',
+      'aristotle': 'Aristotle',
+      
+      // Entertainment & Pop Culture
+      'morgan freeman': 'Morgan Freeman',
+      'david attenborough': 'David Attenborough',
+      'oprah winfrey': 'Oprah Winfrey',
+      'beyonce': 'Beyoncé',
+      'taylor swift': 'Taylor Swift',
+      'dwayne johnson': 'Dwayne "The Rock" Johnson',
+      'robert downey jr': 'Robert Downey Jr.',
+      
+      // Fictional Characters
+      'sherlock holmes': 'Sherlock Holmes',
+      'tony stark': 'Tony Stark',
+      'iron man': 'Iron Man',
+      'batman': 'Batman',
+      'yoda': 'Yoda',
+      'gandalf': 'Gandalf',
+      'dumbledore': 'Dumbledore',
+      'darth vader': 'Darth Vader',
+      
+      // Roles & Archetypes
       'pirate': 'a pirate',
       'robot': 'a robot',
       'cowboy': 'a cowboy',
       'ninja': 'a ninja',
+      'detective': 'a detective',
+      'scientist': 'a scientist',
+      'doctor': 'a doctor',
+      'teacher': 'a teacher',
+      'chef': 'a chef',
+      'astronaut': 'an astronaut',
+      'superhero': 'a superhero',
+      'wizard': 'a wizard',
+      'knight': 'a knight',
+      'samurai': 'a samurai',
+      'viking': 'a viking',
+      'spy': 'a spy',
+      'comedian': 'a comedian',
+      'news anchor': 'a news anchor',
+      'tour guide': 'a tour guide',
+      'motivational speaker': 'a motivational speaker',
     };
 
     final nameLower = name.toLowerCase().trim();

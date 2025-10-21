@@ -4,7 +4,7 @@ Advanced LLM API for Building Management System
 Enhanced with robust error handling, comprehensive data analysis, and fallback mechanisms
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from datetime import datetime, timezone, timedelta
 import logging
@@ -19,6 +19,8 @@ import json
 from pymongo import MongoClient, DESCENDING
 from bson import ObjectId
 from dotenv import load_dotenv
+from functools import lru_cache
+import hashlib
 
 # Load environment variables
 load_dotenv()
@@ -102,6 +104,52 @@ system_health = {
     "data_quality": "unknown"
 }
 
+# Performance optimization: Cache for building context
+building_context_cache = {
+    'data': None,
+    'timestamp': None,
+    'ttl': 300  # 5 minutes cache
+}
+
+def get_cached_building_context():
+    """Get building context with caching to avoid repeated DB queries"""
+    now = datetime.now()
+    cache = building_context_cache
+    
+    # Check if cache is valid
+    if cache['data'] and cache['timestamp']:
+        age = (now - cache['timestamp']).total_seconds()
+        if age < cache['ttl']:
+            logger.debug(f"✅ Using cached building context (age: {age:.1f}s)")
+            return cache['data']
+    
+    # Fetch fresh data
+    try:
+        if analyzer and analyzer.df is not None and not analyzer.df.empty:
+            df = analyzer.df
+            total_rooms = df['room_name'].nunique() if 'room_name' in df.columns else 0
+            avg_energy = df['energy_consumption_kwh'].mean() if 'energy_consumption_kwh' in df.columns else 0
+            context = f"""Current Building Status:
+- Active Rooms: {total_rooms}
+- Average Energy: {avg_energy:.2f} kWh/day
+- Data Points: {len(df)}
+"""
+            # Update cache
+            cache['data'] = context
+            cache['timestamp'] = now
+            logger.debug("🔄 Building context cached")
+            return context
+    except Exception as e:
+        logger.warning(f"Could not get building context: {e}")
+    
+    return ""
+
+@lru_cache(maxsize=100)
+def generate_cache_key(query: str, user_id: str, intent: str) -> str:
+    """Generate cache key for similar queries"""
+    key_string = f"{query.lower().strip()}:{user_id}:{intent}"
+    return hashlib.md5(key_string.encode()).hexdigest()
+
 def extract_personality_from_query(query: str) -> Tuple[str, Optional[str]]:
     """
     Extract personality/role instructions from user query.
@@ -119,13 +167,93 @@ def extract_personality_from_query(query: str) -> Tuple[str, Optional[str]]:
     
     def capitalize_name(name: str) -> str:
         """Capitalize names properly (e.g., 'lebron james' -> 'LeBron James')"""
-        # Special cases for known names
+        # Special cases for known names and roles
         special_cases = {
+            # Sports & Athletes
             'lebron james': 'LeBron James',
+            'michael jordan': 'Michael Jordan',
+            'serena williams': 'Serena Williams',
+            'cristiano ronaldo': 'Cristiano Ronaldo',
+            'lionel messi': 'Lionel Messi',
+            'kobe bryant': 'Kobe Bryant',
+            'tom brady': 'Tom Brady',
+            
+            # Tech & Business Leaders
             'elon musk': 'Elon Musk',
+            'steve jobs': 'Steve Jobs',
+            'bill gates': 'Bill Gates',
+            'mark zuckerberg': 'Mark Zuckerberg',
+            'jeff bezos': 'Jeff Bezos',
+            'tim cook': 'Tim Cook',
+            'sundar pichai': 'Sundar Pichai',
+            
+            # Scientists & Inventors
             'albert einstein': 'Albert Einstein',
-            'shakespeare': 'Shakespeare',
             'einstein': 'Einstein',
+            'nikola tesla': 'Nikola Tesla',
+            'marie curie': 'Marie Curie',
+            'stephen hawking': 'Stephen Hawking',
+            'isaac newton': 'Isaac Newton',
+            'neil degrasse tyson': 'Neil deGrasse Tyson',
+            
+            # Historical Figures
+            'abraham lincoln': 'Abraham Lincoln',
+            'winston churchill': 'Winston Churchill',
+            'nelson mandela': 'Nelson Mandela',
+            'mahatma gandhi': 'Mahatma Gandhi',
+            'martin luther king': 'Martin Luther King Jr.',
+            'cleopatra': 'Cleopatra',
+            
+            # Writers & Philosophers
+            'shakespeare': 'Shakespeare',
+            'william shakespeare': 'William Shakespeare',
+            'mark twain': 'Mark Twain',
+            'jane austen': 'Jane Austen',
+            'ernest hemingway': 'Ernest Hemingway',
+            'socrates': 'Socrates',
+            'plato': 'Plato',
+            'aristotle': 'Aristotle',
+            
+            # Entertainment & Pop Culture
+            'morgan freeman': 'Morgan Freeman',
+            'david attenborough': 'David Attenborough',
+            'oprah winfrey': 'Oprah Winfrey',
+            'beyonce': 'Beyoncé',
+            'taylor swift': 'Taylor Swift',
+            'dwayne johnson': 'Dwayne "The Rock" Johnson',
+            'robert downey jr': 'Robert Downey Jr.',
+            
+            # Fictional Characters
+            'sherlock holmes': 'Sherlock Holmes',
+            'tony stark': 'Tony Stark',
+            'iron man': 'Iron Man',
+            'batman': 'Batman',
+            'yoda': 'Yoda',
+            'gandalf': 'Gandalf',
+            'dumbledore': 'Dumbledore',
+            'darth vader': 'Darth Vader',
+            
+            # Roles & Archetypes
+            'pirate': 'a pirate',
+            'robot': 'a robot',
+            'cowboy': 'a cowboy',
+            'ninja': 'a ninja',
+            'detective': 'a detective',
+            'scientist': 'a scientist',
+            'doctor': 'a doctor',
+            'teacher': 'a teacher',
+            'chef': 'a chef',
+            'astronaut': 'an astronaut',
+            'superhero': 'a superhero',
+            'wizard': 'a wizard',
+            'knight': 'a knight',
+            'samurai': 'a samurai',
+            'viking': 'a viking',
+            'spy': 'a spy',
+            'comedian': 'a comedian',
+            'news anchor': 'a news anchor',
+            'tour guide': 'a tour guide',
+            'motivational speaker': 'a motivational speaker',
         }
         name_lower = name.lower().strip()
         if name_lower in special_cases:
@@ -135,6 +263,9 @@ def extract_personality_from_query(query: str) -> Tuple[str, Optional[str]]:
     
     # Patterns to detect personality instructions (ordered by specificity)
     patterns = [
+        # "can you act like/as X" (at start)
+        (r'^can\s+you\s+act\s+(?:like|as)\s+([a-z\s]+?)(?:\s+(?:while|and|when|to))',
+         lambda m: f"You are {capitalize_name(m.group(1))}"),
         # "while acting as X" or "while acting like X" (at start)
         (r'^while\s+acting\s+(?:as|like)\s+([a-z\s]+?)(?:\s+(?:can\s+you|please|tell|show|give|provide|check))',
          lambda m: f"You are {capitalize_name(m.group(1))}"),
@@ -496,15 +627,15 @@ def energy_report():
             document_template="energy_report"
         )
 
-        # Get recent data of this period type
-        # Limit based on period to get appropriate amount of recent data
+        # Determine data limit based on period (optimized for speed)
         limit_map = {
-            'daily': 7,      # Last 7 days
-            'weekly': 4,     # Last 4 weeks
-            'monthly': 3,    # Last 3 months
-            'yearly': 2      # Last 2 years
+            'daily': 7,     # Last 7 days (reduced from 30 for speed)
+            'weekly': 8,    # Last 8 weeks (reduced from 12)
+            'monthly': 6,   # Last 6 months (reduced from 12)
+            'yearly': 3     # Last 3 years (reduced from 5)
         }
-        data_limit = limit_map.get(period, 10)
+        data_limit = limit_map.get(period, 7)
+        logger.info(f"⚡ Fetching {data_limit} {period} records for faster response")
 
         all_data = analyzer.db_adapter.get_energy_summary_data(
             period_type=period,
@@ -643,9 +774,13 @@ Be specific, use the actual data provided, and make recommendations actionable w
             from langchain_ollama import OllamaLLM
             # Use higher temperature for personality to make it more creative/character-like
             temp = 0.9 if personality_instruction else 0.7
-            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=temp)
+            llm = OllamaLLM(
+                model="incept5/llama3.1-claude:latest", 
+                temperature=temp,
+                num_predict=800  # Limit tokens for faster response
+            )
             llm_analysis = llm.invoke(llm_context)
-            logger.info(f"LLM energy analysis generated for {username} ({period})")
+            logger.info(f"⚡ LLM energy analysis generated for {username} ({period})")
         except Exception as llm_error:
             logger.warning(f"LLM call failed: {llm_error}")
             llm_analysis = f"""**1. CONSUMPTION ANALYSIS:**
@@ -718,6 +853,52 @@ def llm_query():
 
         # Smart query routing - detect if user wants specific analysis
         query_lower = query.lower()
+        
+        # Detect simple greetings and provide friendly responses
+        greeting_keywords = ['hello', 'hi', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening', 'howdy', 'sup', 'what\'s up']
+        is_simple_greeting = (
+            query_lower.strip() in greeting_keywords or
+            (len(query.split()) <= 3 and any(keyword in query_lower for keyword in greeting_keywords))
+        )
+        
+        if is_simple_greeting:
+            greeting_response = f"""Hello {username}! 👋
+
+I'm your Smart Building Management Assistant. I can help you with:
+
+• **Energy Analysis** - Monitor consumption, identify inefficiencies
+• **Maintenance Tracking** - Predict failures, prioritize repairs  
+• **Room Utilization** - Optimize space allocation
+• **Cost Optimization** - Reduce expenses, analyze billing
+• **Anomaly Detection** - Catch unusual patterns early
+
+What would you like to explore today?"""
+            
+            # Save to conversation history
+            try:
+                if chat_collection is not None:
+                    chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'user',
+                        'content': query,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+                    chat_collection.insert_one({
+                        'session_id': session_id,
+                        'role': 'assistant',
+                        'content': greeting_response,
+                        'timestamp': datetime.now(timezone.utc)
+                    })
+            except Exception as e:
+                logger.warning(f"Could not save greeting to conversation history: {e}")
+            
+            return jsonify({
+                "status": "success",
+                "query": query,
+                "answer": greeting_response,
+                "detected_intent": "greeting",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
 
         # Check for room queries first
         room_keywords = ['show me rooms', 'list rooms', 'all rooms', 'room list', 'what rooms', 'available rooms', 'room directory']
@@ -773,21 +954,8 @@ def llm_query():
         # Build context from history
         history_context = "\n".join(conversation_history) if conversation_history else "No previous conversation"
 
-        # Get building status for context
-        building_context = ""
-        try:
-            if analyzer and analyzer.df is not None and not analyzer.df.empty:
-                df = analyzer.df
-                total_rooms = df['room_name'].nunique() if 'room_name' in df.columns else 0
-                avg_energy = df['energy_consumption_kwh'].mean() if 'energy_consumption_kwh' in df.columns else 0
-                building_context = f"""
-Current Building Status:
-- Active Rooms: {total_rooms}
-- Average Energy: {avg_energy:.2f} kWh/day
-- Data Points: {len(df)}
-"""
-        except Exception as e:
-            logger.warning(f"Could not get building context: {e}")
+        # Get building status for context (with caching)
+        building_context = get_cached_building_context()
 
         # Enhanced system prompt with conversation awareness and better general responses
         current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
@@ -855,7 +1023,12 @@ Assistant:"""
         # Direct LLM call (bypass vector store for speed)
         try:
             from langchain_ollama import OllamaLLM
-            llm = OllamaLLM(model="incept5/llama3.1-claude:latest", temperature=0.7)
+            # Optimize: Reduce max tokens for faster responses
+            llm = OllamaLLM(
+                model="incept5/llama3.1-claude:latest", 
+                temperature=0.7,
+                num_predict=512  # Limit response length for speed
+            )
             response = llm.invoke(system_prompt)
 
             # Add suggestion if specific intent detected
