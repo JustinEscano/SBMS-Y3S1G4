@@ -458,8 +458,9 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call the dedicated anomalies endpoint to leverage alerts + next_steps
-  const callAnomaliesDetect = async (userRole: UserRole, sensitivity: number = 0.8) => {
+  const callAnomaliesDetect = async (userRole: UserRole, sensitivity: number = 0.8, userQuery?: string) => {
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/anomalies/detect", {
         method: "POST",
         headers: {
@@ -467,8 +468,10 @@ const LLMChatPage: React.FC = () => {
           "X-User-Role": userRole
         },
         body: JSON.stringify({
+          query: userQuery || '', // ✅ Pass full query for personality
           sensitivity,
-          user_id: getUserInfo().user_id
+          user_id: user_id,
+          username: username
         })
       });
 
@@ -1037,7 +1040,7 @@ const LLMChatPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-          const response = await callAnomaliesDetect(userRole);
+          const response = await callAnomaliesDetect(userRole, 0.8, messageText); // ✅ Pass full message
           
           // Use the formatted answer from backend (includes everything)
           const formattedContent = response.answer || "No anomalies detected.";
@@ -1050,7 +1053,7 @@ const LLMChatPage: React.FC = () => {
           );
           
           // Save to MongoDB
-          await saveChatToMongoDB("Show me anomalies", formattedContent, "anomalies", userRole);
+          await saveChatToMongoDB(messageText, formattedContent, "anomalies", userRole); // ✅ Save actual message
         } catch (error: any) {
           setMessages((prev) =>
             prev.map((msg) =>
