@@ -201,7 +201,11 @@
     },
     {
       "name": "image_picker_android",
+<<<<<<< HEAD
       "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+1",
+=======
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+1",
+>>>>>>> LLM_PROMPTS
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -249,7 +253,11 @@
     },
     {
       "name": "leak_tracker",
+<<<<<<< HEAD
       "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-11.0.2",
+=======
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-11.0.2",
+>>>>>>> LLM_PROMPTS
       "packageUri": "lib/",
       "languageVersion": "3.2"
     },
@@ -471,7 +479,11 @@
     },
     {
       "name": "url_launcher_android",
+<<<<<<< HEAD
       "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/url_launcher_android-6.3.20",
+=======
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/url_launcher_android-6.3.20",
+>>>>>>> LLM_PROMPTS
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -519,7 +531,11 @@
     },
     {
       "name": "vm_service",
+<<<<<<< HEAD
       "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.0.0",
+=======
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.0.0",
+>>>>>>> LLM_PROMPTS
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },

@@ -10328,6 +10328,7 @@ Email sent to dummy@example.com (Notification ID: 0faa7ddf-d345-4460-ad9c-ae360c
 In-app notification created for AceAdmin (ID: e7ae16a6-6a86-468c-af8a-8d02ebe43441, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
 Email sent to acephilipgclass18@gmail.com (Notification ID: e7ae16a6-6a86-468c-af8a-8d02ebe43441, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
 Skipped duplicate notification for justin (Type: maintenance_request_updated, User ID: fa5d4488-10d6-43c8-8afa-54c52649000a)
+<<<<<<< HEAD
 Successfully imported core.views.signals
 Successfully imported core.views.signals
 Response requested for maintenance request 39fa0d05-7d6c-4157-821f-b0aebf75bd91
@@ -10456,6 +10457,8 @@ Latest sensor data requested
 Returning 4 sensor readings
 Latest sensor data requested
 Returning 4 sensor readings
+=======
+>>>>>>> LLM_PROMPTS
 Successfully imported core.views.signals
 Successfully imported core.views.signals
 Successfully imported core.views.signals
@@ -10550,6 +10553,7 @@ Latest sensor data requested
 Returning 4 sensor readings
 Successfully imported core.views.signals
 Successfully imported core.views.signals
+<<<<<<< HEAD
 ESP32 health check requested
 ESP32 heartbeat received: POST /api/esp32/heartbeat/
 Heartbeat data: {'device_id': 'ESP32_001', 'timestamp': 25309, 'dht22_working': True, 'pzem_working': False, 'photoresistor_working': True, 'pir_working': True, 'success_rate': 0, 'wifi_signal': -24, 'uptime': 25, 'sensor_type': 'PZEM_SERIAL2,DHT22_3PIN_MODULE_GPIO5,PHOTO_GPIO19,MOTION_GPIO18', 'current_temp': 0, 'current_humidity': 0, 'current_power': 0}
@@ -13811,6 +13815,10 @@ Latest sensor data requested
 Returning 4 sensor readings
 Latest sensor data requested
 Returning 4 sensor readings
+=======
+Successfully imported core.views.signals
+Profile created for user 12345 (ID: 6d591b45-2273-4ac4-9a5f-62ffe9bc4d10) on token obtain
+>>>>>>> LLM_PROMPTS
 Latest sensor data requested
 Returning 4 sensor readings
 Latest sensor data requested
@@ -13836,4 +13844,132 @@ Returning 4 sensor readings
 Latest sensor data requested
 Returning 4 sensor readings
 Latest sensor data requested
+<<<<<<< HEAD
 Returning 4 sensor readings
+=======
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-20T00:00:00.000Z'], 'period_end': ['2025-10-20T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-20T00:00:00+00:00, period_end=2025-10-21T00:00:00+00:00
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Energy cost calculation requested with params: <QueryDict: {'period_type': ['daily'], 'period_start': ['2025-10-20T00:00:00.000Z'], 'period_end': ['2025-10-20T23:59:59.000Z']}>
+Initial query count: 0
+All matching EnergySummaries: []
+No daily energy summaries found for criteria: room_id=None, equipment_id=None, component_id=None, period_start=2025-10-20T00:00:00+00:00, period_end=2025-10-21T00:00:00+00:00
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Latest sensor data requested
+Returning 0 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+>>>>>>> LLM_PROMPTS

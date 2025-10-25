@@ -109,7 +109,10 @@ const SideBar: React.FC<SideBarProps> = ({ collapsed, onToggle, handleLogout }) 
 
         {section.subItems && isExpanded && !collapsed && (
           <ul className="submenu">
-            {section.subItems.map(sub => (
+            
+            {section.subItems
+            .filter(sub => sub.id !== "Lighting" && sub.id !== "Security") 
+            .map(sub => (
               <li
                 key={sub.id}
                 className={`submenu-item ${active.child === sub.id ? "active" : ""}`}

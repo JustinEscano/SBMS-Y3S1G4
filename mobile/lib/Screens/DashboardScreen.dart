@@ -90,6 +90,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           backgroundColor: Colors.red,
         ),
+        SnackBar(
+          content: Text(
+            'Error fetching user role: $e',
+            style: GoogleFonts.urbanist(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -190,6 +197,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ));
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '$systemType management coming soon!',
+                  style: GoogleFonts.urbanist(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+              ),
               SnackBar(
                 content: Text(
                   '$systemType management coming soon!',

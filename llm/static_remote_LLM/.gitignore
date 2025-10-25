@@ -9,8 +9,13 @@ __pycache__/
 
 # Virtual environment
 venv/
+myenv/
 .env/
 .venv/
+<<<<<<< HEAD
+=======
+env/
+>>>>>>> LLM_PROMPTS
 
 # SQLite databases
 *.sqlite3
