@@ -7,7 +7,7 @@ import 'package:mobile/Screens/ChangePasswordScreen.dart';
 import 'package:mobile/Screens/AboutScreen.dart';
 import 'dart:io';
 import 'dart:developer' as developer;
-import '../utils/constants.dart';
+import '../Config/api.dart';
 
 class ProfileWidgets {
   static Widget buildProfileHeader({
