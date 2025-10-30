@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 import '../Config/api.dart';
 import '../Screens/MaintenanceManagementScreen.dart';
 import '../Screens/NotificationsScreen.dart';
@@ -160,52 +161,14 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
   }
   DateTime _getStartTime(DateTime now) {
-    switch (timeFrame) {
-      case 'daily':
-        return now.copyWith(
-          hour: 0,
-          minute: 0,
-          second: 0,
-          millisecond: 0,
-          microsecond: 0,
-        );
-      case 'weekly':
-        return now.subtract(Duration(days: 7)).copyWith(
-          hour: 0,
-          minute: 0,
-          second: 0,
-          millisecond: 0,
-          microsecond: 0,
-        );
-      case 'monthly':
-        return now.subtract(Duration(days: 30)).copyWith(
-          hour: 0,
-          minute: 0,
-          second: 0,
-          millisecond: 0,
-          microsecond: 0,
-        );
-      default:
-        return now.subtract(Duration(hours: 24)).copyWith(
-          hour: 0,
-          minute: 0,
-          second: 0,
-          millisecond: 0,
-          microsecond: 0,
-        );
-    }
+    final int periodDays = _periodDurations[timeFrame]!.inDays;
+    final int subtractDays = periodDays - 1;
+    final DateTime startDate = now.subtract(Duration(days: subtractDays));
+    return DateTime(startDate.year, startDate.month, startDate.day);
   }
   DateTime _getEndTime(DateTime startTime) {
-    switch (timeFrame) {
-      case 'daily':
-        return startTime.add(Duration(hours: 23, minutes: 59, seconds: 59));
-      case 'weekly':
-        return startTime.add(Duration(days: 7));
-      case 'monthly':
-        return startTime.add(Duration(days: 30));
-      default:
-        return startTime.add(Duration(hours: 23, minutes: 59, seconds: 59));
-    }
+    final DateTime now = DateTime.now();
+    return DateTime(now.year, now.month, now.day, 23, 59, 59, 999, 999);
   }
   Future<void> _loadHvacSensorData(DateTime startTime, DateTime endTime) async {
     try {
@@ -294,6 +257,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       List<String> sensorParams = [
         'timeframe=$timeFrame',
         'period_start=${startTimeCalc.toIso8601String()}Z',
+        'period_end=${endTimeCalc.toIso8601String()}Z',
         'limit=10000',
         if (selectedRoomId != null) 'room_id=$selectedRoomId',
         if (selectedComponentId != null) 'component_id=$selectedComponentId',
@@ -377,7 +341,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       }
       _generateHVACData();
       _generateSecurityData();
-      await _loadSummaryData(startTimeCalc);
+      await _loadSummaryData(startTimeCalc, endTimeCalc);
     } catch (e) {
       setState(() {
         errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading data: $e';
@@ -528,21 +492,26 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       };
     });
   }
-  Future<void> _loadSummaryData(DateTime startTimeCalc) async {
+  Future<void> _loadSummaryData(DateTime startTimeCalc, DateTime endTimeCalc) async {
     try {
       if (!(await AuthService().ensureValidToken())) {
         throw Exception('Session expired. Please log in again.');
       }
       final headers = AuthService().getAuthHeaders();
-      String summaryUrl = ApiConfig.energySummary(periodType: timeFrame, roomId: selectedScope == 'room' ? selectedRoomId : null);
-      summaryUrl += '&start_time=${startTimeCalc.toIso8601String()}Z';
+      String summaryUrl = ApiConfig.sensorLog.replaceAll('sensorlog', 'energysummary');
+      summaryUrl = '${ApiConfig.baseUrl}/energysummary/?period_type=daily';
+      if (selectedScope == 'room' && selectedRoomId != null) {
+        summaryUrl += '&room_id=$selectedRoomId';
+      }
+      summaryUrl += '&period_start__gte=${startTimeCalc.toIso8601String()}Z';
+      summaryUrl += '&period_start__lte=${endTimeCalc.toIso8601String()}Z';
       final response = await http.get(
         Uri.parse(summaryUrl),
         headers: headers,
       ).timeout(const Duration(seconds: 15));
       if (response.statusCode == 401) {
         if (await _refreshToken()) {
-          return _loadSummaryData(startTimeCalc);
+          return _loadSummaryData(startTimeCalc, endTimeCalc);
         } else {
           throw Exception('Session expired. Please log in again.');
         }
@@ -551,27 +520,58 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
       }
       final summary = json.decode(response.body);
       print('Summary Response: $summary');
-      if (summary is List && summary.isNotEmpty) {
-        setState(() {
-          summaryData = Map<String, dynamic>.from(summary[0]);
-        });
+      if (timeFrame == 'daily') {
+        if (summary is List && summary.isNotEmpty) {
+          setState(() {
+            summaryData = Map<String, dynamic>.from(summary[0]);
+          });
+        } else {
+          _setDefaultSummary();
+        }
       } else {
-        setState(() {
-          summaryData = {
-            'total_energy': 0.0,
-            'avg_power': 0.0,
-            'peak_power': 0.0,
-            'reading_count': 0,
-            'anomaly_count': 0,
-          };
-          errorMessage = '';
-        });
+        if (summary is List) {
+          double totalEnergy = 0.0;
+          double sumAvgPowerTimesReadings = 0.0;
+          double maxPeakPower = 0.0;
+          int totalReadings = 0;
+          int totalAnomalies = 0;
+          for (var s in summary) {
+            totalEnergy += (s['total_energy'] as num?)?.toDouble() ?? 0.0;
+            sumAvgPowerTimesReadings += ((s['avg_power'] as num?)?.toDouble() ?? 0.0) * ((s['reading_count'] as num?)?.toInt() ?? 0);
+            maxPeakPower = math.max(maxPeakPower, (s['peak_power'] as num?)?.toDouble() ?? 0.0);
+            totalReadings += (s['reading_count'] as num?)?.toInt() ?? 0;
+            totalAnomalies += (s['anomaly_count'] as num?)?.toInt() ?? 0;
+          }
+          double avgPower = totalReadings > 0 ? sumAvgPowerTimesReadings / totalReadings : 0.0;
+          setState(() {
+            summaryData = {
+              'total_energy': totalEnergy,
+              'avg_power': avgPower,
+              'peak_power': maxPeakPower,
+              'reading_count': totalReadings,
+              'anomaly_count': totalAnomalies,
+            };
+          });
+        } else {
+          _setDefaultSummary();
+        }
       }
     } catch (e) {
       setState(() {
         errorMessage = e.toString().contains('Session expired') ? e.toString() : 'Error loading summary data: $e';
       });
+      _setDefaultSummary();
     }
+  }
+  void _setDefaultSummary() {
+    summaryData = {
+      'total_energy': 0.0,
+      'avg_power': 0.0,
+      'peak_power': 0.0,
+      'reading_count': 0,
+      'anomaly_count': 0,
+    };
+    errorMessage = '';
   }
   List<FlSpot> _generatePowerSpots() {
     final now = DateTime.now();
