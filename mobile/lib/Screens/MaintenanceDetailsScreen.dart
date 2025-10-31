@@ -73,8 +73,9 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
     }
     _requestData = Map.from(widget.request ?? {});
     if (widget.request == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showAddEditMaintenanceDialog();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final result = await _showAddEditMaintenanceDialog();
+        Navigator.pop(context, result);
       });
     } else {
       _refreshDetails();
@@ -453,10 +454,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
           SnackBar(content: Text(isEditing ? 'Request updated successfully' : 'Request created successfully'), backgroundColor: Colors.green),
         );
         widget.onSave();
-        Navigator.of(context).pop();
-        if (!isEditing) {
-          Navigator.of(context).pop();
-        }
+        Navigator.of(context).pop(true);  // Pop dialog with true to indicate save
       } else if (response.statusCode == 401) {
         if (await _refreshToken()) {
           return _saveMaintenanceRequest(
@@ -547,7 +545,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
     return (comments.length / _commentsPerPage).ceil();
   }
 
-  void _showAddEditMaintenanceDialog() {
+  Future<bool?> _showAddEditMaintenanceDialog() async {
     final isEditing = widget.request != null;
     final issueController = TextEditingController(text: _requestData['issue'] as String? ?? '');
     String selectedUserId = widget.userRole == 'client' && !isEditing
@@ -566,17 +564,17 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot create/edit request: Users or equipment data not loaded'), backgroundColor: Colors.red),
       );
-      return;
+      return false;
     }
 
     if (isEditing && widget.userRole == 'client' && _requestData['user']?.toString() != _currentUserId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('You can only edit your own requests'), backgroundColor: Colors.red),
       );
-      return;
+      return false;
     }
 
-    showDialog(
+    return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -630,7 +628,7 @@ class _MaintenanceDetailsScreenState extends State<MaintenanceDetailsScreen> {
     if (widget.request == null) {
       return Scaffold(
         backgroundColor: const Color(0xFF000000),
-        body: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
+        body: const SizedBox(),  // Empty body since dialog will cover
       );
     }
 

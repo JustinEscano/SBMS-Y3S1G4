@@ -60,16 +60,45 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     'weekly': Duration(days: 1),
     'monthly': Duration(days: 1),
   };
+  String? userRole;
   @override
   void initState() {
     super.initState();
     AuthService().setTokens(widget.accessToken, widget.refreshToken);
+    _fetchUserRole();
     _loadRooms();
     _loadEquipment();
     loadEnergyData();
     // Initialize notifications via DashboardProvider
     final provider = Provider.of<DashboardProvider>(context, listen: false);
     provider.loadData(context: context);
+  }
+  Future<void> _fetchUserRole() async {
+    try {
+      if (!(await AuthService().ensureValidToken())) {
+        throw Exception('Session expired. Please log in again.');
+      }
+      final headers = AuthService().getAuthHeaders();
+      final response = await http.get(Uri.parse(ApiConfig.userInfo), headers: headers).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final userData = json.decode(response.body);
+        setState(() {
+          userRole = userData['role']?.toString() ?? 'Client';
+        });
+      } else if (response.statusCode == 401) {
+        if (await _refreshToken()) {
+          return _fetchUserRole();
+        } else {
+          throw Exception('Session expired. Please log in again.');
+        }
+      } else {
+        throw Exception('Failed to load user role: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        userRole = 'Client';
+      });
+    }
   }
   Future<void> _loadRooms() async {
     try {
@@ -990,6 +1019,7 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
     }
     final double maxX = now.difference(startTime).inMinutes / 60.0;
     final interval = _getInterval(timeFrame);
+    final isClient = userRole == 'client';
     return SafePopScope(
       routeName: 'analytics',
       child: Scaffold(
@@ -1019,7 +1049,22 @@ class _EnergyAnalyticsScreenState extends State<EnergyAnalyticsScreen> {
             ),
           ],
         ),
-        body: isLoading || isRefreshingToken
+        body: isClient
+            ? Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Cannot check the building statistics as of the moment, if you have any concerns please submit a request for now. Thank you for your patience.',
+              style: GoogleFonts.urbanist(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        )
+            : isLoading || isRefreshingToken
             ? const Center(child: CircularProgressIndicator(color: Color(0xFF184BFB)))
             : RefreshIndicator(
           onRefresh: () {

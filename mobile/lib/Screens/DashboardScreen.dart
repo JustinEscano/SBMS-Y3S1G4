@@ -194,6 +194,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       profileImage = NetworkImage(profilePictureUrl);
       hasImage = true;
     }
+    if (_profileData == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF000000),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      );
+    }
+    final isClient = _profileData?['role'] == 'client';
     return SafePopScope(
       routeName: 'dashboard',
       showExitConfirmation: true,
@@ -254,7 +265,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         backgroundColor: const Color(0xFF000000),
-        body: provider.isLoading
+        body: isClient
+            ? Center(
+          child: Text(
+            'Welcome to Orbit, Dashboard for users will be in work-in-progress for now.',
+            style: GoogleFonts.urbanist(
+              fontSize: 18,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        )
+            : provider.isLoading
             ? Center(
             child: CircularProgressIndicator(
                 color: Theme.of(context).colorScheme.primary))
