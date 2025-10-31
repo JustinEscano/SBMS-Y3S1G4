@@ -185,10 +185,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final onlineEsp32Count = provider.aggregatedSensorData
         .where((s) => s['status'] == 'online')
         .length;
-    // Legacy “Online” card (still uses equipment list)
-    final onlineEquipment = provider.equipment
-        .where((e) => e['status'] == 'online')
-        .length;
     // Profile picture
     ImageProvider? profileImage;
     bool hasImage = false;
