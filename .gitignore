@@ -7,3 +7,16 @@ llm/static_remote_LLM/chroma_room_logs/
 .qodo
 __pycache__/
 *.pyc
+
+# Python virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Node dependencies and logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

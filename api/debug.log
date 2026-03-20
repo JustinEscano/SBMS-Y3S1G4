@@ -41909,6 +41909,18 @@ Latest sensor data requested
 Returning 12 sensor readings
 Latest sensor data requested
 Returning 12 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+User Yume (ID: a44a92fc-0b1e-4673-89c9-fdbdd2c817ee) created with default profile
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Profile created for user admin (ID: f6c37ca8-47c4-4c2e-bda0-f2a7e9573730) on token obtain
+Successfully imported core.views.signals
+Successfully imported core.views.signals
 Failed to import core.views.signals: No module named 'dateutil'
 Failed to import core.views.signals: No module named 'dateutil'
 Successfully imported core.views.signals
@@ -42574,3 +42586,4 @@ PZEM logs for 2026-03-20: 20
 Updated/Created EnergySummary 9eb38d77-2a15-4957-82ce-1d1bea6e8bf0 with total_cost 0.01 PHP, effective_rate 10.0
 PZEM logs for 2026-03-20: 0
 Sensor data saved: ['c0868989-54d3-474b-968a-467718e116ca', '77bfb589-8b5c-487e-97ba-ba7c1b2a81da', 'da7a0b98-2b03-499b-a5ea-64eea769f67c', 'eb9802a4-1b21-4d21-af42-e81dacac84b5'], Alerts created: [], Alerts resolved: ['da797465-9999-4be5-a86e-99574e021e4a']
+Successfully imported core.views.signals

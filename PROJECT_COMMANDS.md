@@ -26,6 +26,7 @@ This file provides instructions for setting up and running each component of the
    ```
 
 ### Commands
+- **Configure api\dbmsAPI\settings.py":** `ipconfig` and copy-paste the IPV4 address in ALLOWED_HOSTS.
 - **Run Server:** `python manage.py runserver 0.0.0.0:8000`
 - **Apply Migrations:** `python manage.py migrate`
 - **Create Superuser:** `python manage.py createsuperuser`
@@ -55,6 +56,7 @@ This file provides instructions for setting up and running each component of the
    ```powershell
    flutter pub get
    ```
+   - run ipconfig in terminal and copy-paste IPV4 address into mobile/lib/Config/api.dart
 
 ### Commands
 - **Run App:** `flutter run`
