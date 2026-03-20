@@ -149,7 +149,7 @@ class Equipment(models.Model):
     type = models.CharField(max_length=100, choices=EQUIPMENT_TYPE_CHOICES)
     status = models.CharField(max_length=100, choices=EQUIPMENT_STATUS_CHOICES, default='offline')
     device_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
-    qr_code = models.CharField(max_length=255, null=True, blank=True)
+    qr_code = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def generate_qr_code(self):
