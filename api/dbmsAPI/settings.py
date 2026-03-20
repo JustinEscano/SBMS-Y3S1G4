@@ -36,8 +36,8 @@ ALLOWED_HOSTS = [
     '10.206.118.29',
     '0.0.0.0',  # For development only
     '0.0.0.0', 
-    '192.168.1.38',
-    '192.168.0.44' # For development only
+    '192.168.1.38'
+    '172.22.48.1' # For development only
 ]
 
 # Application definition
