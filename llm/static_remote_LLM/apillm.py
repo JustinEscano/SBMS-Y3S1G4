@@ -644,8 +644,8 @@ def llm_query():
         # Get conversation history from MongoDB (last 5 messages)
         conversation_history = []
         try:
-            if mongo_chat_collection is not None:
-                history_docs = mongo_chat_collection.find(
+            if chat_collection is not None:
+                history_docs = chat_collection.find(
                     {'session_id': session_id}
                 ).sort('timestamp', -1).limit(5)
                 
@@ -754,14 +754,14 @@ Assistant:"""
             
             # Save to conversation history
             try:
-                if mongo_chat_collection is not None:
-                    mongo_chat_collection.insert_one({
+                if chat_collection is not None:
+                    chat_collection.insert_one({
                         'session_id': session_id,
                         'role': 'user',
                         'content': query,
                         'timestamp': datetime.now(timezone.utc)
                     })
-                    mongo_chat_collection.insert_one({
+                    chat_collection.insert_one({
                         'session_id': session_id,
                         'role': 'assistant',
                         'content': response,

@@ -42587,3 +42587,6 @@ Updated/Created EnergySummary 9eb38d77-2a15-4957-82ce-1d1bea6e8bf0 with total_co
 PZEM logs for 2026-03-20: 0
 Sensor data saved: ['c0868989-54d3-474b-968a-467718e116ca', '77bfb589-8b5c-487e-97ba-ba7c1b2a81da', 'da7a0b98-2b03-499b-a5ea-64eea769f67c', 'eb9802a4-1b21-4d21-af42-e81dacac84b5'], Alerts created: [], Alerts resolved: ['da797465-9999-4be5-a86e-99574e021e4a']
 Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+User yume (ID: 939f52ea-f849-47dd-aaf0-f441e8db6c5e) created with default profile
