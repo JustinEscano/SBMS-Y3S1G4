@@ -2,7 +2,6 @@ import pandas as pd
 import os
 import hashlib
 import time
-import json
 import shutil
 import re
 from datetime import datetime, timedelta
@@ -25,7 +24,6 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Union
 import numpy as np
 import logging
 
@@ -84,30 +82,6 @@ class LoggingManager:
             ]
         )
     
-    def ensure_mongodb_connection(self, mongo_uri=None, db_name=None, collection_name=None,
-                                 prompt_db_name=None, prompt_collection_name=None):
-        """Ensure MongoDB connection is established"""
-        if not self.use_database:
-            return
-            
-        try:
-            mongo_uri = mongo_uri or self.mongo_uri
-            if not mongo_uri:
-                self.logger.warning("No MongoDB URI provided")
-                return
-                
-            self.mongo_client = MongoClient(mongo_uri)
-            self.prompt_mongo_client = MongoClient(mongo_uri)
-            
-            # Test connection
-            self.mongo_client.admin.command('ping')
-            self.logger.info("MongoDB connection established successfully")
-            
-        except Exception as e:
-            self.logger.error(f"MongoDB connection failed: {e}")
-            self.mongo_client = None
-            self.prompt_mongo_client = None
-    
     def log_to_mongodb(self, document, processed_hashes=None, save_callback=None):
         """Log document to MongoDB"""
         if not self.use_database or not self.mongo_client:
@@ -161,11 +135,6 @@ class LoggingManager:
             
         except Exception as e:
             self.logger.error(f"Failed to log prompt to MongoDB: {e}")
-    
-    def recover_backup_logs(self):
-        """Recover logs from backup if needed"""
-        # Implementation for backup recovery
-        pass
 
 # Import PromptsConfig from existing file instead of duplicating it
 from prompts_config import PromptsConfig
@@ -848,6 +817,23 @@ class RoomLogAnalyzer:
         self.df = None
         self.maintenance_df = None
         self.db_adapter = None
+        self._last_load_time = 0.0          # TTL cache timestamp
+        self._DATA_CACHE_TTL = 60           # seconds before re-querying DB
+
+        # ── Scale protection ─────────────────────────────────────────────────
+        # Max sensor rows fetched from PostgreSQL per load cycle.
+        # Prevents unbounded memory use when the DB grows large.
+        # Rows are ordered by recorded_at DESC so we always get the freshest data.
+        # Raise this if your hardware can handle it (each row ≈ 600 bytes RAM).
+        self._MAX_SENSOR_ROWS = 5000
+
+        # Max new documents embedded into ChromaDB in a single ask() call.
+        # Prevents a cold-start (or data-spike) from blocking queries for minutes.
+        # New rows beyond this cap are picked up on the next TTL refresh cycle.
+        self._MAX_EMBED_BATCH = 500
+
+        # Singleton LLM — instantiated once, reused everywhere
+        self._llm = OllamaLLM(model="qwen2.5:3b", temperature=0.1)
 
         # Initialize logging manager
         self.logger_manager = LoggingManager(
@@ -1095,9 +1081,11 @@ class RoomLogAnalyzer:
 
     def load_and_process_data(self, force_reload=False, limit=None, include_maintenance=True):
         """Load and process both sensor data and maintenance data"""
-        if not force_reload and self.df is not None:
-            self.logger.info("Using cached DataFrame")
+        now = time.time()
+        if not force_reload and self.df is not None and (now - self._last_load_time) < self._DATA_CACHE_TTL:
+            self.logger.info("Using cached DataFrame (TTL not expired)")
             return self.df
+        self._last_load_time = now
 
         try:
             if not self.use_database or self.db_adapter is None:
@@ -1305,7 +1293,7 @@ class RoomLogAnalyzer:
             if not self.vector_store:
                 # Try to initialize vector store with current data
                 self.logger.info("Vector store not found, attempting to initialize with current data")
-                df = self.load_and_process_data(include_maintenance=True)
+                df = self.load_and_process_data(include_maintenance=True, limit=self._MAX_SENSOR_ROWS)
                 if df is not None and not df.empty:
                     documents = self.create_documents(df, include_maintenance=True)
                     if documents:
@@ -1315,10 +1303,13 @@ class RoomLogAnalyzer:
                 else:
                     raise ValueError("No data available to initialize vector store")
             
-            llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
+            llm = self._llm
             self.qa_chain = RetrievalQA.from_chain_type(
                 llm=llm,
-                retriever=self.vector_store.as_retriever(),
+                retriever=self.vector_store.as_retriever(
+                    search_type="mmr",
+                    search_kwargs={"k": 3, "score_threshold": 0.4}
+                ),
                 chain_type="stuff",
                 return_source_documents=True
             )
@@ -1570,7 +1561,7 @@ class RoomLogAnalyzer:
             self.logger.info(f"Matched maintenance query: '{query}'")
             
             if not hasattr(self, 'maintenance_df') or self.maintenance_df is None or self.maintenance_df.empty:
-                self.load_and_process_data(force_reload=True, include_maintenance=True)
+                self.load_and_process_data(force_reload=True, include_maintenance=True, limit=self._MAX_SENSOR_ROWS)
                 
             if not hasattr(self, 'maintenance_df') or self.maintenance_df is None or self.maintenance_df.empty:
                 return {
@@ -1657,7 +1648,7 @@ class RoomLogAnalyzer:
     def _handle_deterministic_query(self, query, user_id=None, username=None, session_id=None, client_ip=None):
         """Handle specific queries deterministically to avoid hallucinations"""
         q_lower = query.lower().strip()
-        df = self.load_and_process_data(include_maintenance=True)
+        df = self.load_and_process_data(include_maintenance=True, limit=self._MAX_SENSOR_ROWS)
         if df is None or df.empty:
             self.logger.error("DataFrame is empty or None; cannot process query")
             self.logger_manager.log_prompt_to_mongodb(
@@ -1905,7 +1896,6 @@ class RoomLogAnalyzer:
                     energy_df = self.db_adapter.get_energy_summary_data(period_type=period_type, limit=30)
                     
                     if energy_df is not None and not energy_df.empty:
-                        from langchain_ollama import OllamaLLM
                         
                         # Calculate statistics
                         total_energy = energy_df['total_energy'].sum()
@@ -1951,8 +1941,7 @@ Provide:
 Be specific and actionable."""
                         
                         try:
-                            llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
-                            llm_analysis = llm.invoke(llm_prompt)
+                            llm_analysis = self._llm.invoke(llm_prompt)
                         except:
                             llm_analysis = f"**SUMMARY**: {period_type.capitalize()} energy consumption totals {total_energy:.2f} kWh with {int(total_anomalies)} anomalies.\n\n**INSIGHTS**: Average consumption is {avg_energy:.2f} kWh per period.\n\n**RECOMMENDATIONS**: Monitor anomalies and optimize peak usage times."
                         
@@ -1970,7 +1959,6 @@ Be specific and actionable."""
                         result = {"answer": full_response, "sources": sources}
                     else:
                         # No data - provide LLM suggestions
-                        from langchain_ollama import OllamaLLM
                         llm_prompt = f"""You are an energy consultant. No {period_type} energy data exists yet.
 ENERGY DATA:
 • Period Type: {period_type}
@@ -1987,8 +1975,7 @@ Provide:
 Be specific and actionable."""
                         
                         try:
-                            llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
-                            llm_analysis = llm.invoke(llm_prompt)
+                            llm_analysis = self._llm.invoke(llm_prompt)
                         except:
                             llm_analysis = f"**SUMMARY**: No {period_type} energy data available.\n\n**INSIGHTS**: No patterns or trends detected.\n\n**RECOMMENDATIONS**: Monitor energy usage and optimize peak times."
                         
@@ -2079,7 +2066,6 @@ Be specific and actionable."""
                         
                         if not alerts_df.empty:
                             # Get LLM analysis with suggestions
-                            from langchain_ollama import OllamaLLM
                             
                             # Prepare summary statistics
                             alert_types = alerts_df['alert_type'].value_counts().to_dict()
@@ -2132,8 +2118,7 @@ Provide:
 Be specific to the data. Only reference what's explicitly shown above."""
                             
                             try:
-                                llm = OllamaLLM(model="incept5/llama3.1-claude:latest")
-                                llm_analysis = llm.invoke(llm_prompt)
+                                llm_analysis = self._llm.invoke(llm_prompt)
                             except Exception as e:
                                 llm_analysis = f"**SUMMARY**: {len(alerts_df)} alerts detected ({unresolved} unresolved, {resolved} resolved).\n\n**CRITICAL ACTIONS**: Review high-severity alerts first.\n\n**RECOMMENDATIONS**: Monitor alert patterns and address recurring issues."
                             
@@ -2489,7 +2474,7 @@ Be specific to the data. Only reference what's explicitly shown above."""
             return {"error": "QA chain not initialized. Please initialize the analyzer."}
 
         try:
-            df = self.load_and_process_data(include_maintenance=True)
+            df = self.load_and_process_data(include_maintenance=True, limit=self._MAX_SENSOR_ROWS)
             if df is None or df.empty:
                 self.logger.warning("No data available for processing query")
                 self.logger_manager.log_prompt_to_mongodb(
@@ -2507,11 +2492,17 @@ Be specific to the data. Only reference what's explicitly shown above."""
 
             documents = self.create_documents(df, include_maintenance=True)
             if documents:
-                self.logger.info(f"Adding {len(documents)} new documents due to data changes")
+                # Cap embed batch so a data spike never blocks the query path.
+                # Remaining new docs are picked up on the next TTL refresh cycle.
+                batch = documents[:self._MAX_EMBED_BATCH]
+                self.logger.info(
+                    f"Embedding {len(batch)} of {len(documents)} new docs "
+                    f"(batch cap: {self._MAX_EMBED_BATCH})"
+                )
                 if self.vector_store is None:
-                    self.initialize_vector_store(documents)
+                    self.initialize_vector_store(batch)
                 else:
-                    self.vector_store.add_documents(documents)
+                    self.vector_store.add_documents(batch)
                 self._save_processed_hashes()
             else:
                 self.logger.info("No new documents to add to vector store - using existing knowledge")
@@ -2610,10 +2601,12 @@ def initialize_analyzer(reset_vector_store=False):
             prompt_logs_collection_name=prompt_logs_collection_name
         )
         
-        df = analyzer.load_and_process_data(force_reload=True, include_maintenance=True)
+        df = analyzer.load_and_process_data(force_reload=True, include_maintenance=True, limit=analyzer._MAX_SENSOR_ROWS)
         if df is not None and not df.empty:
             documents = analyzer.create_documents(df, include_maintenance=True)
-            analyzer.initialize_vector_store(documents, reset=reset_vector_store)
+            # Apply embed batch cap at init time too
+            batch = documents[:analyzer._MAX_EMBED_BATCH]
+            analyzer.initialize_vector_store(batch, reset=reset_vector_store)
             analyzer.initialize_qa_chain()
             logger.info("Analyzer initialized successfully")
         else:
