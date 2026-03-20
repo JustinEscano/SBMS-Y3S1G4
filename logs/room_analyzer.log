@@ -1,0 +1,55 @@
+2026-03-20 16:58:01,166 - main - INFO - Using prompt type: base_enhancement
+2026-03-20 16:58:01,167 - main - INFO - Using document template: standard
+2026-03-20 16:58:01,194 - database_adapter - INFO - Successfully connected to PostgreSQL database
+2026-03-20 16:58:01,194 - main - INFO - PostgreSQL database adapter initialized successfully
+2026-03-20 16:58:01,195 - main - INFO - Comprehensive RoomSpecificHandlers initialized successfully
+2026-03-20 16:58:01,210 - main - INFO - Available rooms detected: Server Room A, Room 408, Bedroom
+2026-03-20 16:58:01,210 - main - INFO - Loading sensor data from PostgreSQL
+2026-03-20 16:58:01,282 - database_adapter - INFO - Retrieved 2715 sensor records from database
+2026-03-20 16:58:01,284 - main - INFO - Loaded 299 unique occupied room records from PostgreSQL
+2026-03-20 16:58:01,284 - main - INFO - Loading maintenance data from PostgreSQL
+2026-03-20 16:58:01,292 - database_adapter - INFO - Retrieved 44 maintenance requests using Django ORM
+2026-03-20 16:58:01,292 - main - INFO - Loaded 44 maintenance requests from PostgreSQL
+2026-03-20 16:58:01,316 - main - INFO - Batch logged 299 new sensor records to MongoDB
+2026-03-20 16:58:01,338 - main - INFO - Created 44 new documents
+2026-03-20 16:58:01,352 - main - INFO - Loading existing vector store
+2026-03-20 16:58:01,373 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-03-20 16:58:01,781 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 16:58:01,802 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 16:58:01,804 - main - INFO - Successfully loaded existing vector store
+2026-03-20 16:58:01,806 - main - INFO - Adding 44 new documents to existing vector store
+2026-03-20 16:58:01,821 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 404 Not Found"
+2026-03-20 16:58:01,822 - main - WARNING - Failed to load existing vector store: model "nomic-embed-text" not found, try pulling it first. Creating new one.
+2026-03-20 16:58:01,824 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 16:58:01,826 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 16:58:01,828 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 404 Not Found"
+2026-03-20 16:58:01,828 - main - ERROR - Error initializing vector store: model "nomic-embed-text" not found, try pulling it first
+2026-03-20 16:58:01,828 - main - ERROR - Failed to initialize analyzer: model "nomic-embed-text" not found, try pulling it first
+2026-03-20 17:00:42,606 - main - INFO - Using prompt type: base_enhancement
+2026-03-20 17:00:42,606 - main - INFO - Using document template: standard
+2026-03-20 17:00:42,652 - database_adapter - INFO - Successfully connected to PostgreSQL database
+2026-03-20 17:00:42,653 - main - INFO - PostgreSQL database adapter initialized successfully
+2026-03-20 17:00:42,666 - main - INFO - Loaded 299 existing document hashes
+2026-03-20 17:00:42,666 - main - INFO - Comprehensive RoomSpecificHandlers initialized successfully
+2026-03-20 17:00:42,671 - main - INFO - Available rooms detected: Server Room A, Room 408, Bedroom
+2026-03-20 17:00:42,671 - main - INFO - Loading sensor data from PostgreSQL
+2026-03-20 17:00:42,843 - database_adapter - INFO - Retrieved 2715 sensor records from database
+2026-03-20 17:00:42,846 - main - INFO - Loaded 299 unique occupied room records from PostgreSQL
+2026-03-20 17:00:42,846 - main - INFO - Loading maintenance data from PostgreSQL
+2026-03-20 17:00:42,854 - database_adapter - INFO - Retrieved 44 maintenance requests using Django ORM
+2026-03-20 17:00:42,854 - main - INFO - Loaded 44 maintenance requests from PostgreSQL
+2026-03-20 17:00:42,871 - main - INFO - No new sensor records to log to MongoDB (all duplicates)
+2026-03-20 17:00:42,892 - main - INFO - Created 44 new documents
+2026-03-20 17:00:42,907 - main - INFO - Loading existing vector store
+2026-03-20 17:00:42,926 - chromadb.telemetry.product.posthog - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-03-20 17:00:43,038 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 17:00:43,040 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 17:00:43,048 - main - INFO - Successfully loaded existing vector store
+2026-03-20 17:00:43,049 - main - INFO - Adding 44 new documents to existing vector store
+2026-03-20 17:00:43,053 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 404 Not Found"
+2026-03-20 17:00:43,053 - main - WARNING - Failed to load existing vector store: model "nomic-embed-text" not found, try pulling it first. Creating new one.
+2026-03-20 17:00:43,055 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 17:00:43,056 - chromadb.telemetry.product.posthog - ERROR - Failed to send telemetry event ClientCreateCollectionEvent: capture() takes 1 positional argument but 3 were given
+2026-03-20 17:00:43,059 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/embed "HTTP/1.1 404 Not Found"
+2026-03-20 17:00:43,059 - main - ERROR - Error initializing vector store: model "nomic-embed-text" not found, try pulling it first
+2026-03-20 17:00:43,059 - main - ERROR - Failed to initialize analyzer: model "nomic-embed-text" not found, try pulling it first
