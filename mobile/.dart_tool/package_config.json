@@ -9,7 +9,7 @@
     },
     {
       "name": "async",
-      "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/async-2.13.0",
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/async-2.12.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -201,7 +201,7 @@
     },
     {
       "name": "image_picker_android",
-      "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+1",
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+3",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -249,7 +249,7 @@
     },
     {
       "name": "leak_tracker",
-      "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-11.0.2",
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-11.0.1",
       "packageUri": "lib/",
       "languageVersion": "3.2"
     },
@@ -471,7 +471,7 @@
     },
     {
       "name": "url_launcher_android",
-      "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/url_launcher_android-6.3.20",
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/url_launcher_android-6.3.22",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -519,7 +519,7 @@
     },
     {
       "name": "vm_service",
-      "rootUri": "file:///C:/Users/Ace/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.0.0",
+      "rootUri": "file:///C:/Users/Oni/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-14.3.1",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },

@@ -7,7 +7,7 @@ import '../Screens/RegisterScreen.dart';
 import '../Screens/DashboardScreen.dart';
 import '../Screens/OtpScreen.dart';
 import '../Services/auth_service.dart';
-import '../utils/constants.dart';
+import '../Config/api.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

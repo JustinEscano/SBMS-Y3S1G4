@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import '/Services/auth_service.dart';
-import '/utils/constants.dart';
+import '../Config/api.dart';
 import 'dart:io';
 
 class ApiService {
@@ -107,6 +107,17 @@ class ApiService {
       return data['results'] is List ? data['results'] : [];
     }
     throw Exception('Failed to load notifications: ${response.statusCode}');
+  }
+
+  Future<List<dynamic>> fetchAlerts() async {
+    final response = await _dio.get(
+      ApiConfig.alert,
+      options: Options(headers: _authService.getAuthHeaders()),
+    ).timeout(const Duration(seconds: 15));
+    if (response.statusCode == 200) {
+      return response.data is List ? response.data : [];
+    }
+    throw Exception('Failed to load alerts: ${response.statusCode}');
   }
 
   Future<String> fetchUserRole() async {

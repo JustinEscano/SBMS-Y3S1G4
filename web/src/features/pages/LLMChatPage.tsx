@@ -65,7 +65,7 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call billing rates endpoint with LLM analysis
-  const callBillingRates = async () => {
+  const callBillingRates = async (userQuery?: string) => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
@@ -78,12 +78,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/billing/rates", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
-          user_id: "web_user",
-          username: "Web User"
+          query: userQuery || '',  // ✅ Pass the full user message for personality extraction!
+          user_id: user_id,
+          username: username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -142,7 +144,7 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call KPI heartbeat endpoint with LLM analysis
-  const callKPIHeartbeat = async () => {
+  const callKPIHeartbeat = async (userQuery?: string) => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
@@ -155,12 +157,14 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/kpi/heartbeat", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "facility_manager" },
         body: JSON.stringify({ 
-          user_id: "web_user",
-          username: "Web User"
+          query: userQuery || '',
+          user_id: user_id,
+          username: username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -454,8 +458,9 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call the dedicated anomalies endpoint to leverage alerts + next_steps
-  const callAnomaliesDetect = async (userRole: UserRole, sensitivity: number = 0.8) => {
+  const callAnomaliesDetect = async (userRole: UserRole, sensitivity: number = 0.8, userQuery?: string) => {
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/anomalies/detect", {
         method: "POST",
         headers: {
@@ -463,8 +468,10 @@ const LLMChatPage: React.FC = () => {
           "X-User-Role": userRole
         },
         body: JSON.stringify({
+          query: userQuery || '', // ✅ Pass full query for personality
           sensitivity,
-          user_id: getUserInfo().user_id
+          user_id: user_id,
+          username: username
         })
       });
 
@@ -765,7 +772,7 @@ const LLMChatPage: React.FC = () => {
   };
 
   // Call energy report endpoint with LLM analysis
-    const callEnergyReportWithLLM = async (period: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
+    const callEnergyReportWithLLM = async (period: 'daily' | 'weekly' | 'monthly' | 'yearly', userQuery?: string) => {
     const loadingId = (Date.now() + Math.random()).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
@@ -778,13 +785,15 @@ const LLMChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const { user_id, username } = getUserInfo();
       const response = await fetch("http://localhost:5000/energy/report", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Role": "energy_analyst" },
         body: JSON.stringify({ 
           period: period,
-          user_id: "web_user",
-          username: "Web User"
+          query: userQuery || '',  // ✅ Pass the full user message for personality extraction!
+          user_id: user_id,
+          username: username
         })
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -970,13 +979,13 @@ const LLMChatPage: React.FC = () => {
       // For billing, energy reports, maintenance, and KPI, use dedicated flows
       if (queryType === "billing") {
         setMessages((prev) => [...prev, userMessage]);
-        await callBillingRates();
+        await callBillingRates(messageText);  // ✅ Pass the full message!
         return;
       }
       
       if (queryType === "kpi") {
         setMessages((prev) => [...prev, userMessage]);
-        await callKPIHeartbeat();
+        await callKPIHeartbeat(messageText);
         return;
       }
       
@@ -988,7 +997,7 @@ const LLMChatPage: React.FC = () => {
           messageText.toLowerCase().includes("yearly"))) {
         setMessages((prev) => [...prev, userMessage]);
         const period = determineReportPeriod(messageText);
-        await callEnergyReportWithLLM(period);
+        await callEnergyReportWithLLM(period, messageText);  // ✅ Pass the full message!
         return;
       }
       
@@ -1031,7 +1040,7 @@ const LLMChatPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-          const response = await callAnomaliesDetect(userRole);
+          const response = await callAnomaliesDetect(userRole, 0.8, messageText); // ✅ Pass full message
           
           // Use the formatted answer from backend (includes everything)
           const formattedContent = response.answer || "No anomalies detected.";
@@ -1044,7 +1053,7 @@ const LLMChatPage: React.FC = () => {
           );
           
           // Save to MongoDB
-          await saveChatToMongoDB("Show me anomalies", formattedContent, "anomalies", userRole);
+          await saveChatToMongoDB(messageText, formattedContent, "anomalies", userRole); // ✅ Save actual message
         } catch (error: any) {
           setMessages((prev) =>
             prev.map((msg) =>

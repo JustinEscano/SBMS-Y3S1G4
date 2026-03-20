@@ -256,9 +256,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       );
       return;
     }
-    setState(() {
-      isLoading = true; // Show loading briefly during navigation
-    });
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -285,11 +282,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         },
       ),
     ).then((result) {
-      setState(() {
-        isLoading = false; // Reset loading state after navigation
-      });
       if (result == true) {
-        // Only refresh data if the request was saved
         _loadData();
       }
     });
@@ -340,123 +333,124 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
     final paginated = paginatedRequests;
     developer.log('Building screen - isLoading: $isLoading, isRefreshingToken: $isRefreshingToken, filtered: ${filtered.length}', name: 'MaintenanceManagementScreen.Build');
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      appBar: AppBar(
-        title: Text(
-          'Maintenance Requests',
-          style: GoogleFonts.urbanist(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF000000),
+        appBar: AppBar(
+          title: Text(
+            'Maintenance Requests',
+            style: GoogleFonts.urbanist(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
+          backgroundColor: const Color(0xFF1F1E23),
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white70),
+              onPressed: isRefreshingToken ? null : _loadData,
+              tooltip: 'Refresh Data',
+            ),
+          ],
         ),
-        backgroundColor: const Color(0xFF1F1E23),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white70),
-            onPressed: isRefreshingToken ? null : _loadData,
-            tooltip: 'Refresh Data',
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: isLoading || isRefreshingToken
-                    ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
-                    : ListView(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  children: [
-                    _buildFilterSelector(),
-                    if (_errorMessage.isNotEmpty)
-                      MaintenanceScreenWidgets.buildErrorBanner(context, _errorMessage),
-                    filtered.isEmpty
-                        ? Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: MaintenanceScreenWidgets.buildEmptyState(
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  child: isLoading || isRefreshingToken
+                      ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
+                      : ListView(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    children: [
+                      _buildFilterSelector(),
+                      if (_errorMessage.isNotEmpty)
+                        MaintenanceScreenWidgets.buildErrorBanner(context, _errorMessage),
+                      filtered.isEmpty
+                          ? Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: MaintenanceScreenWidgets.buildEmptyState(
+                          context,
+                          hasRequests: maintenanceRequests.isNotEmpty,
+                          canCreateRequest: users.isNotEmpty && equipment.isNotEmpty,
+                          onCreateRequest: _showAddEditMaintenanceDialog,
+                        ),
+                      )
+                          : MaintenanceScreenWidgets.buildMaintenanceRequestListWithPagination(
                         context,
-                        hasRequests: maintenanceRequests.isNotEmpty,
-                        canCreateRequest: users.isNotEmpty && equipment.isNotEmpty,
-                        onCreateRequest: _showAddEditMaintenanceDialog,
+                        requests: paginated.cast<Map<String, dynamic>>(),
+                        currentPage: _currentPage,
+                        totalPages: totalPages,
+                        getEquipmentName: _getEquipmentName,
+                        getUserName: _getUserName,
+                        getStatusLabel: _getStatusLabel,
+                        getStatusColor: _getStatusColor,
+                        onRequestTap: (request) => _showAddEditMaintenanceDialog(request: request),
+                        onPreviousPage: () => setState(() => _currentPage--),
+                        onNextPage: () => setState(() => _currentPage++),
                       ),
-                    )
-                        : MaintenanceScreenWidgets.buildMaintenanceRequestListWithPagination(
-                      context,
-                      requests: paginated.cast<Map<String, dynamic>>(),
-                      currentPage: _currentPage,
-                      totalPages: totalPages,
-                      getEquipmentName: _getEquipmentName,
-                      getUserName: _getUserName,
-                      getStatusLabel: _getStatusLabel,
-                      getStatusColor: _getStatusColor,
-                      onRequestTap: (request) => _showAddEditMaintenanceDialog(request: request),
-                      onPreviousPage: () => setState(() => _currentPage--),
-                      onNextPage: () => setState(() => _currentPage++),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        floatingActionButton: (widget.userRole == 'admin' ||
+            widget.userRole == 'superadmin' ||
+            widget.userRole == 'client' ||
+            widget.userRole == 'employee')
+            ? MaintenanceScreenWidgets.buildCustomFAB(
+          onPressed: users.isEmpty || equipment.isEmpty ? null : _showAddEditMaintenanceDialog,
+          tooltip: users.isEmpty || equipment.isEmpty
+              ? 'Cannot create request: Missing data'
+              : 'Create New Request',
+          isEnabled: users.isNotEmpty && equipment.isNotEmpty,
+        )
+            : null,
+        bottomNavigationBar: BottomNavBar(
+          onMenuSelection: (value) {
+            switch (value) {
+              case 'dashboard':
+                Navigator.pop(context);
+                break;
+              case 'analytics':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EnergyAnalyticsScreen(
+                      accessToken: AuthService().accessToken ?? widget.accessToken,
+                      refreshToken: AuthService().refreshToken ?? widget.refreshToken,
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      floatingActionButton: (widget.userRole == 'admin' ||
-          widget.userRole == 'superadmin' ||
-          widget.userRole == 'client' ||
-          widget.userRole == 'employee')
-          ? MaintenanceScreenWidgets.buildCustomFAB(
-        onPressed: users.isEmpty || equipment.isEmpty ? null : _showAddEditMaintenanceDialog,
-        tooltip: users.isEmpty || equipment.isEmpty
-            ? 'Cannot create request: Missing data'
-            : 'Create New Request',
-        isEnabled: users.isNotEmpty && equipment.isNotEmpty,
-      )
-          : null,
-      bottomNavigationBar: BottomNavBar(
-        onMenuSelection: (value) {
-          switch (value) {
-            case 'dashboard':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DashboardScreen(
-                    accessToken: AuthService().accessToken ?? widget.accessToken,
                   ),
-                ),
-              );
-              break;
-            case 'analytics':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EnergyAnalyticsScreen(
-                    accessToken: AuthService().accessToken ?? widget.accessToken,
-                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                );
+                break;
+              case 'maintenance_requests':
+                break;
+              case 'orb_chat':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      accessToken: AuthService().accessToken ?? widget.accessToken,
+                      refreshToken: AuthService().refreshToken ?? widget.refreshToken,
+                    ),
                   ),
-                ),
-              );
-              break;
-            case 'maintenance_requests':
-              break;
-            case 'orb_chat':
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatScreen(
-                    accessToken: AuthService().accessToken ?? widget.accessToken,
-                    refreshToken: AuthService().refreshToken ?? widget.refreshToken,
-                  ),
-                ),
-              );
-              break;
-          }
-        },
-        currentScreen: 'maintenance_requests',
+                );
+                break;
+            }
+          },
+          currentScreen: 'maintenance_requests',
+        ),
       ),
     );
   }

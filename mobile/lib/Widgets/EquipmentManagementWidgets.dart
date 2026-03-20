@@ -98,339 +98,6 @@ class EquipmentManagementWidgets {
     );
   }
 
-  static Widget buildAddEditEquipmentDialog(
-      BuildContext context, {
-        required bool isEditing,
-        required Map<String, dynamic>? equipmentItem,
-        required List<dynamic> rooms,
-        required List<Map<String, String>> equipmentTypeOptions,
-        required List<Map<String, String>> equipmentStatusOptions,
-        required Function(String?, String, String, String, String, String?, String) onSave,
-        required VoidCallback onCancel,
-      }) {
-    final nameController = TextEditingController(text: equipmentItem?['name'] ?? '');
-    final deviceIdController = TextEditingController(text: equipmentItem?['device_id'] ?? '');
-    final qrCodeController = TextEditingController(text: equipmentItem?['qr_code'] ?? '');
-    String selectedRoomId = equipmentItem?['room']?.toString() ?? '';
-    String selectedStatus = equipmentItem?['status'] ?? 'offline';
-    String selectedType = equipmentItem?['type'] ?? 'sensor';
-    String? nameError;
-    String? typeError;
-
-    if (!equipmentTypeOptions.any((option) => option['value'] == selectedType)) {
-      selectedType = 'sensor';
-    }
-
-    return Container(
-      width: double.infinity, // Ensure dialog takes full width within constraints
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-        maxWidth: 400,
-        minWidth: 300, // Add minimum width to prevent collapse
-      ),
-      child: StatefulBuilder(
-        builder: (context, setDialogState) {
-          void validateInputs() {
-            setDialogState(() {
-              nameError = nameController.text.isEmpty ? 'Equipment name is required' : null;
-              typeError = selectedType.isEmpty ? 'Equipment type is required' : null;
-            });
-          }
-
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              buildDialogHeader(
-                context,
-                title: isEditing ? 'Edit Equipment' : 'Add Equipment',
-                icon: Icons.devices,
-              ),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 360), // Constrain inner content width
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Equipment Details',
-                            style: GoogleFonts.urbanist(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: nameController,
-                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                            decoration: InputDecoration(
-                              labelText: 'Equipment Name *',
-                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                              filled: true,
-                              fillColor: const Color(0xFF121822),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                              ),
-                              errorText: nameError,
-                              errorStyle: GoogleFonts.urbanist(color: Colors.red, fontSize: 12),
-                              prefixIcon: const Icon(Icons.devices, color: Colors.white70),
-                            ),
-                            textInputAction: TextInputAction.next,
-                            onChanged: (_) => validateInputs(),
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            value: selectedType,
-                            decoration: InputDecoration(
-                              labelText: 'Equipment Type *',
-                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                              filled: true,
-                              fillColor: const Color(0xFF121822),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                              ),
-                              errorText: typeError,
-                              errorStyle: GoogleFonts.urbanist(color: Colors.red, fontSize: 12),
-                              prefixIcon: const Icon(Icons.category, color: Colors.white70),
-                            ),
-                            dropdownColor: const Color(0xFF121822),
-                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                            isExpanded: true, // Ensure dropdown takes available width
-                            items: equipmentTypeOptions
-                                .map((option) => DropdownMenuItem(
-                              value: option['value'],
-                              child: Text(
-                                option['label']!,
-                                style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ))
-                                .toList(),
-                            onChanged: (value) {
-                              setDialogState(() {
-                                selectedType = value ?? 'sensor';
-                              });
-                              validateInputs();
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: deviceIdController,
-                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                            decoration: InputDecoration(
-                              labelText: 'Device ID',
-                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                              filled: true,
-                              fillColor: const Color(0xFF121822),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                              ),
-                              prefixIcon: const Icon(Icons.memory, color: Colors.white70),
-                              hintText: 'e.g., ESP32_001',
-                              hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                            ),
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: qrCodeController,
-                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                            decoration: InputDecoration(
-                              labelText: 'QR Code',
-                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                              filled: true,
-                              fillColor: const Color(0xFF121822),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                              ),
-                              prefixIcon: const Icon(Icons.qr_code, color: Colors.white70),
-                              hintText: 'QR code identifier',
-                              hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                            ),
-                            textInputAction: TextInputAction.next,
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            value: selectedRoomId.isEmpty ? null : selectedRoomId,
-                            decoration: InputDecoration(
-                              labelText: 'Assign to Room',
-                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                              filled: true,
-                              fillColor: const Color(0xFF121822),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                              ),
-                              prefixIcon: const Icon(Icons.room, color: Colors.white70),
-                              hintText: 'Select a room (optional)',
-                              hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                            ),
-                            dropdownColor: const Color(0xFF121822),
-                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                            isExpanded: true,
-                            items: [
-                              const DropdownMenuItem<String>(
-                                value: '',
-                                child: Text('No room assigned'),
-                              ),
-                              ...rooms.map((room) => DropdownMenuItem<String>(
-                                value: room['id'].toString(),
-                                child: Text(
-                                  '${room['name']} (Floor ${room['floor']})',
-                                  style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ))
-                            ],
-                            onChanged: (value) {
-                              setDialogState(() {
-                                selectedRoomId = value ?? '';
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            value: selectedStatus,
-                            decoration: InputDecoration(
-                              labelText: 'Status',
-                              labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
-                              filled: true,
-                              fillColor: const Color(0xFF121822),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                              ),
-                              prefixIcon: const Icon(Icons.power_settings_new, color: Colors.white70),
-                            ),
-                            dropdownColor: const Color(0xFF121822),
-                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                            isExpanded: true,
-                            items: equipmentStatusOptions
-                                .map((option) => DropdownMenuItem(
-                              value: option['value'],
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(option['value']),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      option['label']!,
-                                      style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ))
-                                .toList(),
-                            onChanged: (value) {
-                              setDialogState(() {
-                                selectedStatus = value ?? 'offline';
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '* Required fields',
-                            style: GoogleFonts.urbanist(
-                              fontSize: 12,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              buildDialogFooter(
-                context,
-                actionText: isEditing ? 'Update' : 'Add',
-                onAction: () {
-                  validateInputs();
-                  if (nameError == null && typeError == null) {
-                    onSave(
-                      equipmentItem?['id']?.toString(),
-                      nameController.text,
-                      selectedType,
-                      deviceIdController.text,
-                      qrCodeController.text,
-                      selectedRoomId.isEmpty ? null : selectedRoomId,
-                      selectedStatus,
-                    );
-                  }
-                },
-                onCancel: onCancel,
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
   static Widget buildCustomFAB({
     required VoidCallback? onPressed,
     required String tooltip,
@@ -797,7 +464,6 @@ class EquipmentManagementWidgets {
     if (filterRoom == 'all' && filterType == 'all') {
       return const SizedBox.shrink();
     }
-
     return Container(
       height: 50,
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -858,7 +524,6 @@ class EquipmentManagementWidgets {
       }) {
     String tempFilterRoom = currentFilterRoom;
     String tempFilterType = currentFilterType;
-
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(
@@ -1141,7 +806,7 @@ class EquipmentManagementWidgets {
     );
   }
 
-  static Color _getStatusColor(String? status) {
+  static Color getStatusColor(String? status) {
     switch (status?.toLowerCase()) {
       case 'online':
         return Colors.green;
@@ -1154,5 +819,370 @@ class EquipmentManagementWidgets {
       default:
         return Colors.grey;
     }
+  }
+}
+
+class AddEditEquipmentDialog extends StatefulWidget {
+  final bool isEditing;
+  final Map<String, dynamic>? equipmentItem;
+  final List<dynamic> rooms;
+  final List<Map<String, String>> equipmentTypeOptions;
+  final List<Map<String, String>> equipmentStatusOptions;
+  final Future<void> Function(String?, String, String, String, String, String?, String) onSave;
+  final VoidCallback onCancel;
+
+  const AddEditEquipmentDialog({
+    super.key,
+    required this.isEditing,
+    required this.equipmentItem,
+    required this.rooms,
+    required this.equipmentTypeOptions,
+    required this.equipmentStatusOptions,
+    required this.onSave,
+    required this.onCancel,
+  });
+
+  @override
+  State<AddEditEquipmentDialog> createState() => _AddEditEquipmentDialogState();
+}
+
+class _AddEditEquipmentDialogState extends State<AddEditEquipmentDialog> {
+  late TextEditingController nameController;
+  late TextEditingController deviceIdController;
+  late TextEditingController qrCodeController;
+  late String selectedRoomId;
+  late String selectedStatus;
+  late String selectedType;
+  String? nameError;
+  String? typeError;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.equipmentItem?['name'] ?? '');
+    deviceIdController = TextEditingController(text: widget.equipmentItem?['device_id'] ?? '');
+    qrCodeController = TextEditingController(text: widget.equipmentItem?['qr_code'] ?? '');
+    selectedRoomId = widget.equipmentItem?['room']?.toString() ?? '';
+    selectedStatus = widget.equipmentItem?['status'] ?? 'offline';
+    selectedType = widget.equipmentItem?['type'] ?? 'sensor';
+    if (!widget.equipmentTypeOptions.any((option) => option['value'] == selectedType)) {
+      selectedType = 'sensor';
+    }
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    deviceIdController.dispose();
+    qrCodeController.dispose();
+    super.dispose();
+  }
+
+  void validateInputs() {
+    setState(() {
+      nameError = nameController.text.isEmpty ? 'Equipment name is required' : null;
+      typeError = selectedType.isEmpty ? 'Equipment type is required' : null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxWidth: 400,
+        minWidth: 300,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          EquipmentManagementWidgets.buildDialogHeader(
+            context,
+            title: widget.isEditing ? 'Edit Equipment' : 'Add Equipment',
+            icon: Icons.devices,
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Equipment Details',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: nameController,
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        decoration: InputDecoration(
+                          labelText: 'Equipment Name *',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          errorText: nameError,
+                          errorStyle: GoogleFonts.urbanist(color: Colors.red, fontSize: 12),
+                          prefixIcon: const Icon(Icons.devices, color: Colors.white70),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        onChanged: (_) => validateInputs(),
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedType,
+                        decoration: InputDecoration(
+                          labelText: 'Equipment Type *',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          errorText: typeError,
+                          errorStyle: GoogleFonts.urbanist(color: Colors.red, fontSize: 12),
+                          prefixIcon: const Icon(Icons.category, color: Colors.white70),
+                        ),
+                        dropdownColor: const Color(0xFF121822),
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        isExpanded: true,
+                        items: widget.equipmentTypeOptions
+                            .map((option) => DropdownMenuItem(
+                          value: option['value'],
+                          child: Text(
+                            option['label']!,
+                            style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedType = value ?? 'sensor';
+                          });
+                          validateInputs();
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: deviceIdController,
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        decoration: InputDecoration(
+                          labelText: 'Device ID',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          prefixIcon: const Icon(Icons.memory, color: Colors.white70),
+                          hintText: 'e.g., ESP32_001',
+                          hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                        ),
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: qrCodeController,
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        decoration: InputDecoration(
+                          labelText: 'QR Code',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          prefixIcon: const Icon(Icons.qr_code, color: Colors.white70),
+                          hintText: 'QR code identifier',
+                          hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                        ),
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedRoomId.isEmpty ? null : selectedRoomId,
+                        decoration: InputDecoration(
+                          labelText: 'Assign to Room',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          prefixIcon: const Icon(Icons.room, color: Colors.white70),
+                          hintText: 'Select a room (optional)',
+                          hintStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                        ),
+                        dropdownColor: const Color(0xFF121822),
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<String>(
+                            value: '',
+                            child: Text('No room assigned'),
+                          ),
+                          ...widget.rooms.map((room) => DropdownMenuItem<String>(
+                            value: room['id'].toString(),
+                            child: Text(
+                              '${room['name']} (Floor ${room['floor']})',
+                              style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ))
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            selectedRoomId = value ?? '';
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedStatus,
+                        decoration: InputDecoration(
+                          labelText: 'Status',
+                          labelStyle: GoogleFonts.urbanist(color: Colors.white70, fontSize: 14),
+                          filled: true,
+                          fillColor: const Color(0xFF121822),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                          ),
+                          prefixIcon: const Icon(Icons.power_settings_new, color: Colors.white70),
+                        ),
+                        dropdownColor: const Color(0xFF121822),
+                        style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                        isExpanded: true,
+                        items: widget.equipmentStatusOptions
+                            .map((option) => DropdownMenuItem(
+                          value: option['value'],
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: EquipmentManagementWidgets.getStatusColor(option['value']),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  option['label']!,
+                                  style: GoogleFonts.urbanist(color: Colors.white, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedStatus = value ?? 'offline';
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '* Required fields',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          EquipmentManagementWidgets.buildDialogFooter(
+            context,
+            actionText: widget.isEditing ? 'Update' : 'Add',
+            onAction: () {
+              validateInputs();
+              if (nameError == null && typeError == null) {
+                widget.onSave(
+                  widget.equipmentItem?['id']?.toString(),
+                  nameController.text,
+                  selectedType,
+                  deviceIdController.text,
+                  qrCodeController.text,
+                  selectedRoomId.isEmpty ? null : selectedRoomId,
+                  selectedStatus,
+                );
+              }
+            },
+            onCancel: widget.onCancel,
+          ),
+        ],
+      ),
+    );
   }
 }

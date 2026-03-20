@@ -7,7 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'dart:developer' as developer;
-import '../utils/constants.dart';
+import '../Config/api.dart';
 import '../Services/auth_service.dart';
 import './LoginScreen.dart';
 import '../Widgets/ProfileWidgets.dart';

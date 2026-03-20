@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:jwt_decode/jwt_decode.dart';
-import '../utils/constants.dart';
+import '../Config/api.dart';
 import 'api_service.dart';
 
 class AuthService {

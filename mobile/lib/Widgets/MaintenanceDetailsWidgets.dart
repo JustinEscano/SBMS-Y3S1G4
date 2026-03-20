@@ -248,6 +248,7 @@ class MaintenanceDetailsWidgets {
     required List<dynamic> users,
     required ValueChanged<String?> onAssignedToChanged,
     required bool isRefreshingToken,
+    bool showAssignTo = false,  // Add this if not already present
   }) {
     if (!canComment) {
       return Padding(
@@ -279,130 +280,135 @@ class MaintenanceDetailsWidgets {
       );
     }
 
-    return Card(
-      color: const Color(0xFF1F1E23),
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: const Color(0xFF184BFB), width: 1),
-      ),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Add Comment',
-              style: GoogleFonts.urbanist(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: responseController,
-              decoration: InputDecoration(
-                labelText: 'Comment',
-                hintText: 'Enter your comment...',
-                labelStyle: GoogleFonts.urbanist(color: Colors.white70),
-                hintStyle: GoogleFonts.urbanist(color: Colors.white54),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                ),
-                prefixIcon: const Icon(Icons.comment, color: Colors.white70),
-                filled: true,
-                fillColor: const Color(0xFF2A2A2E),
-                errorText: responseController.text.trim().isEmpty && responseController.text.isNotEmpty
-                    ? 'Comment cannot be empty'
-                    : null,
-              ),
-              style: GoogleFonts.urbanist(color: Colors.white),
-              maxLines: 3,
-              textInputAction: TextInputAction.newline,
-            ),
-            if (effectiveRole == 'admin' || effectiveRole == 'superadmin') ...[
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: selectedAssignedToId,
-                decoration: InputDecoration(
-                  labelText: 'Assign To (Optional)',
-                  labelStyle: GoogleFonts.urbanist(color: Colors.white70),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF184BFB)),
-                  ),
-                  prefixIcon: const Icon(Icons.person_add, color: Colors.white70),
-                  filled: true,
-                  fillColor: const Color(0xFF2A2A2E),
-                ),
-                isExpanded: true,
-                dropdownColor: const Color(0xFF1F1E23),
-                items: [
-                  DropdownMenuItem<String>(
-                    value: null,
-                    child: Text(
-                      'None',
-                      style: GoogleFonts.urbanist(color: Colors.white),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  ...users
-                      .where((user) => user['role'] == 'employee' || user['role'] == 'admin')
-                      .map((user) => DropdownMenuItem<String>(
-                    value: user['id'].toString(),
-                    child: Text(
-                      '${user['username']} (${user['email']})',
-                      style: GoogleFonts.urbanist(color: Colors.white),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )),
-                ],
-                onChanged: onAssignedToChanged,
-              ),
-            ],
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: responseController.text.trim().isEmpty || isRefreshingToken ? null : onAddComment,
-                icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                label: Text(
+    return StatefulBuilder(  // Wrap in StatefulBuilder for dynamic updates
+      builder: (context, setState) {
+        return Card(
+          color: const Color(0xFF1F1E23),
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: const Color(0xFF184BFB), width: 1),
+          ),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   'Add Comment',
                   style: GoogleFonts.urbanist(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF184BFB),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: responseController,
+                  onChanged: (_) => setState(() {}),  // Trigger rebuild on text change
+                  decoration: InputDecoration(
+                    labelText: 'Comment',
+                    hintText: 'Enter your comment...',
+                    labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                    hintStyle: GoogleFonts.urbanist(color: Colors.white54),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                    ),
+                    prefixIcon: const Icon(Icons.comment, color: Colors.white70),
+                    filled: true,
+                    fillColor: const Color(0xFF2A2A2E),
+                    errorText: responseController.text.trim().isEmpty && responseController.text.isNotEmpty
+                        ? 'Comment cannot be empty'
+                        : null,
+                  ),
+                  style: GoogleFonts.urbanist(color: Colors.white),
+                  maxLines: 3,
+                  textInputAction: TextInputAction.newline,
                 ),
-              ),
+                if (showAssignTo) ...[  // Use showAssignTo to control visibility
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedAssignedToId,
+                    decoration: InputDecoration(
+                      labelText: 'Assign To (Optional)',
+                      labelStyle: GoogleFonts.urbanist(color: Colors.white70),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF184BFB)),
+                      ),
+                      prefixIcon: const Icon(Icons.person_add, color: Colors.white70),
+                      filled: true,
+                      fillColor: const Color(0xFF2A2A2E),
+                    ),
+                    isExpanded: true,
+                    dropdownColor: const Color(0xFF1F1E23),
+                    items: [
+                      DropdownMenuItem<String>(
+                        value: null,
+                        child: Text(
+                          'None',
+                          style: GoogleFonts.urbanist(color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      ...users
+                          .where((user) => user['role'] == 'employee' || user['role'] == 'admin')
+                          .map((user) => DropdownMenuItem<String>(
+                        value: user['id'].toString(),
+                        child: Text(
+                          '${user['username']} (${user['email']})',
+                          style: GoogleFonts.urbanist(color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )),
+                    ],
+                    onChanged: onAssignedToChanged,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    onPressed: responseController.text.trim().isEmpty || isRefreshingToken ? null : onAddComment,
+                    icon: const Icon(Icons.send, color: Colors.white, size: 20),
+                    label: Text(
+                      'Add Comment',
+                      style: GoogleFonts.urbanist(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF184BFB),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
