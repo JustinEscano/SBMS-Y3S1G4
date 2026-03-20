@@ -26,7 +26,7 @@ This file provides instructions for setting up and running each component of the
    ```
 
 ### Commands
-- **Run Server:** `python manage.py runserver`
+- **Run Server:** `python manage.py runserver 0.0.0.0:8000`
 - **Apply Migrations:** `python manage.py migrate`
 - **Create Superuser:** `python manage.py createsuperuser`
 
@@ -62,7 +62,33 @@ This file provides instructions for setting up and running each component of the
 
 ---
 
-## 4. IoT Scripts (ESP32)
+## 4. AI LLM API (Flask)
+**Location:** `llm/static_remote_LLM/`
+
+### Setup
+1. Navigate to the LLM directory and create a **dedicated** virtual environment:
+   ```powershell
+   cd llm/static_remote_LLM
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
+2. Install the specific requirements for the AI component:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+3. Ensure **Ollama** is running in the background with the specific model:
+   ```powershell
+   ollama run incept5/llama3.1-claude:latest
+   ```
+
+### Commands
+- **Run Server:** `python apillm.py`
+  > [!NOTE]
+  > The first run may take a few moments to initialize all AI modules. Please wait for the "Starting enhanced server" message.
+
+---
+
+## 5. IoT Scripts (ESP32)
 **Location:** `iot_scripts/`
 
 ### Setup
