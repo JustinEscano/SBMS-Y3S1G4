@@ -256,9 +256,6 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
       );
       return;
     }
-    setState(() {
-      isLoading = true; // Show loading briefly during navigation
-    });
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -285,11 +282,7 @@ class _MaintenanceManagementScreenState extends State<MaintenanceManagementScree
         },
       ),
     ).then((result) {
-      setState(() {
-        isLoading = false; // Reset loading state after navigation
-      });
       if (result == true) {
-        // Only refresh data if the request was saved
         _loadData();
       }
     });

@@ -5,7 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as developer;
-import '../utils/constants.dart';
+import '../Config/api.dart';
 import '../Services/auth_service.dart';
 import './ProfileScreen.dart';
 import './LoginScreen.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../Screens/DashboardScreen.dart';
 import '../Services/auth_service.dart';
-import '../utils/constants.dart';
+import '../Config/api.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
