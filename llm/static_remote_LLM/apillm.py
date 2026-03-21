@@ -16,6 +16,27 @@ import numpy as np
 import pandas as pd
 from typing import Dict, List, Any
 import json
+import re
+
+# ── Helper: strip control characters from LLM output before JSON serialization ──
+# The LLM can return stray null bytes, escape sequences, or lone surrogates that
+# cause JSON.parse() to fail on the frontend even though Python's json.dumps is fine.
+def sanitize_llm_output(text: str) -> str:
+    """Remove control characters, markdown code fences, and normalize line endings from LLM responses."""
+    if not text:
+        return ""
+    # Strip control chars (keep \n and \t which are valid in JSON strings)
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
+    # Normalize line endings
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    # Strip markdown code fences (```json ... ``` or ``` ... ```) that LLMs sometimes emit
+    text = re.sub(r'```[\w]*\n?', '', text)
+    return text.strip()
+
+
+def _s(value, fallback: str = '') -> str:
+    """Sanitize a raw database string value for safe JSON embedding."""
+    return sanitize_llm_output(str(value) if value is not None else fallback)
 from pymongo import MongoClient, DESCENDING
 from dotenv import load_dotenv
 from langchain_ollama import OllamaLLM
@@ -532,7 +553,7 @@ List 3-4 concrete actions with expected impact:
 Be specific, use the actual data provided, and make recommendations actionable with clear expected outcomes. Each section should be 3-4 sentences with concrete numbers and examples."""        
         # Call LLM directly
         try:
-            llm_analysis = _llm.invoke(llm_context)
+            llm_analysis = sanitize_llm_output(_llm.invoke(llm_context))
             logger.info(f"LLM energy analysis generated for {username} ({period})")
         except Exception as llm_error:
             logger.warning(f"LLM call failed: {llm_error}")
@@ -740,7 +761,7 @@ Assistant:"""
         
         # Direct LLM call (bypass vector store for speed)
         try:
-            response = _llm.invoke(system_prompt)
+            response = sanitize_llm_output(_llm.invoke(system_prompt))
             
             # Add suggestion if specific intent detected
             if detected_intent:
@@ -935,21 +956,21 @@ def predict_maintenance():
                 }
                 
                 actual_request = {
-                    "equipment": req.get('equipment_name', 'Unknown Equipment'),
-                    "room": req.get('room_name', 'Unknown Room'),
-                    "component": req.get('equipment_type', 'Unknown'),
-                    "issue": req.get('issue_description', 'No description'),
+                    "equipment": _s(req.get('equipment_name'), 'Unknown Equipment'),
+                    "room": _s(req.get('room_name'), 'Unknown Room'),
+                    "component": _s(req.get('equipment_type'), 'Unknown'),
+                    "issue": _s(req.get('issue_description'), 'No description'),
                     "urgency": urgency_map.get(status, 'Medium'),
-                    "action": req.get('notes', 'Review and address'),
+                    "action": _s(req.get('notes'), 'Review and address'),
                     "timeline": f"Scheduled: {req.get('requested_date')}" if pd.notna(req.get('requested_date')) else "Not scheduled",
                     "confidence": 1.0,  # Actual requests have 100% confidence
                     "cost_estimate": "To be determined",
                     "risk_level": urgency_map.get(status, 'Medium'),
-                    "requested_by": req.get('requested_by_username', 'Unknown User'),
+                    "requested_by": _s(req.get('requested_by_username'), 'Unknown User'),
                     "user_id": str(req.get('requested_by_id', 'unknown')),
-                    "requested_by_email": req.get('requested_by_email', ''),
-                    "requested_by_role": req.get('requested_by_role', ''),
-                    "assigned_to": req.get('assigned_to_username', 'Unassigned'),
+                    "requested_by_email": _s(req.get('requested_by_email')),
+                    "requested_by_role": _s(req.get('requested_by_role')),
+                    "assigned_to": _s(req.get('assigned_to_username'), 'Unassigned'),
                     "status": status,
                     "created_at": req.get('created_at').isoformat() if pd.notna(req.get('created_at')) else None,
                     "resolved_at": req.get('resolved_date').isoformat() if pd.notna(req.get('resolved_date')) else None,
@@ -1014,7 +1035,7 @@ Should we replace {most_problematic_equipment} instead of repairing it again?
 Use the exact headers shown above. Be concise (2-3 sentences each)."""            
             # Call LLM directly for better analysis (bypass vector store)
             try:
-                llm_analysis = _llm.invoke(maintenance_context)
+                llm_analysis = sanitize_llm_output(_llm.invoke(maintenance_context))
                 logger.info(f"LLM maintenance analysis generated for {username} (direct call)")
             except Exception as llm_error:
                 logger.warning(f"Direct LLM call failed: {llm_error}, trying ask()")
@@ -1025,7 +1046,7 @@ Use the exact headers shown above. Be concise (2-3 sentences each)."""
                     session_id=f"maintenance_{datetime.now().timestamp()}",
                     client_ip=request.remote_addr
                 )
-                llm_analysis = llm_result.get('answer', '')
+                llm_analysis = sanitize_llm_output(llm_result.get('answer', ''))
                 logger.info(f"LLM maintenance analysis generated for {username} (fallback)")
         except Exception as e:
             logger.warning(f"LLM analysis failed, using fallback: {e}")
@@ -1125,7 +1146,7 @@ Be specific and actionable."""
                     session_id=f"maintenance_preventive_{datetime.now().timestamp()}",
                     client_ip=request.remote_addr
                 )
-                llm_analysis = llm_result.get('answer', '')
+                llm_analysis = sanitize_llm_output(llm_result.get('answer', ''))
             except:
                 llm_analysis = """**PREVENTIVE SCHEDULE**:
 • Weekly: Visual inspections
@@ -1166,8 +1187,8 @@ Be specific and actionable."""
                 "in_progress_requests": len([r for r in actual_requests if r.get('status') == 'in_progress']),
                 "resolved_requests": len([r for r in actual_requests if r.get('status') == 'resolved'])
             },
-            "summary_text": summary_text,
-            "llm_analysis": llm_analysis,
+            "summary_text": sanitize_llm_output(summary_text),
+            "llm_analysis": sanitize_llm_output(llm_analysis),
             "anomalies": [
                 {
                     "type": getattr(a, 'anomaly_type', 'Unknown'),
@@ -1343,7 +1364,7 @@ RULES: Use room names. Be specific. Stay under 15 words each."""
 
             # Call LLM directly
             logger.info("Calling Ollama LLM for room analysis...")
-            llm_analysis = _llm.invoke(llm_context)
+            llm_analysis = sanitize_llm_output(_llm.invoke(llm_context))
             logger.info(f"✅ LLM room analysis generated successfully")
             
         except Exception as llm_error:
@@ -1459,7 +1480,7 @@ Be concise (2-3 sentences each)."""
         
         # Call LLM
         try:
-            llm_analysis = _llm.invoke(llm_context)
+            llm_analysis = sanitize_llm_output(_llm.invoke(llm_context))
             logger.info(f"LLM anomaly analysis generated for {username}")
         except Exception as llm_error:
             logger.warning(f"LLM call failed: {llm_error}")
@@ -1637,7 +1658,7 @@ Be concise (2-3 sentences each)."""
         
         # Call LLM
         try:
-            llm_analysis = _llm.invoke(llm_context)
+            llm_analysis = sanitize_llm_output(_llm.invoke(llm_context))
             logger.info(f"LLM billing analysis generated for {username}")
         except Exception as llm_error:
             logger.warning(f"LLM call failed: {llm_error}")
@@ -1757,7 +1778,7 @@ Be concise (2-3 sentences each)."""
         
         # Call LLM
         try:
-            llm_analysis = _llm.invoke(llm_context)
+            llm_analysis = sanitize_llm_output(_llm.invoke(llm_context))
             logger.info(f"LLM KPI analysis generated for {username}")
         except Exception as llm_error:
             logger.warning(f"LLM call failed: {llm_error}")
