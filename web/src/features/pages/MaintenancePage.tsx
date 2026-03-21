@@ -32,7 +32,7 @@ const MaintenancePage: React.FC = () => {
   const navigate = useNavigate();
   const { requests, loading, error, updateRequest, deleteRequest, refetch } = useMaintenanceRequests();
   const { equipment } = useEquipment();
-  const { currentUser } = useAuth(); // Add this: Pull current user from auth hook/context
+  const { } = useAuth(); // Removed unused currentUser
 
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
@@ -215,104 +215,117 @@ const MaintenancePage: React.FC = () => {
 
   return (
     <PageLayout initialSection={{ parent: "Dashboard", child: "Maintenance" }}>
-      <h1>Dashboard &gt; Maintenance Requests</h1>
+      {/* Page Header */}
+      <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>Maintenance Requests</h1>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Manage and track equipment maintenance</p>
+        </div>
+        <button onClick={() => openModal("add")}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', border: 'none', background: '#3b82f6', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+          Add Request
+        </button>
+      </div>
 
-      <div className="content-container">
-        {/* Controls */}
-        <div className="table-controls">
-          <input
-            type="text"
-            placeholder="Search requests..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            style={{ marginLeft: "10px" }}
-          >
-            <option value="all">All</option>
+      {/* Filters Card */}
+      <div style={{ background: '#141828', border: '1px solid #1d2540', borderRadius: '16px', padding: '16px 20px', marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: '200px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Search</label>
+          <div style={{ position: 'relative' }}>
+            <svg style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input type="text" placeholder="Search requests..." value={search}
+              onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+              style={{ width: '100%', padding: '9px 14px 9px 34px', borderRadius: '10px', border: '1px solid #1d2540', background: '#080c14', color: '#e2e8f0', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+          <label style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Status</label>
+          <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            style={{ padding: '9px 14px', borderRadius: '10px', border: '1px solid #1d2540', background: '#080c14', color: '#e2e8f0', fontSize: '14px', outline: 'none', flexShrink: 0 }}>
+            <option value="all">All Status</option>
             <option value="pending">Pending</option>
             <option value="in_progress">In Progress</option>
             <option value="resolved">Resolved</option>
           </select>
         </div>
+      </div>
 
+      {/* Table Card */}
+      <div style={{ background: '#141828', border: '1px solid #1d2540', borderRadius: '16px', overflow: 'hidden' }}>
         {/* Table */}
-        {loading ? (
-          <p>Loading maintenance requests...</p>
-        ) : error ? (
-          <p style={{ color: "red" }}>{error}</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Equipment</th>
-                <th>Issue</th>
-                <th>Status</th>
-                <th>Scheduled</th>
-                <th>Resolved</th>
-                <th>Assigned To</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedRequests.length ? (
-                paginatedRequests.map((req) => (
-                  <tr key={req.id}>
-                    <td>{getUser(req.user)}</td>
-                    <td>{getEquipment(req.equipment)}</td>
-                    <td>{req.issue}</td>
-                    <td>
-                      <span
-                        className={`status-color status-color-${(req.status ?? "").toLowerCase()}`}
-                      >
-                        {(req.status ?? "").toUpperCase()}
-                      </span>
-                    </td>
-                    <td>{req.scheduled_date || "-"}</td>
-                    <td>{formatDate(req.resolved_at) || "-"}</td>
-                    <td>{getUser(req.assigned_to)}</td>
-                    <td>
-                      <button className="view-btn" onClick={() => handleView(req)}>
-                        View
-                      </button>
-                      <button className="edt-btn" onClick={() => openModal("edit", req)}>
-                        Edit
-                      </button>
-                      <button className="dlt-btn" onClick={() => openModal("delete", req)}>
-                        Delete
-                      </button>
+        <div style={{ overflowX: 'auto' }}>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error ? (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-center">{error}</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#0d1022', borderBottom: '1px solid #1d2540' }}>
+                  <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>User</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>Equipment</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>Issue</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>Status</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>Scheduled</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>Resolved</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>Assigned To</th>
+                  <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 700, color: '#f8fafc' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedRequests.length ? (
+                  paginatedRequests.map((req) => (
+                    <tr key={req.id} style={{ borderBottom: '1px solid #1d2540', background: '#141828' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#1a2038')}
+                      onMouseLeave={e => (e.currentTarget.style.background = '#141828')}
+                    >
+                      <td style={{ padding: '13px 16px', fontSize: '13px', color: '#e2e8f0' }}>{getUser(req.user)}</td>
+                      <td style={{ padding: '13px 16px', fontSize: '13px', color: '#e2e8f0', fontWeight: 500 }}>{getEquipment(req.equipment)}</td>
+                      <td style={{ padding: '13px 16px', fontSize: '13px', color: '#94a3b8', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={req.issue}>{req.issue}</td>
+                      <td style={{ padding: '13px 16px' }}>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          padding: '3px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600,
+                          ...((req.status ?? '').toLowerCase() === 'resolved'
+                            ? { background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }
+                            : (req.status ?? '').toLowerCase() === 'in_progress'
+                            ? { background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }
+                            : { background: 'rgba(234,179,8,0.15)', color: '#facc15', border: '1px solid rgba(234,179,8,0.3)' })
+                        }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', flexShrink: 0 }} />
+                          {(req.status ?? 'PENDING').replace('_', ' ').toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ padding: '13px 16px', fontSize: '13px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{req.scheduled_date || '-'}</td>
+                      <td style={{ padding: '13px 16px', fontSize: '13px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{formatDate(req.resolved_at) || '-'}</td>
+                      <td style={{ padding: '13px 16px', fontSize: '13px', color: '#cbd5e1' }}>{getUser(req.assigned_to)}</td>
+                      <td style={{ padding: '13px 16px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button style={{ padding: '5px 12px', background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', borderRadius: '6px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }} onClick={() => handleView(req)}>View</button>
+                          <button style={{ padding: '5px 12px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', color: '#60a5fa', borderRadius: '6px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }} onClick={() => openModal('edit', req)}>Edit</button>
+                          <button style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '6px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }} onClick={() => openModal('delete', req)}>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} style={{ padding: '48px 20px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+                      No maintenance requests found
+                      {search && <span style={{ display: 'block', fontSize: '12px', marginTop: '4px' }}>Try adjusting your search filters</span>}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={8}>No maintenance requests found</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
 
-        <button className="add-btn-main" onClick={() => openModal("add")}>
-          + Add Maintenance Request
-        </button>
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          showRange
-        />
-
-        {/* Modals (removed MaintenanceViewModal; only edit/add/delete modals) */}
+        {/* Modals */}
         {modalType ? (
           <MaintenanceModal
             mode={modalType}
@@ -326,6 +339,17 @@ const MaintenancePage: React.FC = () => {
           />
         ) : null}
       </div>
+
+      {!loading && !error && filteredRequests.length > 0 && (
+        <div style={{ paddingTop: '16px', display: 'flex', justifyContent: 'center' }}>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            showRange
+          />
+        </div>
+      )}
 
       {submitting && (
         <div

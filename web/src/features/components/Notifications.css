@@ -1,178 +1,222 @@
 /* Notification grid container */
+.notif-page-header {
+  margin-bottom: 24px;
+}
+
+.notif-page-header h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -0.5px;
+}
+
+.notif-actions {
+  display: flex;
+  margin-bottom: 24px;
+}
+
+.notif-actions.left {
+  justify-content: flex-start;
+}
+
+.mark-all-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mark-all-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
 .notif-grid {
   display: grid;
-  grid-template-columns: repeat(1, 1fr); /* 1 column by default */
-  gap: 20px; /* Space between cards */
-  padding: 20px; /* Optional padding around the grid */
+  grid-template-columns: repeat(1, 1fr); 
+  gap: 20px; 
 }
 
 @media (min-width: 1024px) {
   .notif-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+    grid-template-columns: repeat(2, 1fr); 
   }
 }
 
 @media (min-width: 1656px) {
   .notif-grid {
-    grid-template-columns: repeat(3, 1fr); /* 3 columns on large screens */
+    grid-template-columns: repeat(3, 1fr); 
   }
 }
 
 /* Notification card styling */
 .notif-card {
-  border-radius: 8px;
-  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-  text-decoration: none; /* Remove underline for the entire card */
-  color: white; /* Ensure the text color inherits from the parent */
+  text-decoration: none; 
+  cursor: pointer;
+  display: block;
+  outline: none;
 }
 
 .notif-card-body {
-  padding: 16px;
-  width: 100%; /* Ensure the card takes up the full width of its grid cell */
-  border-radius: 8px; /* Match the card's border radius */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #0d122e; /* Default background color */
-  border: 1px solid #ddd;
-  box-sizing: border-box; /* Include padding and border in the width calculation */
+  padding: 24px;
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: #0d1222;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-sizing: border-box;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Hover effect for the card */
 .notif-card-body:hover {
-  background-color: #007bff; /* Change background to blue */
-  color: white; /* Change text color to orange */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add hover effect */
-  transform: scale(1.05); /* Slightly enlarge the card */
-  transition: transform 0.2s;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
-.notif-card:hover .notif-card-content {
-  color: white; 
+/* Read / Unread Indicators */
+.notif-card.unread .notif-card-body {
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, #0d1222 50%);
+}
+
+.notif-card.read .notif-card-body {
+  opacity: 0.75;
+  border-left: 4px solid transparent;
+}
+
+.notif-card.read:hover .notif-card-body {
+  opacity: 1;
 }
 
 /* Title and Date Row */
 .notif-card-header {
   display: flex;
-  justify-content: space-between; /* Space between title and date */
-  align-items: center;
-  margin-bottom: 8px; /* Add spacing below the row */
+  justify-content: space-between; 
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 16px;
 }
 
 .notif-card-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: white;
-  margin: 0; /* Remove default margin */
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  line-height: 1.4;
   overflow: hidden;
-  display: -webkit-box; /* ✅ required for line clamp */
+  display: -webkit-box;
   -webkit-box-orient: vertical;
   text-overflow: ellipsis;
 }
 
-/* Orange Divider Line */
+.notif-card-date {
+  font-size: 0.85rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* Divider Line */
 .notif-card-divider {
-  height: 2px;
-  background-color: orange; /* Orange line */
-  margin: 8px 0; /* Add spacing above and below the line */
+  height: 1px;
+  background-color: rgba(255,255,255,0.06);
+  margin: 16px 0; 
 }
 
 /* Content */
 .notif-card-content {
-  font-size: 1rem;
-  color: white;
-  margin-bottom: 16px; /* Add spacing below the content */
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 24px;
   overflow: hidden;
-  display: -webkit-box; /* ✅ required for line clamp */
+  display: -webkit-box;
   -webkit-box-orient: vertical;
   text-overflow: ellipsis;
-  height: 65px;
+  height: 48px; 
 }
 
 /* Actions */
 .notif-card-actions {
   display: flex;
-  justify-content: flex-end; /* Align actions to the right */
+  justify-content: flex-end; 
   align-items: center;
-  gap: 8px; /* Space between action icons */
 }
 
-/* Hover effect for icons */
-.icon {
-  cursor: pointer;
-  background-color: transparent; /* Default background */
-  border-radius: 10%; /* Make the icon background circular */
-  transition: background-color 0.3s ease, color 0.3s ease;
-  text-decoration: none; /* Remove underline for icons */
-  padding: 2px;
-  margin: 0 8px;
-}
-
-.icon:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.5);
-  transition: transform 0.2s;
-}
-
-.delete-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #e74c3c;
-  transition: color 0.3s ease;
-  text-decoration: none; /* Remove underline for delete button */
-}
-
-.delete-btn:hover {
-  color: #c0392b; /* Darker red on hover */
-}
-
-/* Darken read notifications */
-.notif-card.read {
-  opacity: 0.6;
-  background-color: #1a1a1a;
-}
-
-.notif-card.unread {
-  opacity: 1;
-  background-color: #222;
-}
-
-.notif-card .action-icons {
+.action-icons {
   display: flex;
-  gap: 0.5rem;
+  gap: 12px;
 }
 
-.mark-read-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.delete-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.notif-actions {
+/* Action buttons */
+.action-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
   display: flex;
-  margin-bottom: 1rem;
-}
-
-.notif-actions.left {
-  justify-content: flex-start; /* push button to left */
-}
-
-.mark-all-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-size: 0.9rem;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  color: #94a3b8;
 }
 
-.mark-all-btn:hover {
-  background-color: #0056b3;
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  transform: translateY(-2px);
+}
+
+.action-btn.mark-read-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.action-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px;
+  text-align: center;
+  background: #0d1222;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  color: #94a3b8;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  color: #f1f5f9;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  font-size: 0.95rem;
 }

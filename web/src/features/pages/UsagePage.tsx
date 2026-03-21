@@ -41,7 +41,6 @@ const UsagePage: React.FC = () => {
   const [hvacLogs, setHvacLogs] = useState<SensorData[]>([]);
   const [securityLogs, setSecurityLogs] = useState<SensorData[]>([]);
   const [latestSensorData, setLatestSensorData] = useState<SensorData[]>([]);
-  const [latestEnergySnapshot, setLatestEnergySnapshot] = useState<SensorData[]>([]); // NEW: Fallback for energy
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [summary, setSummary] = useState<{
@@ -80,8 +79,10 @@ const UsagePage: React.FC = () => {
     return `${selectedRoomObj.name} - ${selectedEquipment.name}`;
   }, [selectedScope, selectedRoom, selectedEquipmentId, rooms, equipments]);
 
-  // Calculate period dates exactly like Flutter _getStartTime and _getEndTime, with UTC and full end-of-period
-  const getPeriodDates = useMemo(() => {
+  // BUG FIX: Was a useMemo with new Date() — created new object every render,
+  // causing infinite re-fetch loops when included in useEffect deps.
+  // Now a stable callback; called inside the effect only when needed.
+  const getPeriodDates = useCallback(() => {
     const now = new Date();
     const end = new Date(now);
     let start: Date;
@@ -138,14 +139,11 @@ const UsagePage: React.FC = () => {
     }).catch((err) => setError(`Error loading equipment: ${err}`));
   }, []);
 
-  // Fetch latest sensor data (all) - using fetchSensorData as suggested
+  // Fetch latest sensor data (all) using the correct endpoint
   useEffect(() => {
-    sensorService.fetchSensorData()
+    sensorService.fetchLatest()
       .then((resp: any) => {
         setLatestSensorData(resp.data ?? []);
-        // NEW: Extract energy snapshot from latest data (filter PZEM-like entries)
-        const energySnap = resp.data?.filter((d: SensorData) => d.power != null || d.energy != null) ?? [];
-        setLatestEnergySnapshot(energySnap);
       })
       .catch(console.error);
   }, []);
@@ -157,36 +155,28 @@ const UsagePage: React.FC = () => {
     }
   }, [rooms, selectedRoom]);
 
+  // BUG FIX: Previously two separate useEffects both fetched components for
+  // selectedEquipmentId — they raced each other and caused the component ID to
+  // flicker/reset. Merged into a single effect that handles both auto-select
+  // (first room load) and manual equipment change.
   useEffect(() => {
-    if (selectedRoom && equipments.length > 0 && !selectedEquipmentId) {
-      const matching = equipments.find((eq) => eq.room === selectedRoom);
-      if (matching) {
-        setSelectedEquipmentId(matching.id);
-        // OPTIMIZATION: Fetch components inline/parallel
-        componentService.fetchByEquipment(matching.id)
-          .then((compData: Component[]) => {
-            setComponents(compData);
-            const pzemComp = compData.find((c) => (c.component_type as string) === "pzem");
-            debouncedSetComponentId(pzemComp?.id || ""); // Debounced
-          })
-          .catch((_) => {
-            setComponents([]);
-            debouncedSetComponentId("");
-          });
-      }
-    }
-  }, [selectedRoom, equipments, selectedEquipmentId, debouncedSetComponentId]);
+    // BUG FIX: Removed the automatic equipment selection logic. 
+    // Previously, it would silently auto-select the first equipment in the room
+    // and wait 300ms (debounce) to update selectedActualComponentId. This caused
+    // the charts to fetch room-wide data, then suddenly filter down to
+    // that one specific equipment. If that equipment had no data, the charts
+    // would immediately wipe empty ("fetch things but revert"). 
+    // Now it defaults to "All Equipment" ("") so the room-wide data stays.
 
-  // Fetch components for selected equipment (now secondary, only on manual change)
-  useEffect(() => {
-    if (selectedEquipmentId && selectedRoom) { // Only if not auto-fetched
+    // Fetch components whenever selectedEquipmentId changes
+    if (selectedEquipmentId) {
       componentService.fetchByEquipment(selectedEquipmentId)
         .then((compData: Component[]) => {
           setComponents(compData);
           const pzemComp = compData.find((c) => (c.component_type as string) === "pzem");
           debouncedSetComponentId(pzemComp?.id || "");
         })
-        .catch((_) => {
+        .catch(() => {
           setComponents([]);
           debouncedSetComponentId("");
         });
@@ -194,36 +184,46 @@ const UsagePage: React.FC = () => {
       setComponents([]);
       debouncedSetComponentId("");
     }
-  }, [selectedEquipmentId, debouncedSetComponentId]);
+  }, [selectedRoom, equipments, selectedEquipmentId, debouncedSetComponentId]);
 
   // Fetch data like loadEnergyData in Flutter, using provided service for summary/billing
   useEffect(() => {
     const fetchData = async () => {
       if (selectedScope === null) return;
+      if (selectedScope === "room" && !scopeId) {
+        // Prevent premature fetching: wait until the room dropdown state is fully initialized
+        // Otherwise, it queries the whole database, renders it, and then instantly wipes it 
+        // when the specific empty room finishes loading ("appears then disappears" bug).
+        return;
+      }
+      console.log("[DEBUG] fetchData execution triggered with:", {
+        selectedScope, scopeId, selectedActualComponentId, periodType
+      });
+
       setLoading(true);
       setError("");
       try {
-        const { start, end } = getPeriodDates;
+        // BUG FIX: Call getPeriodDates() as a function — previously it was
+        // accessed as a useMemo object, which was recreated on every render
+        // (because new Date() inside) and caused this effect to re-run infinitely.
+        const { start, end } = getPeriodDates();
 
-        // HVAC params (reduced limit for speed)
+        // BUG FIX: Removed unsupported params: `limit`, `component_type`, `timeframe`.
+        // SensorLogViewSet only supports: room_id, component_id, period_start, period_end.
+        // Use `page_size` (DRF pagination param) instead of the unsupported `limit`.
         const hvacParams: Record<string, string | PeriodType> = {
-          timeframe: periodType,
           period_start: start.toISOString(),
           period_end: end.toISOString(),
-          limit: "1000", // OPTIMIZATION: Reduced from 10000
-          component_type: "dht22",
+          page_size: "1000",
         };
         if (scopeId) hvacParams.room_id = scopeId;
         const dht22Comp = components.find((c) => (c.component_type as string) === "dht22");
         if (dht22Comp) hvacParams.component_id = dht22Comp.id;
 
-        // Security params
         const securityParams: Record<string, string | PeriodType> = {
-          timeframe: periodType,
           period_start: start.toISOString(),
           period_end: end.toISOString(),
-          limit: "1000", // OPTIMIZATION: Reduced
-          component_type: "motion",
+          page_size: "1000",
         };
         if (scopeId) securityParams.room_id = scopeId;
         const motionComp = components.find((c) => (c.component_type as string) === "motion");
@@ -235,79 +235,76 @@ const UsagePage: React.FC = () => {
           sensorService.fetchLogs(securityParams),
         ]);
 
-        const validHvac = hvacLogsData.filter((log: SensorData) => log.recorded_at);
+        let rawHvac = hvacLogsData;
+        let rawSecurity = securityLogsData;
+        if (selectedEquipmentId) {
+          rawHvac = rawHvac.filter((log: SensorData) => log.equipment === selectedEquipmentId);
+          rawSecurity = rawSecurity.filter((log: SensorData) => log.equipment === selectedEquipmentId);
+        }
+
+        const validHvac = rawHvac.filter((log: SensorData) => log.recorded_at);
         const sortedHvac = validHvac.sort((a, b) => new Date(a.recorded_at!).getTime() - new Date(b.recorded_at!).getTime());
         setHvacLogs(sortedHvac);
 
-        const validSecurity = securityLogsData.filter((log: SensorData) => log.recorded_at);
+        const validSecurity = rawSecurity.filter((log: SensorData) => log.recorded_at);
         const sortedSecurity = validSecurity.sort((a, b) => new Date(a.recorded_at!).getTime() - new Date(b.recorded_at!).getTime());
         setSecurityLogs(sortedSecurity);
 
-        // Energy logs and summaries only if not (room scope without equipment)
+        // BUG FIX: Removed restrictive `if (!(selectedScope === "room" && !selectedEquipmentId))` 
+        // block. This explicitly wiped out energy data when a room was broadly selected without
+        // an equipment, which is why the data "didn't stay" for room usage.
         let filteredSummaries: EnergySummary[] = [];
         let energyLogs: SensorData[] = [];
-        if (!(selectedScope === "room" && !selectedEquipmentId)) {
-          const baseParams: Record<string, string | PeriodType> = {
-            timeframe: periodType,
-            period_start: start.toISOString(),
-            period_end: end.toISOString(),
-            limit: "1000", // OPTIMIZATION: Reduced
-            component_type: "pzem",
-          };
-          if (scopeId) baseParams.room_id = scopeId;
-          if (selectedActualComponentId) baseParams.component_id = selectedActualComponentId;
 
-          energyLogs = await sensorService.fetchLogs(baseParams);
+        const baseParams: Record<string, string | PeriodType> = {
+          period_start: start.toISOString(),
+          period_end: end.toISOString(),
+          page_size: "1000",
+        };
+        if (scopeId) baseParams.room_id = scopeId;
+        if (selectedActualComponentId) baseParams.component_id = selectedActualComponentId;
 
-          const valid = energyLogs.filter((log: SensorData) => log.recorded_at);
-          const sorted = valid.sort((a, b) => new Date(a.recorded_at!).getTime() - new Date(b.recorded_at!).getTime());
-          setSensorLogs(sorted);
+        console.log(`[DEBUG] Fetching energy logs with baseParams:`, baseParams);
+        let rawEnergyLogs = await sensorService.fetchLogs(baseParams);
+        console.log(`[DEBUG] Received ${rawEnergyLogs.length} raw energyLogs from API.`);
 
-          if (selectedScope === "room") {
-            const allSummaries = await fetchEnergySummaries(scopeId || undefined);
-            filteredSummaries = allSummaries.filter((r) => r.period_type === periodType);
-            if (selectedActualComponentId) {
-              filteredSummaries = filteredSummaries.filter((r) => r.component_id === selectedActualComponentId);
-            }
+        if (selectedEquipmentId) {
+          rawEnergyLogs = rawEnergyLogs.filter((log: SensorData) => log.equipment === selectedEquipmentId);
+        }
+        energyLogs = rawEnergyLogs;
+
+        // Ensure legacy DB `energy_usage` maps cleanly to the `energy` key for charting
+        const valid = energyLogs
+          .filter((log: SensorData) => log.recorded_at)
+          .map(log => ({
+            ...log,
+            energy: log.energy ?? log.energy_usage
+          }));
+          
+        console.log(`[DEBUG] Filtered to ${valid.length} valid logs with recorded_at.`);
+        const sorted = valid.sort((a, b) => new Date(a.recorded_at!).getTime() - new Date(b.recorded_at!).getTime());
+        setSensorLogs(sorted);
+        console.log(`[DEBUG] setSensorLogs called with ${sorted.length} items`);
+
+        if (selectedScope === "room") {
+          const allSummaries = await fetchEnergySummaries(scopeId || undefined);
+          filteredSummaries = allSummaries.filter((r) => r.period_type === periodType);
+          if (selectedActualComponentId) {
+            filteredSummaries = filteredSummaries.filter((r) => r.component_id === selectedActualComponentId);
           }
-        } else {
-          setSensorLogs([]);
         }
 
-        // OPTIMIZATION: Quick fallback summary from latestEnergySnapshot if fresh data is empty
-        let useFallback = false;
-        let fallbackSummary = null;
-        if (filteredSummaries.length === 0 && energyLogs.length === 0) {
-          useFallback = true;
-          // Compute simple fallback from snapshot (mimic summary structure)
-          const totalEnergy = latestEnergySnapshot.reduce((sum, log) => sum + (log.energy ?? 0), 0);
-          const totalReadings = latestEnergySnapshot.length;
-          const avgPower = latestEnergySnapshot.reduce((sum, log) => sum + (log.power ?? 0), 0) / (totalReadings || 1);
-          const peakPower = Math.max(...latestEnergySnapshot.map((log) => log.power ?? 0), 0);
-          fallbackSummary = {
-            total_energy: totalEnergy,
-            avg_power: avgPower,
-            peak_power: peakPower,
-            reading_count: totalReadings,
-            anomaly_count: 0, // Placeholder
-          };
-        }
-
-        const totalEnergyFromSummaries = filteredSummaries.reduce((sum, r) => sum + r.total_energy, 0);
-        const totalEnergyFallback = energyLogs.reduce((sum, log) => sum + (log.energy ?? 0), 0);
-        const totalEnergy = filteredSummaries.length > 0 ? totalEnergyFromSummaries : (useFallback ? fallbackSummary!.total_energy : totalEnergyFallback);
-
-        const totalReadings = filteredSummaries.reduce((sum, r) => sum + r.reading_count, 0);
-        const totalReadingsFallback = energyLogs.length;
-        const finalReadings = totalReadings || (useFallback ? fallbackSummary!.reading_count : totalReadingsFallback);
-
-        const weightedAvgPower = filteredSummaries.reduce((sum, r) => sum + (r.avg_power * r.reading_count), 0) / (totalReadings || 1);
-        const avgPowerFallback = energyLogs.reduce((sum, log) => sum + (log.power ?? 0), 0) / (energyLogs.length || 1);
-        const finalAvgPower = filteredSummaries.length > 0 ? weightedAvgPower : (useFallback ? fallbackSummary!.avg_power : avgPowerFallback);
-
-        const peakPower = Math.max(...filteredSummaries.map((r) => r.peak_power), 0);
-        const peakPowerFallback = Math.max(...energyLogs.map((log) => log.power ?? 0), 0);
-        const finalPeakPower = filteredSummaries.length > 0 ? peakPower : (useFallback ? fallbackSummary!.peak_power : peakPowerFallback);
+        const totalEnergy = filteredSummaries.length > 0 ? filteredSummaries.reduce((sum, r) => sum + r.total_energy, 0) : energyLogs.reduce((sum, log) => sum + (log.energy ?? 0), 0);
+        
+        const totalReadings = filteredSummaries.length > 0 ? filteredSummaries.reduce((sum, r) => sum + r.reading_count, 0) : energyLogs.length;
+        
+        const finalAvgPower = filteredSummaries.length > 0 ? 
+          filteredSummaries.reduce((sum, r) => sum + (r.avg_power * r.reading_count), 0) / (totalReadings || 1) : 
+          energyLogs.reduce((sum, log) => sum + (log.power ?? 0), 0) / (energyLogs.length || 1);
+        
+        const finalPeakPower = filteredSummaries.length > 0 ? 
+          Math.max(...filteredSummaries.map((r) => r.peak_power), 0) : 
+          Math.max(...energyLogs.map((log) => log.power ?? 0), 0);
 
         const anomalyCount = filteredSummaries.reduce((sum, r) => sum + r.anomaly_count, 0);
 
@@ -320,7 +317,7 @@ const UsagePage: React.FC = () => {
             total_energy: totalEnergy,
             avg_power: finalAvgPower,
             peak_power: finalPeakPower,
-            reading_count: finalReadings,
+            reading_count: totalReadings || 0,
             anomaly_count: anomalyCount,
           };
           setSummary(finalSummary);
@@ -332,11 +329,6 @@ const UsagePage: React.FC = () => {
             currency: calcBilling.currency,
             details: calcBilling.details,
           });
-
-          // NEW: Show fallback indicator in UI if used (can be added to card)
-          if (useFallback) {
-            console.log("Using energy fallback snapshot"); // Or set a state for UI badge
-          }
         }
       } catch (err: any) {
         setError(`Failed to load data: ${err.message || err}`);
@@ -346,7 +338,10 @@ const UsagePage: React.FC = () => {
     };
 
     fetchData();
-  }, [selectedScope, scopeId, selectedActualComponentId, periodType, getPeriodDates, latestEnergySnapshot]); // UPDATED: Include fallback dep
+  // BUG FIX: Added `components` to dependency array to resolve stale closure issues
+  // where equipment-specific HVAC/Security charts would pull room-wide data because
+  // the filter logic couldn't see the new equipment components in time.
+  }, [selectedScope, scopeId, selectedActualComponentId, periodType, getPeriodDates, components]);
 
   // Generate HVAC data like _generateHVACData (FIX: Return null if no filtered sensors to hide card)
   const hvacData = useMemo(() => {
@@ -427,8 +422,8 @@ const UsagePage: React.FC = () => {
 
   // OPTIMIZATION: Memoize binning function to reuse logic
   const createBinnedData = useCallback((logs: SensorData[], valueKey: keyof SensorData, aggFn: (vals: number[]) => number) => {
-    const start = getPeriodDates.start;
-    const end = getPeriodDates.end;
+    // BUG FIX: Call getPeriodDates() as function (was accessed as .start/.end property)
+    const { start, end } = getPeriodDates();
     const startMs = start.getTime();
     const endMs = end.getTime();
     const totalBins = Math.ceil((endMs - startMs) / binSizeMs);
@@ -442,6 +437,10 @@ const UsagePage: React.FC = () => {
       if (t < startMs || t > endMs) return;
       const index = Math.floor((t - startMs) / binSizeMs);
       const key = startMs + index * binSizeMs;
+      // BUG FIX: Prevent crash if log falls exactly on the end boundary
+      if (!bins[key]) {
+        bins[key] = [];
+      }
       bins[key].push(log[valueKey] as number);
     });
     const labels: string[] = [];
@@ -464,7 +463,9 @@ const UsagePage: React.FC = () => {
 
   // Generate power spots like _generatePowerSpots (using memoized binning)
   const powerChartData = useMemo(() => {
+    console.log(`[DEBUG] Re-computing powerChartData from sensorLogs (length: ${sensorLogs.length})`);
     const { labels, data } = createBinnedData(sensorLogs, 'power', (vals) => vals.length ? vals.reduce((sum, val) => sum + val, 0) / vals.length : 0);
+    console.log(`[DEBUG] powerChartData produced ${data.length} datapoints. Valid >0 datapoints: ${data.filter(d => d > 0).length}`);
     return {
       labels,
       datasets: [{ label: "Power (kW)", data, fill: true, borderColor: "#4c6ef5", backgroundColor: "rgba(76, 110, 245, 0.15)", tension: 0.35, pointRadius: 2, pointBackgroundColor: "#4c6ef5" }],
@@ -502,7 +503,7 @@ const UsagePage: React.FC = () => {
   const securityChartData = useMemo(() => {
     const { labels, data } = createBinnedData(securityLogs, 'alerts' as keyof SensorData, (vals) => vals.reduce((sum, val) => sum + val, 0)); // Sum alerts per bin; fallback to 1 if motion_detect
     // Override valueKey handling for alerts (since it's derived)
-    const adjustedData = data.map((point, idx) => {
+    const adjustedData = data.map((point) => {
       // If point is 0 and logs have motion, but wait - better to pre-process logs for alerts
       // For simplicity, since createBinnedData uses valueKey, but alerts is computed, keep custom for now but with larger bins
       return point; // Use as-is, bins are larger now
@@ -551,8 +552,7 @@ const UsagePage: React.FC = () => {
 
   const handleRoomChange = (roomId: string) => {
     setSelectedRoom(roomId);
-    const matching = equipments.find((eq) => eq.room === roomId);
-    setSelectedEquipmentId(matching ? matching.id : "");
+    setSelectedEquipmentId(""); // BUG FIX: Do NOT auto-select equipment when changing rooms
     setSelectedActualComponentId("");
   };
 
@@ -561,203 +561,235 @@ const UsagePage: React.FC = () => {
     setSelectedActualComponentId("");
   };
 
-  // Placeholder handlers
-  const handleNotifications = () => console.log("Navigate to notifications");
-
   const isRoomScope = selectedScope === "room";
-  const hasEquipmentForRoom = selectedScope === "room" && selectedEquipmentId;
 
   return (
     <PageLayout initialSection={{ parent: "Analytics" }}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-white">{scopeTitle}</h2>
-      </div>
-      <p className="text-gray-400 text-sm mb-4">Monitor energy, HVAC, and security data</p>
-      {/* Filter Selector */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <select value={selectedScope} onChange={(e) => handleScopeChange(e.target.value as ScopeType)} className="dropdown-default">
-          <option value="building">Building</option>
-          <option value="all_rooms">All Rooms</option>
-          <option value="room">Room</option>
-        </select>
-        {selectedScope === "room" && (
-          <>
-            <select value={selectedRoom} onChange={(e) => handleRoomChange(e.target.value)} className="dropdown-default">
-              <option value="">Select Room</option>
-              {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-            <select value={selectedEquipmentId} onChange={(e) => handleEquipmentChange(e.target.value)} className="dropdown-default">
-              <option value="">Select Equipment</option>
-              {equipments.filter((eq) => eq.room === selectedRoom).map((eq) => (
-                <option key={eq.id} value={eq.id}>{eq.name}</option>
-              ))}
-            </select>
-          </>
-        )}
-        <select value={periodType} onChange={(e) => setPeriodType(e.target.value as PeriodType)} className="dropdown-default">
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
-      </div>
-
-      {error && <div className="bg-red-900 text-red-100 p-2 mb-4 rounded">{error}</div>}
-
-      {loading && <div className="text-white text-center py-4">Loading data...</div>}
-
-      {/* Power and Energy Charts - Only show if not (room scope without equipment) */}
-      {(selectedScope !== "room" || hasEquipmentForRoom) && (
-        <>
-          <div className="usage-chart-container mb-6">
-            <Line data={powerChartData} options={chartOptions} />
-          </div>
-          <div className="usage-chart-container mb-6">
-            <h4 className="text-md font-semibold mb-2">Energy Consumption{chartSuffix}</h4>
-            <Line data={energyChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: true, text: `${scopeTitle} Energy Consumption${chartSuffix}`, color: "#fff" } } }} />
-          </div>
-        </>
-      )}
-
-      <br></br>
-
-      {/* HVAC Charts - Always show */}
-      <div className="usage-chart-container mb-6">
-        <h4 className="text-md font-semibold mb-2">Temperature Trend{chartSuffix}</h4>
-        <Line data={temperatureChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: true, text: `${scopeTitle} Temperature Trend${chartSuffix}`, color: "#fff" } } }} />
-      </div>  
-
-      <br></br>
-
-      <div className="usage-chart-container mb-6">
-        <h4 className="text-md font-semibold mb-2">Humidity Trend{chartSuffix}</h4>
-        <Line data={humidityChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: true, text: `${scopeTitle} Humidity Trend${chartSuffix}`, color: "#fff" } } }} />
+      {/* Page Header */}
+      <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>{scopeTitle} Analytics</h1>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>Monitor energy, HVAC, and security data trends</p>
+        </div>
+        
+        {/* Filter Selector */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select value={selectedScope} onChange={(e) => handleScopeChange(e.target.value as ScopeType)}
+            style={{ padding: '9px 14px', borderRadius: '10px', border: '1px solid #1e293b', background: '#080b14', color: '#e2e8f0', fontSize: '14px', outline: 'none' }}>
+            <option value="building">Building</option>
+            <option value="all_rooms">All Rooms</option>
+            <option value="room">Room</option>
+          </select>
+          {selectedScope === "room" && (
+            <>
+              <select value={selectedRoom} onChange={(e) => handleRoomChange(e.target.value)}
+                style={{ padding: '9px 14px', borderRadius: '10px', border: '1px solid #1e293b', background: '#080b14', color: '#e2e8f0', fontSize: '14px', outline: 'none' }}>
+                <option value="">Select Room</option>
+                {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+              <select value={selectedEquipmentId} onChange={(e) => handleEquipmentChange(e.target.value)}
+                style={{ padding: '9px 14px', borderRadius: '10px', border: '1px solid #1e293b', background: '#080b14', color: '#e2e8f0', fontSize: '14px', outline: 'none' }}>
+                <option value="">Select Equipment</option>
+                {equipments.filter((eq) => eq.room === selectedRoom).map((eq) => (
+                  <option key={eq.id} value={eq.id}>{eq.name}</option>
+                ))}
+              </select>
+            </>
+          )}
+          <select value={periodType} onChange={(e) => setPeriodType(e.target.value as PeriodType)}
+            style={{ padding: '9px 14px', borderRadius: '10px', border: '1px solid #1e293b', background: '#080b14', color: '#e2e8f0', fontSize: '14px', outline: 'none' }}>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
       </div>
 
-      <br></br>
+      {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', color: '#f87171', fontSize: '14px' }}>{error}</div>}
 
-      {/* Security Chart - Always show */}
-      <div className="usage-chart-container mb-6">
-        <h4 className="text-md font-semibold mb-2">Security Alerts Trend{chartSuffix}</h4>
-        <Line data={securityChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: true, text: `${scopeTitle} Security Alerts Trend${chartSuffix}`, color: "#fff" } } }} />
-      </div>
+      {/* Charts Grid */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        
+        {/* Power Chart */}
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -20, right: -20, width: '150px', height: '150px', borderRadius: '50%', background: '#4c6ef5', opacity: 0.05, filter: 'blur(30px)', pointerEvents: 'none' }} />
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 16px', position: 'relative', zIndex: 1 }}>Power Consumption{chartSuffix}</h3>
+          
+          {loading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: '16px' }}><p style={{ color: '#cbd5e1', fontWeight: 500 }}>Updating...</p></div>}
+          
+          {powerChartData.datasets[0].data.length > 0 ? (
+            <div style={{ position: 'relative', width: '100%', height: '300px', zIndex: 1 }}>
+              <Line data={powerChartData} options={chartOptions} />
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>No power data available for this period</div>
+          )}
+        </div>
 
-      <br></br>
-      <br></br>
+        {/* Energy Chart */}
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -20, right: -20, width: '150px', height: '150px', borderRadius: '50%', background: '#f59f00', opacity: 0.05, filter: 'blur(30px)', pointerEvents: 'none' }} />
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 16px', position: 'relative', zIndex: 1 }}>Energy Consumption{chartSuffix}</h3>
+          
+          {loading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: '16px' }}><p style={{ color: '#cbd5e1', fontWeight: 500 }}>Updating...</p></div>}
+          
+          {energyChartData.datasets[0].data.length > 0 ? (
+            <div style={{ position: 'relative', width: '100%', height: '300px', zIndex: 1 }}>
+              <Line data={energyChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: false } } }} />
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>No energy data available for this period</div>
+          )}
+        </div>
 
-      {/* Room-specific sections: Energy Statistics, HVAC Status, Security Status */}
+        {/* HVAC Charts */}
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -20, right: -20, width: '150px', height: '150px', borderRadius: '50%', background: '#ff6384', opacity: 0.05, filter: 'blur(30px)', pointerEvents: 'none' }} />
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 16px', position: 'relative', zIndex: 1 }}>Temperature Trend{chartSuffix}</h3>
+          
+          {loading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: '16px' }}><p style={{ color: '#cbd5e1', fontWeight: 500 }}>Updating...</p></div>}
+          
+          {temperatureChartData.datasets[0].data.length > 0 ? (
+            <div style={{ position: 'relative', width: '100%', height: '300px', zIndex: 1 }}>
+              <Line data={temperatureChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: false } } }} />
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>No data available</div>
+          )}
+        </div>
+
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -20, right: -20, width: '150px', height: '150px', borderRadius: '50%', background: '#36a2eb', opacity: 0.05, filter: 'blur(30px)', pointerEvents: 'none' }} />
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 16px', position: 'relative', zIndex: 1 }}>Humidity Trend{chartSuffix}</h3>
+          
+          {loading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: '16px' }}><p style={{ color: '#cbd5e1', fontWeight: 500 }}>Updating...</p></div>}
+          
+          {humidityChartData.datasets[0].data.length > 0 ? (
+            <div style={{ position: 'relative', width: '100%', height: '300px', zIndex: 1 }}>
+              <Line data={humidityChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: false } } }} />
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>No data available</div>
+          )}
+        </div>
+
+        {/* Security Chart */}
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: -20, right: -20, width: '150px', height: '150px', borderRadius: '50%', background: '#ffce56', opacity: 0.05, filter: 'blur(30px)', pointerEvents: 'none' }} />
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 16px', position: 'relative', zIndex: 1 }}>Security Alerts Trend{chartSuffix}</h3>
+          
+          {loading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: '16px' }}><p style={{ color: '#cbd5e1', fontWeight: 500 }}>Updating...</p></div>}
+          
+          {securityChartData.datasets[0].data.length > 0 ? (
+            <div style={{ position: 'relative', width: '100%', height: '300px', zIndex: 1 }}>
+              <Line data={securityChartData} options={{ ...otherChartOptions, plugins: { ...otherChartOptions.plugins, title: { display: false } } }} />
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>No data available</div>
+          )}
+        </div>
+      </div> {/* End Charts Grid */}
+
+      {/* Room-specific sections */}
       {isRoomScope && (
-        <>
-          {/* Energy Statistics - Only if summary and billing; show fallback if available */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '32px' }}>
+          {/* Energy Statistics */}
           {summary && billing && (
-            <div className="summary-card mb-6 p-4">
-              <h4 className="text-md font-semibold mb-4">{scopeTitle} Energy Statistics</h4>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Total Energy</p>
-                  <p className="text-white text-lg font-semibold">{summary.total_energy.toFixed(3)} kWh</p>
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 20px' }}>{scopeTitle} Energy Statistics</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '20px' }}>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Total Energy</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{summary.total_energy.toFixed(3)} <span style={{ fontSize: '14px', color: '#64748b' }}>kWh</span></p>
                 </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Avg Power</p>
-                  <p className="text-white text-lg font-semibold">{summary.avg_power.toFixed(2)} kW</p>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Avg Power</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{summary.avg_power.toFixed(2)} <span style={{ fontSize: '14px', color: '#64748b' }}>kW</span></p>
                 </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Peak Power</p>
-                  <p className="text-white text-lg font-semibold">{summary.peak_power.toFixed(2)} kW</p>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Peak Power</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{summary.peak_power.toFixed(2)} <span style={{ fontSize: '14px', color: '#64748b' }}>kW</span></p>
                 </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Reading Count</p>
-                  <p className="text-white text-lg font-semibold">{summary.reading_count}</p>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Reading Count</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{summary.reading_count}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Anomaly Count</p>
-                  <p className="text-white text-lg font-semibold">{summary.anomaly_count}</p>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Total Cost</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{billing.total_cost.toFixed(2)} <span style={{ fontSize: '14px', color: '#64748b' }}>{billing.currency}</span></p>
                 </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Total Cost</p>
-                  <p className="text-white text-lg font-semibold">{billing.total_cost.toFixed(2)} {billing.currency}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Effective Rate</p>
-                  <p className="text-white text-lg font-semibold">{billing.effective_rate.toFixed(2)} {billing.currency}/kWh</p>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Effective Rate</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#60a5fa', margin: 0 }}>{billing.effective_rate.toFixed(2)} <span style={{ fontSize: '14px', color: '#64748b' }}>{billing.currency}/kWh</span></p>
                 </div>
               </div>
               {billing.details.length > 0 && (
-                <div>
-                  <h5 className="text-white mb-2">Cost Breakdown by Component</h5>
-                  {billing.details.map((detail, idx) => (
-                    <div key={idx} className="flex justify-between text-sm text-gray-300 p-1 border-b border-gray-700 last:border-b-0">
-                      <span>{detail.name}</span>
-                      <span>{detail.cost.toFixed(2)} {billing.currency} ({detail.energy.toFixed(3)} kWh)</span>
-                    </div>
-                  ))}
+                <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #1e293b' }}>
+                  <h5 style={{ fontSize: '14px', fontWeight: 600, color: '#cbd5e1', margin: '0 0 12px' }}>Cost Breakdown by Component</h5>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {billing.details.map((detail, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: idx < billing.details.length - 1 ? '1px solid #1e293b' : 'none' }}>
+                        <span style={{ fontSize: '14px', color: '#94a3b8' }}>{detail.name}</span>
+                        <span style={{ fontSize: '14px', fontWeight: 500, color: '#e2e8f0' }}>{detail.cost.toFixed(2)} {billing.currency} <span style={{ color: '#64748b' }}>({detail.energy.toFixed(3)} kWh)</span></span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          <br></br>
-
-          {/* HVAC Status Card - Now hides if no data */}
+          {/* HVAC Status */}
           {hvacData && (
-            <div className="summary-card mb-6 p-4">
-              <h4 className="text-md font-semibold mb-2">{scopeTitle} HVAC Status</h4>
-              <div className="grid grid-cols-2 gap-4">
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 20px' }}>{scopeTitle} HVAC Status</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '20px' }}>
                 <div>
-                  <p className="text-gray-400 text-sm">Average Temperature</p>
-                  <p className="text-white text-lg font-semibold">{hvacData.avgTemperature.toFixed(1)} °C</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Avg Temperature</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{hvacData.avgTemperature.toFixed(1)} <span style={{ fontSize: '14px', color: '#64748b' }}>°C</span></p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Average Humidity</p>
-                  <p className="text-white text-lg font-semibold">{hvacData.avgHumidity.toFixed(1)} %</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Avg Humidity</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#60a5fa', margin: 0 }}>{hvacData.avgHumidity.toFixed(1)} <span style={{ fontSize: '14px', color: '#64748b' }}>%</span></p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Active Zones</p>
-                  <p className="text-white text-lg font-semibold">{hvacData.activeZones} / {hvacData.totalZones}</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Active Zones</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{hvacData.activeZones} <span style={{ fontSize: '14px', color: '#64748b' }}>/ {hvacData.totalZones}</span></p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Status</p>
-                  <p className="text-white text-lg font-semibold">{hvacData.status}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-400 text-sm">Data Points</p>
-                  <p className="text-white text-lg font-semibold">{hvacData.dataPoints}</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Data Points</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{hvacData.dataPoints}</p>
                 </div>
               </div>
             </div>
           )}
 
-          <br></br>
-
-          {/* Security Status Card - Now hides if no data */}
+          {/* Security Status */}
           {securityData && (
-            <div className="summary-card mb-6 p-4">
-              <h4 className="text-md font-semibold mb-2">{scopeTitle} Security Status</h4>
-              <div className="grid grid-cols-2 gap-4">
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', margin: '0 0 20px' }}>{scopeTitle} Security Status</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '20px' }}>
                 <div>
-                  <p className="text-gray-400 text-sm">Active Devices</p>
-                  <p className="text-white text-lg font-semibold">{securityData.activeDevices} / {securityData.totalDevices}</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Active Devices</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{securityData.activeDevices} <span style={{ fontSize: '14px', color: '#64748b' }}>/ {securityData.totalDevices}</span></p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Alert Count</p>
-                  <p className="text-white text-lg font-semibold">{securityData.alertCount}</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Alert Count</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#ef4444', margin: 0 }}>{securityData.alertCount}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm">Status</p>
-                  <p className="text-white text-lg font-semibold">{securityData.status}</p>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Status</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#22c55e', margin: 0, textTransform: 'capitalize' }}>{securityData.status}</p>
                 </div>
-                <div className="col-span-2">
-                  <p className="text-gray-400 text-sm">Data Points</p>
-                  <p className="text-white text-lg font-semibold">{securityData.dataPoints}</p>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 4px' }}>Data Points</p>
+                  <p style={{ fontSize: '20px', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{securityData.dataPoints}</p>
                 </div>
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
-
-      <br></br>
-      <br></br>
-      <br></br>
     </PageLayout>
   );
 };

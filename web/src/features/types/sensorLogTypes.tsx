@@ -2,20 +2,37 @@
 export interface SensorData {
   id?: string;
   device_id?: string;
-  equipment_id?: string;
+  equipment?: string;          // FK UUID from serializer
+  equipment_id?: string;       // alias used in some places
   equipment_name?: string;
+  component?: string;          // FK UUID from serializer
   component_name?: string;
-  component_type?: string;  // ✅ Add this
+  component_type?: string;
+
+  // Sensor readings (match serializer field names exactly)
   status?: string;
-  energy_usage?: number;
-  power?: number;
   temperature?: number | null;
   humidity?: number | null;
-  light_level?: boolean | null;
-  motion_detect?: boolean | null;
+  light_detected?: boolean | null;   // serializer uses 'light_detected' not 'light_level'
+  motion_detected?: boolean | null;  // serializer uses 'motion_detected'
+  energy_usage?: number | null;      // legacy/alias field
+  voltage?: number | null;
+  current?: number | null;
+  power?: number | null;             // kW — used by power chart
+  energy?: number | null;            // kWh cumulative — used by energy chart
+
+  // Timestamps
   recorded_at?: string;
-  // Add other fields from your backend response
-  [key: string]: any; // For backend fields not explicitly typed
+  pzem_recorded_at?: string;
+  dht22_recorded_at?: string;
+  photoresistor_recorded_at?: string;
+  motion_recorded_at?: string;
+
+  // Computed / joined fields (from esp32/sensor-data endpoint)
+  room_id?: string;                  // present on sensor-data endpoint
+  alerts?: number;                   // alert count from security processing
+
+  [key: string]: any; // For any other backend fields not explicitly typed
 }
 
 export interface ESP32Response {
@@ -70,4 +87,3 @@ export interface RoomAnalyticsItem {
   total_cost: number;
   currency?: string;
 }
-

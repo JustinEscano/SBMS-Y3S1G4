@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../pages/SignUpForm.css';
 import axios from 'axios';
 
@@ -11,8 +11,10 @@ const SignUp: React.FC = () => {
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'admin'
+    role: 'admin',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +27,7 @@ const SignUp: React.FC = () => {
     setError(null);
 
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match.');
       return;
     }
 
@@ -37,88 +39,219 @@ const SignUp: React.FC = () => {
         password: form.password,
         role: form.role,
       });
-
-      alert("Registration successful. Please log in.");
       navigate('/login');
     } catch (err: any) {
       console.error(err.response || err);
-      setError('Signup failed. Please try again.');
+      setError('Sign up failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="signup-container">
-      {/* Overlay spinner */}
+    <div className="signup-root">
       {loading && (
         <div className="loading-overlay">
-          <div className="spinner"></div>
+          <div className="spinner" />
         </div>
       )}
 
-      <div className="star" style={{ top: '200px', left: '300px' }}></div>
-      <div className="star" style={{ top: '800px', left: '400px' }}></div>
-      <div className="star" style={{ top: '500px', left: '600px' }}></div>
-      <div className="star" style={{ top: '590px', left: '1200px' }}></div>
-      <div className="star" style={{ top: '600px', left: '1400px' }}></div>
-      <div className="star" style={{ top: '300px', left: '1500px' }}></div>
-      <div className="star" style={{ top: '800px', left: '1800px' }}></div>
+      {/* Left branding panel */}
+      <div className="signup-left">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
 
-      <div className="logo">
-        <div className="logo-img"/>
-        <span className="logo-text">Orbit</span>
+        <div className="brand-content">
+          <div className="brand-logo">
+            <div className="brand-logo-img" />
+            <span className="brand-logo-text">ORBIT</span>
+          </div>
+          <h1 className="brand-headline">Join the Smart<br />Building Network</h1>
+          <p className="brand-sub">Create your account and start monitoring your building's performance with AI-powered insights.</p>
+
+          <div className="brand-features">
+            <div className="feature-item">
+              <span className="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span>Real-time sensor monitoring</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span>AI-powered LLM analytics</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span>Energy &amp; occupancy dashboards</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span>Secure role-based access</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="signup-form">
-        <h2 className="signup-title">Sign Up</h2>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email Address"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
+      {/* Right form panel */}
+      <div className="signup-right">
+        <form className="signup-card" onSubmit={handleSubmit} noValidate>
+          <div className="signup-card-header">
+            <h2 className="signup-title">Create account</h2>
+            <p className="signup-subtitle">Fill in your details to get started</p>
+          </div>
 
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange}
-          required
-        />
+          {/* Email */}
+          <div className="input-group">
+            <label className="input-label" htmlFor="su-email">Email Address</label>
+            <div className="input-wrapper">
+              <span className="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </span>
+              <input
+                id="su-email"
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                className="input-field"
+                value={form.email}
+                onChange={handleChange}
+                required
+                autoComplete="email"
+              />
+            </div>
+          </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Enter your Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          autoComplete="new-password"
-        />
+          {/* Username */}
+          <div className="input-group">
+            <label className="input-label" htmlFor="su-username">Username</label>
+            <div className="input-wrapper">
+              <span className="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+              <input
+                id="su-username"
+                type="text"
+                name="username"
+                placeholder="Choose a username"
+                className="input-field"
+                value={form.username}
+                onChange={handleChange}
+                required
+                autoComplete="username"
+              />
+            </div>
+          </div>
 
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm your Password"
-          value={form.confirmPassword}
-          onChange={handleChange}
-          required
-          autoComplete="new-password"
-        />
-        {error && <div className="error-message">* {error}</div>}
+          {/* Password */}
+          <div className="input-group">
+            <label className="input-label" htmlFor="su-password">Password</label>
+            <div className="input-wrapper">
+              <span className="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+              </span>
+              <input
+                id="su-password"
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Create a password"
+                className="input-field"
+                value={form.password}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+              <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password">
+                {showPassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
 
-        <button type="submit" className="signup-button" disabled={loading}>
-          Sign Up
-        </button>
+          {/* Confirm Password */}
+          <div className="input-group">
+            <label className="input-label" htmlFor="su-confirm">Confirm Password</label>
+            <div className="input-wrapper">
+              <span className="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+              </span>
+              <input
+                id="su-confirm"
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                placeholder="Re-enter your password"
+                className="input-field"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+              <button type="button" className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label="Toggle confirm password">
+                {showConfirmPassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
 
-        <p className="login-link">
-          Already have an account? <a href="/login">Login</a>
-        </p>
-      </form>
+          {error && (
+            <div className="error-banner" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <button type="submit" className="signup-btn" disabled={loading}>
+            {loading ? <span className="btn-spinner" /> : 'Create Account'}
+          </button>
+
+          <p className="login-text">
+            Already have an account?{' '}
+            <Link to="/login" className="login-link-text">Sign in</Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 };
