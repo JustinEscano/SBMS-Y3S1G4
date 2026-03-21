@@ -34,15 +34,13 @@ html, body {
   font-family: 'Segoe UI', sans-serif;
   margin: 0;
   padding: 0;
-  background: #1f2235; /* Match dashboard background */
+  background: #080b14; /* Dark base */
 }
 
-/* FIXED: App container setup */
+/* Root: Let PageLayout (Tailwind flex) control layout */
 #root {
   width: 100%;
-  min-height: 100vh; /* CHANGED: Use min-height to allow content to expand */
-  display: flex;
-  flex-direction: column;
+  height: 100%;
 }
 
 /* FIXED: Dashboard content with proper scrolling */

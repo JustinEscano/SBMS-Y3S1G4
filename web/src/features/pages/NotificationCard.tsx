@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { PenSquareIcon, TrashIcon, EyeIcon } from "lucide-react";
+import { TrashIcon, MailIcon, MailOpenIcon } from "lucide-react";
 import NotificationModal from "../components/notificationModal";
 import "../components/Notifications.css";
-import type { Notification } from "../types/notificationTypes";  // Import for type consistency
+import type { Notification } from "../types/notificationTypes";
 
-// Use full Notification type for props (ensures metadata)
 interface NotificationCardProps {
-  notif: Notification;  // Now matches hook output
+  notif: Notification;
   onMarkUnread?: (id: string) => void;
   onMarkRead?: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -15,9 +14,9 @@ interface NotificationCardProps {
 const NotificationCard: React.FC<NotificationCardProps> = ({ notif, onMarkUnread, onMarkRead, onDelete }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Safe formatDate (string input, fallback to today: Oct 15, 2025)
+  // Safe formatDate (string input, fallback to today)
   const formatDate = (dateInput?: string | null): string => {
-    if (!dateInput) return new Date("2025-10-15").toLocaleDateString();  // Fallback to current date
+    if (!dateInput) return new Date("2025-10-15").toLocaleDateString();
     const date = new Date(dateInput);
     return isNaN(date.getTime()) 
       ? "No date" 
@@ -25,12 +24,12 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notif, onMarkUnread
           year: 'numeric', 
           month: 'numeric', 
           day: 'numeric' 
-        });  // e.g., "10/14/2025" from log dates
+        });
   };
 
   const handleMarkRead = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent modal trigger
-    e.preventDefault(); // prevent link navigation
+    e.stopPropagation();
+    e.preventDefault();
     if (notif.read) {
       onMarkUnread?.(notif.id);
     } else {
@@ -39,7 +38,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notif, onMarkUnread
   };
 
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent modal trigger
+    e.stopPropagation();
     e.preventDefault();
     onDelete?.(notif.id);
   };
@@ -55,24 +54,40 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notif, onMarkUnread
     <>
       <div
         className={`notif-card ${notif.read ? "read" : "unread"}`}
-        onClick={handleModalOpen}>
+        onClick={handleModalOpen}
+        role="button"
+        tabIndex={0}
+      >
         <div className="notif-card-body">
           <div className="notif-card-header">
-            <h3 className="notif-card-title">{notif.title || "Title"}</h3>
+            <h3 className="notif-card-title">{notif.title || "Untitled Notification"}</h3>
             <span className="notif-card-date">
-              {formatDate(notif.metadata?.created_at)}  {/* Nested access */}
+              {formatDate(notif.metadata?.created_at)}
             </span>
           </div>
           <div className="notif-card-divider"></div>
-          <p className="notif-card-content">{notif.message || "No message"}</p>
+          <p className="notif-card-content">{notif.message || "No message content."}</p>
+          
           <div className="notif-card-actions">
             <div className="action-icons">
-              <PenSquareIcon className="icon" color="#CCE9EF" />
-              <button className="mark-read-btn" onClick={handleMarkRead}>
-                <EyeIcon className="icon" color={notif.read ? "#888" : "#00f"} />
+              {/* Optional Edit icon if needed:
+              <button className="action-btn edit-btn" title="Edit">
+                <PenSquareIcon size={18} />
               </button>
-              <button className="delete-btn" onClick={handleDelete}>
-                <TrashIcon className="icon" />
+              */}
+              <button 
+                className="action-btn mark-read-btn" 
+                onClick={handleMarkRead}
+                title={notif.read ? "Mark as unread" : "Mark as read"}
+              >
+                {notif.read ? <MailIcon size={18} /> : <MailOpenIcon size={18} />}
+              </button>
+              <button 
+                className="action-btn delete-btn" 
+                onClick={handleDelete}
+                title="Delete notification"
+              >
+                <TrashIcon size={18} />
               </button>
             </div>
           </div>
@@ -81,10 +96,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notif, onMarkUnread
 
       {isModalOpen && (
         <NotificationModal
-          notifModal={{
-            ...notif,  // Spread full notif (includes metadata, read, etc.)
-            // Override if needed; metadata is already there with created_at
-          }}
+          notifModal={notif}
           onClose={() => setIsModalOpen(false)}
         />
       )}

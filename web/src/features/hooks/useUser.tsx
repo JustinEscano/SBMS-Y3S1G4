@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
-import { userService } from "../services/userService"; // Adjust path
+import { userService } from "../services/userService";
 import type { User, Profile } from "../types/dashboardTypes";
 
 type TokenPayload = {
@@ -17,27 +17,34 @@ type UserData = User & Partial<Profile>;
 
 export const useUser = (token?: string | null) => {
   const [user, setUser] = useState<UserData | null>(() => {
-    // Load from localStorage on mount
     const cached = localStorage.getItem("userProfile");
     return cached ? JSON.parse(cached) : null;
   });
-  const [loading, setLoading] = useState(!user);
+  const [loading, setLoading] = useState(!localStorage.getItem("userProfile"));
   const [error, setError] = useState<string | null>(null);
-  const [cache, setCache] = useState<{ data: UserData; timestamp: number } | null>(null);
 
-  const getUserIdFromToken = (t: string): string | null => {
+  // BUG FIX: Use a ref for the cache instead of state.
+  // Previously `cache` was state — updating it caused a re-render, which
+  // re-created `fetchUser` (not memoized), which re-triggered the useEffect.
+  // A ref update does NOT cause a re-render, breaking the loop.
+  const cacheRef = useRef<{ data: UserData; timestamp: number } | null>(null);
+
+  const getUserIdFromToken = useCallback((t: string): string | null => {
     try {
       const decoded = jwtDecode<TokenPayload>(t);
       return decoded.user_id || null;
     } catch {
       return null;
     }
-  };
+  }, []);
 
-  const fetchUser = async (userId: string) => {
-    // Use cached data if fresh (TTL: 30s)
-    if (cache && Date.now() - cache.timestamp < 30000) {
-      setUser(cache.data);
+  // BUG FIX: Wrap fetchUser in useCallback so its reference is stable.
+  // Previously it was a plain async function recreated every render — the
+  // useEffect([token]) saw it as a new dep on each render and re-ran.
+  const fetchUser = useCallback(async (userId: string) => {
+    // Use cached data if fresh (TTL: 30s) — read from ref, not state
+    if (cacheRef.current && Date.now() - cacheRef.current.timestamp < 30000) {
+      setUser(cacheRef.current.data);
       setLoading(false);
       return;
     }
@@ -46,7 +53,6 @@ export const useUser = (token?: string | null) => {
       setLoading(true);
       setError(null);
 
-      // Get base user + profile info
       const [userInfo, profileInfo] = await Promise.all([
         userService.getById(userId),
         userService.getProfile(),
@@ -58,10 +64,11 @@ export const useUser = (token?: string | null) => {
       };
 
       setUser(combinedData);
-      setCache({ data: combinedData, timestamp: Date.now() });
+      // Write to ref — no re-render triggered
+      cacheRef.current = { data: combinedData, timestamp: Date.now() };
       localStorage.setItem("userProfile", JSON.stringify(combinedData));
     } catch (err: any) {
-      console.error("❌ Failed to fetch user:", err);
+      console.error("Failed to fetch user:", err);
       setError(err.message || "Failed to load user data.");
 
       // Fallback: decode from token
@@ -86,7 +93,7 @@ export const useUser = (token?: string | null) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]); // token is needed for the fallback decode only
 
   useEffect(() => {
     if (token) {
@@ -101,23 +108,23 @@ export const useUser = (token?: string | null) => {
       setUser(null);
       setLoading(false);
     }
-  }, [token]);
+  }, [token, fetchUser, getUserIdFromToken]);
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     if (token) {
       const userId = getUserIdFromToken(token);
       if (userId) {
-        setCache(null); // Invalidate cache
+        cacheRef.current = null; // Invalidate cache
         fetchUser(userId);
       }
     }
-  };
+  }, [token, fetchUser, getUserIdFromToken]);
 
-  const clearUser = () => {
+  const clearUser = useCallback(() => {
     localStorage.removeItem("userProfile");
     setUser(null);
-    setCache(null);
-  };
+    cacheRef.current = null;
+  }, []);
 
   return { user, loading, error, refetch, clearUser };
 };

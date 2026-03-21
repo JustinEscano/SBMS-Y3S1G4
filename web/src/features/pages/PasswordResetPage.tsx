@@ -13,11 +13,6 @@ type Star = { x: number; y: number };
 type ResetStep = 'enterEmail' | 'enterOTP' | 'enterNewPassword';
 
 // Define response interface
-interface ResetResponse {
-  access?: string;
-  refresh?: string;
-  detail: string;
-}
 
 interface OTPResponse {
   detail: string;
@@ -133,7 +128,7 @@ function PasswordResetScreen() {
 
     try {
       // Now reset with verified OTP and new password
-      const response = await verifyOTPPasswordReset(email, otp, newPassword) as ResetResponse;
+      await verifyOTPPasswordReset(email, otp, newPassword);
       setSuccess('Password reset successfully! You can now log in.');
       setOtp('');
       setTimeout(() => navigate('/login'), 2000);
@@ -150,96 +145,120 @@ function PasswordResetScreen() {
       case 'enterEmail':
         return (
           <>
-            <h2 className="login-title">Reset Password</h2>
-            <p className="reset-subtitle">Enter your email to receive a reset code.</p>
-            <label>Email</label>
-            <input
-              type="email"
-              placeholder="example@gmail.com"
-              className="input-field"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <button 
-              type="submit" 
-              className="login-button" 
-              disabled={loading || isSubmitting || !isValidEmail(email)} // Disable if invalid
-            >
-              {loading ? 'Sending...' : 'Send Reset Code'}
-            </button>
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold text-white mb-2">Reset Password</h2>
+              <p className="text-sm text-gray-400">Enter your email to receive a reset code.</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Email Address</label>
+                <input
+                  type="email"
+                  placeholder="example@gmail.com"
+                  className="w-full bg-[#1e293b]/50 border border-gray-700/50 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 text-white font-medium rounded-lg px-4 py-3 transition-colors shadow-lg shadow-blue-500/20 disabled:shadow-none" 
+                disabled={loading || isSubmitting || !isValidEmail(email)}
+              >
+                {loading ? 'Sending...' : 'Send Reset Code'}
+              </button>
+            </div>
           </>
         );
       case 'enterOTP':
         return (
           <>
-            <h2 className="login-title">Verify OTP</h2>
-            <p className="reset-subtitle">Enter the 6-digit code sent to {email}</p>
-            <label>OTP Code</label>
-            <input
-              type="text"
-              placeholder="123456"
-              maxLength={6}
-              className="input-field"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} // Only digits
-              required
-            />
-            <button
-              type="button"
-              className="login-button secondary"
-              onClick={goToEmailStep} // Use helper for full reset
-              disabled={loading || isSubmitting}
-            >
-              Change Email
-            </button>
-            <button 
-              type="submit" 
-              className="login-button" 
-              disabled={loading || isSubmitting || otp.length !== 6}
-            >
-              {loading ? 'Verifying...' : 'Continue'}
-            </button>
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold text-white mb-2">Verify OTP</h2>
+              <p className="text-sm text-gray-400">Enter the 6-digit code sent to <span className="text-white font-medium">{email}</span></p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">6-Digit Code</label>
+                <input
+                  type="text"
+                  placeholder="123456"
+                  maxLength={6}
+                  className="w-full bg-[#1e293b]/50 border border-gray-700/50 text-white font-mono text-center tracking-widest text-xl rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-600"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="flex-1 bg-[#1e293b] hover:bg-gray-700 border border-gray-700/50 text-gray-300 font-medium rounded-lg px-4 py-3 transition-colors disabled:opacity-50"
+                  onClick={goToEmailStep}
+                  disabled={loading || isSubmitting}
+                >
+                  Change Email
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 text-white font-medium rounded-lg px-4 py-3 transition-colors shadow-lg shadow-blue-500/20 disabled:shadow-none" 
+                  disabled={loading || isSubmitting || otp.length !== 6}
+                >
+                  {loading ? 'Verifying...' : 'Continue'}
+                </button>
+              </div>
+            </div>
           </>
         );
       case 'enterNewPassword':
         return (
           <>
-            <h2 className="login-title">New Password</h2>
-            <p className="reset-subtitle">Enter your new password.</p>
-            <label>New Password</label>
-            <input
-              type="password"
-              placeholder="Enter new password"
-              className="input-field"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-            <label>Confirm New Password</label>
-            <input
-              type="password"
-              placeholder="Confirm new password"
-              className="input-field"
-              value={confirmNewPassword}
-              onChange={(e) => setConfirmNewPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="login-button secondary"
-              onClick={() => setStep('enterOTP')}
-              disabled={loading || isSubmitting}
-            >
-              Back
-            </button>
-            <button 
-              type="submit" 
-              className="login-button" 
-              disabled={loading || isSubmitting || newPassword.length < 6 || newPassword !== confirmNewPassword}
-            >
-              {loading ? 'Resetting...' : 'Reset Password'}
-            </button>
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold text-white mb-2">New Password</h2>
+              <p className="text-sm text-gray-400">Enter your new secure password.</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">New Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full bg-[#1e293b]/50 border border-gray-700/50 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-500"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Confirm New Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full bg-[#1e293b]/50 border border-gray-700/50 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-gray-500"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="w-24 bg-[#1e293b] hover:bg-gray-700 border border-gray-700/50 text-gray-300 font-medium rounded-lg px-4 py-3 transition-colors disabled:opacity-50"
+                  onClick={() => setStep('enterOTP')}
+                  disabled={loading || isSubmitting}
+                >
+                  Back
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 text-white font-medium rounded-lg px-4 py-3 transition-colors shadow-lg shadow-blue-500/20 disabled:shadow-none" 
+                  disabled={loading || isSubmitting || newPassword.length < 6 || newPassword !== confirmNewPassword}
+                >
+                  {loading ? 'Resetting...' : 'Reset Password'}
+                </button>
+              </div>
+            </div>
           </>
         );
       default:
@@ -262,11 +281,11 @@ function PasswordResetScreen() {
   };
 
   return (
-    <div className="login-container">
+    <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans">
       {/* Overlay spinner */}
       {loading && (
-        <div className="loading-overlay">
-          <div className="spinner"></div>
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
         </div>
       )}
 
@@ -274,24 +293,35 @@ function PasswordResetScreen() {
       {stars.map((star, idx) => (
         <div
           key={idx}
-          className="star"
+          className="absolute w-1 h-1 bg-blue-400 rounded-full opacity-30 shadow-[0_0_10px_2px_rgba(96,165,250,0.5)]"
           style={{ top: `${star.y}px`, left: `${star.x}px` }}
         />
       ))}
 
-      <div className="logo">
-        <div className="logo-img" />
-        <span className="logo-text">Orbit</span>
-      </div>
+      <div className="w-full max-w-md p-8 rounded-2xl bg-[#0f172a] border border-gray-700/50 shadow-2xl relative z-10 m-4">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight text-white mb-1">Orbit</h2>
+          <p className="text-sm text-gray-400">Smart Building Management</p>
+        </div>
 
-      <form className="login-card" onSubmit={getOnSubmit()}>
-        {renderStep()}
-        {error && <div className="error-message">* {error}</div>}
-        {success && <div className="success-message">* {success}</div>}
-        <p className="signup-text">
-          <Link to="/login">Back to Login</Link>
-        </p>
-      </form>
+        <form className="space-y-5" onSubmit={(e) => {
+          const onSubmit = getOnSubmit();
+          if (onSubmit) onSubmit(e);
+        }}>
+          {renderStep()}
+          {error && <div className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 p-3 rounded-lg text-center mb-4">{error}</div>}
+          {success && <div className="text-sm text-green-400 bg-green-400/10 border border-green-400/20 p-3 rounded-lg text-center mb-4">{success}</div>}
+          
+          <div className="text-center mt-6">
+            <Link to="/login" className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors">
+              Back to Login
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import PageLayout from "./PageLayout";
-import type { ChatMessage } from "../../service/LLMService";
 import "./LLMChatPage.css";
+
+export interface ChatMessage {
+  id: string;
+  type: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+  isLoading?: boolean;
+}
 
 // Define API endpoint types
 type QueryType = "general" | "maintenance" | "anomalies" | "energy" | "utilization" | "summary" | "context" | "billing" | "kpi";
@@ -1104,18 +1111,6 @@ const LLMChatPage: React.FC = () => {
             if (!response.answer.includes("Energy Analysis:")) {
               answer = `🔋 Energy Analysis:\n\n${response.answer}`;
             }
-            break;
-          case "maintenance":
-            answer = `🔧 Maintenance Analysis:\n\n${response.answer}`;
-            break;
-          case "billing":
-            answer = `💱 Billing Rates:\n\n${response.answer || "See above for listed rates."}`;
-            break;
-          case "utilization":
-            answer = `🏢 System Utilization:\n\n${response.answer}`;
-            break;
-          case "summary":
-            answer = `📊 Weekly Summary:\n\n${response.answer}`;
             break;
           case "context":
             answer = `🌡️ Current Status:\n\n${response.answer}`;

@@ -6,14 +6,10 @@ import type { RoomAnalytics, RoomAnalyticsItem } from "../types/sensorLogTypes";
 const ROOM_API = "/api/rooms/";
 const ENERGY_SUMMARY_API = "/api/energysummary/";
 
-console.log("🚀 [RoomService] axiosInstance imported:", axiosInstance);
+
 
 export const roomService = {
   getAll: async (): Promise<Room[]> => {
-    console.log(
-      "🔍 [RoomService] Token exists?",
-      localStorage.getItem("access_token") ? "YES" : "NO"
-    );
     const { data } = await axiosInstance.get<Room[]>(ROOM_API);
     return data;
   },
@@ -69,27 +65,23 @@ export const roomService = {
 
     try {
       const { data } = await axiosInstance.get<RoomAnalyticsItem[]>(url);
-      console.log(`📥 [RoomService] Raw all data:`, data);
 
-      // Client-side filter by period_type (hits existing DB rows for weekly/monthly)
+      // Client-side filter by period_type
       const filteredData = data.filter(item => item.period_type === period_type);
 
       // If no exact match, fallback to daily for non-daily (or empty)
       if (filteredData.length === 0 && period_type !== "daily") {
-        console.warn(`⚠️ [RoomService] No ${period_type} data; falling back to daily`);
         const dailyFiltered = data.filter(item => item.period_type === "daily");
-        return dailyFiltered.length > 0 ? dailyFiltered : filteredData;  // Empty if no dailies
+        return dailyFiltered.length > 0 ? dailyFiltered : filteredData;
       }
 
       // Sort chronological (oldest first)
       filteredData.sort((a, b) => new Date(a.period_start).getTime() - new Date(b.period_start).getTime());
 
-      console.log(`📊 [RoomService] Filtered ${period_type} data (${filteredData.length} items):`, filteredData);
       return filteredData;
     } catch (err: any) {
-      console.error(`❌ [RoomService] Fetch error for ${period_type}:`, err);
+      console.error(`[RoomService] Fetch error for ${period_type}:`, err);
       if (err.response?.status === 400 && period_type !== "daily") {
-        console.warn(`🔄 [RoomService] Fallback to daily`);
         return roomService.getEnergySummary(roomId, "daily", selectedPeriod);
       }
       throw err;

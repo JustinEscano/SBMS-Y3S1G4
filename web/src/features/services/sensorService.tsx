@@ -23,16 +23,22 @@ export const sensorService = {
     }
   },
 
-  // Generalized fetch logs with params
+  // BUG FIX: DRF pagination wraps responses as { count, next, previous, results: [...] }
+  // Previously this was typed as SensorData[] and parsed directly — meaning `data`
+  // was the wrapper object {count:X, results:[...]}, not the array. Charts were always
+  // empty because `data.map(...)` would fail or iterate over object keys.
   fetchLogs: async (params: Record<string, string>): Promise<SensorData[]> => {
-    const { data } = await axiosInstance.get<SensorData[]>(SENSOR_LOG_API, { params });
-    return data;
+    const { data } = await axiosInstance.get<SensorData[] | { count: number; results: SensorData[] }>(SENSOR_LOG_API, { params });
+    // Handle both paginated ({ results: [...] }) and non-paginated ([...]) responses
+    if (data && !Array.isArray(data) && 'results' in data) {
+      return data.results;
+    }
+    return data as SensorData[];
   },
 
 
   // ✅ Get latest sensor data filtered by pageType
   fetchByPageType: async (pageType: string): Promise<ESP32Response> => {
-    console.log("🔍 [SensorService] Fetching sensor data for pageType:", pageType);
     const { data } = await axiosInstance.get<ESP32Response>(`${SENSOR_API}latest/`, {
       params: { pageType },
     });
@@ -40,20 +46,13 @@ export const sensorService = {
   },
 
   // 🔥 Future endpoints (if needed, just like RoomService has `analytics`)
-  fetchSensorData: async (): Promise<ESP32Response> => {
-    console.log("🔍 [SensorService] Fetching full sensor data");
-    const { data } = await axiosInstance.get<ESP32Response>(`${SENSOR_API}sensor-data/`);
-    return data;
-  },
 
   fetchHealthCheck: async (): Promise<ESP32Response> => {
-    console.log("🔍 [SensorService] Running ESP32 health check");
     const { data } = await axiosInstance.get<ESP32Response>(`${SENSOR_API}health/`);
     return data;
   },
 
   fetchHeartbeat: async (): Promise<ESP32Response> => {
-    console.log("🔍 [SensorService] Fetching ESP32 heartbeat");
     const { data } = await axiosInstance.get<ESP32Response>(`${SENSOR_API}heartbeat/`);
     return data;
   },

@@ -377,10 +377,10 @@
 .orb-input-floating {
   position: fixed;
   bottom: 0;
-  left: 52%;
+  left: 55%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 1400px;
+  width: 90%;
+  max-width: 1000px;
   background: rgba(30, 30, 30, 0.98);
   backdrop-filter: blur(15px);
   padding: 1.5rem 2rem;
@@ -388,6 +388,7 @@
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
   border-top: 1px solid rgba(68, 68, 68, 0.3);
   border-radius: 16px 16px 0 0;
+  box-sizing: border-box;
 }
 
 /* First row: input field */
@@ -498,9 +499,9 @@
   
   .orb-input-floating {
     padding: 1.25rem 1rem;
-    max-width: 95%;
-    border-radius: 12px 12px 0 0;
-    left: 50%;
+    max-width: 100%;
+    width: 100vw;
+    left: 0;
   }
   
   .orb-messages {

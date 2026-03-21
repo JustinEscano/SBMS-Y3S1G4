@@ -26,10 +26,9 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
-
+  // BUG FIX: was calling useAuth() twice — once for isAuthenticated, once for logout.
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { logout } = useAuth();
 
   function handleLogout(): void {
     logout();

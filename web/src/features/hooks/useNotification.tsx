@@ -40,11 +40,16 @@ export const useNotifications = (userId?: string, pollInterval = 30000) => {
     }
   }, [userId, normalizeNotification]);
 
+  // BUG FIX: Removed `userId` from deps — it was already captured inside
+  // `fetchNotifications` via useCallback. Having it here AND there caused a
+  // double-fetch every time userId changed (once from fetchNotifications
+  // reference changing, once from userId itself). Now only fetchNotifications
+  // and pollInterval drive the effect.
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, pollInterval);
     return () => clearInterval(interval);
-  }, [fetchNotifications, pollInterval, userId]);
+  }, [fetchNotifications, pollInterval]);
 
   // ✅ Mark as read
   const markAsRead = useCallback(async (id: string) => {
