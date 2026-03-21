@@ -42587,3 +42587,368 @@ Updated/Created EnergySummary 9eb38d77-2a15-4957-82ce-1d1bea6e8bf0 with total_co
 PZEM logs for 2026-03-20: 0
 Sensor data saved: ['c0868989-54d3-474b-968a-467718e116ca', '77bfb589-8b5c-487e-97ba-ba7c1b2a81da', 'da7a0b98-2b03-499b-a5ea-64eea769f67c', 'eb9802a4-1b21-4d21-af42-e81dacac84b5'], Alerts created: [], Alerts resolved: ['da797465-9999-4be5-a86e-99574e021e4a']
 Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Profile created for user admin (ID: 8ccb328b-27af-445d-b13a-6257a0a63c47) on token obtain
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Notification 42655d24-d3de-4e9d-bbe6-fa2647dbd324 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification ab47ef62-8a69-471d-95d9-2cdacbc21745 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 8cb0aaa1-94a8-48ca-b777-4b67a8f8c01d deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 37e3d3f0-0b63-4275-a821-188367cc4cf9 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 0442cfe3-7fc4-4418-96c2-9e261a049cb9 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 9a67448a-6847-4a3e-bf2e-8e3beace81ad deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification a5cb0199-706f-4095-9517-853daecb8786 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 26aedef7-121b-4891-98d4-940404b486d5 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 58ff5446-aac2-44f3-bdfc-cde520049267 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 57d6b153-acdd-46af-984d-ca780fbe61c1 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 5310e1ea-e042-4721-b54b-d1d2e5d23fce deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 45a77a5b-003e-457a-8905-7a60e1fa97fc deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 44ce8829-2ab9-4424-a928-64a14314f25d deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification b5dd9e3e-58a8-4aad-9852-70287e905fb7 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Error deleting notification b5dd9e3e-58a8-4aad-9852-70287e905fb7 by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47): No Notification matches the given query.
+Error deleting notification b5dd9e3e-58a8-4aad-9852-70287e905fb7 by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47): No Notification matches the given query.
+Notification d0584317-139b-48e9-a429-bc7025cc8143 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification dc63397f-7d09-41b7-944b-c545c1a78bb0 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification cf829fda-acbb-4970-9857-06e1a0b21a8d deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification a576f805-d64b-4b43-975a-2acc3a757feb deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 33b922b8-561b-4452-9993-8757b440a245 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification c7e2df5c-5f9b-4940-a9a9-8abb4a937fa3 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Notification cf2a82a3-7790-4568-9461-34d4417ff962 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 8b7e95a1-9674-4f6d-a536-e8d10f872907 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 831f28dd-7425-4d81-932e-bc4d3ea381f7 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 2f922855-b5c9-4480-a4fe-2b7c8db12099 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 798a15f9-c008-408f-915f-ef9b02e27d68 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 9f6e45d0-8ae9-4136-a27c-78cfb9a1de66 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Notification 2b4d09c9-16dd-43b7-add1-74e533539040 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 8994fe5e-34df-4e46-8f0b-52bba0e87ab7 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 579a2234-0d4f-4b96-abeb-ee7f9dd89586 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 5e738f41-8607-4624-8c61-bfe5dac3128f deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 15467b51-42d6-491e-a4c7-345c649efdc7 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 8c4cc7a3-5c91-4ac3-ab9b-8f2b7554ad83 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification bed661aa-3249-4fea-82f4-2a6776906f33 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 29b34ff4-1ea2-496c-b0ed-0415f2359fd5 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Error deleting notification 29b34ff4-1ea2-496c-b0ed-0415f2359fd5 by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47): No Notification matches the given query.
+Notification 2c9cf727-845b-4bf4-acb0-472f041404b0 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Notification 57487300-e56f-47bf-ba7c-a551a48b5768 deleted by admin (User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Profile updated for user admin
+Profile updated for user admin
+Profile updated for user Justin Paul Louise
+Profile updated for user Admin123
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+In-app notification created for AceEmployee (ID: acb3686f-10c6-4c76-8dbb-67dff989c735, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: acb3686f-10c6-4c76-8dbb-67dff989c735, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for AceAdmin (ID: d1a7e645-b9d7-4bf9-951e-9333a3654998, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: d1a7e645-b9d7-4bf9-951e-9333a3654998, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+In-app notification created for orbitadmin (ID: bb581939-e589-45bd-8ead-777727c80c33, Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Email sent to orbitexhibit@gmail.com (Notification ID: bb581939-e589-45bd-8ead-777727c80c33, Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+In-app notification created for Admin123 (ID: 65d8fd7c-c75e-4c05-b408-2e68fef73fd1, Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: 8a1d7ca5-d958-4e97-8706-f3b3a47ffea2 for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Email sent to admin@orbit.com (Notification ID: 65d8fd7c-c75e-4c05-b408-2e68fef73fd1, Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: e45c2c2e-5cad-44d3-8ac5-70f39fe16189 for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Response requested for maintenance request 2734a845-72bd-47a0-992d-ff9a56899114
+In-app notification created for AceClient (ID: 8db57bc5-6997-4e0e-8dc1-5d3107dc949b, Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Email sent to acephilipdenulan12@gmail.com (Notification ID: 8db57bc5-6997-4e0e-8dc1-5d3107dc949b, Type: maintenance_request_responded, User ID: 38d41e73-aada-4420-8749-0c7d7d818b41)
+Response added to maintenance request 2734a845-72bd-47a0-992d-ff9a56899114 by Admin123
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+In-app notification created for AceEmployee (ID: 3a0b8bd7-f676-45ae-afc8-79820a42864f, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: 3a0b8bd7-f676-45ae-afc8-79820a42864f, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for AceAdmin (ID: 571dc9bb-5272-473f-b857-ad83125954c7, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 571dc9bb-5272-473f-b857-ad83125954c7, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+In-app notification created for orbitadmin (ID: 3b9e2039-a23a-43ad-aee8-372fbac3a154, Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Email sent to orbitexhibit@gmail.com (Notification ID: 3b9e2039-a23a-43ad-aee8-372fbac3a154, Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+In-app notification created for Admin123 (ID: 14ef1c23-b5fa-41c1-818e-f0fe124864f5, Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Email sent to admin@orbit.com (Notification ID: 14ef1c23-b5fa-41c1-818e-f0fe124864f5, Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: 846309b6-1351-4229-8794-a2fba8e3f6d6 for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Response requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+In-app notification created for AceEmployee (ID: d6ff3e41-c6e5-4ce6-8ee0-7ef12289243a, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for AceAdmin (ID: ca90ee49-0a3a-47e8-9019-035786cbbadb, Type: maintenance_request_responded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acedenulan20@gmail.com (Notification ID: d6ff3e41-c6e5-4ce6-8ee0-7ef12289243a, Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for orbitadmin (ID: 104e6dca-1e3f-4883-b3f1-bd204788f25c, Type: maintenance_request_responded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Email sent to acephilipgclass18@gmail.com (Notification ID: ca90ee49-0a3a-47e8-9019-035786cbbadb, Type: maintenance_request_responded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+In-app notification created for AceEmployee (ID: 42652825-cb36-4220-b3e2-74757c258bea, Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to orbitexhibit@gmail.com (Notification ID: 104e6dca-1e3f-4883-b3f1-bd204788f25c, Type: maintenance_request_responded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for AceAdmin (ID: 51c9eac9-f299-4254-8b39-6eddfcf7c1fe, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acedenulan20@gmail.com (Notification ID: 42652825-cb36-4220-b3e2-74757c258bea, Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+In-app notification created for orbitadmin (ID: 252b8b2a-8cce-440b-ab3b-f02c035a6b07, Type: maintenance_request_updated, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 51c9eac9-f299-4254-8b39-6eddfcf7c1fe, Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_request_updated, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+In-app notification created for Admin123 (ID: 92f1759c-7e6a-45a3-8dcd-717ea4109010, Type: maintenance_request_updated, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Email sent to orbitexhibit@gmail.com (Notification ID: 252b8b2a-8cce-440b-ab3b-f02c035a6b07, Type: maintenance_request_updated, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_request_updated, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Response added to maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830 by Admin123
+Email sent to admin@orbit.com (Notification ID: 92f1759c-7e6a-45a3-8dcd-717ea4109010, Type: maintenance_request_updated, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Skipped duplicate notification for orbitadmin (Type: maintenance_request_updated, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Response added to maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830 by Admin123
+Response requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_request_updated, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_request_updated, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Response added to maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830 by Admin123
+Response requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_responded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for AceExhibit (ID: 841c09f4-3d91-414f-be52-a4643e728da7, Type: maintenance_request_responded, User ID: 5e4f7b9c-fd2f-416a-ab49-a607cb093f35)
+Email sent to clientexhibit@gmail.com (Notification ID: 841c09f4-3d91-414f-be52-a4643e728da7, Type: maintenance_request_responded, User ID: 5e4f7b9c-fd2f-416a-ab49-a607cb093f35)
+Skipped duplicate notification for AceEmployee (Type: maintenance_request_updated, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_request_updated, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_request_updated, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_request_updated, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+In-app notification created for AceExhibit (ID: cd81b8ee-883f-4f6d-a9f9-fe796090f0f2, Type: maintenance_request_updated, User ID: 5e4f7b9c-fd2f-416a-ab49-a607cb093f35)
+Email sent to clientexhibit@gmail.com (Notification ID: cd81b8ee-883f-4f6d-a9f9-fe796090f0f2, Type: maintenance_request_updated, User ID: 5e4f7b9c-fd2f-416a-ab49-a607cb093f35)
+Response added to maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830 by Admin123
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+In-app notification created for AceEmployee (ID: 2a64dc2e-0cee-4cf4-a61c-6618afc2cb9f, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Email sent to acedenulan20@gmail.com (Notification ID: 2a64dc2e-0cee-4cf4-a61c-6618afc2cb9f, Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+In-app notification created for AceAdmin (ID: 32b62a51-6eac-4980-8f6e-d65955adc146, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Email sent to acephilipgclass18@gmail.com (Notification ID: 32b62a51-6eac-4980-8f6e-d65955adc146, Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+In-app notification created for orbitadmin (ID: 86deb3be-2936-4b8c-8520-e3138dd380f8, Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Email sent to orbitexhibit@gmail.com (Notification ID: 86deb3be-2936-4b8c-8520-e3138dd380f8, Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+In-app notification created for Admin123 (ID: bc8249d2-405c-418c-bbab-ee769e22d436, Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Email sent to admin@orbit.com (Notification ID: bc8249d2-405c-418c-bbab-ee769e22d436, Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: facf6b58-aec8-4bf7-b2d0-43a32f47a05d for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: d5272275-3338-45cf-ab51-0ce20867fe6e for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: 535e6fa1-b43d-479e-865c-66f9a46cf681 for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: ca866cfa-044e-4394-84e3-a510612279b0 for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Attachment upload requested for maintenance request 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Skipped duplicate notification for AceEmployee (Type: maintenance_attachment_uploaded, User ID: 88bc738c-6d2e-42c5-99e4-cdf49cbdbaf0)
+Skipped duplicate notification for AceAdmin (Type: maintenance_attachment_uploaded, User ID: 5e40e62e-0308-443b-92c4-826a9fab7131)
+Skipped duplicate notification for orbitadmin (Type: maintenance_attachment_uploaded, User ID: f1cbb01a-0b9b-493c-82fa-a9369422fbf5)
+Skipped duplicate notification for Admin123 (Type: maintenance_attachment_uploaded, User ID: 8ccb328b-27af-445d-b13a-6257a0a63c47)
+Attachment uploaded: 76a970e3-7eaf-4b1f-8c59-d7a86351dd61 for 1eb5010b-0ad5-4c83-ac98-a4c802c08830
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Successfully imported core.views.signals
+Latest sensor data requested
+Returning 12 sensor readings
+Latest sensor data requested
+Returning 12 sensor readings
